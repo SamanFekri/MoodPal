@@ -1,6 +1,7 @@
 services:
   bot:
     build: .
+    network_mode: host
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - MONGODB_URI=${MONGODB_URI}
