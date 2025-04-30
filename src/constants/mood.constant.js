@@ -46,3 +46,15 @@ export const MOOD_MAP = MOODS.reduce((acc, mood) => {
   acc[mood.code] = mood
   return acc;
 }, {});
+// max 6 emojis per row
+export const MOOD_INLINE_KEYBOARD_ROW = 3;
+export const MOOD_INLINE_KEYBOARD = MOODS.reduce((acc, mood, index) => {
+  if (index % MOOD_INLINE_KEYBOARD_ROW === 0) {
+    acc.push([]);
+  }
+  acc[acc.length - 1].push({
+    text: `${mood.emoji} ${mood.name}`,
+    callback_data: `mood_${mood.code}`
+  });
+  return acc;
+}, []);

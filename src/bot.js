@@ -9,6 +9,7 @@ const saveUserMiddleware = require('./middlewares/user.middleware');
 
 // Import commands
 const startCommand = require('./commands/start');
+const saveMood = require('./callbacks/saveMood');
 
 
 // Connect to MongoDB
@@ -21,35 +22,11 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // Middleware to save user data
 bot.use(saveUserMiddleware);
 
-
 // Set up commands
 bot.command('start', startCommand);
 
-// Handle text messages
-bot.on(message('text'), async (ctx) => {
-  try {
-    const userId = ctx.from.id;
-    const username = ctx.from.username || 'unknown';
-    
-    // Log message to database
-    await User.findOneAndUpdate(
-      { userId },
-      { 
-        userId,
-        username,
-        lastMessage: ctx.message.text,
-        lastActivity: new Date()
-      },
-      { upsert: true, new: true }
-    );
-    
-    // Reply to the message
-    ctx.reply(`Received your message: ${ctx.message.text}`);
-  } catch (error) {
-    console.error('Error handling message:', error);
-    ctx.reply('Sorry, something went wrong');
-  }
-});
+// Callbacks from inline buttons
+bot.action(/mood_/, saveMood);
 
 // Error handling
 bot.catch((err, ctx) => {

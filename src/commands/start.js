@@ -1,12 +1,20 @@
-const { MOOD_EMOJIS } = require('../constants');
+const { MOOD_INLINE_KEYBOARD } = require('../constants');
+const msg = `
+  <b>Welcome to the Mood Pal Bot!</b>
+  <i>Please select your mood from the options below:</i>
+`;
 module.exports = async (ctx) => {
   try {
-    ctx.reply(`Welcome, ${ctx.user.first_name}! Your Telegram bot is running.`);
-    // read the mood constants from the constants file and send the emoji of them
-    console.log('=====================');
-    console.log('MOOD_EMOJIS:');
-    console.log(MOOD_EMOJIS);
-    console.log('=====================');
+    // also parse text as html
+    ctx.reply(
+      msg,
+      {
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: MOOD_INLINE_KEYBOARD,
+        },
+      }
+    );
   } catch (error) {
     console.error('Error in start command:', error);
   }
