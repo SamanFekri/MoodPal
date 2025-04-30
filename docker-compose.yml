@@ -7,4 +7,5 @@ services:
       - MONGODB_URI=${MONGODB_URI}
       - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
       - MAIN_CHANNEL_USERNAME=${MAIN_CHANNEL_USERNAME}
+      - CRON_JOB_TIME=${CRON_JOB_TIME}
     restart: unless-stopped

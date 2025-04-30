@@ -56,12 +56,12 @@ bot.launch().then(() => {
 
 
 // run the cron job every day 9:00 AM and 10:00 PM
-cron.schedule('* 9,22 * * *', () => {
+cron.schedule(process.env.CRON_JOB_TIME, () => {
   console.log('======================');
   console.log(`Running cron job at ${new Date().toLocaleString()}`);
   console.log('======================');
   bot.telegram.sendMessage(
-    process.nextTick.MAIN_CHANNEL_ID,
+    process.env.MAIN_CHANNEL_ID,
     msgs.chooseMoodMsg(), 
     {
       parse_mode: 'HTML',
