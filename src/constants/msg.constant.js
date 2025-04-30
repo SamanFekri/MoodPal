@@ -15,3 +15,11 @@ Join our channel to get daily reminders to check in and track your mood
 
 
 export const chooseMoodMsg = () => `It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:`;
+
+export const notImplementedMsg = () => `This feature is not implemented yet. Stay tuned for updates!`;
+
+export const helpMsg = () => `
+Here are some commands you can use:
+/start - Start the bot and get a welcome message
+/help - Get a list of available commands
+/set_mood - Get a list of moods to choose from`;

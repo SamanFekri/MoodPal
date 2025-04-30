@@ -8,8 +8,15 @@ const { msgs, MOOD_INLINE_KEYBOARD } = require('./constants');
 // Import middlewares
 const saveUserMiddleware = require('./middlewares/user.middleware');
 
+// Not implemented
+const notImplemented = require('./utils/not_implemented');
+
 // Import commands
 const startCommand = require('./commands/start');
+const setMoodCommand = require('./commands/set_mood');
+const helpCommand = require('./commands/help');
+
+// Import Callbacks
 const saveMood = require('./callbacks/saveMood');
 
 
@@ -25,6 +32,9 @@ bot.use(saveUserMiddleware);
 
 // Set up commands
 bot.command('start', startCommand);
+bot.command('set_mood', setMoodCommand);
+bot.command('help', helpCommand);
+bot.command('history', notImplemented);
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
