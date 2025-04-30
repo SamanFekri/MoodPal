@@ -3,13 +3,24 @@ const { Telegraf } = require('telegraf');
 const { message } = require('telegraf/filters');
 const connectDB = require('./db');
 const User = require('./models/user');
+
+// Import middlewares
+const saveUserMiddleware = require('./middlewares/user.middleware');
+
+// Import commands
 const startCommand = require('./commands/start');
+
 
 // Connect to MongoDB
 connectDB();
 
 // Create bot instance
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+// Middlewares
+// Middleware to save user data
+bot.use(saveUserMiddleware);
+
 
 // Set up commands
 bot.command('start', startCommand);
