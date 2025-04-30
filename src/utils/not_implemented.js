@@ -8,6 +8,6 @@ module.exports = async (ctx) => {
         ctx.telegram.sendMessage(ctx.user.id, '👷‍♂️')
       });
   } catch (error) {
-    console.error('Error in start command:', error);
+    console.error('Error in not implemented command:', error);
   }
 };

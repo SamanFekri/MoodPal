@@ -9,6 +9,6 @@ module.exports = async (ctx) => {
       },
     });
   } catch (error) {
-    console.error('Error in start command:', error);
+    console.error('Error in set_mood command:', error);
   }
 };
