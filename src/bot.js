@@ -3,6 +3,7 @@ const { Telegraf } = require('telegraf');
 const { message } = require('telegraf/filters');
 const connectDB = require('./db');
 const User = require('./models/user');
+const { msgs, MOOD_INLINE_KEYBOARD } = require('./constants');
 
 // Import middlewares
 const saveUserMiddleware = require('./middlewares/user.middleware');
@@ -36,6 +37,16 @@ bot.catch((err, ctx) => {
 // Start the bot
 bot.launch().then(() => {
   console.log('Bot started successfully!');
+  
 }).catch(err => {
   console.error('Failed to start bot:', err);
+});
+
+bot.telegram.sendMessage(process.env.MAIN_CHANNEL_ID, msgs.chooseMoodMsg(), {
+  parse_mode: 'HTML',
+  reply_markup: {
+    inline_keyboard: MOOD_INLINE_KEYBOARD
+  },
+}).catch(err => {
+  console.error('Failed to send message to channel:', err);
 });
