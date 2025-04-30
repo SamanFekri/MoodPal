@@ -134,3 +134,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# MacOS Finder files
+.DS_Store
+# macOS folder attributes
+.AppleDouble
+.LSOverride
