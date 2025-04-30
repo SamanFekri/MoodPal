@@ -24,7 +24,7 @@ const saveUserMiddleware = async (ctx, next) => {
       ctx.user = {...existingUser._doc, is_new: false}; // Save the existing user to the context
     }
 
-    await next();
+    next();
   } catch (error) {
     console.error('Error saving user:', error);
   }
