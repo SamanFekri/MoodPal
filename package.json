@@ -1,6 +1,5 @@
 {
   "name": "MoodPal",
-  "packageManager": "yarn@4.5.2",
   "version": "1.0.0",
   "description": "Telegram bot with MongoDB in Docker",
   "main": "src/bot.js",
