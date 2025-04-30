@@ -4,4 +4,6 @@ services:
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - MONGODB_URI=${MONGODB_URI}
+      - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
+      - MAIN_CHANNEL_USERNAME=${MAIN_CHANNEL_USERNAME}
     restart: unless-stopped
