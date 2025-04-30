@@ -18,3 +18,6 @@ The main files involved in the project are:
 * `src/middlewares/user.middleware.js`, `src/middlewares/olaf.middleware.js`: Middleware for handling user data and specific tasks.
 * `src/models/mood.js`, `src/models/user.js`: Mongoose models for mood and user data.
 * `src/db.js`: Database connection setup.
+
+### Mood Pals Community
+You can access [MoodPals](https://t.me/MoodPals) community here.
