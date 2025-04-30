@@ -1,10 +1,11 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const { message } = require('telegraf/filters');
 const connectDB = require('./db');
-const User = require('./models/user');
-const { msgs, MOOD_INLINE_KEYBOARD } = require('./constants');
+// Import the cron library
+const cron = require('node-cron');
 
+// Import constants
+const { MOOD_INLINE_KEYBOARD, msgs } = require('./constants');
 // Import middlewares
 const saveUserMiddleware = require('./middlewares/user.middleware');
 
@@ -47,16 +48,24 @@ bot.catch((err, ctx) => {
 // Start the bot
 bot.launch().then(() => {
   console.log('Bot started successfully!');
-  
 }).catch(err => {
   console.error('Failed to start bot:', err);
 });
 
-bot.telegram.sendMessage(process.env.MAIN_CHANNEL_ID, msgs.chooseMoodMsg(), {
-  parse_mode: 'HTML',
-  reply_markup: {
-    inline_keyboard: MOOD_INLINE_KEYBOARD
-  },
-}).catch(err => {
-  console.error('Failed to send message to channel:', err);
+
+// run the cron job every day 9:00 AM and 10:00 PM
+cron.schedule('* 9,22 * * *', () => {
+  console.log('======================');
+  console.log(`Running cron job at ${new Date().toLocaleString()}`);
+  console.log('======================');
+  bot.telegram.sendMessage(
+    process.nextTick.MAIN_CHANNEL_ID,
+    msgs.chooseMoodMsg(), 
+    {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: MOOD_INLINE_KEYBOARD,
+      },
+    }
+  )
 });
