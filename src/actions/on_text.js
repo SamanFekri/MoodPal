@@ -1,6 +1,6 @@
 // write a function that handles the text message from the user
 const { msgs } = require('../constants');
-const { Mood } = require('../models/mood'); // Assuming you have a Mood model
+const Mood = require('../models/mood'); // Assuming you have a Mood model
 
 async function handleTextMessage(ctx) {
   // check if user is a bot return
@@ -17,4 +17,6 @@ async function handleTextMessage(ctx) {
   // send a message to the user
   ctx.reply(msgs.noteSavedMsg());
 }
+
+module.exports = handleTextMessage;
   
