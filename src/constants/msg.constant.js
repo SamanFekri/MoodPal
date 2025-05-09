@@ -23,3 +23,7 @@ Here are some commands you can use:
 /start - Start the bot and get a welcome message
 /help - Get a list of available commands
 /set_mood - Get a list of moods to choose from`;
+
+export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
+export const addNoteMsg = () => `📝 Now you can add a note to your mood. Please type your note below:`
+export const noteSavedMsg = () => `✅ Your note for the mood has been saved successfully!`;

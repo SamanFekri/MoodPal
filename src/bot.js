@@ -21,6 +21,9 @@ const helpCommand = require('./commands/help');
 // Import Callbacks
 const saveMood = require('./callbacks/saveMood');
 
+// Import actions
+const handleTextMessage = require('./actions/on_text');
+
 
 // Connect to MongoDB
 connectDB();
@@ -41,6 +44,9 @@ bot.command('history', notImplemented);
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
+
+// Handle if user sends a message add a note to the last mood
+bot.on('message', handleTextMessage);
 
 // Error handling
 bot.catch((err, ctx) => {
