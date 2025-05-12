@@ -20,6 +20,12 @@ async function getMoodOfUser(userId) {
     error.httpCode = 404;
     throw error;
   }
+  // if user is_mood_private then return user not found
+  if (user.is_mood_private) {
+    const error = new Error('User mood is private');
+    error.httpCode = 404;
+    throw error;
+  }
   // Read the last mood of the user from the database
   const lastMood = await Mood.getLastMood(user._id);
   if (!lastMood) {
