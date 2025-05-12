@@ -20,7 +20,11 @@ const userSchema = new mongoose.Schema({
   is_blocked: {
     type: Boolean,
     default: false
-  }
+  },
+  is_mood_private: {
+    type: Boolean,
+    default: false
+  },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
