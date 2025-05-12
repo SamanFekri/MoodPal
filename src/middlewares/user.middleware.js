@@ -19,10 +19,10 @@ const saveUserMiddleware = async (ctx, next) => {
     if (!existingUser) {
       existingUser = new User(ctx.from);
       u = await existingUser.save();
-      ctx.user = {...u._doc, is_new: true}; // Save the new user to the context
-    } else {
-      ctx.user = {...existingUser._doc, is_new: false}; // Save the existing user to the context
     }
+    // get existing user from db
+    existingUser = await User.findOne({ id: user.id });
+    ctx.user = existingUser;
 
     next();
   } catch (error) {

@@ -19,6 +19,7 @@ const notImplemented = require('./utils/not_implemented');
 const startCommand = require('./commands/start');
 const setMoodCommand = require('./commands/set_mood');
 const helpCommand = require('./commands/help');
+const setVisibilityCommand = require('./commands/set_visibility');
 
 // Import Callbacks
 const saveMood = require('./callbacks/saveMood');
@@ -45,6 +46,8 @@ bot.command('start', startCommand);
 bot.command('set_mood', setMoodCommand);
 bot.command('help', helpCommand);
 bot.command('history', notImplemented);
+bot.command('set_private', setVisibilityCommand.setMoodPrivate);
+bot.command('set_public', setVisibilityCommand.setMoodPublic);
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);

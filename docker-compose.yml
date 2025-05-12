@@ -10,6 +10,7 @@ services:
       - CRON_JOB_TIME=${CRON_JOB_TIME}
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_PORT=${SERVER_PORT}
+      - SERVER_BASE_URL=${SERVER_BASE_URL}
     ports:
       - "8080:${SERVER_PORT}"
     restart: unless-stopped

@@ -22,8 +22,25 @@ export const helpMsg = () => `
 Here are some commands you can use:
 /start - Start the bot and get a welcome message
 /help - Get a list of available commands
-/set_mood - Get a list of moods to choose from`;
+/set_mood - Get a list of moods to choose from
+/set_private - Set your mood to private
+/set_public - Set your mood to public
+`;
 
 export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
 export const addNoteMsg = () => `📝 Now you can add a note to your mood. Please type your note below:`
 export const noteSavedMsg = () => `✅ Your note for the mood has been saved successfully!`;
+
+export const moodPrivateMsg = () => `👻 Your mood is now on private`
+
+export const moodPublicMsg = (id) => `
+👀 Your mood is now on public.
+
+👨🏻‍💻 You can add this to your website to share your mood.
+
+✅ Animated Mood:
+<code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
+
+✅ Emoji Mood:
+<code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji" /&gt;</code>
+`

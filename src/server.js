@@ -22,7 +22,7 @@ async function getMoodOfUser(userId) {
   }
   // if user is_mood_private then return user not found
   if (user.is_mood_private) {
-    const error = new Error('User mood is private');
+    const error = new Error('User not found');
     error.httpCode = 404;
     throw error;
   }
