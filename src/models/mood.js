@@ -26,12 +26,11 @@ moodSchema.methods.addNote = function(note) {
   return this.save();
 };
 
-// Add a method to get last mood of a user
+// get last mood of a user
 moodSchema.statics.getLastMood = async function(userId) {
-  const lastMood = await this.findOne({ user: userId }).sort({ timestamp: -1 });
+  const lastMood = await this.findOne({ user: userId }).sort({ timestamp: -1 }).populate('user');
   return lastMood;
 };
-
 
 
 module.exports = mongoose.model('Mood', moodSchema);

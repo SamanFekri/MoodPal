@@ -8,4 +8,8 @@ services:
       - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
       - MAIN_CHANNEL_USERNAME=${MAIN_CHANNEL_USERNAME}
       - CRON_JOB_TIME=${CRON_JOB_TIME}
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_PORT=${SERVER_PORT}
+    ports:
+      - "8080:${SERVER_PORT}"
     restart: unless-stopped

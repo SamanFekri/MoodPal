@@ -1,0 +1,79 @@
+const express = require('express');
+const path = require('path');
+
+const Mood = require('./models/mood');
+const User = require('./models/user');
+const { MOOD_MAP } = require('./constants/mood.constant');
+
+
+const app = express();
+
+// Read port and IP from environment variables, with defaults
+const PORT = process.env.SERVER_PORT || 3000;
+const HOST = process.env.SERVER_HOST || 'localhost';
+
+async function getMoodOfUser(userId) {
+  // get the user from the database
+  const user = await User.getUserById(userId);
+  if (!user) {
+    const error = new Error('User not found');
+    error.httpCode = 404;
+    throw error;
+  }
+  // Read the last mood of the user from the database
+  const lastMood = await Mood.getLastMood(user._id);
+  if (!lastMood) {
+    const error = new Error('No mood found for this user');
+    error.httpCode = 404;
+    throw error;
+  }
+  return lastMood;
+}
+
+// Route to handle /user/<user-id>/mood/animated
+app.get('/user/:userId/mood/animated', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const lastMood = await getMoodOfUser(userId);
+    // with the mood code pass webp in the public file
+    const moodCode = lastMood.mood.code;
+    const moodFilePath = path.join(__dirname, 'public', 'moods', `${moodCode}.webp`);
+    res.sendFile(moodFilePath);
+    
+  } catch (error) {
+    console.error('Error fetching mood:', error);
+    let httpCode = error.httpCode || 500;
+    res.status(httpCode).json({ error: error.message });
+  }
+});
+
+app.get('/user/:userId/mood/emoji', async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const lastMood = await getMoodOfUser(userId);
+    // return the emoji of the mood
+    res.send(lastMood.mood.emoji);
+  } catch (error) {
+    console.error('Error fetching mood:', error);
+    let httpCode = error.httpCode || 500;
+    res.status(httpCode).json({ error: error.message });
+  }
+});
+
+// make a function listen server so bot can use it
+const listenServer = async () => {
+  try {
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Server is running on http://${HOST}:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Server failed to start:', error);
+    process.exit(1);
+  }
+};
+
+// Export the server and listen function
+module.exports = {
+  app,
+  listenServer,
+};

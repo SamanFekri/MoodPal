@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const connectDB = require('./db');
+// Import the server 
+const { listenServer } = require('./server');
 // Import the cron library
 const cron = require('node-cron');
 
@@ -27,6 +29,8 @@ const handleTextMessage = require('./actions/on_text');
 
 // Connect to MongoDB
 connectDB();
+// Start the server
+listenServer();
 
 // Create bot instance
 const bot = new Telegraf(process.env.BOT_TOKEN);

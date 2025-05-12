@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// Method get user by id
+userSchema.statics.getUserById = async function(userId) {
+  const user = await this.findOne({ id: userId });
+  return user;
+}
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
