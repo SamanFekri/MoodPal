@@ -2,9 +2,8 @@
 
 MoodPal is your personal mood tracking companion on Telegram that helps you understand and monitor your emotional well-being over time. With an intuitive interface and powerful features, MoodPal makes emotional self-awareness simple and engaging.
 
-### Creator's Current Mood
 <div align="center">
-<img src="https://moodpal.samanfekri.me/user/82768138/mood/animated" width="20" height="20" alt="Creator's Mood" />
+<h3 style="display: inline-block">Creator's Current Mood</h3>&nbsp;&nbsp;<img src="https://moodpal.samanfekri.me/user/82768138/mood/animated" width="64" height="64" alt="Creator's Mood" style="vertical-align: middle" />
 </div>
 
 ## 🌟 Features
