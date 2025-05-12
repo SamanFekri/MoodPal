@@ -42,5 +42,5 @@ export const moodPublicMsg = (id) => `
 <code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
 
 ✅ Emoji Mood:
-<code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji" /&gt;</code>
+<code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>
 `
