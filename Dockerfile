@@ -9,7 +9,10 @@ RUN apk add --no-cache \
   jpeg-dev \
   pango-dev \
   giflib-dev \
-  pixman-dev
+  pixman-dev \
+  fontconfig \
+  ttf-dejavu \
+  ttf-freefont
 
 # Set Python for node-gyp explicitly (optional but helps)
 ENV PYTHON=/usr/bin/python3
