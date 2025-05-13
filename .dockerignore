@@ -1,0 +1,37 @@
+# Node modules (always install fresh in container)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# OS & Editor artifacts
+.DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+
+# Git and version control
+.git
+.gitignore
+
+# Docker artifacts
+.dockerignore
+Dockerfile
+
+# Optional: Ignore test files if not needed in container
+__tests__/
+test/
+*.spec.js
+*.test.js
+
+# Optional: Ignore local environment and config files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Optional: Build artifacts
+dist/
+build/
