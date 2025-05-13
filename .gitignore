@@ -140,3 +140,6 @@ dist
 # macOS folder attributes
 .AppleDouble
 .LSOverride
+
+# folder temp
+temp/

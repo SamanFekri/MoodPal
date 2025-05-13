@@ -20,11 +20,12 @@ export const notImplementedMsg = () => `This feature is not implemented yet. Sta
 
 export const helpMsg = () => `
 Here are some commands you can use:
-/start - Start the bot and get a welcome message
-/help - Get a list of available commands
-/set_mood - Get a list of moods to choose from
-/set_private - Set your mood to private
-/set_public - Set your mood to public
+start - Start the bot and get a welcome message
+help - Get a list of available commands
+set_mood - Get a list of moods to choose from
+set_private - Set your mood to private
+set_public - Set your mood to public
+report - Get a report of your mood for the last 7 days
 `;
 
 export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
@@ -44,3 +45,9 @@ export const moodPublicMsg = (id) => `
 ✅ Emoji Mood:
 <code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>
 `
+
+export const sevenDaysReportMsg = (user) => `
+👻 Hi ${user.first_name},
+📊 Here is your mood report for the last 7 days:`
+
+
