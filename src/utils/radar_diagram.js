@@ -40,7 +40,7 @@ function aggregateMoodsFrequency(moodData) {
   // Initialize aggregated moods object with zero counts
   const aggregatedMoods = {};
   Object.keys(AGGREGATED_CATEGORY_MOODS).forEach(category => {
-    aggregatedMoods[category] = 0
+    aggregatedMoods[category] = 1 // set all categories to 1 better for the radar chart
   });
 
   // Aggregate individual mood frequencies into their respective categories
