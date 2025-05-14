@@ -6,9 +6,9 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 
-async function getSevenDaysReport(userId) {
+async function getReport(userId, days) {
   // get all the moods for this user in the last 7 days
-  const moods = await Mood.find({ user: userId, timestamp: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }).sort({ timestamp: -1 }).limit(7);
+  const moods = await Mood.find({ user: userId, timestamp: { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } }).sort({ timestamp: -1 }).limit(days);
   // aggregate the moods by the mood.code
   const aggregatedMoods = moods.reduce((acc, mood) => {
     acc[mood.mood.code] = (acc[mood.mood.code] || 0) + 1;
@@ -35,7 +35,7 @@ async function sendReport(filePath, user, ctx) {
 
 async function showReportCommand(ctx) {
   const userId = ctx.user._id;
-  const data = await getSevenDaysReport(userId);
+  const data = await getReport(userId, 7);
   const path = await generateReport(data, userId);
   await sendReport(path, ctx.user, ctx);
   fs.unlinkSync(path); // delete the file from temp folder

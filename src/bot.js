@@ -18,13 +18,10 @@ const notImplemented = require('./utils/not_implemented');
 
 // Import commands
 const startCommand = require('./commands/start');
-const setMoodCommand = require('./commands/set_mood');
+const { setMoodCommand, saveMood } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
 const { showReportCommand, sendWeeklyReport } = require('./commands/report');
-
-// Import Callbacks
-const saveMood = require('./callbacks/saveMood');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
