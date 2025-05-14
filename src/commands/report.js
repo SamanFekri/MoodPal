@@ -1,4 +1,4 @@
-const { msgs } = require('../constants');
+const { msgs, report } = require('../constants');
 const Mood = require('../models/mood');
 const User = require('../models/user');
 const { generateMoodRadarChart } = require('../utils/radar_diagram');
@@ -25,20 +25,36 @@ async function generateReport(data, userId) {
   return outputPath
 }
 
-async function sendReport(filePath, user, ctx) {
+async function sendReport(filePath, user, ctx, days) {
   await ctx.telegram.sendPhoto(user.id, {
     source: fs.createReadStream(filePath)
   }, {
-    caption: msgs.sevenDaysReportMsg(user)
+    caption: msgs.showReportMsg(user, days)
   });
 }
 
 async function showReportCommand(ctx) {
-  const userId = ctx.user._id;
-  const data = await getReport(userId, 7);
-  const path = await generateReport(data, userId);
-  await sendReport(path, ctx.user, ctx);
-  fs.unlinkSync(path); // delete the file from temp folder
+  ctx.reply(msgs.reportMsg(ctx.user), {
+    parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: report.REPORT_DAYS_INLINE_KEYBOARD
+    }
+  });
+}
+
+async function getReportCallback(ctx) {
+  try {
+    const days = parseInt(ctx.callbackQuery.data.split('_')[1], 10);
+    const userId = ctx.user._id;
+    const data = await getReport(userId, days);
+    const path = await generateReport(data, userId);
+    await sendReport(path, ctx.user, ctx, days);
+    fs.unlinkSync(path); // delete the file from temp folder
+    ctx.answerCbQuery('📊 Report sent successfully!');
+  } catch (error) {
+    console.error('Error in getReportCallback:', error);
+    ctx.answerCbQuery('Error in getReportCallback:', error);
+  }
 }
 
 async function sendWeeklyReport(ctx) {
@@ -58,7 +74,11 @@ async function sendWeeklyReport(ctx) {
   }
 }
 
+
+
+
 module.exports = {
   showReportCommand,
+  getReportCallback,
   sendWeeklyReport
 }

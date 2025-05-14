@@ -21,7 +21,7 @@ const startCommand = require('./commands/start');
 const { setMoodCommand, saveMood } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
-const { showReportCommand, sendWeeklyReport } = require('./commands/report');
+const { showReportCommand, sendWeeklyReport, getReportCallback } = require('./commands/report');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
@@ -51,6 +51,7 @@ bot.command('report', showReportCommand);
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
+bot.action(/report_/, getReportCallback);
 
 // Handle if user sends a message add a note to the last mood
 bot.on('message', handleTextMessage);

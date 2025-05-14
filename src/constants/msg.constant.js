@@ -25,7 +25,7 @@ help - Get a list of available commands
 set_mood - Get a list of moods to choose from
 set_private - Set your mood to private
 set_public - Set your mood to public
-report - Get a report of your mood for the last 7 days
+report - Get a report of your mood
 `;
 
 export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
@@ -46,8 +46,10 @@ export const moodPublicMsg = (id) => `
 <code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>
 `
 
-export const sevenDaysReportMsg = (user) => `
+export const showReportMsg = (user, days) => `
 👻 Hi ${user.first_name},
-📊 Here is your mood report for the last 7 days:`
+📊 Here is your mood report for the last ${days} days`
 
-
+export const reportMsg = (user, days) => `
+📆 Select from the following days to get your mood report:
+`
