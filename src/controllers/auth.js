@@ -51,10 +51,14 @@ const isAuthenticated = async (req, res) => {
   const isAuthenticated = isDataAuthenticated(initData, botToken);
   // parse initData url params
   const urlParams = new URLSearchParams(initData);
+  console.log("======================== 1")
   console.log(urlParams);
   // get user id from url params
   const userParams = urlParams.get('user');
+  console.log("======================== 2")
+  console.log(userParams);
   const userParamsObj = JSON.parse(userParams);
+  console.log("======================== 3")
   console.log(userParamsObj);
   // get user id from userParamsObj
   const USER_ID = userParamsObj.id;
