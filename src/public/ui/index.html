@@ -28,14 +28,17 @@
       <div v-if="loadingFriends" class="text-center text-gray-600 dark:text-gray-400 py-8">
         <p class="text-lg">Fetching your friends...</p>
       </div>
-      <div v-else-if="friends.length > 0" class="flex flex-wrap justify-center">
-        <div class="flex flex-wrap justify-around">
+      <div v-else-if="friends.length > 0" class="flex flex-wrap justify-center w-full">
+        <div class="flex flex-wrap justify-around w-full">
           <div v-for="friend in friends" :key="friend.id" class="flex justify-center w-1/2 md:w-1/4 mb-4">
             <div
               class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
               <img :src="friend.image" :alt="friend.name" class="w-24 h-24 object-cover rounded-none mb-2">
-              <a href="friend.link"><strong class="text-lg text-gray-900 dark:text-white">{{ friend.fullname
-                  }}</strong></a>
+              <a :href="friend.link">
+                <strong class="text-lg text-gray-900 dark:text-white">
+                  {{ friend.fullname }}
+                </strong>
+              </a>
             </div>
           </div>
         </div>
@@ -51,7 +54,6 @@
         <p class="text-gray-600 dark:text-gray-400">Please use telegram miniapp to see your friends' moods.</p>
       </div>
     </template>
-    {{ friends }}
   </div>
 
 
