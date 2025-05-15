@@ -22,6 +22,7 @@ const { setMoodCommand, saveMood } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
 const { showReportCommand, sendWeeklyReport, getReportCallback } = require('./commands/report');
+const { createShareLinkCommand, shareCallback } = require('./commands/share');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
@@ -48,11 +49,12 @@ bot.command('history', notImplemented);
 bot.command('set_private', setVisibilityCommand.setMoodPrivate);
 bot.command('set_public', setVisibilityCommand.setMoodPublic);
 bot.command('report', showReportCommand);
+bot.command('share', createShareLinkCommand);
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
-
+bot.action(/share_/, shareCallback);
 // Handle if user sends a message add a note to the last mood
 bot.on('message', handleTextMessage);
 
