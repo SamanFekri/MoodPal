@@ -1,7 +1,5 @@
 import 'dotenv/config';
 
-
-
 export const chooseMoodMsg = () => `It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:`;
 
 export const notImplementedMsg = () => `This feature is not implemented yet. Stay tuned for updates!`;
