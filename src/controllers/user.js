@@ -9,8 +9,9 @@ const getFollowings = async (req, res) => {
   const followingsWithLastMood = await Promise.all(followings.map(async (following) => {
     let lastMood = await Mood.getLastMood(following.followed._id);
     let temp = {
-      fullname: `${following.followed.first_name} ${following.followed.last_name}`.trim(),
-      img: `/public/moods/${lastMood.mood.code}.webp`,
+      fullname: [following.followed.first_name, following.followed.last_name].filter(Boolean).join(' '),
+      link: `tg://user?id=${following.followed.id}`,
+      image: `/public/moods/${lastMood.mood.code}.webp`,
       ...lastMood._doc
     }
     return temp;
