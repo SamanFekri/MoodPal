@@ -1,5 +1,22 @@
 import 'dotenv/config';
 
+
+
+export const chooseMoodMsg = () => `It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:`;
+
+export const notImplementedMsg = () => `This feature is not implemented yet. Stay tuned for updates!`;
+
+export const helpMsg = () => `
+Here are some commands you can use:
+/start - Start the bot and get a welcome message
+/help - Get a list of available commands
+/set_mood - Get a list of moods to choose from
+/set_private - Set your mood to private
+/set_public - Set your mood to public
+/report - Get a report of your mood
+/share - Share a link so your friends can see your moods
+`;
+
 export const welocmeMsg = (name) => `
 Hi ${name},
 Welcome to Mood Pal — your personal mood tracker.
@@ -11,23 +28,10 @@ Mood Pal helps you visualize how your <i>mood</i> changes over time, giving you 
 
 Join our channel to get daily reminders to check in and track your mood
 @${process.env.MAIN_CHANNEL_USERNAME}
+
+${helpMsg()}
 `;
 
-
-export const chooseMoodMsg = () => `It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:`;
-
-export const notImplementedMsg = () => `This feature is not implemented yet. Stay tuned for updates!`;
-
-export const helpMsg = () => `
-Here are some commands you can use:
-start - Start the bot and get a welcome message
-help - Get a list of available commands
-set_mood - Get a list of moods to choose from
-set_private - Set your mood to private
-set_public - Set your mood to public
-report - Get a report of your mood
-share - Share a link so your friends can see your moods
-`;
 
 export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
 export const addNoteMsg = () => `📝 Now you can add a note to your mood. Please type your note below:`
