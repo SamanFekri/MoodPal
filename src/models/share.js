@@ -52,10 +52,14 @@ shareSchema.statics.enableShare = async function (follower, followed) {
   }
 };
 
-shareSchema.statics.getShares = async function (followed) {
+shareSchema.statics.getFollowers = async function (followed) {
   const shares = await this.find({ followed }).populate('follower');
   return shares;
 };
 
+shareSchema.statics.getFollowings = async function (follower) {
+  const shares = await this.find({ follower }).populate('followed');
+  return shares;
+};
 
 module.exports = mongoose.model('Share', shareSchema);
