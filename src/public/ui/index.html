@@ -1,51 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Telegram Mini App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Pal</title>
+  <link rel="icon" type="image/jpeg" href="/public/logo.jpeg">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Helvetica&display=swap" rel="stylesheet">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      margin-top: 100px;
-    }
-
-    #not-telegram {
-      display: none;
-      color: red;
-      font-size: 18px;
-    }
-
-    #main-content {
-      display: none;
+      font-family: 'Helvetica', Arial, sans-serif;
     }
   </style>
 </head>
 
-<body>
-  <div id="not-telegram">You must open this app inside Telegram to use it.</div>
+<body class="bg-white dark:bg-gray-900">
+  <div id="app" class="container mx-auto p-6">
+    <template v-if="isAuthenticated">
+      <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">Find Friends' Mood</h1>
 
-  <div id="main-content">
-    <h1>Welcome to My Mini App</h1>
-    <div id="user-info">Loading user info...</div>
+      <div v-if="loadingFriends" class="text-center text-gray-600 dark:text-gray-400 py-8">
+        <p class="text-lg">Fetching your friends...</p>
+      </div>
+      <div v-else-if="friends.length > 0" class="flex flex-wrap justify-center">
+        <div class="flex flex-wrap justify-around">
+          <div v-for="friend in friends" :key="friend.id" class="flex justify-center w-1/2 md:w-1/4 mb-4">
+            <div
+              class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
+              <img :src="friend.image" :alt="friend.name" class="w-24 h-24 object-cover rounded-none mb-2">
+              <strong class="text-lg text-gray-900 dark:text-white">{{ friend.name }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="text-center text-gray-600 dark:text-gray-400 py-8">
+        <p class="text-lg">It seems your friend list is currently empty.</p>
+        <p class="text-sm">Start connecting with people to see their moods!</p>
+      </div>
+    </template>
+    <template v-else>
+      <div class="text-center py-12">
+        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Authentication Required</h2>
+        <p class="text-gray-600 dark:text-gray-400">Please use telegram miniapp to see your friends' moods.</p>
+      </div>
+    </template>
   </div>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      const tg = window.Telegram?.WebApp;
+    const { createApp } = Vue;
 
-      if (!tg || !tg.initDataUnsafe?.user) {
-        document.getElementById("not-telegram").style.display = "block";
-        return;
+    createApp({
+      data() {
+        return {
+          isAuthenticated: false,
+          loadingFriends: false,
+          friends: [],
+          tg: null,
+          userId: null
+        }
+      },
+      async mounted() {
+        this.tg = window.Telegram?.WebApp
+        if (!this.tg) {
+          return
+        }
+
+        // Simulate an API call for authentication
+        try {
+          const response = await axios.post(`/auth`, { initData: this.tg.initData });
+          if (response.data.authenticated) {
+            this.isAuthenticated = true;
+            this.userId = response.data.userId;
+            this.fetchFriends();
+          } else {
+            this.isAuthenticated = false;
+          }
+        } catch (error) {
+          console.error("Authentication failed:", error);
+          this.isAuthenticated = false;
+        }
+      },
+      methods: {
+        async fetchFriends() {
+          try {
+            this.loadingFriends = true;
+            const response = await axios.get(`/user/${this.userId}/followings`);
+            this.friends = response.data;
+            this.loadingFriends = false;
+          } catch (error) {
+            console.error("Get Followings failed:", error);
+          }
+        }
       }
-
-      tg.ready();
-      const user = tg.initDataUnsafe.user;
-      document.getElementById("main-content").style.display = "block";
-      document.getElementById("user-info").innerText =
-        `Hello, ${user.first_name} (@${user.username || "no username"})!`;
-    });
+    }).mount('#app');
   </script>
 </body>
 

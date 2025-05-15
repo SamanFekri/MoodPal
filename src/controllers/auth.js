@@ -1,4 +1,5 @@
 const crypto = require('crypto-js');
+const User = require('../models/user');
 
 /**
  * Validates if Telegram WebApp data is authentic (Node.js version)
@@ -43,14 +44,15 @@ function isDataAuthenticated(initData, botToken) {
   }
 }
 
-const isAuthenticated = (req, res) => {
+const isAuthenticated = async (req, res) => {
   // request body is a json object with a key initData
-  console.log(req);
   const initData = req.body.initData;
   const botToken = process.env.BOT_TOKEN;
   const isAuthenticated = isDataAuthenticated(initData, botToken);
+  const USER_ID = initData.split("user=")[1].split("&")[0];
+  let user = await User.findOne({ id: USER_ID });
   // as a response send isAuthenticated
-  res.json({ authenticated: isAuthenticated });
+  res.json({ authenticated: isAuthenticated, userId:   user._id});
 }
 module.exports = {
   isAuthenticated
