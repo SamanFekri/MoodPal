@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Telegram Mini App</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 100px;
+    }
+
+    #not-telegram {
+      display: none;
+      color: red;
+      font-size: 18px;
+    }
+
+    #main-content {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="not-telegram">You must open this app inside Telegram to use it.</div>
+
+  <div id="main-content">
+    <h1>Welcome to My Mini App</h1>
+    <div id="user-info">Loading user info...</div>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const tg = window.Telegram?.WebApp;
+
+      if (!tg || !tg.initDataUnsafe?.user) {
+        document.getElementById("not-telegram").style.display = "block";
+        return;
+      }
+
+      tg.ready();
+      const user = tg.initDataUnsafe.user;
+      document.getElementById("main-content").style.display = "block";
+      document.getElementById("user-info").innerText =
+        `Hello, ${user.first_name} (@${user.username || "no username"})!`;
+    });
+  </script>
+</body>
+
+</html>

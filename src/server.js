@@ -45,7 +45,7 @@ app.get('/user/:userId/mood/animated', async (req, res) => {
     const moodCode = lastMood.mood.code;
     const moodFilePath = path.join(__dirname, 'public', 'moods', `${moodCode}.webp`);
     res.sendFile(moodFilePath);
-    
+
   } catch (error) {
     console.error('Error fetching mood:', error);
     let httpCode = error.httpCode || 500;
@@ -64,6 +64,10 @@ app.get('/user/:userId/mood/emoji', async (req, res) => {
     let httpCode = error.httpCode || 500;
     res.status(httpCode).json({ error: error.message });
   }
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ui', 'index.html'));
 });
 
 // make a function listen server so bot can use it
