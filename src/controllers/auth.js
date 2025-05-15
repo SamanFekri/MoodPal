@@ -52,8 +52,14 @@ const isAuthenticated = async (req, res) => {
   // parse initData url params
   const urlParams = new URLSearchParams(initData);
   console.log(urlParams);
-  const USER_ID = urlParams.get('user');
+  // get user id from url params
+  const userParams = urlParams.get('user');
+  const userParamsObj = JSON.parse(userParams);
+  console.log(userParamsObj);
+  // get user id from userParamsObj
+  const USER_ID = userParamsObj.id;
   let user = await User.findOne({ id: USER_ID });
+
   // as a response send isAuthenticated
   res.json({ authenticated: isAuthenticated, userId: user._id });
 }
