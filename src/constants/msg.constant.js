@@ -26,6 +26,7 @@ set_mood - Get a list of moods to choose from
 set_private - Set your mood to private
 set_public - Set your mood to public
 report - Get a report of your mood
+share - Share a link so your friends can see your moods
 `;
 
 export const noMoodMsg = () => `😔 You haven't set a mood yet. Use /set_mood to set your mood. 🤩`;
