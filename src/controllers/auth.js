@@ -49,10 +49,13 @@ const isAuthenticated = async (req, res) => {
   const initData = req.body.initData;
   const botToken = process.env.BOT_TOKEN;
   const isAuthenticated = isDataAuthenticated(initData, botToken);
-  const USER_ID = initData.split("user=")[1].split("&")[0];
+  // parse initData url params
+  const urlParams = new URLSearchParams(initData);
+  console.log(urlParams);
+  const USER_ID = urlParams.get('user');
   let user = await User.findOne({ id: USER_ID });
   // as a response send isAuthenticated
-  res.json({ authenticated: isAuthenticated, userId:   user._id});
+  res.json({ authenticated: isAuthenticated, userId: user._id });
 }
 module.exports = {
   isAuthenticated
