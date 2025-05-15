@@ -53,12 +53,14 @@ shareSchema.statics.enableShare = async function (follower, followed) {
 };
 
 shareSchema.statics.getFollowers = async function (followed) {
-  const shares = await this.find({ followed }).populate('follower');
+  // if disable is false
+  const shares = await this.find({ followed, disabled: false }).populate('follower');
   return shares;
 };
 
 shareSchema.statics.getFollowings = async function (follower) {
-  const shares = await this.find({ follower }).populate('followed');
+  // if disable is false  
+  const shares = await this.find({ follower, disabled: false }).populate('followed');
   return shares;
 };
 
