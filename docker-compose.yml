@@ -4,6 +4,7 @@ services:
     network_mode: host
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_USERNAME=${BOT_USERNAME}
       - MONGODB_URI=${MONGODB_URI}
       - OLAF_CHANNEL_ID=${OLAF_CHANNEL_ID}
       - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
