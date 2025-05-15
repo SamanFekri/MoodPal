@@ -32,6 +32,9 @@ app.post('/auth', controllers.auth.isAuthenticated);
 
 app.get('/user/:userId/followings', controllers.user.getFollowings);
 
+// allow all requests to /public
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // make a function listen server so bot can use it
 const listenServer = async () => {
   try {

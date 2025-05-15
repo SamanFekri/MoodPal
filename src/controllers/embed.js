@@ -34,7 +34,7 @@ const animatedMood = async (req, res) => {
     const lastMood = await getMoodOfUser(userId);
     // with the mood code pass webp in the public file
     const moodCode = lastMood.mood.code;
-    const moodFilePath = path.join(__dirname, 'public', 'moods', `${moodCode}.webp`);
+    const moodFilePath = path.join(__dirname, '..', 'public', 'moods', `${moodCode}.webp`);
     res.sendFile(moodFilePath);
 
   } catch (error) {
