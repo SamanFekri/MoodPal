@@ -9,8 +9,26 @@ MoodPal is your personal mood tracking companion on Telegram that helps you unde
 ## 🌟 Features
 
 ### Core Features
-- **Mood Tracking**: Select your mood from a diverse range of emojis and descriptions
-- **Daily Reminders**: Customizable notifications to help you maintain consistent tracking
+- **Mood Tracking**: Select your mood from a diverse range of emojis (18 different moods) and descriptions
+- **Daily Reminders**: notifications to help you maintain consistent tracking
+- **Mood Notes**: Add personal context to each mood entry
+- **Privacy Controls**: Toggle between public and private mood visibility
+
+### Analytics & Insights
+- **Mood Radar**: Visual representation of your emotional patterns using radar charts
+- **Time-based Reports**: Analyze your mood patterns over different time periods
+- **Mood Categories**: Smart categorization of moods into 6 main categories:
+  - Positive (Happy, Relaxed, Excited)
+  - Motivated (Motivated, Naughty, Confused)
+  - Anxious (Anxious, Overthinking, Nervous)
+  - Negative (Disappointed, Sad, Overwhelmed)
+  - Drained (Tired, Sick, Angry)
+  - Calm (Neutral, Uncertain, Bored)
+
+### Social Features
+- **Mood Sharing**: Share your mood updates with friends
+- **Follow System**: Connect with and follow other users' mood journeys
+- **Community Channel**: Join the MoodPals community for support and interaction
 
 ### Embed Your Mood
 Want to display your current mood on your website or blog? Use our animated mood display:
@@ -22,10 +40,11 @@ To get your personal embed code:
 2. Send the `/set_public` command
 3. The bot will provide you with your personalized embed code ready to use
 
-Simply paste the provided code into your website or blog to get a live, animated representation of your current mood state!
+Available embed options:
+- **Animated Mood**: Dynamic WebP animation of your current mood
+- **Emoji Display**: Simple emoji representation of your mood state
 
-### Advanced Features
-- **Mood Notes**: Add context to your mood entries with personal notes
+Simply paste the provided code into your website or blog to get a live representation of your current mood state!
 
 ## 🛠 Technical Stack
 - **Bot Framework**: Built with Telegraf.js for reliable Telegram integration
