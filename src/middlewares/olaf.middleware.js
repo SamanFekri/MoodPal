@@ -5,7 +5,7 @@ const Cache = require('../utils/cache'); // Assuming you have a Cache utility
 const cache = new Cache(1000 * 60 * 60);
 
 const olafCaption = (user) => `
-👤 ${user.first_name} ${user.last_name}
+${user.first_name || user.last_name ? `👤 ${user.first_name || ''} ${user.last_name || ''}`.trim() : ''}
 🫆 <code>${user.id}</code>
 ${user.username ? `🆔 @${user.username}` : ''}`
 
@@ -61,4 +61,4 @@ const olafMiddleware = async (ctx, next) => {
   next();
 };
 
-module.exports = olafMiddleware;``
+module.exports = olafMiddleware;

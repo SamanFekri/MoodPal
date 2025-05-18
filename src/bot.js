@@ -12,6 +12,7 @@ const { MOOD_INLINE_KEYBOARD, msgs } = require('./constants');
 // Import middlewares
 const saveUserMiddleware = require('./middlewares/user.middleware');
 const olafMiddleware = require('./middlewares/olaf.middleware');
+const joinMiddleware = require('./middlewares/join.middleware');
 
 // Not implemented
 const notImplemented = require('./utils/not_implemented');
@@ -40,6 +41,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 // Middleware to save user data
 bot.use(saveUserMiddleware);
 bot.use(olafMiddleware);
+bot.use(joinMiddleware);
 
 // Set up commands
 bot.command('start', startCommand);
