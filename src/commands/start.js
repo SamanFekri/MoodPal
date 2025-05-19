@@ -14,8 +14,8 @@ module.exports = async (ctx) => {
             break;
           }
           // if you already shared your mood, don't ask for it again
-          const share = await Share.findOne({ follower: ctx.user._id, followed: followed._id, disabled: false });
-          if (share) {
+          const isShared = await Share.findOne({ follower: ctx.user._id, followed: followed._id, disabled: false });
+          if (isShared) {
             await ctx.reply(msgs.hasAlreadySharedMsg(followed), { parse_mode: 'HTML' });
             return;
           }
