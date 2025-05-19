@@ -17,6 +17,10 @@ const joinButton = {
 const joinMiddleware = async (ctx, next) => {
   // Call next() first to continue the middleware chain
   next();
+  // if chat id is the main channel, return
+  if (ctx.chat.id === process.env.MAIN_CHANNEL_ID) {
+    return;
+  }
 
   try {
     const c = cache.get(ctx.from.id);

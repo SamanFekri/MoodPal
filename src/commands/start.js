@@ -13,13 +13,6 @@ module.exports = async (ctx) => {
           if (followed.id === ctx.user.id) {
             break;
           }
-          // check if the followed user has allowed the user to see their mood
-          const share = await Share.findOne({ follower: ctx.user.id, followed: followed.id, disabled: false });
-          // if share found, answer that the user has allowed the user to see their mood
-          if (share) {
-            await ctx.reply(msgs.hasAlreadySharedMsg(followed), { parse_mode: 'HTML' });
-            return;
-          }
           await ctx.telegram.sendMessage(
             followed.id,
             msgs.askForShareMoodMsg(ctx.user),
