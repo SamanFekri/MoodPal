@@ -14,12 +14,12 @@ module.exports = async (ctx) => {
             break;
           }
           // if you already shared your mood, don't ask for it again
-          const share = await Share.findOne({ follower: ctx.user.id, followed: followed.id, disabled: false });
+          const share = await Share.findOne({ follower: ctx.user._id, followed: followed._id, disabled: false });
           if (share) {
             await ctx.reply(msgs.hasAlreadySharedMsg(followed), { parse_mode: 'HTML' });
             return;
           }
-          
+
           await ctx.telegram.sendMessage(
             followed.id,
             msgs.askForShareMoodMsg(ctx.user),
