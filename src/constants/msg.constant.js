@@ -64,8 +64,9 @@ export const createShareLinkMsg = (user) => `
 
 🔗 <code>https://t.me/${process.env.BOT_USERNAME}?start=sm-${user._id}</code>
 `
-export const askForShareMoodMsg = (follower) => `👀 ${follower.first_name}  wants to see your mood.`
+export const askForShareMoodMsg = (follower) => `👀 ${follower.first_name} wants to see your mood.`
 export const waitingForShareMsg = (follower) => `👀 Waiting for ${follower.first_name} to allow you to see their mood.`
 export const shareAllowedMsg = (follower) => `👀 Now ${follower.first_name} can see your mood.`
 export const sharePermissionGrantedMsg = (followed) => `✅ ${followed.first_name} has allowed you to see their mood.`
+export const hasAlreadySharedMsg = (followed) => `🤩 ${followed.first_name} has already shared their mood with you.`
 export const rejectShareMsg = (follower) => `❌ You have rejected ${follower.first_name}'s request to see your mood.`
