@@ -64,13 +64,17 @@ async function sendWeeklyReport(ctx) {
   const users = await User.find({ _id: { $in: distinctUsers } });
   // send report to each user
   for (const user of users) {
-    let userId = user._id;
-    const data = await getReport(userId, 7);
-    const path = await generateReport(data, userId);
-    await sendReport(path, user, ctx, 7);
-    fs.unlinkSync(path); // delete the file from temp folder
-    // wait 1 second
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      let userId = user._id;
+      const data = await getReport(userId, 7);
+      const path = await generateReport(data, userId);
+      await sendReport(path, user, ctx, 7);
+      fs.unlinkSync(path); // delete the file from temp folder
+      // wait 5 second
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    } catch (error) {
+      console.error('Error in sendWeeklyReport:', error);
+    }
   }
 }
 
