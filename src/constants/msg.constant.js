@@ -48,6 +48,7 @@ export const moodPublicMsg = (id) => `
 ✅ Animated TGS Mood:
 Load the script before using the mood-pal tag
 <code>&lt;script src="${process.env.SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;</code>
+
 Add this to your HTML body to embed
 <code>&lt;mood-pal src="${process.env.SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;</code>
 
