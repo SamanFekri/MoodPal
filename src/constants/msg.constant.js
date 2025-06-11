@@ -42,8 +42,16 @@ export const moodPublicMsg = (id) => `
 
 👨🏻‍💻 You can add this to your website to share your mood.
 
-✅ Animated Mood:
+✅ Animated WebP Mood:
 <code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
+
+✅ Animated TGS Mood:
+<code>
+// Add this script in your HTML header
+&lt;script src="${process.env.SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;
+
+&lt;mood-pal src="${process.env.SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;
+</code>
 
 ✅ Emoji Mood:
 <code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>

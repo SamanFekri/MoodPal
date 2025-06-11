@@ -65,6 +65,8 @@ To get your personal embed code:
 
 Available embed options:
 - **Animated Mood**: Dynamic (WebP, TGS) animation of your current mood
+  - WebP: Traditional animated image format
+  - TGS: Lightweight Telegram sticker format (recommended)
 - **Emoji Display**: Simple emoji representation of your mood state
 
 Simply paste the provided code into your website or blog to get a live representation of your current mood state!
