@@ -44,6 +44,9 @@
     }
 
     TgsPlayer.prototype.load = async function () {
+      // Clear any existing content
+      this.container.innerHTML = '';
+
       const response = await fetch(this.tgsUrl);
       if (!response.ok) throw new Error(`Failed to load ${this.tgsUrl}`);
 
@@ -64,6 +67,10 @@
       if (this.animation) {
         this.animation.destroy();
         this.animation = null;
+      }
+      // Clear the container
+      if (this.container) {
+        this.container.innerHTML = '';
       }
     };
 
