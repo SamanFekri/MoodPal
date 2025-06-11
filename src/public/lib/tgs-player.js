@@ -84,7 +84,7 @@
           container.className = this.getAttribute('class');
         }
         this.shadowRoot.appendChild(container);
-        this.player = new TgsPlayer(container, this.getAttribute('src'));
+        // this.player = new TgsPlayer(container, this.getAttribute('src'));
       }
 
       connectedCallback() {
