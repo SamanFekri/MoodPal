@@ -47,6 +47,8 @@ const animatedMood = async (req, res) => {
 const tgsMood = async (req, res) => {
   const userId = req.params.userId;
   try {
+    const lastMood = await getMoodOfUser(userId);
+    // with the mood code pass tgs in the public file
     const moodCode = lastMood.mood.code;
     const moodFilePath = path.join(__dirname, '..', 'public', 'tgs', `${moodCode}.tgs`);
     res.sendFile(moodFilePath);
