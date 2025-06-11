@@ -99,7 +99,7 @@
       }
 
       async attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'src' && oldValue !== newValue) {
+        if (name === 'data-src' && oldValue !== newValue) {
           this.player.destroy();
           this.player.tgsUrl = newValue;
           await this.player.load();
