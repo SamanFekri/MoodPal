@@ -46,12 +46,10 @@ export const moodPublicMsg = (id) => `
 <code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
 
 ✅ Animated TGS Mood:
-<code>
-// Add this script in your HTML header
-&lt;script src="${process.env.SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;
-
-&lt;mood-pal src="${process.env.SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;
-</code>
+Load the script before using the mood-pal tag
+<code>&lt;script src="${process.env.SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;</code>
+Add this to your HTML body to embed
+<code>&lt;mood-pal src="${process.env.SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;</code>
 
 ✅ Emoji Mood:
 <code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>
