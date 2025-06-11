@@ -83,7 +83,7 @@
           container.className = this.getAttribute('class');
         }
         this.shadowRoot.appendChild(container);
-        this.player = new TgsPlayer(container, this.getAttribute('src'));
+        this.player = new TgsPlayer(container, this.getAttribute('data-src'));
       }
 
       connectedCallback() {
@@ -95,7 +95,7 @@
       }
 
       static get observedAttributes() {
-        return ['src', 'class'];
+        return ['data-src', 'class'];
       }
 
       async attributeChangedCallback(name, oldValue, newValue) {
