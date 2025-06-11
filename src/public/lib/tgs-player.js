@@ -83,7 +83,7 @@
           container.className = this.getAttribute('class');
         }
         this.shadowRoot.appendChild(container);
-        this.player = new TgsPlayer(container, this.getAttribute('data-src'));
+        this.player = new TgsPlayer(container, this.getAttribute('src'));
       }
 
       connectedCallback() {
@@ -95,14 +95,14 @@
       }
 
       static get observedAttributes() {
-        return ['data-src', 'class'];
+        return ['src', 'class'];
       }
 
       async attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'data-src' && oldValue !== newValue) {
+        if (name === 'src' && oldValue !== newValue) {
           this.player.destroy();
           this.player.tgsUrl = newValue;
-          await this.player.load();
+          // await this.player.load();
         } else if (name === 'class' && oldValue !== newValue) {
           this.shadowRoot.firstElementChild.className = newValue;
         }
