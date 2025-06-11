@@ -43,6 +43,20 @@ const animatedMood = async (req, res) => {
     res.status(httpCode).json({ error: error.message });
   }
 }
+
+const tgsMood = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const moodCode = lastMood.mood.code;
+    const moodFilePath = path.join(__dirname, '..', 'public', 'tgs', `${moodCode}.tgs`);
+    res.sendFile(moodFilePath);
+  } catch (error) {
+    console.error('Error fetching mood:', error);
+    let httpCode = error.httpCode || 500;
+    res.status(httpCode).json({ error: error.message });
+  }
+}
+
 const emojiMood = async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -58,5 +72,6 @@ const emojiMood = async (req, res) => {
 
 module.exports = {
   animatedMood,
-  emojiMood
+  emojiMood,
+  tgsMood
 }

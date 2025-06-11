@@ -67,6 +67,47 @@
       }
     };
 
+    // Define custom element
+    class TgsElement extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        const container = document.createElement('div');
+        if (this.hasAttribute('class')) {
+          container.className = this.getAttribute('class');
+        }
+        this.shadowRoot.appendChild(container);
+        this.player = new TgsPlayer(container, this.getAttribute('src'));
+      }
+
+      connectedCallback() {
+        this.player.load();
+      }
+
+      disconnectedCallback() {
+        this.player.destroy();
+      }
+
+      static get observedAttributes() {
+        return ['src', 'class'];
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'src' && oldValue !== newValue) {
+          this.player.destroy();
+          this.player = new TgsPlayer(this.shadowRoot.firstElementChild, newValue);
+          this.player.load();
+        } else if (name === 'class' && oldValue !== newValue) {
+          this.shadowRoot.firstElementChild.className = newValue;
+        }
+      }
+    }
+
+    // Register custom element
+    if (!customElements.get('moodpal')) {
+      customElements.define('moodpal', TgsElement);
+    }
+
     // Expose globally
     global.TgsPlayer = TgsPlayer;
   });

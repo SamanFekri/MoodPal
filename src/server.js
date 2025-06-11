@@ -21,6 +21,7 @@ const HOST = process.env.SERVER_HOST || 'localhost';
 
 // Route to handle /user/<user-id>/mood/animated
 app.get('/user/:userId/mood/animated', controllers.embed.animatedMood);
+app.get('/user/:userId/mood/tgs', controllers.embed.tgsMood);
 
 app.get('/user/:userId/mood/emoji', controllers.embed.emojiMood);
 
