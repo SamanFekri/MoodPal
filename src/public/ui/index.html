@@ -12,7 +12,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Helvetica&display=swap" rel="stylesheet">
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <script src="/public/lib/tgs-player.js"></script>
   <style>
     body {
       font-family: 'Helvetica', Arial, sans-serif;
@@ -31,15 +34,26 @@
       <div v-else-if="friends.length > 0" class="flex flex-wrap justify-center w-full">
         <div class="flex flex-wrap justify-around w-full">
           <div v-for="friend in friends" :key="friend.id" class="flex justify-center w-1/2 md:w-1/4 mb-4">
-            <div
+            <!-- <div
               class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
               <img :src="friend.image" :alt="friend.name" class="w-24 h-24 object-cover rounded-none mb-2">
               <a :href="friend.link" target="_blank">
-                <strong class="text-lg text-gray-900 dark:text-white">
+                <strong class="text-sm text-gray-900 dark:text-white">
+                  {{ friend.fullname }}
+                </strong>
+              </a>
+            </div> -->
+
+            <div
+              class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
+              <div :id="`tgs-${friend.user.id}`" class="w-24 h-24 rounded-none mb-2"></div>
+              <a :href="friend.link" target="_blank">
+                <strong class="text-sm text-gray-900 dark:text-white">
                   {{ friend.fullname }}
                 </strong>
               </a>
             </div>
+
           </div>
         </div>
       </div>
@@ -97,7 +111,15 @@
             this.loadingFriends = true;
             const response = await axios.get(`/user/${this.userId}/followings`);
             this.friends = response.data;
+
             this.loadingFriends = false;
+            // sleep for 1 second
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // for each friend, load the tgs animation
+            this.friends.forEach(friend => {
+              const tgsPlayer = new TgsPlayer(`#tgs-${friend.user.id}`, friend.tgs);
+              tgsPlayer.load();
+            });
           } catch (error) {
             console.error("Get Followings failed:", error);
           }

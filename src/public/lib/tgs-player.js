@@ -1,0 +1,73 @@
+// tgs-player.js
+// Minimal TGS player lib using lottie-web and pako
+
+(function (global) {
+  // Check dependencies and load them if not present
+  const loadDependency = (src) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  const loadDependencies = async () => {
+    const promises = [];
+    if (!global.lottie) {
+      promises.push(loadDependency('https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js'));
+    }
+    if (!global.pako) {
+      promises.push(loadDependency('https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js'));
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  };
+
+  // Initialize the player after dependencies are loaded
+  loadDependencies().then(() => {
+    console.log('TgsPlayer loaded');
+
+    function TgsPlayer(container, tgsUrl, options = {}) {
+      if (typeof container === "string") {
+        container = document.querySelector(container);
+      }
+      if (!container) {
+        throw new Error("Container element not found");
+      }
+      this.container = container;
+      this.tgsUrl = tgsUrl;
+      this.options = options;
+      this.animation = null;
+    }
+
+    TgsPlayer.prototype.load = async function () {
+      const response = await fetch(this.tgsUrl);
+      if (!response.ok) throw new Error(`Failed to load ${this.tgsUrl}`);
+
+      const buffer = await response.arrayBuffer();
+      const decompressedStr = pako.inflate(new Uint8Array(buffer), { to: "string" });
+      const animationData = JSON.parse(decompressedStr);
+
+      this.animation = lottie.loadAnimation({
+        container: this.container,
+        renderer: this.options.renderer || "svg",
+        loop: this.options.loop !== undefined ? this.options.loop : true,
+        autoplay: this.options.autoplay !== undefined ? this.options.autoplay : true,
+        animationData,
+      });
+    };
+
+    TgsPlayer.prototype.destroy = function () {
+      if (this.animation) {
+        this.animation.destroy();
+        this.animation = null;
+      }
+    };
+
+    // Expose globally
+    global.TgsPlayer = TgsPlayer;
+  });
+})(window);
