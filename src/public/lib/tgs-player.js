@@ -101,6 +101,7 @@
 
       attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'src' && oldValue !== newValue) {
+          console.log('src changed here');
           this.player.destroy();
           this.player = new TgsPlayer(this.shadowRoot.firstElementChild, newValue);
           this.player.load();
