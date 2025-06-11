@@ -87,7 +87,7 @@
       }
 
       connectedCallback() {
-        this.player.load();
+        // this.player.load();
       }
 
       disconnectedCallback() {
@@ -102,7 +102,7 @@
         if (name === 'src' && oldValue !== newValue) {
           this.player.destroy();
           this.player.tgsUrl = newValue;
-          // await this.player.load();
+          await this.player.load();
         } else if (name === 'class' && oldValue !== newValue) {
           this.shadowRoot.firstElementChild.className = newValue;
         }
