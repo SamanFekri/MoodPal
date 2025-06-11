@@ -104,8 +104,8 @@
     }
 
     // Register custom element
-    if (!customElements.get('moodpal')) {
-      customElements.define('moodpal', TgsElement);
+    if (!customElements.get('mood-pal')) {
+      customElements.define('mood-pal', TgsElement);
     }
 
     // Expose globally
