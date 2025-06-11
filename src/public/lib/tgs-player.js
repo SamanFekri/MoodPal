@@ -88,11 +88,15 @@
       }
 
       connectedCallback() {
-        this.player.load();
+        if (this.player) {
+          this.player.load();
+        }
       }
 
       disconnectedCallback() {
-        this.player.destroy();
+        if (this.player) {
+          this.player.destroy();
+        }
       }
 
       static get observedAttributes() {
@@ -102,7 +106,9 @@
       attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'src' && oldValue !== newValue) {
           console.log('src changed here');
-          this.player.destroy();
+          if (this.player) {
+            this.player.destroy();
+          }
           this.player = new TgsPlayer(this.shadowRoot.firstElementChild, newValue);
           this.player.load();
         } else if (name === 'class' && oldValue !== newValue) {
