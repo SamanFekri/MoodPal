@@ -68,7 +68,6 @@
         this.animation.destroy();
         this.animation = null;
       }
-      // Clear the container
       if (this.container) {
         this.container.innerHTML = '';
       }
@@ -84,33 +83,26 @@
           container.className = this.getAttribute('class');
         }
         this.shadowRoot.appendChild(container);
-        // this.player = new TgsPlayer(container, this.getAttribute('src'));
+        this.player = new TgsPlayer(container, this.getAttribute('src'));
       }
 
       connectedCallback() {
-        if (this.player) {
-          this.player.load();
-        }
+        this.player.load();
       }
 
       disconnectedCallback() {
-        if (this.player) {
-          this.player.destroy();
-        }
+        this.player.destroy();
       }
 
       static get observedAttributes() {
         return ['src', 'class'];
       }
 
-      attributeChangedCallback(name, oldValue, newValue) {
+      async attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'src' && oldValue !== newValue) {
-          console.log('src changed here');
-          if (this.player) {
-            this.player.destroy();
-          }
-          this.player = new TgsPlayer(this.shadowRoot.firstElementChild, newValue);
-          this.player.load();
+          this.player.destroy();
+          this.player.tgsUrl = newValue;
+          await this.player.load();
         } else if (name === 'class' && oldValue !== newValue) {
           this.shadowRoot.firstElementChild.className = newValue;
         }
