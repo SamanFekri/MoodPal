@@ -22,7 +22,7 @@ const startCommand = require('./commands/start');
 const { setMoodCommand, saveMood } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
-const { showReportCommand, sendWeeklyReport, getReportCallback } = require('./commands/report');
+const { showReportCommand, sendWeeklyReport, getReportCallback, generateYearlyWeeklyReportVideo } = require('./commands/report');
 const { createShareLinkCommand, shareCallback } = require('./commands/share');
 
 // Import actions
@@ -53,10 +53,59 @@ bot.command('set_public', setVisibilityCommand.setMoodPublic);
 bot.command('report', showReportCommand);
 bot.command('share', createShareLinkCommand);
 
+bot.command('mood_2025', async ctx => {
+  const year = new Date().getFullYear();
+  const msg = await ctx.reply(`⏳ Generating reports for video (year ${year})…\n\n🌃 ⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️ \n\n🏷️ Phase: images`);
+
+  const bar = p => {
+    const w = 20, filled = Math.round((p / 100) * w);
+    return `${'🟩'.repeat(filled)}${'⬜️'.repeat(w - filled)} ${p}%`;
+  };
+
+  const edit = async (text) => {
+    try { await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, undefined, text); } catch {}
+  };
+
+  const { videoPath, maxScale } = await generateYearlyWeeklyReportVideo(ctx.user._id, year, {
+    outputDir: `./temp/${ctx.user._id}`,
+    chart: { width: 1000, height: 1000 },
+    slideshow: { stillDuration: 0.6, transitionDuration: 0.6, transition: 'dissolve', fps: 30},
+    onProgress: (p) => {
+      if (p.phase === 'images') {
+        edit(`⏳ Generating reports for video (year ${year})…\n\n🌃 ${bar(p.percent)} \n\n🏷️ Phase: images`);
+      } else if (p.phase === 'video') {
+        edit(`⏳ Generating video…\n\n🏷️ Phase: video`);
+      } else if (p.phase === 'done') {
+        edit(`✅ Rendering complete.\n\n🚀 Sending video…`);
+      }
+    }
+  });
+
+  if (videoPath) {
+    await ctx.replyWithVideo({ source: fs.createReadStream(videoPath) }, {
+      caption: `😁 Your mood through the year.`
+    });
+    edit(`✅ Video sent!`);
+    try {
+      const tempPath = `./temp/${ctx.user._id}`;
+      if (fs.existsSync(tempPath)) {
+        fs.rmSync(tempPath, { recursive: true, force: true });
+      }
+    } catch (err) {
+      console.error('Failed to remove temp path:', err);
+    }
+  } else {
+    await ctx.reply('No mood data found for this year.');
+  }
+});
+
+
+
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
+
 // Handle if user sends a message add a note to the last mood
 bot.on('message', handleTextMessage);
 
