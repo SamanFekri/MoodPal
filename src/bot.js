@@ -55,10 +55,10 @@ bot.command('share', createShareLinkCommand);
 
 bot.command('mood_2025', async ctx => {
   const year = new Date().getFullYear();
-  const msg = await ctx.reply(`⏳ Generating reports for video (year ${year})…\n\n🌃 ⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️ \n\n🏷️ Phase: images`);
+  const msg = await ctx.reply(`⏳ Generating reports for video (year ${year})…\n\n🌃 ⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜ \n\n🏷️ Phase: images`);
 
   const bar = p => {
-    const w = 20, filled = Math.round((p / 100) * w);
+    const w = 10, filled = Math.round((p / 100) * w);
     return `${'🟩'.repeat(filled)}${'⬜️'.repeat(w - filled)} ${p}%`;
   };
 
@@ -74,9 +74,9 @@ bot.command('mood_2025', async ctx => {
       if (p.phase === 'images') {
         edit(`⏳ Generating reports for video (year ${year})…\n\n🌃 ${bar(p.percent)} \n\n🏷️ Phase: images`);
       } else if (p.phase === 'video') {
-        edit(`⏳ Generating video…\n\n🏷️ Phase: video`);
+        edit(`⏳ Generating video (It could take some minutes)…\n🏷️ Phase: video`);
       } else if (p.phase === 'done') {
-        edit(`✅ Rendering complete.\n\n🚀 Sending video…`);
+        edit(`✅ Rendering complete.\n🚀 Sending video…`);
       }
     }
   });
@@ -85,7 +85,7 @@ bot.command('mood_2025', async ctx => {
     await ctx.replyWithVideo({ source: fs.createReadStream(videoPath) }, {
       caption: `😁 Your mood through the year.`
     });
-    edit(`✅ Video sent!`);
+    edit(`✅ Video sent! 🚀🚀🚀`);
     try {
       const tempPath = `./temp/${ctx.user._id}`;
       if (fs.existsSync(tempPath)) {
