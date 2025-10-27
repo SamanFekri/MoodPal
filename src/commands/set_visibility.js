@@ -7,7 +7,7 @@ async function setMoodPrivate(ctx) {
     await ctx.user.save().then(() => {
       ctx.reply(msgs.moodPrivateMsg(), {
         parse_mode: 'HTML',
-        reply_markup: { keyboard: common.makeKeyboardMenu(ctx)}
+        reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}
       });
     }
     );
@@ -23,7 +23,7 @@ async function setMoodPublic(ctx) {
     await ctx.user.save().then(() => {
       ctx.reply(msgs.moodPublicMsg(ctx.user.id), {
         parse_mode: 'HTML',
-        reply_markup: { keyboard: common.makeKeyboardMenu(ctx)}
+        reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}
       });
     }
     );

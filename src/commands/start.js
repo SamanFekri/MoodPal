@@ -38,9 +38,7 @@ module.exports = async (ctx) => {
     ctx.reply(msgs.welocmeMsg(ctx.user.first_name),
      { 
       parse_mode: 'HTML', 
-      reply_markup: {
-        keyboard: common.makeKeyboardMenu(ctx)
-      }
+      reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}
     });
     ctx.reply(msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
