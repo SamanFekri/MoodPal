@@ -1,6 +1,7 @@
 const Mood = require('../models/mood');
-const { MOOD_INLINE_KEYBOARD, msgs } = require('../constants');
+const { MOOD_INLINE_KEYBOARD, msgs, common } = require('../constants');
 const { MOOD_MAP } = require('../constants/mood.constant');
+const { keyboard } = require('telegraf/markup');
 
 async function setMoodCommand(ctx) {
   try {
@@ -32,7 +33,7 @@ async function saveMood(ctx) {
             // wait for a minute
             await new Promise(resolve => setTimeout(resolve, 2000));
             // send a message to the user to add a note
-            ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg())
+            ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg(), {reply_markup: {keyboard: common.makeKeyboardMenu(ctx)}})
           })
       });
   } catch (error) {
