@@ -1,7 +1,7 @@
 export const MENU_BUTTONS = {
   SET_MOOD: '🤩 New mood',
   REPORT: '📊 Report',
-  YEAR_REPORT: '✨ You In 2025',
+  YEAR_REPORT: '✨ 2025',
   SHARE: '🚀 Share',
   VISIBILITY_PUBLIC: '👀 Make Visibility Public',
   VISIBILITY_PRIVATE: '👻 Make Visibility Private'
