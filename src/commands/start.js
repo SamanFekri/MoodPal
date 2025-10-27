@@ -1,4 +1,4 @@
-const { MOOD_INLINE_KEYBOARD, msgs, share } = require('../constants');
+const { MOOD_INLINE_KEYBOARD, msgs, share, common } = require('../constants');
 const User = require('../models/user');
 const Share = require('../models/share');
 
@@ -35,7 +35,13 @@ module.exports = async (ctx) => {
       }
       return;
     }
-    ctx.reply(msgs.welocmeMsg(ctx.user.first_name), { parse_mode: 'HTML', });
+    ctx.reply(msgs.welocmeMsg(ctx.user.first_name),
+     { 
+      parse_mode: 'HTML', 
+      reply_markup: {
+        keyboard: common.makeKeyboardMenu(ctx)
+      }
+    });
     ctx.reply(msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
       reply_markup: {

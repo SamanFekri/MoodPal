@@ -316,10 +316,58 @@ async function generateYearlyWeeklyReportVideo(
   return { images: [], videoPath, maxScale: fixedMax };
 }
 
+async function getYearlyMoodVideo(ctx) {
+  const year = 2025;
+  const msg = await ctx.reply(`⏳ Generating reports for video (year ${year})…\n\n🌃 ⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜ \n\n🏷️ Phase: images`);
+
+  const bar = p => {
+    const w = 10, filled = Math.round((p / 100) * w);
+    return `${'🟩'.repeat(filled)}${'⬜️'.repeat(w - filled)} ${p}%`;
+  };
+
+  const edit = async (text) => {
+    try { await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, undefined, text); } catch {}
+  };
+
+  const { videoPath, maxScale } = await generateYearlyWeeklyReportVideo(ctx.user._id, year, {
+    outputDir: `./temp/${ctx.user._id}`,
+    chart: { width: 1000, height: 1000 },
+    slideshow: { stillDuration: 0.6, transitionDuration: 0.6, transition: 'dissolve', fps: 30},
+    onProgress: (p) => {
+      if (p.phase === 'images') {
+        edit(`⏳ Generating reports for video (year ${year})…\n\n🌃 ${bar(p.percent)} \n\n🏷️ Phase: images`);
+      } else if (p.phase === 'video') {
+        edit(`⏳ Generating video (It could take some minutes)…\n🏷️ Phase: video`);
+      } else if (p.phase === 'done') {
+        edit(`✅ Rendering complete.\n🚀 Sending video…`);
+      }
+    }
+  });
+
+  if (videoPath) {
+    await ctx.replyWithVideo({ source: fs.createReadStream(videoPath) }, {
+      caption: `😁 Your mood through the year.`
+    });
+    edit(`✅ Video sent! 🚀🚀🚀`);
+    try {
+      const tempPath = `./temp/${ctx.user._id}`;
+      if (fs.existsSync(tempPath)) {
+        fs.rmSync(tempPath, { recursive: true, force: true });
+      }
+    } catch (err) {
+      console.error('Failed to remove temp path:', err);
+    }
+  } else {
+    await ctx.reply('No mood data found for this year.');
+  }
+}
+
+
 module.exports = {
   showReportCommand,
   getReportCallback,
   sendWeeklyReport,
   generateWeeklyImagesForYear,
-  generateYearlyWeeklyReportVideo
+  generateYearlyWeeklyReportVideo,
+  getYearlyMoodVideo
 };
