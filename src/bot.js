@@ -31,6 +31,7 @@ const handleTextMessage = require('./actions/on_text');
 
 // Connect to MongoDB
 connectDB();
+
 // Start the server
 listenServer();
 
@@ -114,3 +115,4 @@ cron.schedule(process.env.WEEKLY_CRON_JOB_TIME, () => {
   console.log('======================');
   sendWeeklyReport(bot);
 });
+

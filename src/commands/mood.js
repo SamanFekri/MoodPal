@@ -30,7 +30,7 @@ async function saveMood(ctx) {
       .then(() => {
         ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].emoji)
           .then(async () => {
-            // wait for a minute
+            // wait for 2s
             await new Promise(resolve => setTimeout(resolve, 2000));
             // send a message to the user to add a note
             ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg(), {reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}})

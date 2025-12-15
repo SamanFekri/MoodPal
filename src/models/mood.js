@@ -32,5 +32,29 @@ moodSchema.statics.getLastMood = async function(userId) {
   return lastMood;
 };
 
+/**
+ * @function getLastWeekMoods
+ * @param {string|mongoose.Types.ObjectId} userId - The ID of the user.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of mood objects 
+ * for the last 7 days, containing only mood, note, and timestamp.
+ */
+moodSchema.statics.getLastWeekMoods = async function(userId) {
+  // 1. Calculate the date from 7 days ago
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  // 2. Find all moods for the user where the timestamp is greater than or equal to 7 days ago.
+  // 3. Sort them from newest to oldest (-1).
+  // 4. Use .select() to include only the requested fields: 'mood', 'note', and 'timestamp'.
+  const lastWeekMoods = await this.find({
+    user: userId,
+    timestamp: { $gte: oneWeekAgo }
+  })
+  .sort({ timestamp: -1 })
+  .select('mood note timestamp -_id'); // -_id excludes the default _id field
+
+  return lastWeekMoods;
+};
+
 
 module.exports = mongoose.model('Mood', moodSchema);
