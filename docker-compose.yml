@@ -1,11 +1,10 @@
 services:
   bot:
     build: .
-    network_mode: host
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - BOT_USERNAME=${BOT_USERNAME}
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=mongodb://mongodb:27017
       - OLAF_CHANNEL_ID=${OLAF_CHANNEL_ID}
       - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
       - MAIN_CHANNEL_USERNAME=${MAIN_CHANNEL_USERNAME}
@@ -17,3 +16,9 @@ services:
     ports:
       - "8080:${SERVER_PORT}"
     restart: unless-stopped
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    external: true
