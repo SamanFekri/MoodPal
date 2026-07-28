@@ -4,7 +4,7 @@ services:
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - BOT_USERNAME=${BOT_USERNAME}
-      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_URI=${MONGODB_URI}
       - OLAF_CHANNEL_ID=${OLAF_CHANNEL_ID}
       - MAIN_CHANNEL_ID=${MAIN_CHANNEL_ID}
       - MAIN_CHANNEL_USERNAME=${MAIN_CHANNEL_USERNAME}
