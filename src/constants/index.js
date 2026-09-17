@@ -4,6 +4,7 @@ const reportConstants = require('./report.constant');
 const shareConstants = require('./share.constant');
 const commonConstant = require('./common.constant')
 const serverConstant = require('./server.constant');
+const personalityConstant = require('./personality.constant');
 
 module.exports = {
   ...moodConstants,
@@ -11,5 +12,6 @@ module.exports = {
   report: reportConstants,
   share: shareConstants,
   common: commonConstant,
-  server: serverConstant
+  server: serverConstant,
+  personality: personalityConstant
 };

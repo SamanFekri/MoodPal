@@ -14,6 +14,8 @@ Here are some commands you can use:
 /set_public - Set your mood to public
 /report - Get a report of your mood
 /share - Share a link so your friends can see your moods
+/personality_test - Take a personality test
+/my_personality - See your personality profile
 /set_openai_key - Add your own OpenAI key to get AI insights with your weekly report
 /remove_openai_key - Remove your OpenAI key and turn off AI insights
 `;

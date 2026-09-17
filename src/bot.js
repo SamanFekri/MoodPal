@@ -25,13 +25,16 @@ const setVisibilityCommand = require('./commands/set_visibility');
 const { showReportCommand, sendWeeklyReport, getReportCallback, getYearlyMoodVideo } = require('./commands/report');
 const { createShareLinkCommand, shareCallback } = require('./commands/share');
 const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
+const personalityCommands = require('./commands/personality');
+const { ensurePersonalityCatalog } = require('./personality/migrate');
+const { personality: personalityConstants } = require('./constants');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
 
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB, then make sure the personality catalog is seeded
+connectDB().then(() => ensurePersonalityCatalog()).catch(err => console.error('Personality catalog seed failed:', err));
 
 // Start the server
 listenServer();
@@ -56,6 +59,8 @@ bot.command('report', showReportCommand);
 bot.command('share', createShareLinkCommand);
 bot.command('set_openai_key', setOpenAIKeyCommand);
 bot.command('remove_openai_key', removeOpenAIKeyCommand);
+bot.command('personality_test', personalityCommands.personalityTestCommand);
+bot.command('my_personality', (ctx) => personalityCommands.myPersonalityCommand(ctx));
 
 bot.command('mood_2025', getYearlyMoodVideo);
 
@@ -65,6 +70,8 @@ bot.hears(common.MENU_BUTTONS.SHARE, createShareLinkCommand)
 bot.hears(common.MENU_BUTTONS.YEAR_REPORT, getYearlyMoodVideo)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPrivate)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPublic)
+bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityTestCommand)
+bot.hears(common.MENU_BUTTONS.MY_PERSONALITY, (ctx) => personalityCommands.myPersonalityCommand(ctx))
 
 
 
@@ -72,6 +79,9 @@ bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPub
 bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
+bot.action(new RegExp(`^${personalityConstants.CALLBACK.TEST_PREFIX}`), personalityCommands.testCallback);
+bot.action(new RegExp(`^${personalityConstants.CALLBACK.ANSWER_PREFIX}`), personalityCommands.answerCallback);
+bot.action(new RegExp(`^${personalityConstants.CALLBACK.PROFILE_PREFIX}`), personalityCommands.profileCallback);
 
 // Handle if user sends a message add a note to the last mood
 bot.on('message', handleTextMessage);

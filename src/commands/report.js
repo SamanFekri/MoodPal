@@ -3,6 +3,7 @@ const Mood = require('../models/mood');
 const User = require('../models/user');
 const radar = require('../utils/radar_diagram');
 const llm = require('../utils/llm');
+const personalityService = require('../personality/service');
 
 const {
   generateMoodRadarChart,
@@ -97,8 +98,17 @@ async function sendWeeklyReport(ctx) {
         const moods = await Mood.getLastWeekMoods(user._id);
         if (moods.length > 0) {
           try {
-            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey);
+            // adapt the reply to the user's personality profile (if they have one)
+            const personalityContext = await personalityService.getPersonalityContext(user._id);
+            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext });
             await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
+
+            // let the week's notes refine the profile, gradually
+            const notes = moods.map(m => m.note).filter(Boolean).join('\n');
+            if (notes.length >= 40) {
+              await personalityService.inferFromText(user._id, notes, apiKey)
+                .catch(err => console.error(`Personality inference failed for user ${user.id}:`, err.message));
+            }
           } catch (error) {
             console.error(`AI insight failed for user ${user.id}:`, error.message);
             if (llm.isAuthError(error)) {

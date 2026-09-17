@@ -71,6 +71,19 @@ Available embed options:
 
 Simply paste the provided code into your website or blog to get a live representation of your current mood state!
 
+### 🧠 Personality Profile
+- **Personality Test** (`🧠 Personality Test` / `/personality_test`): interactive one-question-at-a-time tests, starting with a 20-item Big Five (Mini-IPIP) test. Progress is saved; you can cancel, continue or start over.
+- **My Personality** (`🧠 My Personality` / `/my_personality`): view your profile, retake the test or reset the profile.
+- **Evolves over time**: with your own OpenAI key set, your weekly mood notes are analysed and the profile is adjusted *gradually* (small, validated, bounded updates). Big Five traits are slow-changing; communication preferences adapt faster.
+- AI replies use a compact personality context to adapt tone and length — it is never revealed unless you ask for your profile.
+- ⚠️ This is an approximate self-report profile, **not a clinical or medical diagnosis**.
+
+The trait catalog, tests and questions live in the database (`personality_traits`, `personality_tests`, `personality_test_questions`) and are seeded automatically at start-up or with:
+```bash
+yarn migrate:personality
+```
+New traits or tests can be added by inserting documents into those collections (or extending `src/personality/catalog.seed.js` and bumping `version`).
+
 ## 🛠 Technical Stack
 - **Bot Framework**: Built with Telegraf.js for reliable Telegram integration
 - **Database**: MongoDB for robust data persistence
@@ -131,6 +144,12 @@ npm start
 ```bash
 docker-compose up -d
 ```
+
+### Tests
+```bash
+yarn test
+```
+Uses Node's built-in test runner and an in-memory MongoDB (set `MONGODB_TEST_URI` to use a real server instead).
 
 ## 🤝 Contributing
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
