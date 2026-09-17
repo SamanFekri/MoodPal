@@ -13,13 +13,17 @@
     });
   };
 
+  // dependencies are served from the same place as this script (no public CDNs)
+  const scriptSrc = (document.currentScript && document.currentScript.src) || '/public/lib/tgs-player.js';
+  const base = scriptSrc.replace(/\/[^/]*$/, '/');
+
   const loadDependencies = async () => {
     const promises = [];
     if (!global.lottie) {
-      promises.push(loadDependency('https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js'));
+      promises.push(loadDependency(base + 'vendor/lottie.min.js'));
     }
     if (!global.pako) {
-      promises.push(loadDependency('https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js'));
+      promises.push(loadDependency(base + 'vendor/pako.min.js'));
     }
     if (promises.length > 0) {
       await Promise.all(promises);

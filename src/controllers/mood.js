@@ -17,4 +17,21 @@ const requestMoodPicker = async (req, res) => {
   }
 };
 
-module.exports = { requestMoodPicker };
+// GET /api/me/moods?before=<ISO date>&limit= — the signed-in user's own history, newest first
+const Mood = require('../models/mood');
+const myMoods = async (req, res) => {
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 30));
+  const before = req.query.before ? new Date(req.query.before) : null;
+  const filter = { user: req.user._id };
+  if (before && !isNaN(before)) filter.timestamp = { $lt: before };
+  const moods = await Mood.find(filter).sort({ timestamp: -1 }).limit(limit + 1).select('mood note timestamp').lean();
+  const hasMore = moods.length > limit;
+  const page = moods.slice(0, limit);
+  res.json({
+    moods: page.map(m => ({ mood: m.mood, note: m.note || '', timestamp: m.timestamp, tgs: `/public/tgs/${m.mood.code}.tgs` })),
+    has_more: hasMore,
+    next_before: hasMore ? page[page.length - 1].timestamp : null,
+  });
+};
+
+module.exports = { requestMoodPicker, myMoods };

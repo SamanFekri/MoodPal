@@ -104,6 +104,23 @@ describe('mini app API', () => {
     });
   });
 
+  describe('my moods', () => {
+    test('every user can page through their own history, newest first', async () => {
+      for (let i = 0; i < 32; i++) await Mood.create({ user: alice._id, mood: { code: 'neutral', emoji: '😐', name: 'Neutral' }, note: `mine ${i}`, timestamp: new Date(Date.now() - (i + 5) * 60000) });
+      const p0 = await api('/api/me/moods', { as: alice });
+      assert.equal(p0.status, 200);
+      assert.equal(p0.body.moods.length, 30);
+      assert.equal(p0.body.moods[0].note, 'long day');
+      assert.equal(p0.body.has_more, true);
+      const p1 = await api(`/api/me/moods?before=${encodeURIComponent(p0.body.next_before)}`, { as: alice });
+      assert.equal(p1.body.moods.length, 3);
+      assert.equal(p1.body.has_more, false);
+      assert.ok(!JSON.stringify(p0.body).includes('sunny'), "bob's moods never appear");
+      assert.equal((await api('/api/me/moods', { as: bob })).body.moods.length, 1);
+      assert.equal((await api('/api/me/moods')).status, 401);
+    });
+  });
+
   describe('my personality', () => {
     test('no profile yet: null profile, full test list', async () => {
       const r = await api('/api/me/personality', { as: alice });

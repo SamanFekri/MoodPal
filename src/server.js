@@ -31,12 +31,16 @@ app.get('/', miniApp);
 // public personality card (share link); the page reads the token from the URL
 app.get('/p/:token', miniApp);
 
+// mini app data must never be served from a WebView cache
+app.use(['/auth', '/api'], (req, res, next) => { res.set('Cache-Control', 'no-store, max-age=0'); res.set('Pragma', 'no-cache'); next(); });
+
 app.post('/auth', controllers.auth.isAuthenticated);
 
 // ---- mini app API (signed Telegram initData in X-Telegram-Init-Data) ----
 app.get('/api/friends', requireWebAppUser, controllers.user.getFollowings);
 app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.personality.getFriends);
 app.post('/api/me/mood/picker', requireWebAppUser, controllers.mood.requestMoodPicker);
+app.get('/api/me/moods', requireWebAppUser, controllers.mood.myMoods);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/public/personality/:token', controllers.personality.getPublic);

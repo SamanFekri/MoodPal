@@ -3,13 +3,14 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <title>Mood Pal</title>
   <link rel="icon" type="image/jpeg" href="/public/logo.jpeg">
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <!-- libraries are served by this app itself, never from a public CDN -->
+  <script src="/public/lib/vendor/vue.global.prod.js"></script>
   <script src="/public/lib/tgs-player.js"></script>
 
   <style>
@@ -45,7 +46,18 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     [v-cloak] { display: none; }
 
-    html, body { margin: 0; padding: 0; }
+    /* ---- loading screen (shown until the app has authenticated and loaded its first data) ---- */
+    #splash { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .35s ease; }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    #splash img { width: 84px; height: 84px; border-radius: 26px; box-shadow: 0 18px 40px rgba(0, 0, 0, .35); animation: float 3s ease-in-out infinite; }
+    #splash .ring { width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(138, 143, 152, .3); border-top-color: var(--accent); animation: spin .9s linear infinite; }
+    #splash p { margin: 0; font-size: 14px; color: var(--hint); font-weight: 600; }
+    #splash button { display: none; font: inherit; font-weight: 700; font-size: 14px; border: 0; border-radius: 999px; padding: 10px 18px; background: var(--accent); color: #fff; }
+    #splash.failed .ring { display: none; }
+    #splash.failed button { display: inline-block; }
+
+    html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; }
+    html { -webkit-text-size-adjust: 100%; }
 
     body {
       background: var(--bg);
@@ -55,11 +67,13 @@
       min-height: 100vh;
       min-height: 100dvh;
       overflow-x: hidden;
+      overscroll-behavior-x: none;
     }
 
     #app {
       max-width: 640px;
       margin: 0 auto;
+      overflow-x: clip;
       padding: 16px 16px calc(var(--nav-h) + 32px + env(safe-area-inset-bottom));
     }
     #app.public { padding-bottom: 32px; }
@@ -119,7 +133,7 @@
     .me-card::before {
       content: "";
       position: absolute;
-      right: -20px; top: 50%;
+      left: -20px; top: 50%;
       width: 160px; height: 160px;
       transform: translateY(-50%);
       border-radius: 50%;
@@ -133,6 +147,7 @@
       display: grid; place-items: center;
       font-size: 40px;
       border-radius: 24px;
+      background: rgba(138,143,152,0.12);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--hint) 12%, transparent);
     }
     .me-body { flex: 1; min-width: 0; }
@@ -210,6 +225,7 @@
       margin-top: 8px;
       font-size: 12px; font-weight: 600;
       color: var(--hint);
+      background: rgba(15,17,21,0.70);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--bg) 70%, transparent);
       padding: 4px 10px;
       border-radius: 999px;
@@ -243,11 +259,13 @@
       animation-delay: calc(var(--i, 0) * 60ms);
     }
     .skeleton.row { flex-direction: row; gap: 12px; align-items: center; padding: 12px 14px; margin-bottom: 8px; }
+    .shimmer { position: relative; overflow: hidden; background: rgba(138,143,152,0.18); border-radius: 12px; }  /* fallback for WebViews without color-mix */
     .shimmer { position: relative; overflow: hidden; background: color-mix(in srgb, var(--hint) 18%, transparent); border-radius: 12px; }
     .shimmer::after {
       content: "";
       position: absolute; inset: 0;
       transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(27,30,37,0.60), transparent);  /* fallback for WebViews without color-mix */
       background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card) 60%, transparent), transparent);
       animation: shimmer 1.4s infinite;
     }
@@ -275,12 +293,13 @@
       font-size: 15px; font-weight: 700;
       cursor: pointer;
       text-decoration: none;
-      box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+      box-shadow: 0 8px 20px rgba(51,144,236,0.35);
       transition: transform .15s var(--ease-out), box-shadow .15s var(--ease-out), opacity .2s;
     }
-    .btn:active { transform: scale(.96); box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 30%, transparent); }
+    .btn:active { transform: scale(.96); box-shadow: 0 4px 10px rgba(51,144,236,0.30); }
     .btn:disabled { opacity: .55; }
     .btn svg { width: 18px; height: 18px; }
+    .btn.ghost { background: rgba(51,144,236,0.12); color: var(--accent); box-shadow: none; }  /* fallback for WebViews without color-mix */
     .btn.ghost { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); box-shadow: none; }
 
     .fab-wrap {
@@ -309,9 +328,11 @@
       position: fixed; left: 0; right: 0; bottom: 0;
       height: calc(var(--nav-h) + env(safe-area-inset-bottom));
       padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(27,30,37,0.88);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--card) 88%, transparent);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(138,143,152,0.18);  /* fallback for WebViews without color-mix */
       border-top: 1px solid color-mix(in srgb, var(--hint) 18%, transparent);
       z-index: 40;
       animation: fade-up .5s var(--ease-out) .1s both;
@@ -321,6 +342,7 @@
       max-width: 640px; margin: 0 auto;
       display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
       height: 48px;
+      background: rgba(138,143,152,0.12);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--hint) 12%, transparent);
       border-radius: 999px;
       padding: 4px;
@@ -358,9 +380,9 @@
 
     .radar-wrap { display: flex; flex-direction: column; align-items: center; }
     .radar { width: min(100%, 330px); height: auto; overflow: visible; }
-    .radar .ring { fill: none; stroke: color-mix(in srgb, var(--hint) 28%, transparent); stroke-width: 1; }
-    .radar .axis { stroke: color-mix(in srgb, var(--hint) 28%, transparent); stroke-width: 1; }
-    .radar .shape { fill: color-mix(in srgb, var(--accent) 28%, transparent); stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; transform-box: view-box; transform: scale(0); transition: transform .9s var(--ease-spring); }
+    .radar .ring { fill: none; stroke: rgba(138,143,152,0.28); stroke-width: 1; }
+    .radar .axis { stroke: rgba(138,143,152,0.28); stroke-width: 1; }
+    .radar .shape { fill: rgba(51,144,236,0.28); stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; transform-box: view-box; transform: scale(0); transition: transform .9s var(--ease-spring); }
     .radar.animated .shape { transform: scale(1); }
     .radar .vertex { fill: var(--accent); r: 0; transition: r .4s var(--ease-spring); }
     .radar.animated .vertex { r: 4; transition-delay: .5s; }
@@ -370,21 +392,27 @@
     .radar.animated .lbl, .radar.animated .pct { opacity: 1; }
 
     .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .stat { text-align: center; padding: 10px 6px; border-radius: 14px; background: rgba(138,143,152,0.10); }  /* fallback for WebViews without color-mix */
     .stat { text-align: center; padding: 10px 6px; border-radius: 14px; background: color-mix(in srgb, var(--hint) 10%, transparent); }
     .stat b { display: block; font-size: 18px; letter-spacing: -.02em; }
     .stat span { font-size: 11px; color: var(--hint); font-weight: 600; }
 
     .trait { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 7px 0; }
+    .trait + .trait { border-top: 1px solid rgba(138,143,152,0.12); }  /* fallback for WebViews without color-mix */
     .trait + .trait { border-top: 1px solid color-mix(in srgb, var(--hint) 12%, transparent); }
     .trait .t-name { font-size: 14px; font-weight: 600; }
     .trait .t-label { font-size: 12px; color: var(--hint); font-weight: 600; text-transform: capitalize; }
+    .trait .t-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: rgba(138,143,152,0.14); overflow: hidden; }  /* fallback for WebViews without color-mix */
     .trait .t-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--hint) 14%, transparent); overflow: hidden; }
     .trait .t-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, hsl(var(--hue, 210) 85% 62%), hsl(calc(var(--hue, 210) + 30) 85% 55%)); transition: width .9s var(--ease-out); transition-delay: calc(var(--i, 0) * 45ms); }
     .trait .t-conf { grid-column: 1 / -1; font-size: 11px; color: var(--hint); }
 
     .test-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
+    .test-row + .test-row { border-top: 1px solid rgba(138,143,152,0.12); }  /* fallback for WebViews without color-mix */
     .test-row + .test-row { border-top: 1px solid color-mix(in srgb, var(--hint) 12%, transparent); }
+    .test-row .t-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: rgba(138,143,152,0.10); flex: none; }  /* fallback for WebViews without color-mix */
     .test-row .t-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: color-mix(in srgb, var(--hint) 10%, transparent); flex: none; }
+    .test-row .t-ico.done { background: rgba(52,199,89,0.18); }  /* fallback for WebViews without color-mix */
     .test-row .t-ico.done { background: color-mix(in srgb, var(--fresh) 18%, transparent); }
     .test-row .t-body { flex: 1; min-width: 0; }
     .test-row .t-title { font-size: 14px; font-weight: 700; }
@@ -396,8 +424,10 @@
     .share-row .s-desc { font-size: 12px; color: var(--hint); line-height: 1.35; margin-top: 2px; }
     .share-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .share-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
+    .link-box { margin-top: 10px; font-size: 12px; color: var(--hint); background: rgba(138,143,152,0.10); padding: 8px 10px; border-radius: 10px; word-break: break-all; }  /* fallback for WebViews without color-mix */
     .link-box { margin-top: 10px; font-size: 12px; color: var(--hint); background: color-mix(in srgb, var(--hint) 10%, transparent); padding: 8px 10px; border-radius: 10px; word-break: break-all; }
 
+    .switch { position: relative; width: 50px; height: 30px; border-radius: 999px; border: 0; padding: 0; flex: none; cursor: pointer; background: rgba(138,143,152,0.30); transition: background .25s; }  /* fallback for WebViews without color-mix */
     .switch { position: relative; width: 50px; height: 30px; border-radius: 999px; border: 0; padding: 0; flex: none; cursor: pointer; background: color-mix(in srgb, var(--hint) 30%, transparent); transition: background .25s; }
     .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .3s var(--ease-spring); }
     .switch.on { background: var(--fresh); }
@@ -408,7 +438,7 @@
 
     /* ---- Admin ---- */
     .search { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow); margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
-    .search input { flex: 1; border: 0; background: none; font: inherit; font-size: 15px; color: var(--text); outline: none; min-width: 0; }
+    .search input { flex: 1; border: 0; background: none; font: inherit; font-size: 16px; color: var(--text); outline: none; min-width: 0; }
     .search input::placeholder { color: var(--hint); }
     .search svg { width: 18px; height: 18px; color: var(--hint); flex: none; }
 
@@ -440,20 +470,23 @@
     .row-right .when { margin: 0; }
     .row-right .cnt { display: block; font-size: 11px; color: var(--hint); margin-top: 4px; font-weight: 600; }
     .lock { font-size: 11px; }
+    .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(52,199,89,0.18); color: var(--fresh); flex: none; }  /* fallback for WebViews without color-mix */
     .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--fresh) 18%, transparent); color: var(--fresh); flex: none; }
+    .avatar.none { font-size: 20px; background: rgba(138,143,152,0.12); color: var(--hint); }  /* fallback for WebViews without color-mix */
     .avatar.none { font-size: 20px; background: color-mix(in srgb, var(--hint) 12%, transparent); color: var(--hint); }
     .load-more { text-align: center; margin: 10px 0 4px; }
 
     /* admin personality filter */
     .filters { display: flex; gap: 8px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) .05s both; }
     .filters select {
-      flex: 1; min-width: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--text);
+      flex: 1; min-width: 0; font: inherit; font-size: 16px; font-weight: 600; color: var(--text);
       background: var(--card); border: 0; border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow);
       -webkit-appearance: none; appearance: none;
     }
     .seg { display: inline-flex; background: var(--card); border-radius: 14px; padding: 3px; box-shadow: var(--shadow); flex: none; }
     .seg button { border: 0; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--hint); padding: 7px 10px; border-radius: 11px; cursor: pointer; transition: background .2s, color .2s; }
     .seg button.on { background: var(--accent); color: var(--accent-text); }
+    .trait-pill { font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(51,144,236,0.14); padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 4px; }  /* fallback for WebViews without color-mix */
     .trait-pill { font-size: 11px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 4px; }
 
     /* FIFA-style overall badge on the radar */
@@ -464,6 +497,7 @@
     .ovr span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--hint); margin-top: 2px; }
 
     .timeline { position: relative; padding-left: 44px; }
+    .timeline::before { content: ""; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: rgba(138,143,152,0.20); border-radius: 2px; }  /* fallback for WebViews without color-mix */
     .timeline::before { content: ""; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
     .tl-item { position: relative; padding: 6px 0 10px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
     .tl-item .tl-ico { position: absolute; left: -38px; top: 2px; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
@@ -485,7 +519,9 @@
       padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
       box-shadow: 0 -10px 40px rgba(0, 0, 0, .25);
     }
+    .sheet .grip { width: 40px; height: 5px; border-radius: 999px; background: rgba(138,143,152,0.35); margin: 0 auto 14px; }  /* fallback for WebViews without color-mix */
     .sheet .grip { width: 40px; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--hint) 35%, transparent); margin: 0 auto 14px; }
+    .sheet .close { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(138,143,152,0.14); color: var(--hint); font-size: 16px; font-weight: 700; display: grid; place-items: center; cursor: pointer; transition: transform .15s var(--ease-out); }  /* fallback for WebViews without color-mix */
     .sheet .close { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--hint) 14%, transparent); color: var(--hint); font-size: 16px; font-weight: 700; display: grid; place-items: center; cursor: pointer; transition: transform .15s var(--ease-out); }
     .sheet .close:active { transform: scale(.9); }
     .sheet-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
@@ -496,7 +532,9 @@
     .sheet-actions { display: flex; gap: 8px; margin: 6px 0 14px; }
     .sheet-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
     .sheet-section-title { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--hint); margin: 14px 0 8px; }
+    .muted-box { font-size: 13px; color: var(--hint); background: rgba(138,143,152,0.10); padding: 12px; border-radius: 12px; line-height: 1.4; }  /* fallback for WebViews without color-mix */
     .muted-box { font-size: 13px; color: var(--hint); background: color-mix(in srgb, var(--hint) 10%, transparent); padding: 12px; border-radius: 12px; line-height: 1.4; }
+    .sheet .section { box-shadow: none; background: rgba(138,143,152,0.08); }  /* fallback for WebViews without color-mix */
     .sheet .section { box-shadow: none; background: color-mix(in srgb, var(--hint) 8%, transparent); }
 
     .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform .38s var(--ease-out); }
@@ -531,6 +569,13 @@
 </head>
 
 <body>
+  <div id="splash">
+    <img src="/public/logo.jpeg" alt="">
+    <div class="ring"></div>
+    <p id="splash-text">Loading MoodPal…</p>
+    <button id="splash-retry" onclick="location.reload()">Reload</button>
+  </div>
+
   <div id="app" v-cloak :class="{ public: mode === 'public' }">
 
     <!-- ================= PUBLIC SHARE CARD (/p/:token) ================= -->
@@ -622,6 +667,13 @@
             </div>
           </transition-group>
 
+          <div v-else-if="friendsError" class="state">
+            <div class="art">📡</div>
+            <h2>Couldn't load your friends</h2>
+            <p>{{ friendsError }}</p>
+            <button class="btn" @click="refresh">Try again</button>
+          </div>
+
           <div v-else class="state">
             <div class="art">🫂</div>
             <h2>No friends yet</h2>
@@ -652,6 +704,7 @@
           <template v-if="loadingPersonality && !personality">
             <div class="section" v-for="n in 3" :key="'psk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
+          <div v-else-if="!personality && personalityError" class="state"><div class="art">📡</div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
 
           <template v-else-if="personality">
             <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey"></personality-view>
@@ -758,10 +811,10 @@
           <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
         </div>
         <!-- ---------- Logs (admin) ---------- -->
-        <div v-else-if="tab === 'logs' && isAdmin" key="logs">
+        <div v-else-if="tab === 'logs'" key="logs">
           <header class="header">
             <div>
-              <p class="greeting">Admin</p>
+              <p class="greeting">{{ isAdmin ? 'Everyone' : 'Your history' }}</p>
               <h1>Mood log</h1>
             </div>
             <div class="header-right">
@@ -777,15 +830,17 @@
           </template>
           <div v-else-if="logs.error" class="state"><div class="art">⚠️</div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
           <template v-else-if="logs.moods.length > 0">
-            <div v-for="(m, i) in logs.moods" :key="m.timestamp + '-' + m.user.id" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }" @click="openAdminUser({ ...m.user, last_mood: m, mood_count: null, last_active_at: m.timestamp, is_friend: false })">
+            <div v-for="(m, i) in logs.moods" :key="m.timestamp + '-' + (m.user ? m.user.id : 'me')" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }" @click="m.user && isAdmin ? openAdminUser({ ...m.user, last_mood: m, mood_count: null, last_active_at: m.timestamp, is_friend: false }) : null">
               <div class="avatar anim">
                 <div class="sticker" :class="{ loaded: loaded['log' + i] }" :data-id="'log' + i" :data-tgs="m.tgs" ref="logStickers">
                   <span v-if="failed['log' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
                 </div>
               </div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ m.user.fullname || 'Unnamed' }}</span><span class="u" v-if="m.user.username">@{{ m.user.username }}</span><span class="lock" v-if="m.user.is_mood_private">🔒</span></div>
-                <div class="row-sub">{{ m.mood.name }}<template v-if="m.note"> · <i>“{{ m.note }}”</i></template></div>
+                <div class="row-title" v-if="m.user"><span class="n">{{ m.user.fullname || 'Unnamed' }}</span><span class="u" v-if="m.user.username">@{{ m.user.username }}</span><span class="lock" v-if="m.user.is_mood_private">🔒</span></div>
+                <div class="row-title" v-else><span class="n">{{ m.mood.name }}</span></div>
+                <div class="row-sub" v-if="m.user">{{ m.mood.name }}<template v-if="m.note"> · <i>“{{ m.note }}”</i></template></div>
+                <div class="row-sub" v-else>{{ m.note ? '“' + m.note + '”' : 'No note' }}</div>
               </div>
               <div class="row-right">
                 <div class="when"><span class="dot" :class="freshness(m.timestamp)"></span>{{ formatWhen(m.timestamp, true) }}</div>
@@ -795,7 +850,7 @@
               <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ logs.loadingMore ? 'Loading…' : 'Load older' }}</button>
             </div>
           </template>
-          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p>Entries will appear here as people set their mood.</p></div>
+          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p v-if="isAdmin">Entries will appear here as people set their mood.</p><p v-else>Set your first mood in the bot and it will show up here.</p></div>
         </div>
       </transition>
 
@@ -903,6 +958,17 @@
   </div>
 
   <script>
+    // splash: gone as soon as the app is ready; turns into a retry screen if the scripts never load
+    function hideSplash() { const s = document.getElementById('splash'); if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 400); } }
+    const splashTimer = setTimeout(() => {
+      const s = document.getElementById('splash');
+      if (s && !s.classList.contains('hide')) { s.classList.add('failed'); document.getElementById('splash-text').textContent = 'This is taking longer than usual.'; }
+    }, 12000);
+    if (typeof Vue === 'undefined') {
+      document.getElementById('splash').classList.add('failed');
+      document.getElementById('splash-text').textContent = "Couldn't load the app. Please reload.";
+      throw new Error('Vue failed to load');
+    }
     const { createApp, nextTick } = Vue;
 
     // hue per mood so each card gets a matching soft glow
@@ -998,6 +1064,7 @@
     createApp({
       components: { 'personality-view': PersonalityView },
       data() {
+        this._inflight = {};
         return {
           mode: location.pathname.startsWith('/p/') ? 'public' : 'app',
           tg: null,
@@ -1008,6 +1075,7 @@
           tab: 'friends',
           // friends
           loadingFriends: false,
+          friendsError: '',
           friends: [],
           loaded: {},
           failed: {},
@@ -1018,6 +1086,7 @@
           usingMainButton: false,
           // personality
           personality: null,
+          personalityError: '',
           loadingPersonality: false,
           savingSharing: false,
           personalityAnimKey: 'p0',
@@ -1044,7 +1113,8 @@
       computed: {
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: '🫂' }, { key: 'personality', label: 'Personality', icon: '🧠' }];
-          if (this.isAdmin) { t.push({ key: 'admin', label: 'Admin', icon: '🛡️' }); t.push({ key: 'logs', label: 'Logs', icon: '📜' }); }
+          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
+          t.push({ key: 'logs', label: 'Logs', icon: '📜' });
           return t;
         },
         adminTraitGroups() {
@@ -1065,10 +1135,11 @@
           try { this.tg.setHeaderColor('secondary_bg_color'); } catch {}
         }
 
-        if (this.mode === 'public') return this.loadPublic();
+        if (this.mode === 'public') { hideSplash(); return this.loadPublic(); }
 
         if (!this.tg?.initData) {
           this.authenticating = false;
+          hideSplash();
           return;
         }
 
@@ -1087,6 +1158,7 @@
             this.setupMainButton();
             this.watchActivation();
             await this.fetchFriends();
+            hideSplash();
             if (this.tab === 'personality') this.fetchPersonality();
             if (this.tab === 'admin') this.fetchAdmin();
             if (this.tab === 'logs') this.fetchLogs();
@@ -1097,20 +1169,35 @@
           console.error('Authentication failed:', error);
         } finally {
           this.authenticating = false;
+          hideSplash();
         }
       },
 
       methods: {
         // ----- api -----
-        async api(path, { method = 'GET', body } = {}) {
-          const res = await fetch(path, {
-            method,
-            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': this.tg?.initData || '' },
-            body: body ? JSON.stringify(body) : undefined,
-          });
-          const data = await res.json().catch(() => null);
-          if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; throw e; }
-          return data;
+        // fetch with no caching, and up to 3 attempts for reads that fail on the network or with a 5xx
+        async api(path, { method = 'GET', body, retries = method === 'GET' ? 2 : 0 } = {}) {
+          if (method === 'GET' && this._inflight[path]) return this._inflight[path];
+          const attempt = async (n) => {
+            try {
+              const res = await fetch(path, {
+                method,
+                cache: 'no-store',
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': this.tg?.initData || '' },
+                body: body ? JSON.stringify(body) : undefined,
+              });
+              const data = await res.json().catch(() => null);
+              if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; throw e; }
+              return data;
+            } catch (error) {
+              const transient = !error.status || error.status >= 500;
+              if (n < retries && transient) { await new Promise(r => setTimeout(r, 400 * (n + 1))); return attempt(n + 1); }
+              throw error;
+            }
+          };
+          const p = attempt(0);
+          if (method === 'GET') { this._inflight[path] = p; p.finally(() => { delete this._inflight[path]; }); }
+          return p;
         },
 
         // ----- tabs -----
@@ -1131,8 +1218,9 @@
 
         // Telegram keeps the mini app alive in the background; when it comes back, refresh what's on screen
         watchActivation() {
+          const openedAt = Date.now();
           const refresh = () => {
-            if (!this.isAuthenticated || this.sheet) return;
+            if (!this.isAuthenticated || this.sheet || Date.now() - openedAt < 5000) return;
             if (this.tab === 'friends' && this.isStale('friends')) { this.destroyStickers(); this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); }
             if (this.tab === 'personality' && this.isStale('personality')) this.fetchPersonality();
             if (this.tab === 'admin' && this.isStale('admin')) this.fetchAdmin();
@@ -1145,15 +1233,17 @@
 
         // ----- friends -----
         async fetchFriends() {
+          if (this.loadingFriends) return;
           this.loadingFriends = true;
           try {
             this.friends = await this.api('/api/friends');
+            this.friendsError = '';
             this.fetchedAt.friends = Date.now();
             await nextTick();
             this.mountStickers();
           } catch (error) {
             console.error('Get friends failed:', error);
-            this.showToast("Couldn't load your friends");
+            this.friendsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
           } finally {
             this.loadingFriends = false;
           }
@@ -1275,14 +1365,16 @@
         // ----- personality -----
         async fetchPersonality(manual = false) {
           if (manual) this.haptic('light');
+          if (this.loadingPersonality) return;
           this.loadingPersonality = true;
           try {
             this.personality = await this.api('/api/me/personality');
+            this.personalityError = '';
             this.fetchedAt.personality = Date.now();
             this.personalityAnimKey = 'p' + Date.now();
           } catch (error) {
             console.error('Personality failed:', error);
-            this.showToast("Couldn't load your personality");
+            this.personalityError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
           } finally {
             this.loadingPersonality = false;
           }
@@ -1314,6 +1406,7 @@
 
         // ----- admin -----
         async fetchAdmin({ append = false } = {}) {
+          if (this.admin.loading) return;
           this.admin.loading = true;
           try {
             const page = append ? this.admin.page + 1 : 0;
@@ -1408,11 +1501,11 @@
 
         // ----- mood log (admin) -----
         async fetchLogs({ append = false } = {}) {
-          if (append) { if (!this.logs.next_before || this.logs.loadingMore) return; this.logs.loadingMore = true; } else { this.logs.loading = true; }
+          if (append) { if (!this.logs.next_before || this.logs.loadingMore) return; this.logs.loadingMore = true; } else { if (this.logs.loading) return; this.logs.loading = true; }
           try {
             const params = new URLSearchParams();
             if (append) params.set('before', this.logs.next_before);
-            const data = await this.api(`/api/admin/moods?${params}`);
+            const data = await this.api(`${this.isAdmin ? '/api/admin/moods' : '/api/me/moods'}?${params}`);
             this.logs.error = '';
             this.logs.moods = append ? [...this.logs.moods, ...data.moods] : data.moods;
             this.logs.has_more = data.has_more;
