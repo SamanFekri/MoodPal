@@ -1,6 +1,6 @@
 {
   "name": "MoodPal",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Telegram bot with MongoDB in Docker",
   "main": "src/bot.js",
   "scripts": {

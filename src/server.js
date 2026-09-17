@@ -36,11 +36,16 @@ app.post('/auth', controllers.auth.isAuthenticated);
 // ---- mini app API (signed Telegram initData in X-Telegram-Init-Data) ----
 app.get('/api/friends', requireWebAppUser, controllers.user.getFollowings);
 app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.personality.getFriends);
+app.post('/api/me/mood/picker', requireWebAppUser, controllers.mood.requestMoodPicker);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/public/personality/:token', controllers.personality.getPublic);
 app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.listUsers);
 app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
+app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAdmin, controllers.admin.userPersonality);
+app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
+app.post('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
+app.delete('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 
 // allow all requests to /public
 app.use('/public', express.static(path.join(__dirname, 'public')));

@@ -20,8 +20,8 @@ const saveUserMiddleware = async (ctx, next) => {
       existingUser = new User(ctx.from);
       u = await existingUser.save();
     }
-    // get existing user from db
-    existingUser = await User.findOne({ id: user.id });
+    // get existing user from db and mark them active
+    existingUser = await User.findOneAndUpdate({ id: user.id }, { last_active_at: new Date() }, { new: true });
     ctx.user = existingUser;
 
     next();

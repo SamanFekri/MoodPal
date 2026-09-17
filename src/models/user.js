@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema({
     default: null,
     index: true
   },
+  // last time the user interacted with the bot; drives "most recently active" ordering
+  last_active_at: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
   // User's own OpenAI key for AI mood insights. Stored encrypted and never
   // selected by default so it can't leak through populate() or API responses.
   openai_api_key: {
@@ -50,6 +56,15 @@ const userSchema = new mongoose.Schema({
     select: false
   },
 }, { timestamps: true });
+
+// One-off: give users created before last_active_at existed a sensible value
+userSchema.statics.backfillLastActive = async function() {
+  const result = await this.updateMany(
+    { last_active_at: { $exists: false } },
+    [{ $set: { last_active_at: { $ifNull: ['$updatedAt', '$createdAt', '$$NOW'] } } }]
+  );
+  return result.modifiedCount;
+};
 
 // Method get user by id
 userSchema.statics.getUserById = async function(userId) {

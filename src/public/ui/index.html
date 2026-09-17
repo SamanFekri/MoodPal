@@ -116,10 +116,11 @@
       overflow: hidden;
       animation: fade-up .55s var(--ease-out) both;
     }
+    .me-card { flex-direction: row-reverse; }
     .me-card::before {
       content: "";
       position: absolute;
-      left: -20px; top: 50%;
+      right: -20px; top: 50%;
       width: 160px; height: 160px;
       transform: translateY(-50%);
       border-radius: 50%;
@@ -424,6 +425,12 @@
     }
     .row-card:active { transform: scale(.98); }
     .avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; flex: none; background: radial-gradient(circle at 30% 30%, hsl(var(--hue, 210) 90% 70% / .5), hsl(var(--hue, 210) 90% 50% / .15)); }
+    .avatar.anim { position: relative; overflow: visible; }
+    .avatar.anim .sticker { width: 44px; height: 44px; margin: 0; }
+    .avatar.anim .sticker-fallback { font-size: 24px; }
+    .sheet-head .avatar.anim { width: 76px; height: 76px; }
+    .sheet-head .avatar.anim .sticker { width: 76px; height: 76px; }
+    .sheet-head .avatar.anim .sticker-fallback { font-size: 42px; }
     .row-body { flex: 1; min-width: 0; }
     .row-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0; }
     .row-title .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -434,11 +441,35 @@
     .row-right .when { margin: 0; }
     .row-right .cnt { display: block; font-size: 11px; color: var(--hint); margin-top: 4px; font-weight: 600; }
     .lock { font-size: 11px; }
+    .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--fresh) 18%, transparent); color: var(--fresh); flex: none; }
+    .avatar.none { font-size: 20px; background: color-mix(in srgb, var(--hint) 12%, transparent); color: var(--hint); }
+    .load-more { text-align: center; margin: 10px 0 4px; }
 
-    .timeline { position: relative; padding-left: 26px; }
-    .timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
+    /* admin personality filter */
+    .filters { display: flex; gap: 8px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) .05s both; }
+    .filters select {
+      flex: 1; min-width: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--text);
+      background: var(--card); border: 0; border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow);
+      -webkit-appearance: none; appearance: none;
+    }
+    .seg { display: inline-flex; background: var(--card); border-radius: 14px; padding: 3px; box-shadow: var(--shadow); flex: none; }
+    .seg button { border: 0; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--hint); padding: 7px 10px; border-radius: 11px; cursor: pointer; transition: background .2s, color .2s; }
+    .seg button.on { background: var(--accent); color: var(--accent-text); }
+    .trait-pill { font-size: 11px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 4px; }
+
+    /* FIFA-style overall badge on the radar */
+    .radar-wrap { position: relative; }
+    .ovr { position: absolute; left: 0; top: 0; text-align: center; line-height: 1; opacity: 0; transform: scale(.6); transition: opacity .5s ease .7s, transform .6s var(--ease-spring) .7s; }
+    .ovr.show { opacity: 1; transform: scale(1); }
+    .ovr b { display: block; font-size: 34px; font-weight: 900; letter-spacing: -.04em; background: linear-gradient(135deg, hsl(45 95% 55%), hsl(30 95% 50%)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .ovr span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--hint); margin-top: 2px; }
+
+    .timeline { position: relative; padding-left: 44px; }
+    .timeline::before { content: ""; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
     .tl-item { position: relative; padding: 6px 0 10px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
-    .tl-item::before { content: ""; position: absolute; left: -22px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--hue, 210) 85% 60%); box-shadow: 0 0 0 3px var(--card); }
+    .tl-item .tl-ico { position: absolute; left: -38px; top: 2px; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
+    .tl-item .tl-ico .sticker { width: 34px; height: 34px; margin: 0; }
+    .tl-item .tl-ico .sticker-fallback { font-size: 20px; }
     .tl-head { display: flex; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; }
     .tl-head time { font-size: 11px; font-weight: 600; color: var(--hint); }
     .tl-note { font-size: 13px; color: var(--hint); font-style: italic; margin-top: 2px; line-height: 1.35; }
@@ -529,7 +560,7 @@
     <!-- ================= SIGNED IN ================= -->
     <template v-else-if="isAuthenticated">
 
-      <transition name="tab" mode="out-in">
+      <transition name="tab" mode="out-in" @after-enter="mountStickers">
         <!-- ---------- Friends ---------- -->
         <div v-if="tab === 'friends'" key="friends">
           <header class="header">
@@ -553,7 +584,7 @@
               </div>
               <div class="me-body">
                 <div class="me-label">Your mood</div>
-                <div class="me-mood">{{ myMood.mood.emoji }} {{ myMood.mood.name }}</div>
+                <div class="me-mood">{{ myMood.mood.name }}</div>
                 <div class="when" :title="new Date(myMood.timestamp).toLocaleString()"><span class="dot" :class="freshness(myMood.timestamp)"></span>{{ formatWhen(myMood.timestamp) }}</div>
                 <div v-if="myMood.note" class="note">“{{ myMood.note }}”</div>
                 <button class="btn small" @click="updateMood">
@@ -586,7 +617,7 @@
                 <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
               </div>
               <div class="name">{{ friend.fullname }}</div>
-              <div class="mood">{{ friend.mood.emoji }} {{ friend.mood.name }}</div>
+              <div class="mood">{{ friend.mood.name }}</div>
               <div class="when" :title="new Date(friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(friend.timestamp)"></span>{{ formatWhen(friend.timestamp) }}</div>
               <div v-if="friend.note" class="note">“{{ friend.note }}”</div>
             </div>
@@ -686,26 +717,45 @@
             <input v-model="admin.query" @input="searchAdmin" placeholder="Search name, @username or id" autocomplete="off">
           </div>
 
+          <div class="filters">
+            <select v-model="admin.trait" @change="applyAdminFilter">
+              <option value="">🧠 Any personality</option>
+              <optgroup v-for="g in adminTraitGroups" :key="g.category" :label="g.name">
+                <option v-for="t in g.traits" :key="t.key" :value="t.key">{{ t.name }}</option>
+              </optgroup>
+            </select>
+            <div class="seg" v-if="admin.trait">
+              <button v-for="l in TRAIT_LEVELS" :key="l.key" :class="{ on: admin.level === l.key }" @click="setAdminLevel(l.key)">{{ l.label }}</button>
+            </div>
+          </div>
+
           <template v-if="admin.loading && admin.users.length === 0">
             <div v-for="n in 6" :key="'ask' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
           <template v-else-if="admin.users.length > 0">
-            <div v-for="(u, i) in admin.users" :key="u.id" class="row-card" :style="{ '--i': i, '--hue': hueFor(u.last_mood.mood.code) }" @click="openAdminUser(u)">
-              <div class="avatar">{{ u.last_mood.mood.emoji }}</div>
+            <div v-for="(u, i) in admin.users" :key="u.id" class="row-card" :style="{ '--i': Math.min(i, 12), '--hue': u.last_mood ? hueFor(u.last_mood.mood.code) : 210 }" @click="openAdminUser(u)">
+              <div v-if="u.last_mood" class="avatar anim">
+                <div class="sticker" :class="{ loaded: loaded['adm' + u.id] }" :data-id="'adm' + u.id" :data-tgs="u.last_mood.tgs" ref="adminStickers">
+                  <span v-if="failed['adm' + u.id]" class="sticker-fallback">{{ u.last_mood.mood.emoji }}</span>
+                </div>
+              </div>
+              <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span></div>
-                <div class="row-sub">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="chip" v-if="u.is_friend">friend</span></div>
+                <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
+                <div class="row-sub" v-else>No mood yet</div>
+                <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
               </div>
               <div class="row-right">
-                <div class="when"><span class="dot" :class="freshness(u.last_mood.timestamp)"></span>{{ formatWhen(u.last_mood.timestamp, true) }}</div>
+                <div class="when"><span class="dot" :class="freshness(u.last_active_at)"></span>{{ formatWhen(u.last_active_at, true) }}</div>
                 <span class="cnt">{{ u.mood_count }} {{ u.mood_count === 1 ? 'mood' : 'moods' }}</span>
               </div>
             </div>
-            <div style="text-align:center; margin-top: 10px" v-if="admin.users.length >= admin.page_size * (admin.page + 1)">
-              <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more' }}</button>
+            <div class="load-more" v-if="admin.has_more">
+              <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more users' }}</button>
             </div>
           </template>
-          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No moods have been set yet.</p></div>
+          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
         </div>
       </transition>
 
@@ -733,7 +783,7 @@
                 </div>
                 <div>
                   <h2>{{ sheet.friend.fullname }}</h2>
-                  <div class="mood">{{ sheet.friend.mood.emoji }} {{ sheet.friend.mood.name }}</div>
+                  <div class="mood">{{ sheet.friend.mood.name }}</div>
                   <div class="when" :title="new Date(sheet.friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(sheet.friend.timestamp)"></span>{{ formatWhen(sheet.friend.timestamp) }}</div>
                 </div>
               </div>
@@ -751,18 +801,44 @@
             <!-- admin: a user's history -->
             <template v-else-if="sheet.type === 'admin-user'">
               <div class="sheet-head">
-                <div class="avatar" :style="{ '--hue': hueFor(sheet.user.last_mood.mood.code) }">{{ sheet.user.last_mood.mood.emoji }}</div>
+                <div v-if="sheet.user.last_mood" class="avatar anim" :style="{ '--hue': hueFor(sheet.user.last_mood.mood.code) }">
+                  <div class="sticker" :class="{ loaded: loaded.sheet }" data-id="sheet" :data-tgs="sheet.user.last_mood.tgs" ref="sheetSticker">
+                    <span v-if="failed.sheet" class="sticker-fallback">{{ sheet.user.last_mood.mood.emoji }}</span>
+                  </div>
+                </div>
+                <div v-else class="avatar none" style="width:76px;height:76px;font-size:32px">–</div>
                 <div>
                   <h2>{{ sheet.user.fullname || 'Unnamed' }}</h2>
                   <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }} · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</div>
+                  <div class="mood">Active {{ formatWhen(sheet.user.last_active_at).toLowerCase() }}</div>
                 </div>
               </div>
+              <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
+                <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
+                  {{ sheet.savingFriend ? '…' : sheet.user.is_friend ? '✓ Friend · remove' : '➕ Add as friend' }}
+                </button>
+              </div>
+              <div class="sheet-section-title">Personality</div>
+              <div v-if="sheet.personalityLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+              <personality-view v-else-if="sheet.personality?.profile" :profile="sheet.personality.profile" :animate-key="'adm-' + sheet.user.id" compact></personality-view>
+              <div v-else class="muted-box">No personality test taken yet.</div>
+
+              <div class="sheet-section-title">Mood history</div>
               <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+              <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
               <div v-else class="timeline">
-                <div v-for="(m, i) in sheet.moods" :key="i" class="tl-item" :style="{ '--i': i, '--hue': hueFor(m.mood.code) }">
-                  <div class="tl-head">{{ m.mood.emoji }} {{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
+                  <div class="tl-ico">
+                    <div class="sticker" :class="{ loaded: loaded['tl' + i] }" :data-id="'tl' + i" :data-tgs="m.tgs" ref="timelineStickers">
+                      <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
+                    </div>
+                  </div>
+                  <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
                   <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
                 </div>
+              </div>
+              <div class="load-more" v-if="!sheet.loading && sheet.has_more">
+                <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
               </div>
             </template>
           </div>
@@ -835,7 +911,8 @@
             const above = y < cy - 4, below = y > cy + 4;
             return { x, y: above ? y - (lines.length - 1) * 11 : y, lines, pct: Math.round(t.value * 100), anchor: Math.abs(x - cx) < 6 ? 'middle' : x > cx ? 'start' : 'end', dy: above ? -4 : below ? 8 : 2 };
           });
-          return { title: cat.name, cx, cy, rings, axes: traits.map((_, i) => pt(i, R)), points, polygon: points.map(p => p.join(',')).join(' '), labels };
+          const overall = Math.round((traits.reduce((sum, t) => sum + t.value, 0) / n) * 100);
+          return { title: cat.name, overall, cx, cy, rings, axes: traits.map((_, i) => pt(i, R)), points, polygon: points.map(p => p.join(',')).join(' '), labels };
         },
       },
       methods: { hueFor(key) { return CATEGORY_HUES[key] ?? 210; } },
@@ -844,8 +921,9 @@
       template: `
         <div>
           <section v-if="radar" class="section" :style="{ '--i': 0 }">
-            <h3 v-if="!compact">Overview <span class="sub">{{ radar.title }}</span></h3>
+            <h3>Overview <span class="sub">{{ radar.title }}</span></h3>
             <div class="radar-wrap">
+              <div class="ovr" :class="{ show: animated }" :title="'Average of the ' + radar.title + ' axes'"><b>{{ radar.overall }}</b><span>OVR</span></div>
               <svg class="radar" :class="{ animated }" viewBox="0 0 300 256">
                 <polygon v-for="(r, i) in radar.rings" :key="'r' + i" class="ring" :points="r"></polygon>
                 <line v-for="(a, i) in radar.axes" :key="'a' + i" class="axis" :x1="radar.cx" :y1="radar.cy" :x2="a[0]" :y2="a[1]"></line>
@@ -904,7 +982,9 @@
           savingSharing: false,
           personalityAnimKey: 'p0',
           // admin
-          admin: { query: '', users: [], page: 0, page_size: 30, total_users: null, total_moods: null, loading: false },
+          admin: { query: '', trait: '', level: 'any', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false },
+          TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
+          myTelegramId: null,
           // sheet / misc
           sheet: null,
           toast: '',
@@ -924,6 +1004,13 @@
           if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
           return t;
         },
+        adminTraitGroups() {
+          const names = { big_five: 'Big Five', big_five_facet: 'Big Five facets', communication: 'Communication', emotional_style: 'Conversation & emotional style', thinking_style: 'Thinking & decision style', behavioral: 'Behavioral' };
+          const groups = {};
+          for (const t of this.admin.traits) (groups[t.category] ||= { category: t.category, name: names[t.category] || t.category, traits: [] }).traits.push(t);
+          return Object.values(groups);
+        },
+        adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
 
@@ -952,6 +1039,7 @@
             this.shareLink = data.shareLink;
             this.myMood = data.myMood || null;
             this.isAdmin = Boolean(data.isAdmin);
+            this.myTelegramId = data.telegramId ?? this.tg.initDataUnsafe?.user?.id ?? null;
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             this.setupMainButton();
             await this.fetchFriends();
@@ -988,7 +1076,7 @@
           try { localStorage.setItem('moodpal.tab', key); } catch {}
           const mb = this.tg?.MainButton;
           if (mb && this.usingMainButton) key === 'friends' ? mb.show() : mb.hide();
-          if (key === 'friends') { this.players = {}; nextTick(() => this.mountStickers()); }
+          if (key === 'friends') this.players = {};   // stickers re-mount on the tab transition's after-enter
           if (key === 'personality' && !this.personality) this.fetchPersonality();
           if (key === 'admin' && this.admin.total_users === null) this.fetchAdmin();
         },
@@ -1026,8 +1114,10 @@
           }
         },
 
-        updateMood() {
+        async updateMood() {
           this.haptic('medium');
+          // the bot posts the mood picker in the chat, then we close so the user lands on it
+          try { await this.api('/api/me/mood/picker', { method: 'POST' }); } catch (error) { console.error('Mood picker request failed:', error); }
           if (this.tg?.close) return this.tg.close();
           window.open(this.botLink, '_blank');
         },
@@ -1042,7 +1132,8 @@
           }
           const load = async (el) => {
             const id = el.dataset.id;
-            if (this.players[id]) return;
+            if (this.players[id]?.container === el) return;
+            if (this.players[id]) { try { this.players[id].destroy(); } catch {} }
             try {
               const player = new TgsPlayer(el, el.dataset.tgs);
               this.players[id] = player;
@@ -1053,8 +1144,8 @@
               this.failed[id] = true; this.loaded[id] = true;
             }
           };
-          const friendEls = Array.isArray(this.$refs.stickers) ? this.$refs.stickers : [this.$refs.stickers].filter(Boolean);
-          const els = [...(this.$refs.meSticker ? [this.$refs.meSticker] : []), ...(this.$refs.sheetSticker ? [this.$refs.sheetSticker] : []), ...friendEls];
+          const list = (ref) => (Array.isArray(ref) ? ref : [ref]).filter(Boolean);
+          const els = [...list(this.$refs.meSticker), ...list(this.$refs.sheetSticker), ...list(this.$refs.stickers), ...list(this.$refs.adminStickers), ...list(this.$refs.timelineStickers)];
           if (!('IntersectionObserver' in window)) { els.forEach(load); return; }
           this.observer?.disconnect();
           this.observer = new IntersectionObserver((entries) => {
@@ -1162,12 +1253,19 @@
           this.admin.loading = true;
           try {
             const page = append ? this.admin.page + 1 : 0;
-            const data = await this.api(`/api/admin/users?q=${encodeURIComponent(this.admin.query)}&page=${page}`);
+            const level = this.TRAIT_LEVELS.find(l => l.key === this.admin.level) || this.TRAIT_LEVELS[0];
+            const params = new URLSearchParams({ q: this.admin.query, page });
+            if (this.admin.trait) { params.set('trait', this.admin.trait); params.set('min', level.min); params.set('max', level.max); }
+            if (this.admin.traits.length === 0) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
+            const data = await this.api(`/api/admin/users?${params}`);
             this.admin.users = append ? [...this.admin.users, ...data.users] : data.users;
             this.admin.page = data.page;
             this.admin.page_size = data.page_size;
+            this.admin.has_more = data.has_more;
             this.admin.total_users = data.total_users;
             this.admin.total_moods = data.total_moods;
+            await nextTick();
+            this.mountStickers();
           } catch (error) {
             console.error('Admin list failed:', error);
             this.showToast(error.status === 403 ? 'Admin access required' : "Couldn't load users");
@@ -1180,16 +1278,64 @@
           this._searchTimer = setTimeout(() => this.fetchAdmin(), 300);
         },
         loadMoreAdmin() { this.fetchAdmin({ append: true }); },
+        applyAdminFilter() { this.haptic('light'); if (!this.admin.trait) this.admin.level = 'any'; this.fetchAdmin(); },
+        setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
         async openAdminUser(u) {
           this.haptic('light');
-          this.sheet = { type: 'admin-user', user: u, loading: true, moods: [] };
+          delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
+          for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
+          this.sheet = { type: 'admin-user', user: u, loading: true, loadingMore: false, savingFriend: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true };
+          this.api(`/api/admin/users/${u.id}/personality`).then(d => { if (this.sheet?.user?.id === u.id) this.sheet.personality = d; }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.personalityLoading = false; });
+          await nextTick();
+          this.mountStickers();
           try {
-            const data = await this.api(`/api/admin/users/${u.id}/moods?limit=100`);
-            if (this.sheet?.type === 'admin-user') this.sheet.moods = data.moods;
+            const data = await this.api(`/api/admin/users/${u.id}/moods`);
+            if (this.sheet?.type === 'admin-user') {
+              Object.assign(this.sheet, { moods: data.moods, has_more: data.has_more, next_before: data.next_before, loading: false });
+              await nextTick();                // render the timeline before mounting its stickers
+              this.mountStickers();
+            }
           } catch (error) {
             this.showToast("Couldn't load history");
           } finally {
             if (this.sheet) this.sheet.loading = false;
+          }
+        },
+        async loadMoreMoods() {
+          const sheet = this.sheet;
+          if (!sheet || sheet.loadingMore || !sheet.next_before) return;
+          this.haptic('light');
+          sheet.loadingMore = true;
+          try {
+            const data = await this.api(`/api/admin/users/${sheet.user.id}/moods?before=${encodeURIComponent(sheet.next_before)}`);
+            if (this.sheet !== sheet) return;
+            sheet.moods = [...sheet.moods, ...data.moods];
+            sheet.has_more = data.has_more;
+            sheet.next_before = data.next_before;
+            await nextTick();
+            this.mountStickers();
+          } catch (error) {
+            this.showToast("Couldn't load older moods");
+          } finally {
+            sheet.loadingMore = false;
+          }
+        },
+        async toggleAdminFriend(u) {
+          if (this.sheet?.savingFriend) return;
+          this.haptic('medium');
+          this.sheet.savingFriend = true;
+          try {
+            const data = await this.api(`/api/admin/users/${u.id}/friend`, { method: u.is_friend ? 'DELETE' : 'POST' });
+            u.is_friend = data.is_friend;
+            const row = this.admin.users.find(x => x.id === u.id);
+            if (row) row.is_friend = data.is_friend;
+            this.showToast(data.is_friend ? `${u.fullname || 'User'} added to your friends` : `${u.fullname || 'User'} removed from your friends`);
+            this.destroyStickers(); this.loaded = {}; this.failed = {};
+            this.fetchFriends();               // keep the Friends tab in sync
+          } catch (error) {
+            this.showToast("Couldn't update friend");
+          } finally {
+            if (this.sheet) this.sheet.savingFriend = false;
           }
         },
 

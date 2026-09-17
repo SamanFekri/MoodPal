@@ -80,6 +80,7 @@ const isAuthenticated = async (req, res) => {
     res.json({
       authenticated: true,
       userId: user._id,
+      telegramId: user.id,
       firstName: user.first_name,
       isAdmin: Boolean(user.is_admin),
       // the user's own latest mood (null until they set one in the bot)

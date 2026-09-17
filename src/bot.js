@@ -34,7 +34,10 @@ const handleTextMessage = require('./actions/on_text');
 
 
 // Connect to MongoDB, then make sure the personality catalog is seeded
-connectDB().then(() => ensurePersonalityCatalog()).catch(err => console.error('Personality catalog seed failed:', err));
+connectDB()
+  .then(() => ensurePersonalityCatalog())
+  .then(() => require('./models/user').backfillLastActive())
+  .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server
 listenServer();

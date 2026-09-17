@@ -12,6 +12,7 @@ const Mood = require('../../src/models/mood');
 const Share = require('../../src/models/share');
 const { ensurePersonalityCatalog } = require('../../src/personality/migrate');
 const personalityService = require('../../src/personality/service');
+const { setTelegram } = require('../../src/utils/telegram');
 
 // ---- helpers ----
 function signInitData(tgUser, { token = process.env.BOT_TOKEN, ageSeconds = 5 } = {}) {
@@ -83,6 +84,23 @@ describe('mini app API', () => {
       assert.equal(r.body[0].mood.code, 'happy');
       assert.equal(r.body[0].personality_shared, false);
       assert.deepEqual(await api('/api/friends', { as: bob }).then(r => r.body), []);
+    });
+  });
+
+  describe('mood picker bridge', () => {
+    test('asks the bot to send the mood picker to the signed-in user', async () => {
+      const sent = [];
+      setTelegram({ sendMessage: async (chatId, text, extra) => { sent.push({ chatId, text, extra }); return { message_id: 1 }; } });
+      const r = await api('/api/me/mood/picker', { as: alice, method: 'POST' });
+      assert.equal(r.status, 200);
+      assert.equal(sent.length, 1);
+      assert.equal(sent[0].chatId, 1);
+      assert.match(sent[0].text, /mood/i);
+      assert.ok(sent[0].extra.reply_markup.inline_keyboard.flat().some(b => b.callback_data === 'mood_happy'));
+      assert.equal((await api('/api/me/mood/picker', { method: 'POST' })).status, 401);
+
+      setTelegram({ sendMessage: async () => { throw new Error('blocked'); } });
+      assert.equal((await api('/api/me/mood/picker', { as: alice, method: 'POST' })).status, 502);
     });
   });
 
@@ -165,14 +183,27 @@ describe('mini app API', () => {
       assert.equal((await api('/api/admin/users')).status, 401);
     });
 
-    test('admins see everyone\'s latest mood and note, newest first, with search', async () => {
+    test('admins see every user, most recently active first, with latest mood/note and search', async () => {
+      const t = Date.now();
+      await User.updateOne({ _id: bob._id }, { last_active_at: new Date(t - 1000) });
+      await User.updateOne({ _id: alice._id }, { last_active_at: new Date(t - 2000) });
+      await User.updateOne({ _id: carol._id }, { last_active_at: new Date(t - 3000) });
+      await User.updateOne({ _id: admin._id }, { last_active_at: new Date(t - 4000) });
+
       const r = await api('/api/admin/users', { as: admin });
       assert.equal(r.status, 200);
-      assert.deepEqual(r.body.users.map(u => u.id), [1, 2]);          // alice's mood is newer
-      assert.equal(r.body.users[0].last_mood.note, 'long day');
-      assert.equal(r.body.users[1].last_mood.mood.code, 'happy');
-      assert.equal(r.body.users[1].username, 'bobby');
+      assert.deepEqual(r.body.users.map(u => u.id), [2, 1, 3, 9]);    // by activity, users without moods included
+      assert.equal(r.body.users[0].last_mood.mood.code, 'happy');
+      assert.equal(r.body.users[0].username, 'bobby');
+      assert.equal(r.body.users[1].last_mood.note, 'long day');
+      assert.equal(r.body.users[2].last_mood, null);
+      assert.equal(r.body.users[2].mood_count, 0);
+      assert.equal(r.body.users[0].mood_count, 1);
+      assert.equal(r.body.users[0].is_friend, false);
+      assert.equal(r.body.total_users, 4);
       assert.equal(r.body.total_moods, 2);
+      assert.equal(r.body.has_more, false);
+      assert.equal(r.body.page_size, 20);
 
       const byName = await api('/api/admin/users?q=bob', { as: admin });
       assert.deepEqual(byName.body.users.map(u => u.id), [2]);
@@ -181,6 +212,79 @@ describe('mini app API', () => {
       const byId = await api('/api/admin/users?q=1', { as: admin });
       assert.deepEqual(byId.body.users.map(u => u.id), [1]);
       assert.deepEqual((await api('/api/admin/users?q=nobody', { as: admin })).body.users, []);
+    });
+
+    test('user list is paginated', async () => {
+      for (let i = 0; i < 25; i++) await User.create({ id: 1000 + i, first_name: `U${i}`, last_active_at: new Date(Date.now() + i * 1000) });
+      const p0 = await api('/api/admin/users', { as: admin });
+      assert.equal(p0.body.users.length, 20);
+      assert.equal(p0.body.has_more, true);
+      assert.equal(p0.body.users[0].id, 1024);                        // most recently active first
+      const p1 = await api('/api/admin/users?page=1', { as: admin });
+      assert.equal(p1.body.users.length, 9);                          // 25 new + 4 seeded - 20
+      assert.equal(p1.body.has_more, false);
+      const ids = new Set([...p0.body.users, ...p1.body.users].map(u => u.id));
+      assert.equal(ids.size, 29, 'no duplicates across pages');
+    });
+
+    test('a user\'s history is cursor paginated, newest first', async () => {
+      for (let i = 0; i < 35; i++) await Mood.create({ user: carol._id, mood: { code: 'neutral', emoji: '😐', name: 'Neutral' }, note: `n${i}`, timestamp: new Date(Date.now() - i * 60000) });
+      const p0 = await api('/api/admin/users/3/moods', { as: admin });
+      assert.equal(p0.body.moods.length, 30);
+      assert.equal(p0.body.moods[0].note, 'n0');
+      assert.equal(p0.body.has_more, true);
+      assert.ok(p0.body.next_before);
+      const p1 = await api(`/api/admin/users/3/moods?before=${encodeURIComponent(p0.body.next_before)}`, { as: admin });
+      assert.equal(p1.body.moods.length, 5);
+      assert.equal(p1.body.moods[0].note, 'n30');
+      assert.equal(p1.body.has_more, false);
+      assert.equal(p1.body.next_before, null);
+      const small = await api('/api/admin/users/3/moods?limit=5', { as: admin });
+      assert.equal(small.body.moods.length, 5);
+    });
+
+    test('admin can add and remove anyone as a friend (they appear in the admin\'s friends)', async () => {
+      let r = await api('/api/admin/users/2/friend', { as: admin, method: 'POST' });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.is_friend, true);
+      assert.deepEqual((await api('/api/friends', { as: admin })).body.map(f => f.id), [2]);
+      assert.equal((await api('/api/admin/users', { as: admin })).body.users.find(u => u.id === 2).is_friend, true);
+
+      r = await api('/api/admin/users/2/friend', { as: admin, method: 'DELETE' });
+      assert.equal(r.body.is_friend, false);
+      assert.deepEqual((await api('/api/friends', { as: admin })).body, []);
+      assert.equal((await api('/api/admin/users', { as: admin })).body.users.find(u => u.id === 2).is_friend, false);
+
+      assert.equal((await api('/api/admin/users/9/friend', { as: admin, method: 'POST' })).status, 400);
+      assert.equal((await api('/api/admin/users/999/friend', { as: admin, method: 'POST' })).status, 404);
+      assert.equal((await api('/api/admin/users/2/friend', { as: alice, method: 'POST' })).status, 403);
+    });
+
+    test('admin sees anyone\'s personality regardless of sharing, and can filter users by a trait', async () => {
+      await takeBigFive(bob._id, q => (q.reverse ? 1 : 5));     // bob: everything 1.0, sharing off
+      await takeBigFive(alice._id, q => (q.reverse ? 5 : 1));   // alice: everything 0.0
+      let r = await api('/api/admin/users/2/personality', { as: admin });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.shared, false);
+      assert.equal(r.body.profile.categories[0].traits[0].value, 1);
+      assert.equal((await api('/api/admin/users/3/personality', { as: admin })).body.profile, null);
+      assert.equal((await api('/api/admin/users/2/personality', { as: alice })).status, 403);
+
+      const traits = await api('/api/admin/traits', { as: admin });
+      assert.ok(traits.body.traits.some(t => t.key === 'openness' && t.category === 'big_five'));
+
+      r = await api('/api/admin/users?trait=openness&min=0.6', { as: admin });
+      assert.deepEqual(r.body.users.map(u => u.id), [2]);
+      assert.equal(r.body.users[0].trait_value, 1);
+      assert.equal(r.body.total_users, 1);
+      assert.deepEqual(r.body.filter, { trait: 'openness', min: 0.6, max: 1 });
+      r = await api('/api/admin/users?trait=openness&max=0.4', { as: admin });
+      assert.deepEqual(r.body.users.map(u => u.id), [1]);
+      r = await api('/api/admin/users?trait=openness', { as: admin });
+      assert.deepEqual(new Set(r.body.users.map(u => u.id)), new Set([1, 2]));    // only users with a profile
+      r = await api('/api/admin/users?trait=openness&q=bob', { as: admin });
+      assert.deepEqual(r.body.users.map(u => u.id), [2]);
+      assert.equal((await api('/api/admin/users?trait=$where', { as: admin })).body.filter, null);
     });
 
     test('admins can read a user\'s full history including private moods and notes', async () => {

@@ -20,6 +20,8 @@ const moodSchema = new mongoose.Schema({
   },
 });
 
+moodSchema.index({ user: 1, timestamp: -1 });
+
 // Add a method to add a note to the mood
 moodSchema.methods.addNote = function(note) {
   this.note = note;

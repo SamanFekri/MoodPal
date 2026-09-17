@@ -81,7 +81,7 @@ Simply paste the provided code into your website or blog to get a live represent
 - **In the mini app**: a *Personality* tab shows your profile as an animated radar and trait bars, lists the tests, and lets you **share** it — friends who follow your mood can tap your card to see it, and a public link (`/p/<token>`) shows a standalone card to anyone. Sharing is off by default.
 
 ### 🛡️ Admin
-An admin can see every user's latest mood and their full mood/notes history in the mini app's *Admin* tab. Admins are chosen by hand in the database:
+An admin can see every user in the mini app's *Admin* tab — most recently active first, paginated — with their latest mood and note, search, and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend. Admins are chosen by hand in the database:
 ```js
 db.users.updateOne({ id: <telegram user id> }, { $set: { is_admin: true } })
 ```
