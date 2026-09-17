@@ -27,7 +27,8 @@ describe('keyboard menu refresh', () => {
     assert.equal(ctx.sent.length, 1);
     assert.match(ctx.sent[0].t, /menu has been updated/);
     const keys = ctx.sent[0].extra.reply_markup.keyboard.flat();
-    assert.ok(keys.includes('💬 Talk') && keys.includes('🛑 End talk') && keys.includes('🧠 Personality Test'));
+    assert.ok(keys.includes('💬 Talk') && keys.includes('🧠 Personality Test'));
+    assert.ok(!keys.includes('🛑 End talk'), 'End talk only appears while talking');
     assert.equal((await User.findById(alice._id)).menu_signature, common.MENU_SIGNATURE);
 
     ctx = makeCtx(await User.findById(alice._id));
