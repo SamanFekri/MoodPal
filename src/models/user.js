@@ -61,7 +61,7 @@ const userSchema = new mongoose.Schema({
 userSchema.statics.backfillLastActive = async function() {
   const result = await this.updateMany(
     { last_active_at: { $exists: false } },
-    [{ $set: { last_active_at: { $ifNull: ['$updatedAt', '$createdAt', '$$NOW'] } } }]
+    [{ $set: { last_active_at: { $ifNull: ['$updatedAt', { $ifNull: ['$createdAt', '$$NOW'] }] } } }]
   );
   return result.modifiedCount;
 };

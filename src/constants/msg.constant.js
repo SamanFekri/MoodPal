@@ -24,7 +24,7 @@ Here are some commands you can use:
 
 export const welocmeMsg = (name) => `
 Hi ${name},
-Welcome to Mood Pal — your personal mood tracker.
+Welcome to Mood Pal, your personal mood tracker.
 
 Start tracking your <i>mood</i> and stay connected with your <i>feelings</i>.
 Choose from a wide range of moods to reflect how you're feeling right now.
@@ -109,14 +109,14 @@ export const openAIKeyStoppedWorkingMsg = () => `⚠️ OpenAI rejected your sav
 export const TALK_DISCLAIMER = `🤖 <b>Please read first</b>
 • You're talking to an <b>AI bot</b>, not a human and not a therapist. It tries to respond like a supportive psychologist, but it is <b>not accurate</b> and can be wrong.
 • This is <b>not</b> therapy, medical advice or a diagnosis. If you're in danger or thinking about hurting yourself, contact your local emergency number or a crisis line right away.
-• It runs on <b>your own OpenAI key</b> (/set_openai_key) — your messages are sent to OpenAI and stored here so the conversation has context.`
+• It runs on <b>your own OpenAI key</b> (/set_openai_key). Your messages are sent to OpenAI and stored here so the conversation has context.`
 
 export const talkIntroMsg = (name) => `
 💬 <b>Let's talk${name ? `, ${name}` : ''}.</b>
 
 ${TALK_DISCLAIMER}
 
-Whenever you're ready, tell me what's on your mind. Send 🛑 <b>End talk</b> (or /end_talk) at any time to stop — after that, your messages are saved as mood notes again like before.
+Whenever you're ready, tell me what's on your mind. Send 🛑 <b>End talk</b> (or /end_talk) at any time to stop. After that, your messages are saved as mood notes again, like before.
 `
 export const talkNeedsKeyMsg = () => `
 💬 <b>Talk</b> uses your own OpenAI key, so nobody else pays for your conversations.
@@ -132,6 +132,6 @@ export const talkNotActiveMsg = () => `ℹ️ You're not in a conversation right
 export const talkErrorMsg = () => `⚠️ I couldn't get a reply right now. Please try again in a moment, or /end_talk to stop.`
 export const talkKeyRejectedMsg = () => `❌ OpenAI rejected your key, so I can't reply. Update it with /set_openai_key and press 💬 Talk again.`
 export const talkSafetyFooterMsg = () => `
-🛟 <b>If you might be in danger, please don't wait on a bot.</b> Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe — a real person can.`
+🛟 <b>If you might be in danger, please don't wait on a bot.</b> Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.`
 export const talkAboutNoteMsg = () => `💬 Want to talk about it?`
 export const talkReminderMsg = () => `<i>🤖 Reminder: I'm an AI, not a therapist, and I can be wrong.</i>`

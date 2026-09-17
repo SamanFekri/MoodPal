@@ -625,7 +625,7 @@
           <div v-else class="state">
             <div class="art">🫂</div>
             <h2>No friends yet</h2>
-            <p>Share your link so a friend can follow your mood — once they allow you back, they'll show up here.</p>
+            <p>Share your link so a friend can follow your mood. Once they allow you back, they'll show up here.</p>
             <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
           </div>
 
@@ -658,7 +658,7 @@
             <div v-else class="state" style="padding-top: 24px">
               <div class="art">🧠</div>
               <h2>No profile yet</h2>
-              <p>Take a short test in the chat and your personality will appear here — with a radar, trait bars and everything.</p>
+              <p>Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.</p>
               <button class="btn" @click="takeTest()">📝 Take a test</button>
             </div>
 
@@ -754,7 +754,48 @@
               <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more users' }}</button>
             </div>
           </template>
+          <div v-else-if="admin.error" class="state"><div class="art">⚠️</div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
           <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
+        </div>
+        <!-- ---------- Logs (admin) ---------- -->
+        <div v-else-if="tab === 'logs' && isAdmin" key="logs">
+          <header class="header">
+            <div>
+              <p class="greeting">Admin</p>
+              <h1>Mood log</h1>
+            </div>
+            <div class="header-right">
+              <span class="pill" v-if="logs.moods.length">{{ logs.moods.length }} shown</span>
+              <button class="icon-btn" :class="{ spinning: logs.loading }" @click="fetchLogs()" aria-label="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <template v-if="logs.loading && logs.moods.length === 0">
+            <div v-for="n in 6" :key="'lsk' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
+          </template>
+          <div v-else-if="logs.error" class="state"><div class="art">⚠️</div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
+          <template v-else-if="logs.moods.length > 0">
+            <div v-for="(m, i) in logs.moods" :key="m.timestamp + '-' + m.user.id" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }" @click="openAdminUser({ ...m.user, last_mood: m, mood_count: null, last_active_at: m.timestamp, is_friend: false })">
+              <div class="avatar anim">
+                <div class="sticker" :class="{ loaded: loaded['log' + i] }" :data-id="'log' + i" :data-tgs="m.tgs" ref="logStickers">
+                  <span v-if="failed['log' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
+                </div>
+              </div>
+              <div class="row-body">
+                <div class="row-title"><span class="n">{{ m.user.fullname || 'Unnamed' }}</span><span class="u" v-if="m.user.username">@{{ m.user.username }}</span><span class="lock" v-if="m.user.is_mood_private">🔒</span></div>
+                <div class="row-sub">{{ m.mood.name }}<template v-if="m.note"> · <i>“{{ m.note }}”</i></template></div>
+              </div>
+              <div class="row-right">
+                <div class="when"><span class="dot" :class="freshness(m.timestamp)"></span>{{ formatWhen(m.timestamp, true) }}</div>
+              </div>
+            </div>
+            <div class="load-more" v-if="logs.has_more">
+              <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ logs.loadingMore ? 'Loading…' : 'Load older' }}</button>
+            </div>
+          </template>
+          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p>Entries will appear here as people set their mood.</p></div>
         </div>
       </transition>
 
@@ -808,7 +849,7 @@
                 <div v-else class="avatar none" style="width:76px;height:76px;font-size:32px">–</div>
                 <div>
                   <h2>{{ sheet.user.fullname || 'Unnamed' }}</h2>
-                  <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }} · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</div>
+                  <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }}<template v-if="sheet.user.mood_count !== null && sheet.user.mood_count !== undefined"> · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</template></div>
                   <div class="mood">Active {{ formatWhen(sheet.user.last_active_at).toLowerCase() }}</div>
                 </div>
               </div>
@@ -853,7 +894,7 @@
       <div v-else class="state">
         <div class="art">🔐</div>
         <h2>Open in Telegram</h2>
-        <p v-if="authReason === 'unknown_user'">We don't know you yet — send /start to the MoodPal bot first, then open this mini app again.</p>
+        <p v-if="authReason === 'unknown_user'">We don't know you yet. Send /start to the MoodPal bot first, then open this mini app again.</p>
         <p v-else>Please open this page from the MoodPal bot to see your friends' moods.</p>
       </div>
     </template>
@@ -981,9 +1022,12 @@
           savingSharing: false,
           personalityAnimKey: 'p0',
           // admin
-          admin: { query: '', trait: '', level: 'any', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false },
+          admin: { query: '', trait: '', level: 'any', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
+          fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0 },
+          logs: { moods: [], has_more: false, next_before: null, loading: false, loadingMore: false, error: '' },
+          STALE_MS: 30 * 1000,
           // sheet / misc
           sheet: null,
           toast: '',
@@ -1000,7 +1044,7 @@
       computed: {
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: '🫂' }, { key: 'personality', label: 'Personality', icon: '🧠' }];
-          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
+          if (this.isAdmin) { t.push({ key: 'admin', label: 'Admin', icon: '🛡️' }); t.push({ key: 'logs', label: 'Logs', icon: '📜' }); }
           return t;
         },
         adminTraitGroups() {
@@ -1041,9 +1085,11 @@
             this.myTelegramId = data.telegramId ?? this.tg.initDataUnsafe?.user?.id ?? null;
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             this.setupMainButton();
+            this.watchActivation();
             await this.fetchFriends();
             if (this.tab === 'personality') this.fetchPersonality();
             if (this.tab === 'admin') this.fetchAdmin();
+            if (this.tab === 'logs') this.fetchLogs();
           } else {
             this.authReason = data.reason || null;
           }
@@ -1075,9 +1121,26 @@
           try { localStorage.setItem('moodpal.tab', key); } catch {}
           const mb = this.tg?.MainButton;
           if (mb && this.usingMainButton) key === 'friends' ? mb.show() : mb.hide();
-          if (key === 'friends') this.players = {};   // stickers re-mount on the tab transition's after-enter
-          if (key === 'personality' && !this.personality) this.fetchPersonality();
-          if (key === 'admin' && this.admin.total_users === null) this.fetchAdmin();
+          if (key === 'friends') { this.players = {}; if (this.isStale('friends')) { this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); } }   // stickers re-mount on the tab transition's after-enter
+          if (key === 'personality' && (!this.personality || this.isStale('personality'))) this.fetchPersonality();
+          if (key === 'admin' && (this.admin.total_users === null || this.isStale('admin'))) this.fetchAdmin();
+          if (key === 'logs' && (this.logs.moods.length === 0 || this.isStale('logs'))) this.fetchLogs();
+        },
+
+        isStale(key) { return Date.now() - (this.fetchedAt[key] || 0) > this.STALE_MS; },
+
+        // Telegram keeps the mini app alive in the background; when it comes back, refresh what's on screen
+        watchActivation() {
+          const refresh = () => {
+            if (!this.isAuthenticated || this.sheet) return;
+            if (this.tab === 'friends' && this.isStale('friends')) { this.destroyStickers(); this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); }
+            if (this.tab === 'personality' && this.isStale('personality')) this.fetchPersonality();
+            if (this.tab === 'admin' && this.isStale('admin')) this.fetchAdmin();
+            if (this.tab === 'logs' && this.isStale('logs')) this.fetchLogs();
+          };
+          document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+          window.addEventListener('focus', refresh);
+          try { this.tg?.onEvent?.('activated', refresh); } catch {}
         },
 
         // ----- friends -----
@@ -1085,6 +1148,7 @@
           this.loadingFriends = true;
           try {
             this.friends = await this.api('/api/friends');
+            this.fetchedAt.friends = Date.now();
             await nextTick();
             this.mountStickers();
           } catch (error) {
@@ -1144,7 +1208,7 @@
             }
           };
           const list = (ref) => (Array.isArray(ref) ? ref : [ref]).filter(Boolean);
-          const els = [...list(this.$refs.meSticker), ...list(this.$refs.sheetSticker), ...list(this.$refs.stickers), ...list(this.$refs.adminStickers), ...list(this.$refs.timelineStickers)];
+          const els = [...list(this.$refs.meSticker), ...list(this.$refs.sheetSticker), ...list(this.$refs.stickers), ...list(this.$refs.adminStickers), ...list(this.$refs.timelineStickers), ...list(this.$refs.logStickers)];
           if (!('IntersectionObserver' in window)) { els.forEach(load); return; }
           this.observer?.disconnect();
           this.observer = new IntersectionObserver((entries) => {
@@ -1214,6 +1278,7 @@
           this.loadingPersonality = true;
           try {
             this.personality = await this.api('/api/me/personality');
+            this.fetchedAt.personality = Date.now();
             this.personalityAnimKey = 'p' + Date.now();
           } catch (error) {
             console.error('Personality failed:', error);
@@ -1235,7 +1300,7 @@
           const enabled = !this.personality.sharing.enabled;
           try {
             this.personality.sharing = await this.api('/api/me/personality/sharing', { method: 'POST', body: { enabled } });
-            this.showToast(enabled ? 'Sharing on — friends can see your personality' : 'Sharing off');
+            this.showToast(enabled ? 'Sharing on. Friends can see your personality' : 'Sharing off');
           } catch (error) {
             this.showToast("Couldn't update sharing");
           } finally {
@@ -1257,17 +1322,20 @@
             if (this.admin.trait) { params.set('trait', this.admin.trait); params.set('min', level.min); params.set('max', level.max); }
             if (this.admin.traits.length === 0) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
             const data = await this.api(`/api/admin/users?${params}`);
+            this.admin.error = '';
             this.admin.users = append ? [...this.admin.users, ...data.users] : data.users;
             this.admin.page = data.page;
             this.admin.page_size = data.page_size;
             this.admin.has_more = data.has_more;
+            this.fetchedAt.admin = Date.now();
             this.admin.total_users = data.total_users;
             this.admin.total_moods = data.total_moods;
             await nextTick();
             this.mountStickers();
           } catch (error) {
             console.error('Admin list failed:', error);
-            this.showToast(error.status === 403 ? 'Admin access required' : "Couldn't load users");
+            this.admin.error = error.status === 403 ? 'This account is not an admin.' : error.status === 401 ? 'Please reopen the mini app from Telegram.' : `Server error (${error.message}). Check the bot logs.`;
+            if (!append) this.admin.users = [];
           } finally {
             this.admin.loading = false;
           }
@@ -1335,6 +1403,28 @@
             this.showToast("Couldn't update friend");
           } finally {
             if (this.sheet) this.sheet.savingFriend = false;
+          }
+        },
+
+        // ----- mood log (admin) -----
+        async fetchLogs({ append = false } = {}) {
+          if (append) { if (!this.logs.next_before || this.logs.loadingMore) return; this.logs.loadingMore = true; } else { this.logs.loading = true; }
+          try {
+            const params = new URLSearchParams();
+            if (append) params.set('before', this.logs.next_before);
+            const data = await this.api(`/api/admin/moods?${params}`);
+            this.logs.error = '';
+            this.logs.moods = append ? [...this.logs.moods, ...data.moods] : data.moods;
+            this.logs.has_more = data.has_more;
+            this.logs.next_before = data.next_before;
+            this.fetchedAt.logs = Date.now();
+            await nextTick();
+            this.mountStickers();
+          } catch (error) {
+            console.error('Mood log failed:', error);
+            this.logs.error = error.status === 403 ? 'This account is not an admin.' : `Server error (${error.message}).`;
+          } finally {
+            this.logs.loading = false; this.logs.loadingMore = false;
           }
         },
 

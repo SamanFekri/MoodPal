@@ -214,6 +214,25 @@ describe('mini app API', () => {
       assert.deepEqual((await api('/api/admin/users?q=nobody', { as: admin })).body.users, []);
     });
 
+    test('users created before last_active_at existed still sort by recency', async () => {
+      await User.collection.updateOne({ id: 3 }, { $unset: { last_active_at: '' } });      // pre-migration user
+      await User.updateOne({ _id: bob._id }, { last_active_at: new Date(Date.now() - 10 * 86400000) });
+      await User.updateOne({ _id: alice._id }, { last_active_at: new Date(Date.now() - 20 * 86400000) });
+      await User.updateOne({ _id: admin._id }, { last_active_at: new Date(Date.now() - 30 * 86400000) });
+      const r = await api('/api/admin/users', { as: admin });
+      // the admin's own request counts as activity, then carol (updated just now, no field), then by last_active_at
+      assert.deepEqual(r.body.users.map(u => u.id), [9, 3, 2, 1]);
+      assert.ok(r.body.users[1].last_active_at, 'fallback activity time is reported');
+    });
+
+    test('opening the mini app counts as activity', async () => {
+      await User.updateOne({ _id: alice._id }, { last_active_at: new Date(Date.now() - 86400000) });
+      await api('/api/friends', { as: alice });
+      await new Promise(r => setTimeout(r, 50));
+      const fresh = await User.findById(alice._id);
+      assert.ok(Date.now() - fresh.last_active_at.getTime() < 5000);
+    });
+
     test('user list is paginated', async () => {
       for (let i = 0; i < 25; i++) await User.create({ id: 1000 + i, first_name: `U${i}`, last_active_at: new Date(Date.now() + i * 1000) });
       const p0 = await api('/api/admin/users', { as: admin });
@@ -285,6 +304,24 @@ describe('mini app API', () => {
       r = await api('/api/admin/users?trait=openness&q=bob', { as: admin });
       assert.deepEqual(r.body.users.map(u => u.id), [2]);
       assert.equal((await api('/api/admin/users?trait=$where', { as: admin })).body.filter, null);
+    });
+
+    test('the global mood log lists every entry newest first with pagination', async () => {
+      for (let i = 0; i < 33; i++) await Mood.create({ user: i % 2 ? alice._id : carol._id, mood: { code: 'neutral', emoji: '😐', name: 'Neutral' }, note: `log ${i}`, timestamp: new Date(Date.now() - (i + 10) * 60000) });
+      assert.equal((await api('/api/admin/moods', { as: alice })).status, 403);
+      const p0 = await api('/api/admin/moods', { as: admin });
+      assert.equal(p0.status, 200);
+      assert.equal(p0.body.moods.length, 30);
+      assert.equal(p0.body.moods[0].note, 'long day');           // alice's seeded mood is the newest
+      assert.equal(p0.body.moods[0].user.id, 1);
+      assert.equal(p0.body.moods[1].user.username, 'bobby');
+      assert.equal(p0.body.has_more, true);
+      const p1 = await api(`/api/admin/moods?before=${encodeURIComponent(p0.body.next_before)}`, { as: admin });
+      assert.equal(p1.body.moods.length, 5);                     // 2 seeded + 33 = 35 total
+      assert.equal(p1.body.has_more, false);
+      const all = [...p0.body.moods, ...p1.body.moods];
+      assert.equal(new Set(all.map(m => m.timestamp)).size, 35, 'no duplicates across pages');
+      for (let i = 1; i < all.length; i++) assert.ok(new Date(all[i - 1].timestamp) >= new Date(all[i].timestamp), 'newest first');
     });
 
     test('admins can read a user\'s full history including private moods and notes', async () => {

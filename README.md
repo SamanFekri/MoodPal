@@ -72,16 +72,16 @@ Available embed options:
 Simply paste the provided code into your website or blog to get a live representation of your current mood state!
 
 ### 🧠 Personality Profile
-- **Personality Tests** (`🧠 Personality Test` / `/personality_test`): six interactive one-question-at-a-time tests — Big Five (Mini-IPIP), Communication style, Thinking & decision style, Conversation & emotional style, Behavioral preferences, and Big Five facets (in depth). Progress is saved; you can cancel, continue or start over, and completed tests are marked ✅.
+- **Personality Tests** (`🧠 Personality Test` / `/personality_test`): six interactive one-question-at-a-time tests. Big Five (Mini-IPIP), Communication style, Thinking & decision style, Conversation & emotional style, Behavioral preferences, and Big Five facets (in depth). Progress is saved; you can cancel, continue or start over, and completed tests are marked ✅.
 - **My Personality** (`🧠 My Personality` / `/my_personality`): view your profile, retake the test or reset the profile.
 - **Evolves over time**: with your own OpenAI key set, your weekly mood notes are analysed and the profile is adjusted *gradually* (small, validated, bounded updates). Big Five traits are slow-changing; communication preferences adapt faster.
-- AI replies use a compact personality context to adapt tone and length — it is never revealed unless you ask for your profile.
+- AI replies use a compact personality context to adapt tone and length. It is never revealed unless you ask for your profile.
 - ⚠️ This is an approximate self-report profile, **not a clinical or medical diagnosis**.
 
-- **In the mini app**: a *Personality* tab shows your profile as an animated radar and trait bars, lists the tests, and lets you **share** it — friends who follow your mood can tap your card to see it, and a public link (`/p/<token>`) shows a standalone card to anyone. Sharing is off by default.
+- **In the mini app**: a *Personality* tab shows your profile as an animated radar and trait bars, lists the tests, and lets you **share** it. Friends who follow your mood can tap your card to see it, and a public link (`/p/<token>`) shows a standalone card to anyone. Sharing is off by default.
 
 ### 💬 Talk
-`💬 Talk` / `/talk` starts a supportive conversation with the AI companion, which responds the way a warm, experienced psychologist would — reflecting, asking one gentle question at a time, offering small realistic ideas — and silently screens every message for risk (self-harm, panic, hopelessness, …). On medium/high risk the reply focuses on immediate safety and adds a crisis footer.
+`💬 Talk` / `/talk` starts a supportive conversation with the AI companion, which responds the way a warm, experienced psychologist would: reflecting, asking one gentle question at a time, offering small realistic ideas. It also quietly screens every message for risk (self-harm, panic, hopelessness, …). On medium/high risk the reply focuses on immediate safety and adds a crisis footer.
 
 Important, and stated to the user before every conversation:
 - it is an **AI bot**, not a human and **not a therapist**; it can be **wrong** and is not accurate;
@@ -91,7 +91,7 @@ Important, and stated to the user before every conversation:
 Mood notes keep working exactly as before: outside a conversation, text is saved as a note (with a *💬 Talk about it* button). `🛑 End talk` / `/end_talk` ends the conversation (it also ends after 2 idle hours). What the user said is then used to gradually refine their personality profile.
 
 ### 🛡️ Admin
-An admin can see every user in the mini app's *Admin* tab — most recently active first, paginated — with their latest mood and note, search, and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend. Admins are chosen by hand in the database:
+An admin can see every user in the mini app's *Admin* tab, most recently active first and paginated, with their latest mood and note, a search box, and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend. Admins are chosen by hand in the database:
 ```js
 db.users.updateOne({ id: <telegram user id> }, { $set: { is_admin: true } })
 ```

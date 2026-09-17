@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>MoodPal brag</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <script src="assets/audio-data.js"></script>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #1b1e25;
+        --card-light: #ffffff;
+        --text: #f2f3f5;
+        --hint: #9aa0ab;
+        --accent: #3390ec;
+        --bass: 0;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      #s2, #s3, #s4, #s5, #s6 { opacity: 0; }
+
+      /* ambient background: one soft glow per scene, breathes with the music */
+      .glow {
+        position: absolute;
+        width: 1100px;
+        height: 1100px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, hsl(var(--hue, 280) 80% 55% / 0.22), transparent 72%);
+        transform: scale(calc(1 + var(--bass) * 0.08));
+        pointer-events: none;
+      }
+
+      /* ---------- scene 1: hook ---------- */
+      #s1 .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; }
+      #fine-wrap { position: relative; display: inline-block; height: 190px; }
+      #fine { font-size: 150px; font-weight: 800; letter-spacing: -0.03em; line-height: 190px; white-space: nowrap; color: #f2f3f5; }
+      #cursor { display: inline-block; width: 8px; height: 130px; background: #f2f3f5; vertical-align: -12px; margin-left: 10px; }
+      #strike { position: absolute; left: -12px; right: -12px; top: 96px; height: 12px; border-radius: 6px; background: #ff5f6d; transform-origin: left center; transform: scaleX(0); }
+      #hook-sticker { position: absolute; width: 420px; height: 420px; left: 50%; top: 50%; margin-left: -210px; margin-top: -330px; opacity: 0; }
+      #hook-line { font-size: 58px; font-weight: 700; color: #cfd3da; letter-spacing: -0.01em; opacity: 0; margin-top: 60px; }
+
+      /* ---------- scene 2: picker ---------- */
+      .chat { position: absolute; width: 860px; border-radius: 28px; background: #171a21; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45); padding: 28px 30px 30px; box-sizing: border-box; }
+      .chat-head { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+      .chat-head img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+      .chat-head .name { font-size: 28px; font-weight: 800; }
+      .chat-head .sub { font-size: 20px; color: var(--hint); font-weight: 500; }
+      .bubble { display: inline-block; max-width: 720px; padding: 18px 24px; border-radius: 22px; background: #252a34; font-size: 27px; line-height: 1.35; font-weight: 500; }
+      .bubble b { font-weight: 800; }
+      .bubble.me { background: var(--accent); color: #fff; }
+      .kb { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+      .kb .row { display: contains; }
+      .kbtn { height: 62px; border-radius: 14px; background: #2b3040; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #f2f3f5; opacity: 0; }
+      .kbtn.hit { background: var(--accent); }
+      #cursor-arrow { position: absolute; width: 44px; height: 44px; opacity: 0; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+      #pick-sticker { position: absolute; width: 560px; height: 560px; left: 1180px; top: 260px; opacity: 0; }
+      #pick-label { position: absolute; left: 1180px; top: 830px; width: 560px; text-align: center; font-size: 44px; font-weight: 800; opacity: 0; }
+
+      /* ---------- scene 3: friends ---------- */
+      .phone { position: absolute; left: 260px; top: 70px; width: 470px; height: 940px; border-radius: 54px; background: #0f1115; border: 10px solid #262a33; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5); padding: 30px 22px; box-sizing: border-box; overflow: hidden; }
+      .phone .greet { font-size: 17px; color: var(--hint); font-weight: 600; margin: 4px 0 2px; }
+      .phone h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 14px; }
+      .me-card { position: relative; display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 20px; padding: 10px 12px; margin-bottom: 12px; overflow: hidden; }
+      .me-card .glow-mini { position: absolute; right: -30px; top: 50%; width: 180px; height: 180px; margin-top: -90px; border-radius: 50%; background: radial-gradient(closest-side, hsl(25 90% 60% / 0.35), transparent 70%); }
+      .me-card .stk { width: 78px; height: 78px; flex: none; }
+      .me-card .lbl { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hint); font-weight: 800; }
+      .me-card .mood { font-size: 22px; font-weight: 800; }
+      .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--hint); background: #262a33; padding: 4px 9px; border-radius: 999px; margin-top: 4px; white-space: nowrap; }
+      .dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; }
+      .dot.amber { background: #ff9f0a; }
+      .dot.grey { background: #8b919c; }
+      .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .fcard { position: relative; background: var(--card); border-radius: 18px; padding: 12px 8px 10px; text-align: center; overflow: hidden; opacity: 0; }
+      .fcard::before { content: ""; position: absolute; top: -34px; left: 50%; width: 150px; height: 150px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, hsl(var(--hue, 210) 90% 60% / calc(0.25 + var(--bass) * 0.15)), transparent 70%); }
+      .fcard .stk { position: relative; width: 84px; height: 84px; margin: 0 auto 4px; }
+      .fcard .name { position: relative; font-size: 16px; font-weight: 800; }
+      .fcard .mood { position: relative; font-size: 13px; color: var(--hint); font-weight: 600; }
+      .fcard .note { position: relative; font-size: 11px; color: var(--hint); font-style: italic; margin-top: 3px; }
+      #friends-caption { position: absolute; left: 860px; top: 340px; width: 860px; }
+      #friends-caption h1 { font-size: 84px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin: 0; opacity: 0; }
+      #friends-caption h1 em { font-style: normal; color: #ffb454; }
+      #friends-caption p { font-size: 34px; color: var(--hint); font-weight: 600; margin: 22px 0 0; opacity: 0; }
+
+      /* ---------- scene 4: radar ---------- */
+      .radar-card { position: absolute; left: 220px; top: 190px; width: 700px; height: 690px; border-radius: 32px; background: var(--card-light); color: #111318; padding: 34px 38px; box-sizing: border-box; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.45); }
+      .radar-card h3 { margin: 0; font-size: 30px; font-weight: 800; display: flex; justify-content: space-between; }
+      .radar-card h3 span { font-size: 20px; color: #5b6270; font-weight: 600; }
+      .ovr { position: absolute; right: 38px; top: 26px; text-align: center; line-height: 1; opacity: 0; }
+      .ovr b { display: block; font-size: 78px; line-height: 1.1; font-weight: 900; letter-spacing: -0.04em; color: #c2410c; }
+      .ovr span { display: block; font-size: 16px; font-weight: 800; letter-spacing: 0.14em; color: #5b6270; margin-top: 14px; }
+      #radar { position: absolute; left: 0; top: 130px; width: 700px; height: 517px; }
+      #radar .ring { fill: none; stroke: #d5d9e2; stroke-width: 2; }
+      #radar .axis { stroke: #d5d9e2; stroke-width: 2; }
+      #radar .shape { fill: rgba(51, 144, 236, 0.28); stroke: #3390ec; stroke-width: 5; stroke-linejoin: round; transform-box: view-box; transform-origin: 230px 170px; }
+      #radar .vtx { fill: #3390ec; }
+      #radar .lbl { font-size: 11px; font-weight: 800; fill: #111318; }
+      #radar .pct { font-size: 10px; font-weight: 700; fill: #5b6270; }
+      .traits { position: absolute; left: 1000px; top: 150px; width: 720px; }
+      .trait { background: var(--card); border-radius: 22px; padding: 20px 26px; margin-bottom: 16px; opacity: 0; }
+      .trait .top { display: flex; justify-content: space-between; font-size: 28px; font-weight: 800; }
+      .trait .top span { color: var(--hint); font-weight: 700; font-size: 24px; }
+      .trait .bar { height: 14px; border-radius: 999px; background: #2b3040; margin-top: 14px; overflow: hidden; }
+      .trait .fill { display: block; width: 100%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, hsl(var(--hue, 265) 85% 62%), hsl(calc(var(--hue, 265) + 30) 85% 55%)); transform-origin: left center; transform: scaleX(0); }
+      #radar-caption { position: absolute; left: 1000px; top: 640px; width: 760px; font-size: 68px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; opacity: 0; }
+
+      /* ---------- scene 5: talk ---------- */
+      #talk .chat { left: 460px; top: 250px; width: 1000px; }
+      #talk .line { display: flex; margin-top: 18px; }
+      #talk .line.right { justify-content: flex-end; }
+      #talk .bubble { font-size: 30px; }
+      #reply-wrap { opacity: 0; }
+      #ai-tag { font-size: 20px; color: var(--hint); font-weight: 600; margin: 10px 0 0 6px; }
+      #cursor2 { display: inline-block; width: 4px; height: 32px; background: #fff; vertical-align: -6px; margin-left: 4px; }
+
+      /* ---------- scene 6: outro ---------- */
+      #s6 .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .brand { display: flex; align-items: center; gap: 34px; }
+      .brand img { width: 170px; height: 170px; border-radius: 44px; object-fit: cover; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); }
+      .brand .word { font-size: 150px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+      #outro-sticker { width: 200px; height: 200px; margin-left: 10px; }
+      #tagline { font-size: 60px; font-weight: 800; color: #ffb454; margin-top: 30px; letter-spacing: -0.02em; opacity: 0; }
+      #handle { font-size: 30px; color: var(--hint); font-weight: 600; margin-top: 20px; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="21" data-fps="30">
+
+      <!-- ========== 1. hook ========== -->
+      <div id="s1" class="scene">
+        <div class="glow" data-layout-ignore id="glow1" style="--hue: 280; left: 410px; top: -80px;"></div>
+        <div class="stage">
+          <div id="fine-wrap">
+            <span id="fine"></span><span id="cursor"></span>
+            <div id="strike"></div>
+            <div id="hook-sticker" class="lottie"></div>
+          </div>
+          <div id="hook-line">Say it with a sticker instead.</div>
+        </div>
+      </div>
+
+      <!-- ========== 2. the picker ========== -->
+      <div id="s2" class="scene">
+        <div class="glow" data-layout-ignore id="glow2" style="--hue: 25; left: 900px; top: -100px;"></div>
+        <div class="chat" id="picker" style="left: 160px; top: 150px;">
+          <div class="chat-head">
+            <img src="assets/img/logo.jpeg" alt="" />
+            <div><div class="name">MoodPal</div><div class="sub">bot</div></div>
+          </div>
+          <div class="bubble" id="picker-msg">It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:</div>
+          <div class="kb" id="kb">
+            <div class="kbtn" data-row="0">😊 Happy</div><div class="kbtn" data-row="0">😌 Relaxed</div><div class="kbtn" data-row="0">😁 Excited</div>
+            <div class="kbtn" data-row="1" id="kb-motivated">🤩 Motivated</div><div class="kbtn" data-row="1">😐 Neutral</div><div class="kbtn" data-row="1">🤔 Confused</div>
+            <div class="kbtn" data-row="2">🥱 Bored</div><div class="kbtn" data-row="2">🤷 Uncertain</div><div class="kbtn" data-row="2">😞 Disappointed</div>
+            <div class="kbtn" data-row="3">😰 Anxious</div><div class="kbtn" data-row="3">😡 Angry</div><div class="kbtn" data-row="3">😢 Sad</div>
+            <div class="kbtn" data-row="4">😩 Overwhelmed</div><div class="kbtn" data-row="4">🤯 Overthinking</div><div class="kbtn" data-row="4">😴 Tired</div>
+            <div class="kbtn" data-row="5">😬 Nervous</div><div class="kbtn" data-row="5">🤒 Sick</div><div class="kbtn" data-row="5">😈 Naughty</div>
+          </div>
+        </div>
+        <svg id="cursor-arrow" viewBox="0 0 24 24"><path d="M4 3l7.5 17 2.3-6.8L20.5 11 4 3z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <div id="pick-sticker" class="lottie"></div>
+        <div id="pick-label">Motivated</div>
+      </div>
+
+      <!-- ========== 3. friends ========== -->
+      <div id="s3" class="scene">
+        <div class="glow" data-layout-ignore id="glow3" style="--hue: 45; left: 700px; top: 200px;"></div>
+        <div class="phone">
+          <div class="greet">Hi, Saman 👋</div>
+          <h2>Friends' moods</h2>
+          <div class="me-card">
+            <div class="glow-mini" data-layout-ignore></div>
+            <div class="stk lottie" id="stk-me"></div>
+            <div>
+              <div class="lbl">Your mood</div>
+              <div class="mood">Motivated</div>
+              <div class="pill"><span class="dot"></span>Today · 12:30 PM</div>
+            </div>
+          </div>
+          <div class="fgrid">
+            <div class="fcard" style="--hue: 45"><div class="stk lottie" id="stk-ada"></div><div class="name">Ada Lovelace</div><div class="mood">Happy</div><div class="pill"><span class="dot amber"></span>Monday</div></div>
+            <div class="fcard" style="--hue: 230"><div class="stk lottie" id="stk-bob"></div><div class="name">Bob</div><div class="mood">Tired</div><div class="pill"><span class="dot"></span>Today · 11:02</div></div>
+            <div class="fcard" style="--hue: 280"><div class="stk lottie" id="stk-charlie"></div><div class="name">Charlie</div><div class="mood">Anxious</div><div class="pill"><span class="dot amber"></span>Yesterday</div><div class="note">“exam tomorrow”</div></div>
+            <div class="fcard" style="--hue: 330"><div class="stk lottie" id="stk-dana"></div><div class="name">Dana</div><div class="mood">Excited</div><div class="pill"><span class="dot grey"></span>Sat, Sep 5</div></div>
+            <div class="fcard" style="--hue: 160"><div class="stk lottie" id="stk-eve"></div><div class="name">Eve</div><div class="mood">Relaxed</div><div class="pill"><span class="dot"></span>Today · 09:14</div></div>
+          </div>
+        </div>
+        <div id="friends-caption">
+          <h1>See how your friends <em>really</em> are.</h1>
+          <p>Follow each other. Moods show up live, as stickers.</p>
+        </div>
+      </div>
+
+      <!-- ========== 4. radar ========== -->
+      <div id="s4" class="scene">
+        <div class="glow" data-layout-ignore id="glow4" style="--hue: 265; left: -200px; top: 100px;"></div>
+        <div class="radar-card">
+          <h3>Big Five</h3>
+          <div class="ovr"><b id="ovr">0</b><span>OVR</span></div>
+          <svg id="radar" viewBox="0 0 460 340"></svg>
+        </div>
+        <div class="traits">
+          <div class="trait" style="--hue: 265"><div class="top">Openness <span>Medium-Low · 38%</span></div><div class="bar"><span class="fill" data-v="0.38"></span></div></div>
+          <div class="trait" style="--hue: 200"><div class="top">Directness <span>High · 80%</span></div><div class="bar"><span class="fill" data-v="0.80"></span></div></div>
+          <div class="trait" style="--hue: 340"><div class="top">Humor <span>High · 74%</span></div><div class="bar"><span class="fill" data-v="0.74"></span></div></div>
+        </div>
+        <div id="radar-caption">6 tests. 57 traits. One radar.</div>
+      </div>
+
+      <!-- ========== 5. talk ========== -->
+      <div id="s5" class="scene" >
+        <div class="glow" data-layout-ignore id="glow5" style="--hue: 200; left: 410px; top: 0px;"></div>
+        <div id="talk">
+          <div class="chat">
+            <div class="chat-head">
+              <img src="assets/img/logo.jpeg" alt="" />
+              <div><div class="name">Talk</div><div class="sub">MoodPal companion</div></div>
+            </div>
+            <div class="line right"><div class="bubble me"><span id="typed2"></span><span id="cursor2"></span></div></div>
+            <div id="reply-wrap">
+              <div class="line"><div class="bubble">That sounds heavy. What happened today?</div></div>
+              <div id="ai-tag">🤖 an AI, not a therapist</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 6. outro ========== -->
+      <div id="s6" class="scene">
+        <div class="glow" data-layout-ignore id="glow6" style="--hue: 25; left: 410px; top: -60px;"></div>
+        <div class="stage">
+          <div class="brand" id="brand">
+            <img src="assets/img/logo.jpeg" alt="" />
+            <div class="word">MoodPal</div>
+            <div id="outro-sticker" class="lottie"></div>
+          </div>
+          <div id="tagline">Your mood. As a sticker.</div>
+          <div id="handle">Telegram · t.me/MoodPals</div>
+        </div>
+      </div>
+
+      <!-- ========== audio ========== -->
+      <audio id="bgm" data-start="0" data-duration="21" data-track-index="10" data-volume="0.32" src="assets/music/happy-beats-business-moves-vol-11-by-ende-dot-app.mp3"></audio>
+      <!-- scene 1: typing ticks, then the sticker slam -->
+      <audio id="k1" data-start="0.30" data-duration="0.3" data-track-index="11" data-volume="0.35" src="assets/sfx/keyboard/keypress-001.wav"></audio>
+      <audio id="k2" data-start="0.56" data-duration="0.3" data-track-index="12" data-volume="0.35" src="assets/sfx/keyboard/keypress-004.wav"></audio>
+      <audio id="k3" data-start="0.82" data-duration="0.3" data-track-index="13" data-volume="0.35" src="assets/sfx/keyboard/keypress-007.wav"></audio>
+      <audio id="k4" data-start="1.08" data-duration="0.3" data-track-index="14" data-volume="0.35" src="assets/sfx/keyboard/keypress-010.wav"></audio>
+      <audio id="k5" data-start="1.34" data-duration="0.3" data-track-index="15" data-volume="0.35" src="assets/sfx/keyboard/keypress-013.wav"></audio>
+      <audio id="slam" data-start="1.58" data-duration="0.2" data-track-index="16" data-volume="0.85" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+      <!-- scene 2: rows land on beats, the tap, the sticker pop -->
+      <audio id="r1" data-start="4.23" data-duration="0.15" data-track-index="17" data-volume="0.4" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="r2" data-start="4.75" data-duration="0.2" data-track-index="18" data-volume="0.4" src="assets/sfx/interface/drop_002.ogg"></audio>
+      <audio id="r3" data-start="5.28" data-duration="0.15" data-track-index="19" data-volume="0.4" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="r4" data-start="5.80" data-duration="0.2" data-track-index="20" data-volume="0.4" src="assets/sfx/interface/drop_002.ogg"></audio>
+      <audio id="r5" data-start="6.34" data-duration="0.15" data-track-index="21" data-volume="0.4" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="r6" data-start="6.86" data-duration="0.2" data-track-index="22" data-volume="0.4" src="assets/sfx/interface/drop_002.ogg"></audio>
+      <audio id="tap" data-start="7.38" data-duration="0.05" data-track-index="23" data-volume="0.7" src="assets/sfx/interface/click_003.ogg"></audio>
+      <audio id="pop" data-start="7.50" data-duration="0.15" data-track-index="24" data-volume="0.6" src="assets/sfx/impact/impactSoft_medium_003.ogg"></audio>
+      <!-- scene 3: one card slide per friend card -->
+      <audio id="c1" data-start="8.96" data-duration="0.5" data-track-index="25" data-volume="0.5" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <audio id="c2" data-start="10.01" data-duration="0.5" data-track-index="26" data-volume="0.5" src="assets/sfx/casino/card-slide-2.ogg"></audio>
+      <audio id="c3" data-start="11.06" data-duration="0.5" data-track-index="27" data-volume="0.5" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <audio id="c4" data-start="12.12" data-duration="0.5" data-track-index="28" data-volume="0.5" src="assets/sfx/casino/card-slide-2.ogg"></audio>
+      <audio id="c5" data-start="12.65" data-duration="0.5" data-track-index="29" data-volume="0.5" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+      <!-- scene 4: radar lands, vertices tick -->
+      <audio id="radar-hit" data-start="13.18" data-duration="0.2" data-track-index="30" data-volume="0.75" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+      <audio id="v1" data-start="13.70" data-duration="0.05" data-track-index="31" data-volume="0.35" src="assets/sfx/interface/click_002.ogg"></audio>
+      <audio id="v2" data-start="13.82" data-duration="0.05" data-track-index="32" data-volume="0.35" src="assets/sfx/interface/click_002.ogg"></audio>
+      <audio id="v3" data-start="13.94" data-duration="0.05" data-track-index="33" data-volume="0.35" src="assets/sfx/interface/click_002.ogg"></audio>
+      <audio id="v4" data-start="14.06" data-duration="0.05" data-track-index="34" data-volume="0.35" src="assets/sfx/interface/click_002.ogg"></audio>
+      <audio id="v5" data-start="14.18" data-duration="0.05" data-track-index="35" data-volume="0.35" src="assets/sfx/interface/click_002.ogg"></audio>
+      <!-- scene 5: typing, reply pop, logo hit -->
+      <audio id="k6" data-start="17.70" data-duration="0.3" data-track-index="36" data-volume="0.35" src="assets/sfx/keyboard/keypress-016.wav"></audio>
+      <audio id="k7" data-start="17.92" data-duration="0.3" data-track-index="37" data-volume="0.35" src="assets/sfx/keyboard/keypress-019.wav"></audio>
+      <audio id="k8" data-start="18.14" data-duration="0.3" data-track-index="38" data-volume="0.35" src="assets/sfx/keyboard/keypress-022.wav"></audio>
+      <audio id="k9" data-start="18.36" data-duration="0.3" data-track-index="39" data-volume="0.35" src="assets/sfx/keyboard/keypress-001.wav"></audio>
+      <audio id="reply-pop" data-start="18.96" data-duration="0.15" data-track-index="40" data-volume="0.6" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="logo-hit" data-start="20.02" data-duration="1.0" data-track-index="41" data-volume="0.55" src="assets/sfx/impact/impactBell_heavy_000.ogg"></audio>
+    </div>
+
+    <script>
+      gsap.registerPlugin(TextPlugin);
+
+      /* ---------- stickers: lottie-web with our own loop-aware seek ----------
+         The HyperFrames lottie adapter seeks every registered player with the absolute
+         composition time. Our stickers are short loops that appear mid-video, so we
+         register wrappers that offset and wrap the time, and hide the raw players from
+         auto-discovery. */
+      const STICKERS = [
+        ["hook-sticker", "overwhelmed", 1.6],
+        ["pick-sticker", "motivated", 7.5],
+        ["stk-me", "motivated", 8.5],
+        ["stk-ada", "happy", 8.96],
+        ["stk-bob", "tired", 10.01],
+        ["stk-charlie", "anxious", 11.06],
+        ["stk-dana", "excited", 12.12],
+        ["stk-eve", "relaxed", 12.65],
+        ["outro-sticker", "motivated", 19.6],
+      ];
+      window.__hfLottie = window.__hfLottie || [];
+      for (const [id, name, startAt] of STICKERS) {
+        const anim = lottie.loadAnimation({
+          container: document.getElementById(id),
+          renderer: "svg",
+          loop: true,
+          autoplay: false,
+          path: `assets/stickers/${name}.json`,
+        });
+        window.__hfLottie.push({
+          goToAndStop(ms) {
+            const total = anim.totalFrames, fr = anim.frameRate || 60;
+            if (!total) return;
+            const loopMs = (total / fr) * 1000;
+            const local = ((ms - startAt * 1000) % loopMs + loopMs) % loopMs;
+            anim.goToAndStop(local, false);
+          },
+          pause() { anim.pause(); },
+        });
+      }
+      lottie.getRegisteredAnimations = () => [];
+
+      /* ---------- radar geometry (pure, no DOM measurement) ---------- */
+      const RADAR = [["Openness", 0.38], ["Conscientiousness", 0.5], ["Extraversion", 0.5], ["Agreeableness", 0.5], ["Neuroticism", 0.5]];
+      (function buildRadar() {
+        const svg = document.getElementById("radar");
+        const NS = "http://www.w3.org/2000/svg";
+        const n = RADAR.length, cx = 230, cy = 170, R = 96, minR = 10;
+        const angle = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+        const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+        const mk = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); svg.appendChild(el); return el; };
+        for (const f of [0.25, 0.5, 0.75, 1]) mk("polygon", { class: "ring", points: RADAR.map((_, i) => pt(i, R * f).join(",")).join(" ") });
+        RADAR.forEach((_, i) => { const [x, y] = pt(i, R); mk("line", { class: "axis", x1: cx, y1: cy, x2: x, y2: y }); });
+        const points = RADAR.map(([, v], i) => pt(i, minR + v * (R - minR)));
+        mk("polygon", { class: "shape", id: "radar-shape", points: points.map((p) => p.join(",")).join(" ") });
+        points.forEach(([x, y], i) => mk("circle", { class: "vtx", id: "vtx-" + i, cx: x, cy: y, r: 0 }));
+        // labels sit outside the outer ring: name, then the percentage on the next line, never touching the shape
+        RADAR.forEach(([name, v], i) => {
+          const [x, y] = pt(i, R + 26);
+          const anchor = Math.abs(x - cx) < 6 ? "middle" : x > cx ? "start" : "end";
+          const above = y < cy;
+          const nameY = above ? y - 14 : y + 10;
+          const pctY = above ? y + 1 : y + 24;
+          const t = mk("text", { class: "lbl radar-lbl", x, y: nameY, "text-anchor": anchor });
+          t.textContent = name;
+          const p = mk("text", { class: "pct radar-lbl", x, y: pctY, "text-anchor": anchor });
+          p.textContent = Math.round(v * 100) + "%";
+        });
+        gsap.set(".radar-lbl", { opacity: 0 });
+      })();
+
+      /* ---------- timeline ---------- */
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+
+      // music: quick fade in, fade out under the logo
+      tl.fromTo("#bgm", { volume: 0 }, { volume: 0.32, duration: 0.4, ease: "none" }, 0);
+      tl.to("#bgm", { volume: 0, duration: 0.8, ease: "none" }, 20.2);
+
+      // ===== scene 1 (0 - 4): "I'm fine." =====
+      const FINE = "“I’m fine.”";
+      tl.set("#cursor", { opacity: 1 }, 0);
+      tl.to("#fine", { text: { value: FINE }, duration: 1.2, ease: "none" }, 0.25);
+      // idle blink after typing (finite yoyo)
+      tl.to("#cursor", { opacity: 0, duration: 0.3, ease: "steps(1)", repeat: 3, yoyo: true }, 1.5);
+      tl.set("#cursor", { opacity: 0 }, 2.7);
+      // beat-locked: 1.60s strong cue. strike + sticker slam
+      tl.fromTo("#strike", { scaleX: 0 }, { scaleX: 1, duration: 0.28, ease: "power4.out" }, 1.6);
+      tl.fromTo("#hook-sticker", { opacity: 0, scale: 0.2, rotation: -14 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.55, ease: "back.out(2.2)" }, 1.6);
+      tl.to("#fine", { opacity: 0.35, duration: 0.3 }, 1.65);
+      tl.fromTo("#hook-line", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.5 }, 2.4);
+
+      // transition 1 -> 2 at 4.0: hard push up
+      tl.to("#s1", { yPercent: -100, duration: 0.45, ease: "power3.in" }, 4.0);
+      tl.fromTo("#s2", { opacity: 1, yPercent: 100 }, { opacity: 1, yPercent: 0, duration: 0.5, ease: "power3.out" }, 4.05);
+
+      // ===== scene 2 (4 - 8.5): the picker =====
+      tl.fromTo("#picker", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, 4.1);
+      // beat-grid: rows at 4.23, 4.75, 5.28, 5.80, 6.34, 6.86 (accents only, labels are short)
+      const ROW_TIMES = [4.23, 4.75, 5.28, 5.8, 6.34, 6.86];
+      ROW_TIMES.forEach((t, r) => {
+        tl.fromTo(`.kbtn[data-row="${r}"]`, { opacity: 0, y: 14, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.05, ease: "back.out(1.6)" }, t);
+      });
+      // cursor glides in and taps Motivated (button center is ~ (298, 542) in the chat panel: 160+30+ (0.5*266)... precomputed below)
+      const BTN = { x: 160 + 30 + 133, y: 150 + 28 + 56 + 22 + 122 + 18 + 62 + 10 + 31 }; // panel padding + head + bubble + kb rows
+      tl.fromTo("#cursor-arrow", { opacity: 0, x: 900, y: 980 }, { opacity: 1, x: BTN.x + 8, y: BTN.y + 4, duration: 0.7, ease: "power2.inOut" }, 6.7);
+      tl.to("#cursor-arrow", { scale: 0.8, duration: 0.08, yoyo: true, repeat: 1, ease: "power1.inOut" }, 7.38);
+      tl.to("#kb-motivated", { backgroundColor: "#3390ec", scale: 1.06, duration: 0.15, ease: "power2.out" }, 7.38);
+      tl.to("#kb-motivated", { scale: 1, duration: 0.25 }, 7.53);
+      tl.fromTo("#pick-sticker", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.8)" }, 7.5);
+      tl.fromTo("#pick-label", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, 7.75);
+
+      // transition 2 -> 3 at 8.5: slide left / in from right
+      tl.to("#s2", { xPercent: -100, duration: 0.5, ease: "power3.inOut" }, 8.5);
+      tl.fromTo("#s3", { opacity: 1, xPercent: 100 }, { opacity: 1, xPercent: 0, duration: 0.5, ease: "power3.inOut" }, 8.5);
+
+      // ===== scene 3 (8.5 - 13): friends =====
+      // beat-grid (every other beat so each card reads): 8.96, 10.01, 11.06, 12.12, 12.65 (beat-locked: 8.96 strong cue)
+      const CARD_TIMES = [8.96, 10.01, 11.06, 12.12, 12.65];
+      const cards = gsap.utils.toArray(".fcard");
+      CARD_TIMES.forEach((t, i) => {
+        tl.fromTo(cards[i], { opacity: 0, y: 40, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.5)" }, t);
+      });
+      tl.fromTo("#friends-caption h1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 }, 9.3);
+      tl.fromTo("#friends-caption p", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 }, 9.8);
+
+      // transition 3 -> 4 at 13.0: crossfade with a slight scale
+      tl.to("#s3", { opacity: 0, scale: 1.04, duration: 0.45, ease: "power2.inOut" }, 13.0);
+      tl.fromTo("#s4", { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.45, ease: "power2.out" }, 13.0);
+
+      // ===== scene 4 (13 - 17.5): radar =====
+      // beat-locked: radar springs open on the 13.18 beat (12.65 cue is still mid-transition)
+      tl.fromTo("#radar-shape", { scale: 0 }, { scale: 1, duration: 0.9, ease: "back.out(1.4)" }, 13.18);
+      RADAR.forEach((_, i) => tl.to("#vtx-" + i, { attr: { r: 5 }, duration: 0.25, ease: "back.out(2)" }, 13.7 + i * 0.12));
+      tl.to(".radar-lbl", { opacity: 1, duration: 0.4, stagger: 0.05 }, 13.9);
+      // OVR counter 0 -> 48
+      const ovr = { v: 0 }, ovrEl = document.getElementById("ovr");
+      tl.fromTo(".ovr", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, 13.6);
+      tl.to(ovr, { v: 48, duration: 1.0, ease: "power2.out", onUpdate: () => { ovrEl.textContent = Math.round(ovr.v); } }, 13.7);
+      // trait bars in sequence (beats 14.22, 14.76, 15.28)
+      const BAR_TIMES = [14.22, 14.76, 15.28];
+      gsap.utils.toArray(".trait").forEach((el, i) => {
+        tl.fromTo(el, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.45 }, BAR_TIMES[i]);
+        const fill = el.querySelector(".fill");
+        tl.fromTo(fill, { scaleX: 0 }, { scaleX: parseFloat(fill.dataset.v), duration: 0.8, ease: "power3.out" }, BAR_TIMES[i] + 0.15);
+      });
+      tl.fromTo("#radar-caption", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.55 }, 15.6);
+
+      // transition 4 -> 5 at 17.5: soft crossfade
+      tl.to("#s4", { opacity: 0, duration: 0.4, ease: "power2.inOut" }, 17.5);
+      tl.fromTo("#s5", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 17.5);
+
+      // ===== scene 5 (17.5 - 19.6): talk =====
+      tl.fromTo("#talk .chat", { y: 24 }, { y: 0, duration: 0.5 }, 17.5);
+      const ASK = "Rough day. Can we talk?";
+      tl.set("#cursor2", { opacity: 1 }, 17.5);
+      tl.to("#typed2", { text: { value: ASK }, duration: 0.9, ease: "none" }, 17.65);
+      tl.set("#cursor2", { opacity: 0 }, 18.6);
+      // reply lands on the 18.96 beat
+      tl.fromTo("#reply-wrap", { opacity: 0, y: 18, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 18.96);
+
+      // transition 5 -> 6 at 19.6: crossfade to the outro
+      tl.to("#s5", { yPercent: -100, duration: 0.45, ease: "power3.in" }, 19.55);
+      tl.fromTo("#s6", { opacity: 1, yPercent: 100 }, { opacity: 1, yPercent: 0, duration: 0.5, ease: "power3.out" }, 19.6);
+
+      // ===== scene 6 (19.6 - 21): outro =====
+      tl.fromTo("#brand", { scale: 0.86, y: 20 }, { scale: 1, y: 0, duration: 0.6, ease: "back.out(1.4)" }, 19.65);
+      tl.fromTo("#tagline", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45 }, 20.02); // beat 20.02
+      tl.fromTo("#handle", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4 }, 20.3);
+
+      /* ---------- audio-reactive: the glows breathe with the bass (pre-extracted data) ---------- */
+      const AD = window.AUDIO_DATA;
+      if (AD && AD.frames) {
+        const root = document.getElementById("root");
+        for (let f = 0; f < AD.totalFrames; f++) {
+          const bands = AD.frames[f].bands;
+          const bass = Math.min(1, (bands[0] + bands[1]) / 2);
+          tl.call(((v) => () => root.style.setProperty("--bass", v.toFixed(3)))(bass), [], f / AD.fps);
+        }
+      }
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

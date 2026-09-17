@@ -15,6 +15,10 @@ const requireWebAppUser = async (req, res, next) => {
     const user = await User.findOne({ id: tgUser.id });
     if (!user) return res.status(401).json({ error: 'unknown_user' });
     req.user = user;
+    // using the mini app counts as activity too
+    if (!user.last_active_at || Date.now() - user.last_active_at.getTime() > 5 * 60 * 1000) {
+      User.updateOne({ _id: user._id }, { last_active_at: new Date() }).catch(() => {});
+    }
     next();
   } catch (error) {
     console.error('WebApp auth error:', error);

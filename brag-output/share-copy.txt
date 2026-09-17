@@ -1,0 +1,1 @@
+Made MoodPal. It's a Telegram bot where "I'm fine" is replaced by a sticker that actually moves, your friends can see it, and six personality tests turn you into a FIFA-style radar. Say it with a sticker instead. t.me/MoodPals

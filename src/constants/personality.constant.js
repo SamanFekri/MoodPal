@@ -13,9 +13,9 @@ export const DISCLAIMER = '⚠️ <i>This is an approximate personality profile,
 export const chooseTestMsg = (tests = []) => `
 🧠 <b>Personality Tests</b>
 
-Pick a test to start. You'll answer one question at a time — you can cancel anytime.
+Pick a test to start. You'll answer one question at a time, and you can cancel anytime.
 ${tests.map(test => `
-${test.completed ? '✅' : '📝'} <b>${test.name}</b> — ${test.question_count} questions (~${estimatedMinutes(test.question_count)} min)
+${test.completed ? '✅' : '📝'} <b>${test.name}</b>: ${test.question_count} questions (~${estimatedMinutes(test.question_count)} min)
 <i>${test.description}</i>`).join('\n')}
 
 ${DISCLAIMER}
@@ -40,7 +40,7 @@ ${test.intro}
 `;
 
 export const questionMsg = (test, question, index, total) => `
-🧠 <b>${test.name}</b> — question ${index + 1}/${total}
+🧠 <b>${test.name}</b> · question ${index + 1}/${total}
 ${progressBar(index, total)}
 
 <b>${question.text}</b>

@@ -124,7 +124,7 @@ const LIKERT_5 = {
   labels: ['Very inaccurate', 'Somewhat inaccurate', 'Neutral', 'Somewhat accurate', 'Very accurate'],
 };
 
-const INTRO = 'For each statement, pick how accurately it describes you. There are no right or wrong answers — go with your first instinct.';
+const INTRO = 'For each statement, pick how accurately it describes you. There are no right or wrong answers, so go with your first instinct.';
 
 // items: [trait, text, reverse]
 const TEST_DEFINITIONS = [
@@ -174,11 +174,11 @@ const TEST_DEFINITIONS = [
       ['preference_for_summaries', 'I appreciate a quick summary before the details.', false],
       ['communication_directness', 'I would rather someone soften bad news than say it plainly.', true],
       ['communication_formality', 'I like conversations to be casual and relaxed.', true],
-      ['preferred_response_length', 'I prefer short answers — just give me the gist.', true],
+      ['preferred_response_length', 'I prefer short answers. Just give me the gist.', true],
       ['technical_depth', 'Technical details usually bore me.', true],
       ['explanation_detail', 'I get impatient with long explanations.', true],
       ['preference_for_examples', 'I do not need examples to understand an idea.', true],
-      ['preference_for_summaries', 'Summaries feel unnecessary to me — I would rather read everything.', true],
+      ['preference_for_summaries', 'Summaries feel unnecessary to me. I would rather read everything.', true],
     ],
   },
   {
@@ -216,7 +216,7 @@ const TEST_DEFINITIONS = [
       ['enthusiasm', 'I get excited easily and show it.', false],
       ['warmth', 'I like a warm, friendly tone in conversations.', false],
       ['emotional_expressiveness', 'I keep my feelings to myself.', true],
-      ['emotional_support_preference', 'When I have a problem, just help me fix it — I do not need sympathy.', true],
+      ['emotional_support_preference', 'When I have a problem, just help me fix it. I do not need sympathy.', true],
       ['humor_preference', 'Jokes in a serious conversation annoy me.', true],
       ['seriousness', 'I find overly serious conversations tiring.', true],
       ['enthusiasm', 'I rarely show much excitement.', true],
