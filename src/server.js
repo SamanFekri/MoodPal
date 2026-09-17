@@ -6,6 +6,7 @@ const Mood = require('./models/mood');
 const User = require('./models/user');
 
 const controllers = require('./controllers');
+const { requireWebAppUser, requireAdmin } = require('./middlewares/webapp.middleware');
 
 const app = express();
 
@@ -25,13 +26,21 @@ app.get('/user/:userId/mood/tgs', controllers.embed.tgsMood);
 
 app.get('/user/:userId/mood/emoji', controllers.embed.emojiMood);
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ui', 'index.html'));
-});
+const miniApp = (req, res) => res.sendFile(path.join(__dirname, 'public', 'ui', 'index.html'));
+app.get('/', miniApp);
+// public personality card (share link); the page reads the token from the URL
+app.get('/p/:token', miniApp);
 
 app.post('/auth', controllers.auth.isAuthenticated);
 
-app.get('/user/:userId/followings', controllers.user.getFollowings);
+// ---- mini app API (signed Telegram initData in X-Telegram-Init-Data) ----
+app.get('/api/friends', requireWebAppUser, controllers.user.getFollowings);
+app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.personality.getFriends);
+app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
+app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
+app.get('/api/public/personality/:token', controllers.personality.getPublic);
+app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.listUsers);
+app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
 
 // allow all requests to /public
 app.use('/public', express.static(path.join(__dirname, 'public')));

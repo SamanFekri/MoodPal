@@ -41,8 +41,22 @@ class PersonalityService {
     catalogCache.clear();
   }
 
-  async listTests() {
-    return PersonalityTest.find({ enabled: true }).sort({ name: 1 }).lean();
+  // Enabled tests in display order, with question counts and (for a user) which ones they completed
+  async listTests({ userId = null } = {}) {
+    const tests = await PersonalityTest.find({ enabled: true }).sort({ order: 1, name: 1 }).lean();
+    const counts = await PersonalityTestQuestion.aggregate([
+      { $match: { enabled: true } },
+      { $group: { _id: '$test_key', count: { $sum: 1 } } },
+    ]);
+    const countByKey = Object.fromEntries(counts.map(c => [c._id, c.count]));
+    const completed = new Set();
+    if (userId) {
+      const profile = await PersonalityProfile.findByUser(userId);
+      for (const source of profile?.sources || []) completed.add(source.test_key);
+    }
+    return tests
+      .map(test => ({ ...test, question_count: countByKey[test.key] || 0, completed: completed.has(test.key) }))
+      .filter(test => test.question_count > 0);
   }
 
   async getTest(testKey) {
@@ -226,6 +240,41 @@ class PersonalityService {
     const profile = await this.getProfile(userId);
     if (!profile) return '';
     return buildPersonalityContext(profile, await this.getTraits());
+  }
+
+  /**
+   * Structured profile for the mini app: traits grouped by category with labels,
+   * only measured ones (confidence > 0). `null` when the user has no profile.
+   */
+  async getProfileView(userId) {
+    const [profile, traits] = await Promise.all([this.getProfile(userId), this.getTraits()]);
+    if (!profile) return null;
+    const { CATEGORY_NAMES } = require('./catalog.seed');
+    const { describe, MIN_CONFIDENCE_FOR_CONTEXT } = require('./context');
+    const categories = [];
+    for (const [key, name] of Object.entries(CATEGORY_NAMES)) {
+      const rows = Object.values(traits)
+        .filter(t => t.category === key)
+        .filter(t => profile.traits[t.key] !== undefined && (profile.confidence[t.key] ?? 0) >= MIN_CONFIDENCE_FOR_CONTEXT)
+        .map(t => ({
+          key: t.key,
+          name: t.name,
+          description: t.description,
+          value: Math.round(profile.traits[t.key] * 1000) / 1000,
+          confidence: Math.round((profile.confidence[t.key] ?? 0) * 1000) / 1000,
+          label: describe(t.key, profile.traits[t.key]),
+        }));
+      if (rows.length) categories.push({ key, name, traits: rows });
+    }
+    if (categories.length === 0) return null;
+    return {
+      categories,
+      measured: categories.reduce((n, c) => n + c.traits.length, 0),
+      total: Object.keys(traits).length,
+      tests_taken: [...new Set((profile.sources || []).map(s => s.test_key))],
+      observation_count: profile.observation_count,
+      updated_at: profile.sources?.at(-1)?.taken_at || null,
+    };
   }
 
   async getProfileSummary(userId) {

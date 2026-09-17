@@ -42,8 +42,12 @@ describe('personality telegram handlers', () => {
   test('🧠 Personality Test lists tests, starting one shows question 1 with the Likert keyboard', async () => {
     let ctx = makeCtx(alice);
     await handlers.personalityTestCommand(ctx);
-    const startButton = buttons(ctx.sent[0]).find(b => b.callback_data.startsWith('ptest_start_'));
-    assert.ok(startButton, 'has a start button');
+    const startButtons = buttons(ctx.sent[0]).filter(b => b.callback_data.startsWith('ptest_start_'));
+    assert.ok(startButtons.length >= 6, 'lists several tests');
+    const startButton = startButtons[0];
+    assert.equal(startButton.callback_data, 'ptest_start_big_five');
+    assert.match(startButton.text, /^📝 .*\(20\)$/);
+    assert.match(ctx.sent[0].text, /20 questions \(~3 min\)/);
     assert.match(ctx.sent[0].text, /not a clinical or medical diagnosis/);
 
     ctx = makeCtx(alice, startButton.callback_data);
@@ -85,6 +89,13 @@ describe('personality telegram handlers', () => {
     const profile = await personalityService.getProfile(alice._id);
     assert.equal(profile.traits.extraversion, 0.5);   // all "5": 2 normal + 2 reversed
     assert.equal(profile.traits.openness, 0.25);      // 1 normal + 3 reversed
+
+    // the completed test is now marked in the list
+    ctx = makeCtx(alice);
+    await handlers.personalityTestCommand(ctx);
+    const bigFive = buttons(ctx.sent[0]).find(b => b.callback_data === 'ptest_start_big_five');
+    assert.match(bigFive.text, /^✅ /);
+    assert.ok(buttons(ctx.sent[0]).some(b => b.text.startsWith('📝 ')), 'other tests still pending');
   });
 
   test('a stale answer (old session id) does not crash and tells the user', async () => {
@@ -132,11 +143,11 @@ describe('personality telegram handlers', () => {
     assert.match(ctx.sent[0].text, /Take the 🧠 Personality Test/);
     assert.deepEqual(buttons(ctx.sent[0]).map(b => b.callback_data), ['pprof_retake']);
 
-    // retake with a single available test starts it directly
+    // retake shows the list of tests (there are several)
     ctx = makeCtx(alice, 'pprof_retake');
     await handlers.profileCallback(ctx);
-    assert.match(ctx.edited[0].text, /Big Five personality test/);   // intro replaces the profile message
-    assert.match(ctx.sent[0].text, /question 1\/20/);
+    assert.match(ctx.edited[0].text, /Personality Tests/);
+    assert.ok(buttons(ctx.edited[0]).filter(b => b.callback_data.startsWith('ptest_start_')).length >= 6);
 
     await personalityService.recordLLMUpdates(alice._id, { updates: [{ trait: 'patience', change: 0.1, confidence: 0.9 }] });
     ctx = makeCtx(alice, 'pprof_reset');

@@ -56,8 +56,9 @@ describe('personality service (database)', () => {
   describe('migration / catalog', () => {
     test('seeds all traits, tests and questions into their own collections', async () => {
       assert.equal(await PersonalityTrait.countDocuments(), seed.TRAITS.length);
-      assert.equal(await PersonalityTest.countDocuments(), 1);
-      assert.equal(await PersonalityTestQuestion.countDocuments(), 20);
+      assert.equal(await PersonalityTest.countDocuments(), seed.TESTS.length);
+      assert.equal(await PersonalityTestQuestion.countDocuments(), seed.QUESTIONS.length);
+      assert.ok(seed.TESTS.length >= 6, 'several tests are available');
       assert.equal(PersonalityTrait.collection.collectionName, 'personality_traits');
       assert.equal(PersonalityTest.collection.collectionName, 'personality_tests');
       assert.equal(PersonalityTestQuestion.collection.collectionName, 'personality_test_questions');
@@ -80,6 +81,35 @@ describe('personality service (database)', () => {
       const third = await ensurePersonalityCatalog({ log: () => {} });
       assert.equal(third.traits.updated, 1);
       assert.equal((await PersonalityTrait.findOne({ key: 'patience' }).lean()).learning_rate, seed.CATEGORY_DEFAULTS.behavioral.learning_rate);
+    });
+
+    test('lists tests in order with question counts, marking the ones a user completed', async () => {
+      const before = await service.listTests({ userId: alice._id });
+      assert.deepEqual(before.map(t => t.key), seed.TESTS.slice().sort((a, b) => a.order - b.order).map(t => t.key));
+      assert.equal(before[0].key, 'big_five');
+      assert.equal(before[0].question_count, 20);
+      assert.ok(before.every(t => t.completed === false));
+
+      const s = await service.startTest(alice._id, 'communication_style');
+      await completeTest(service, alice._id, s.session, s.questions, () => 4);
+      const after = await service.listTests({ userId: alice._id });
+      assert.deepEqual(after.filter(t => t.completed).map(t => t.key), ['communication_style']);
+      // other users are unaffected, and a test with no enabled questions disappears
+      assert.ok((await service.listTests({ userId: bob._id })).every(t => !t.completed));
+      await PersonalityTestQuestion.updateMany({ test_key: 'thinking_style' }, { enabled: false });
+      assert.ok(!(await service.listTests()).some(t => t.key === 'thinking_style'));
+    });
+
+    test('every seeded test scores into the catalog traits it targets', async () => {
+      for (const def of seed.TESTS) {
+        const s = await service.startTest(alice._id, def.key);
+        const final = await completeTest(service, alice._id, s.session, s.questions, q => (q.reverse ? 1 : 5));
+        assert.equal(final.done, true, def.key);
+        for (const value of Object.values(final.result.traits)) assert.equal(value, 1);
+      }
+      const profile = await service.getProfile(alice._id);
+      assert.equal(Object.keys(profile.traits).length, seed.TRAITS.length, 'all traits measured after all tests');
+      assert.equal(profile.sources.length, seed.TESTS.length);
     });
 
     test('trait CRUD works through the model and disabled traits drop out of the enabled map', async () => {

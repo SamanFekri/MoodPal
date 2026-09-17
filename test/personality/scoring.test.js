@@ -4,8 +4,8 @@ const assert = require('node:assert/strict');
 const { scoreTest, itemScore, levelLabel } = require('../../src/personality/scoring');
 const seed = require('../../src/personality/catalog.seed');
 
-const bigFive = seed.TESTS[0];
-const questions = seed.QUESTIONS;
+const bigFive = seed.TESTS.find(t => t.key === 'big_five');
+const questions = seed.QUESTIONS.filter(q => q.test_key === 'big_five');
 
 const answerAll = (value) => questions.map(q => ({ order: q.order, value }));
 const answerBy = (fn) => questions.map(q => ({ order: q.order, value: fn(q) }));
@@ -78,7 +78,16 @@ describe('personality scoring', () => {
   test('seed catalog is consistent', () => {
     const traitKeys = new Set(seed.TRAITS.map(t => t.key));
     assert.equal(traitKeys.size, seed.TRAITS.length, 'trait keys are unique');
-    for (const q of questions) assert.ok(traitKeys.has(q.trait), `question ${q.order} references known trait`);
+    for (const q of seed.QUESTIONS) assert.ok(traitKeys.has(q.trait), `${q.test_key} question ${q.order} references known trait`);
+    for (const t of seed.TESTS) {
+      const qs = seed.QUESTIONS.filter(q => q.test_key === t.key);
+      assert.ok(qs.length >= 10, `${t.key} has enough questions`);
+      assert.ok(qs.some(q => q.reverse), `${t.key} has reverse-keyed items`);
+      const perTrait = qs.reduce((a, q) => ((a[q.trait] = (a[q.trait] || 0) + 1), a), {});
+      assert.ok(Object.values(perTrait).every(n => n >= 2), `${t.key} has at least 2 items per trait`);
+      assert.equal(new Set(qs.map(q => q.order)).size, qs.length, `${t.key} orders are unique`);
+    }
+    assert.equal(new Set(seed.QUESTIONS.map(q => q.trait)).size, seed.TRAITS.length, 'every trait is measured by some test');
     for (const t of seed.TRAITS) {
       assert.ok(t.default_value >= 0 && t.default_value <= 1);
       assert.ok(t.learning_rate > 0 && t.learning_rate <= 1);

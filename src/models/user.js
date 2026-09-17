@@ -26,6 +26,22 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Admins can see everyone's moods and notes in the mini app. Set by hand in the database:
+  //   db.users.updateOne({ id: <telegram id> }, { $set: { is_admin: true } })
+  is_admin: {
+    type: Boolean,
+    default: false
+  },
+  // Personality sharing: friends who follow this user (and anyone with the public link) can see it
+  is_personality_shared: {
+    type: Boolean,
+    default: false
+  },
+  personality_share_token: {
+    type: String,
+    default: null,
+    index: true
+  },
   // User's own OpenAI key for AI mood insights. Stored encrypted and never
   // selected by default so it can't leak through populate() or API responses.
   openai_api_key: {

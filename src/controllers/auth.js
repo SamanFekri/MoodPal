@@ -1,5 +1,6 @@
 const crypto = require('crypto-js');
 const User = require('../models/user');
+const Mood = require('../models/mood');
 
 // initData older than this is refused so a captured payload can't be replayed forever
 const MAX_INIT_DATA_AGE_SECONDS = 24 * 60 * 60;
@@ -74,10 +75,21 @@ const isAuthenticated = async (req, res) => {
       return res.status(401).json({ authenticated: false, reason: 'unknown_user' });
     }
 
+    const lastMood = await Mood.getLastMood(user._id);
+
     res.json({
       authenticated: true,
       userId: user._id,
       firstName: user.first_name,
+      isAdmin: Boolean(user.is_admin),
+      // the user's own latest mood (null until they set one in the bot)
+      myMood: lastMood ? {
+        mood: lastMood.mood,
+        note: lastMood.note || '',
+        timestamp: lastMood.timestamp,
+        image: `/public/moods/${lastMood.mood.code}.webp`,
+        tgs: `/public/tgs/${lastMood.mood.code}.tgs`,
+      } : null,
       // same link the /share command gives, used by the "add a friend" button
       shareLink: `https://t.me/${process.env.BOT_USERNAME}?start=sm-${user._id}`
     });
@@ -87,5 +99,6 @@ const isAuthenticated = async (req, res) => {
   }
 }
 module.exports = {
-  isAuthenticated
+  isAuthenticated,
+  isDataAuthenticated
 };

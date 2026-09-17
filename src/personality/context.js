@@ -83,7 +83,7 @@ function formatProfileSummary(profile, traitsByKey, { title = '🧠 <b>My Person
     }
     const unmeasured = Object.values(traitsByKey).length - measured.length;
     if (unmeasured > 0) {
-      lines.push(`<i>${unmeasured} more traits will fill in over time from your conversations.</i>`);
+      lines.push(`<i>${unmeasured} more traits will fill in as you take other tests and from your conversations.</i>`);
       lines.push('');
     }
   }

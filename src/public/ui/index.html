@@ -29,6 +29,7 @@
       --stale: #9aa0a6;
       --ease-out: cubic-bezier(.22, 1, .36, 1);
       --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+      --nav-h: 64px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -59,8 +60,9 @@
     #app {
       max-width: 640px;
       margin: 0 auto;
-      padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+      padding: 16px 16px calc(var(--nav-h) + 32px + env(safe-area-inset-bottom));
     }
+    #app.public { padding-bottom: 32px; }
 
     /* ---- Header ---- */
     .header {
@@ -71,22 +73,8 @@
       padding: 8px 4px 18px;
       animation: fade-down .5s var(--ease-out) both;
     }
-
-    .header .greeting {
-      font-size: 14px;
-      color: var(--hint);
-      margin: 0 0 2px;
-      font-weight: 500;
-    }
-
-    .header h1 {
-      font-size: 26px;
-      line-height: 1.15;
-      font-weight: 800;
-      letter-spacing: -.02em;
-      margin: 0;
-    }
-
+    .header .greeting { font-size: 14px; color: var(--hint); margin: 0 0 2px; font-weight: 500; }
+    .header h1 { font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; margin: 0; }
     .header-right { display: flex; align-items: center; gap: 8px; }
 
     .pill {
@@ -114,12 +102,50 @@
     .icon-btn svg { width: 18px; height: 18px; }
     .icon-btn.spinning svg { animation: spin .8s linear infinite; }
 
-    /* ---- Grid & cards ---- */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+    /* ---- My mood (hero) ---- */
+    .me-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+      animation: fade-up .55s var(--ease-out) both;
     }
+    .me-card::before {
+      content: "";
+      position: absolute;
+      left: -20px; top: 50%;
+      width: 160px; height: 160px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: radial-gradient(closest-side, hsl(var(--hue, 210) 90% 60% / .26), transparent 70%);
+      pointer-events: none;
+    }
+    .me-card .sticker { width: 84px; height: 84px; margin: 0; flex: none; }
+    .me-card .sticker-fallback { font-size: 46px; }
+    .me-card .me-empty {
+      width: 84px; height: 84px; flex: none;
+      display: grid; place-items: center;
+      font-size: 40px;
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--hint) 12%, transparent);
+    }
+    .me-body { flex: 1; min-width: 0; }
+    .me-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--hint); margin-bottom: 2px; }
+    .me-mood { font-size: 20px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+    .me-body .when { margin-top: 6px; }
+    .me-body .note { margin-top: 6px; text-align: left; }
+    .me-hint { font-size: 13px; color: var(--hint); margin-top: 2px; line-height: 1.35; }
+    .btn.small { padding: 9px 14px; font-size: 13px; margin-top: 10px; box-shadow: none; }
+    .btn.small svg { width: 15px; height: 15px; }
+
+    /* ---- Grid & cards ---- */
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     @media (min-width: 480px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
     .card {
@@ -135,14 +161,13 @@
       text-decoration: none;
       color: inherit;
       overflow: hidden;
+      cursor: pointer;
       transform-origin: center;
       transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
       animation: fade-up .55s var(--ease-out) both;
       animation-delay: calc(var(--i, 0) * 60ms);
     }
     .card:active { transform: scale(.96); }
-
-    /* soft color glow behind the sticker, tinted per mood */
     .card::before {
       content: "";
       position: absolute;
@@ -152,6 +177,17 @@
       border-radius: 50%;
       background: radial-gradient(closest-side, hsl(var(--hue, 210) 90% 60% / .22), transparent 70%);
       pointer-events: none;
+    }
+    .card .badge {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 13px;
+      background: var(--card);
+      border-radius: 999px;
+      width: 26px; height: 26px;
+      display: grid; place-items: center;
+      box-shadow: var(--shadow);
+      animation: pop-in .5s var(--ease-spring) both;
+      animation-delay: calc(var(--i, 0) * 60ms + .3s);
     }
 
     .sticker {
@@ -164,56 +200,28 @@
     }
     .sticker.loaded { transform: scale(1); opacity: 1; }
     .sticker svg { width: 100% !important; height: 100% !important; }
+    .sticker-fallback { position: absolute; inset: 0; display: grid; place-items: center; font-size: 52px; }
 
-    .sticker-fallback {
-      position: absolute; inset: 0;
-      display: grid; place-items: center;
-      font-size: 52px;
-    }
-
-    .name {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -.01em;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .mood {
-      font-size: 13px;
-      color: var(--hint);
-      margin-top: 2px;
-      font-weight: 500;
-    }
+    .name { font-size: 15px; font-weight: 700; letter-spacing: -.01em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mood { font-size: 13px; color: var(--hint); margin-top: 2px; font-weight: 500; }
 
     .when {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
       margin-top: 8px;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 12px; font-weight: 600;
       color: var(--hint);
       background: color-mix(in srgb, var(--bg) 70%, transparent);
       padding: 4px 10px;
       border-radius: 999px;
       white-space: nowrap;
     }
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--stale);
-      flex: none;
-    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--stale); flex: none; }
     .dot.fresh { background: var(--fresh); box-shadow: 0 0 0 0 rgba(52, 199, 89, .6); animation: pulse 2s infinite; }
     .dot.recent { background: var(--recent); }
 
     .note {
       margin-top: 8px;
-      font-size: 12px;
-      line-height: 1.35;
+      font-size: 12px; line-height: 1.35;
       color: var(--hint);
       font-style: italic;
       display: -webkit-box;
@@ -234,12 +242,8 @@
       animation: fade-up .4s var(--ease-out) both;
       animation-delay: calc(var(--i, 0) * 60ms);
     }
-    .shimmer {
-      position: relative;
-      overflow: hidden;
-      background: color-mix(in srgb, var(--hint) 18%, transparent);
-      border-radius: 12px;
-    }
+    .skeleton.row { flex-direction: row; gap: 12px; align-items: center; padding: 12px 14px; margin-bottom: 8px; }
+    .shimmer { position: relative; overflow: hidden; background: color-mix(in srgb, var(--hint) 18%, transparent); border-radius: 12px; }
     .shimmer::after {
       content: "";
       position: absolute; inset: 0;
@@ -248,20 +252,14 @@
       animation: shimmer 1.4s infinite;
     }
     .sk-sticker { width: 96px; height: 96px; border-radius: 28px; margin-bottom: 10px; }
+    .sk-avatar { width: 44px; height: 44px; border-radius: 50%; flex: none; margin: 0; }
     .sk-line { height: 12px; width: 70%; margin-top: 8px; }
     .sk-line.short { width: 45%; height: 10px; }
 
     /* ---- Empty / auth states ---- */
-    .state {
-      text-align: center;
-      padding: 48px 16px 24px;
-      animation: fade-up .5s var(--ease-out) both;
-    }
+    .state { text-align: center; padding: 48px 16px 24px; animation: fade-up .5s var(--ease-out) both; }
     .state .art {
-      font-size: 72px;
-      line-height: 1;
-      margin-bottom: 18px;
-      display: inline-block;
+      font-size: 72px; line-height: 1; margin-bottom: 18px; display: inline-block;
       animation: float 3.5s ease-in-out infinite;
       filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .12));
     }
@@ -270,29 +268,24 @@
 
     /* ---- Buttons ---- */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: var(--accent);
-      color: var(--accent-text);
-      border: 0;
-      border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--accent); color: var(--accent-text);
+      border: 0; border-radius: 999px;
       padding: 14px 22px;
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 15px; font-weight: 700;
       cursor: pointer;
+      text-decoration: none;
       box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 35%, transparent);
-      transition: transform .15s var(--ease-out), box-shadow .15s var(--ease-out);
+      transition: transform .15s var(--ease-out), box-shadow .15s var(--ease-out), opacity .2s;
     }
     .btn:active { transform: scale(.96); box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 30%, transparent); }
+    .btn:disabled { opacity: .55; }
     .btn svg { width: 18px; height: 18px; }
+    .btn.ghost { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); box-shadow: none; }
 
-    /* floating bottom CTA, shown only when Telegram's native main button isn't available */
     .fab-wrap {
-      position: fixed;
-      left: 0; right: 0;
-      bottom: calc(16px + env(safe-area-inset-bottom));
+      position: fixed; left: 0; right: 0;
+      bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
       display: flex; justify-content: center;
       pointer-events: none;
       animation: fade-up .5s var(--ease-out) .3s both;
@@ -300,29 +293,204 @@
     .fab-wrap .btn { pointer-events: auto; }
 
     .toast {
-      position: fixed;
-      left: 50%; bottom: calc(88px + env(safe-area-inset-bottom));
-      transform: translateX(-50%);
-      background: var(--text);
-      color: var(--card);
+      position: fixed; left: 16px; right: 16px; bottom: calc(var(--nav-h) + 80px + env(safe-area-inset-bottom));
+      width: max-content; max-width: calc(100% - 32px); margin: 0 auto;
+      background: var(--text); color: var(--card);
       font-size: 13px; font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 999px;
+      padding: 10px 16px; border-radius: 999px;
       box-shadow: var(--shadow);
       animation: fade-up .3s var(--ease-out) both;
+      z-index: 70;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+
+    /* ---- Bottom tab bar ---- */
+    .tabbar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+      padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid color-mix(in srgb, var(--hint) 18%, transparent);
+      z-index: 40;
+      animation: fade-up .5s var(--ease-out) .1s both;
+    }
+    .tabbar-inner {
+      position: relative;
+      max-width: 640px; margin: 0 auto;
+      display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+      height: 48px;
+      background: color-mix(in srgb, var(--hint) 12%, transparent);
+      border-radius: 999px;
+      padding: 4px;
+    }
+    .tab-indicator {
+      position: absolute; top: 4px; bottom: 4px;
+      width: calc((100% - 8px) / var(--tabs, 2));
+      left: calc(4px + var(--active, 0) * (100% - 8px) / var(--tabs, 2));
+      background: var(--card);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      transition: left .35s var(--ease-spring);
+    }
+    .tab {
+      position: relative; z-index: 1;
+      border: 0; background: none;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font: inherit; font-size: 13px; font-weight: 700;
+      color: var(--hint);
+      cursor: pointer;
+      transition: color .25s;
+    }
+    .tab.active { color: var(--text); }
+    .tab .ico { font-size: 16px; transition: transform .35s var(--ease-spring); }
+    .tab.active .ico { transform: scale(1.15); }
+
+    .tab-enter-active, .tab-leave-active { transition: opacity .22s ease, transform .22s var(--ease-out); }
+    .tab-enter-from { opacity: 0; transform: translateY(10px); }
+    .tab-leave-to { opacity: 0; transform: translateY(-6px); }
+
+    /* ---- Personality ---- */
+    .section { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; animation: fade-up .55s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 70ms); }
+    .section h3 { margin: 0 0 12px; font-size: 15px; font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .section h3 .sub { font-size: 12px; font-weight: 600; color: var(--hint); }
+
+    .radar-wrap { display: flex; flex-direction: column; align-items: center; }
+    .radar { width: min(100%, 330px); height: auto; overflow: visible; }
+    .radar .ring { fill: none; stroke: color-mix(in srgb, var(--hint) 28%, transparent); stroke-width: 1; }
+    .radar .axis { stroke: color-mix(in srgb, var(--hint) 28%, transparent); stroke-width: 1; }
+    .radar .shape { fill: color-mix(in srgb, var(--accent) 28%, transparent); stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; transform-box: view-box; transform: scale(0); transition: transform .9s var(--ease-spring); }
+    .radar.animated .shape { transform: scale(1); }
+    .radar .vertex { fill: var(--accent); r: 0; transition: r .4s var(--ease-spring); }
+    .radar.animated .vertex { r: 4; transition-delay: .5s; }
+    .radar .lbl { font-size: 10.5px; font-weight: 700; fill: var(--text); }
+    .radar .pct { font-size: 9.5px; font-weight: 600; fill: var(--hint); }
+    .radar .lbl, .radar .pct { opacity: 0; transition: opacity .5s ease .6s; }
+    .radar.animated .lbl, .radar.animated .pct { opacity: 1; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .stat { text-align: center; padding: 10px 6px; border-radius: 14px; background: color-mix(in srgb, var(--hint) 10%, transparent); }
+    .stat b { display: block; font-size: 18px; letter-spacing: -.02em; }
+    .stat span { font-size: 11px; color: var(--hint); font-weight: 600; }
+
+    .trait { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; padding: 7px 0; }
+    .trait + .trait { border-top: 1px solid color-mix(in srgb, var(--hint) 12%, transparent); }
+    .trait .t-name { font-size: 14px; font-weight: 600; }
+    .trait .t-label { font-size: 12px; color: var(--hint); font-weight: 600; text-transform: capitalize; }
+    .trait .t-bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--hint) 14%, transparent); overflow: hidden; }
+    .trait .t-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, hsl(var(--hue, 210) 85% 62%), hsl(calc(var(--hue, 210) + 30) 85% 55%)); transition: width .9s var(--ease-out); transition-delay: calc(var(--i, 0) * 45ms); }
+    .trait .t-conf { grid-column: 1 / -1; font-size: 11px; color: var(--hint); }
+
+    .test-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
+    .test-row + .test-row { border-top: 1px solid color-mix(in srgb, var(--hint) 12%, transparent); }
+    .test-row .t-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: color-mix(in srgb, var(--hint) 10%, transparent); flex: none; }
+    .test-row .t-ico.done { background: color-mix(in srgb, var(--fresh) 18%, transparent); }
+    .test-row .t-body { flex: 1; min-width: 0; }
+    .test-row .t-title { font-size: 14px; font-weight: 700; }
+    .test-row .t-desc { font-size: 12px; color: var(--hint); line-height: 1.3; }
+    .test-row .t-meta { font-size: 11px; color: var(--hint); font-weight: 600; white-space: nowrap; }
+
+    .share-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .share-row .s-title { font-size: 14px; font-weight: 700; }
+    .share-row .s-desc { font-size: 12px; color: var(--hint); line-height: 1.35; margin-top: 2px; }
+    .share-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .share-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
+    .link-box { margin-top: 10px; font-size: 12px; color: var(--hint); background: color-mix(in srgb, var(--hint) 10%, transparent); padding: 8px 10px; border-radius: 10px; word-break: break-all; }
+
+    .switch { position: relative; width: 50px; height: 30px; border-radius: 999px; border: 0; padding: 0; flex: none; cursor: pointer; background: color-mix(in srgb, var(--hint) 30%, transparent); transition: background .25s; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .3s var(--ease-spring); }
+    .switch.on { background: var(--fresh); }
+    .switch.on::after { transform: translateX(20px); }
+    .switch:disabled { opacity: .6; }
+
+    .disclaimer { font-size: 11px; color: var(--hint); line-height: 1.4; text-align: center; padding: 4px 8px 0; }
+
+    /* ---- Admin ---- */
+    .search { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow); margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
+    .search input { flex: 1; border: 0; background: none; font: inherit; font-size: 15px; color: var(--text); outline: none; min-width: 0; }
+    .search input::placeholder { color: var(--hint); }
+    .search svg { width: 18px; height: 18px; color: var(--hint); flex: none; }
+
+    .row-card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card); border-radius: 16px;
+      padding: 10px 12px; box-shadow: var(--shadow);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: transform .15s var(--ease-out);
+      animation: fade-up .45s var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 35ms);
+    }
+    .row-card:active { transform: scale(.98); }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; flex: none; background: radial-gradient(circle at 30% 30%, hsl(var(--hue, 210) 90% 70% / .5), hsl(var(--hue, 210) 90% 50% / .15)); }
+    .row-body { flex: 1; min-width: 0; }
+    .row-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .row-title .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-title .u { font-size: 12px; color: var(--hint); font-weight: 500; }
+    .row-sub { font-size: 12px; color: var(--hint); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-sub i { color: var(--text); opacity: .75; }
+    .row-right { text-align: right; flex: none; }
+    .row-right .when { margin: 0; }
+    .row-right .cnt { display: block; font-size: 11px; color: var(--hint); margin-top: 4px; font-weight: 600; }
+    .lock { font-size: 11px; }
+
+    .timeline { position: relative; padding-left: 26px; }
+    .timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
+    .tl-item { position: relative; padding: 6px 0 10px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+    .tl-item::before { content: ""; position: absolute; left: -22px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--hue, 210) 85% 60%); box-shadow: 0 0 0 3px var(--card); }
+    .tl-head { display: flex; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; }
+    .tl-head time { font-size: 11px; font-weight: 600; color: var(--hint); }
+    .tl-note { font-size: 13px; color: var(--hint); font-style: italic; margin-top: 2px; line-height: 1.35; }
+
+    /* ---- Bottom sheet ---- */
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 60; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+    .sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 61;
+      max-width: 640px; margin: 0 auto;
+      max-height: 86vh; max-height: 86dvh;
+      overflow-y: auto;
+      background: var(--card);
+      border-radius: 24px 24px 0 0;
+      padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, .25);
+    }
+    .sheet .grip { width: 40px; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--hint) 35%, transparent); margin: 0 auto 14px; }
+    .sheet .close { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--hint) 14%, transparent); color: var(--hint); font-size: 16px; font-weight: 700; display: grid; place-items: center; cursor: pointer; transition: transform .15s var(--ease-out); }
+    .sheet .close:active { transform: scale(.9); }
+    .sheet-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .sheet-head .sticker { width: 76px; height: 76px; margin: 0; flex: none; }
+    .sheet-head .sticker-fallback { font-size: 42px; }
+    .sheet-head h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+    .sheet-head .mood { margin-top: 2px; }
+    .sheet-actions { display: flex; gap: 8px; margin: 6px 0 14px; }
+    .sheet-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
+    .sheet-section-title { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--hint); margin: 14px 0 8px; }
+    .muted-box { font-size: 13px; color: var(--hint); background: color-mix(in srgb, var(--hint) 10%, transparent); padding: 12px; border-radius: 12px; line-height: 1.4; }
+    .sheet .section { box-shadow: none; background: color-mix(in srgb, var(--hint) 8%, transparent); }
+
+    .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform .38s var(--ease-out); }
+    .sheet-enter-active .sheet-backdrop, .sheet-leave-active .sheet-backdrop { transition: opacity .3s ease; }
+    .sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
+    .sheet-enter-from .sheet-backdrop, .sheet-leave-to .sheet-backdrop { opacity: 0; }
+
+    /* ---- Public card ---- */
+    .public-hero { text-align: center; padding: 20px 8px 8px; animation: fade-down .5s var(--ease-out) both; }
+    .public-hero .avatar { width: 72px; height: 72px; font-size: 36px; margin: 0 auto 10px; }
+    .public-hero h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+    .public-hero p { margin: 4px 0 0; color: var(--hint); font-size: 14px; }
+    .public-foot { text-align: center; margin-top: 20px; animation: fade-up .5s var(--ease-out) .4s both; }
+    .public-foot a { color: var(--link); font-weight: 700; text-decoration: none; }
+    .public-foot small { display: block; color: var(--hint); margin-top: 6px; font-size: 12px; }
 
     /* ---- Keyframes ---- */
     @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
     @keyframes fade-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes pop-in { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
     @keyframes shimmer { to { transform: translateX(100%); } }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, .55); }
-      70% { box-shadow: 0 0 0 7px rgba(52, 199, 89, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
-    }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, .55); } 70% { box-shadow: 0 0 0 7px rgba(52, 199, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); } }
 
     .list-move { transition: transform .4s var(--ease-out); }
 
@@ -333,81 +501,279 @@
 </head>
 
 <body>
-  <div id="app" v-cloak>
-    <!-- ===== Signed in ===== -->
-    <template v-if="isAuthenticated">
-      <header class="header">
-        <div>
-          <p class="greeting" v-if="firstName">Hi, {{ firstName }} 👋</p>
-          <h1>Friends' moods</h1>
-        </div>
-        <div class="header-right">
-          <span class="pill" v-if="!loadingFriends">{{ friends.length }} {{ friends.length === 1 ? 'friend' : 'friends' }}</span>
-          <button class="icon-btn" :class="{ spinning: loadingFriends }" @click="refresh" aria-label="Refresh">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
-            </svg>
-          </button>
-        </div>
-      </header>
+  <div id="app" v-cloak :class="{ public: mode === 'public' }">
 
-      <!-- loading skeletons -->
-      <div v-if="loadingFriends && friends.length === 0" class="grid">
-        <div v-for="n in 4" :key="'sk' + n" class="skeleton" :style="{ '--i': n - 1 }">
-          <div class="shimmer sk-sticker"></div>
-          <div class="shimmer sk-line"></div>
-          <div class="shimmer sk-line short"></div>
+    <!-- ================= PUBLIC SHARE CARD (/p/:token) ================= -->
+    <template v-if="mode === 'public'">
+      <div v-if="publicLoading" class="section"><div class="shimmer sk-line" style="width:60%"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+      <template v-else-if="publicProfile">
+        <div class="public-hero">
+          <div class="avatar" :style="{ '--hue': 265 }">🧠</div>
+          <h1>{{ publicName }}'s personality</h1>
+          <p>An approximate profile from MoodPal tests and conversations</p>
         </div>
-      </div>
-
-      <!-- friends -->
-      <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
-        <a v-for="(friend, i) in friends" :key="friend.id"
-           class="card"
-           :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }"
-           :href="profileHref(friend)"
-           @click="openProfile($event, friend)">
-          <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
-            <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
-          </div>
-          <div class="name">{{ friend.fullname }}</div>
-          <div class="mood">{{ friend.mood.emoji }} {{ friend.mood.name }}</div>
-          <div class="when" :title="new Date(friend.timestamp).toLocaleString()">
-            <span class="dot" :class="freshness(friend.timestamp)"></span>
-            {{ formatWhen(friend.timestamp) }}
-          </div>
-          <div v-if="friend.note" class="note">“{{ friend.note }}”</div>
-        </a>
-      </transition-group>
-
-      <!-- empty -->
+        <personality-view :profile="publicProfile" animate-key="public"></personality-view>
+        <div class="public-foot">
+          <a :href="botLink" target="_blank">Make your own with MoodPal →</a>
+          <small>Not a clinical or medical diagnosis.</small>
+        </div>
+      </template>
       <div v-else class="state">
-        <div class="art">🫂</div>
-        <h2>No friends yet</h2>
-        <p>Share your link so a friend can follow your mood — once they allow you back, they'll show up here.</p>
-        <button class="btn" @click="addFriend">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Add a friend
-        </button>
-      </div>
-
-      <!-- fallback CTA (outside Telegram or when the native button is unavailable) -->
-      <div v-if="friends.length > 0 && !usingMainButton" class="fab-wrap">
-        <button class="btn" @click="addFriend">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Add a friend
-        </button>
+        <div class="art">🔗</div>
+        <h2>Link not available</h2>
+        <p>This personality profile is private or the link has expired.</p>
+        <a class="btn" :href="botLink">Open MoodPal</a>
       </div>
     </template>
 
-    <!-- ===== Checking / not signed in ===== -->
+    <!-- ================= SIGNED IN ================= -->
+    <template v-else-if="isAuthenticated">
+
+      <transition name="tab" mode="out-in">
+        <!-- ---------- Friends ---------- -->
+        <div v-if="tab === 'friends'" key="friends">
+          <header class="header">
+            <div>
+              <p class="greeting" v-if="firstName">Hi, {{ firstName }} 👋</p>
+              <h1>Friends' moods</h1>
+            </div>
+            <div class="header-right">
+              <span class="pill" v-if="!loadingFriends">{{ friends.length }} {{ friends.length === 1 ? 'friend' : 'friends' }}</span>
+              <button class="icon-btn" :class="{ spinning: loadingFriends }" @click="refresh" aria-label="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <!-- my own mood -->
+          <section class="me-card" :style="{ '--hue': myMood ? hueFor(myMood.mood.code) : 210 }">
+            <template v-if="myMood">
+              <div class="sticker" :class="{ loaded: loaded.me }" data-id="me" :data-tgs="myMood.tgs" ref="meSticker">
+                <span v-if="failed.me" class="sticker-fallback">{{ myMood.mood.emoji }}</span>
+              </div>
+              <div class="me-body">
+                <div class="me-label">Your mood</div>
+                <div class="me-mood">{{ myMood.mood.emoji }} {{ myMood.mood.name }}</div>
+                <div class="when" :title="new Date(myMood.timestamp).toLocaleString()"><span class="dot" :class="freshness(myMood.timestamp)"></span>{{ formatWhen(myMood.timestamp) }}</div>
+                <div v-if="myMood.note" class="note">“{{ myMood.note }}”</div>
+                <button class="btn small" @click="updateMood">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  Update mood
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <div class="me-empty">🤔</div>
+              <div class="me-body">
+                <div class="me-label">Your mood</div>
+                <div class="me-mood">Not set yet</div>
+                <div class="me-hint">Tell the bot how you feel and it will show up here.</div>
+                <button class="btn small" @click="updateMood">🤩 Set my mood</button>
+              </div>
+            </template>
+          </section>
+
+          <div v-if="loadingFriends && friends.length === 0" class="grid">
+            <div v-for="n in 4" :key="'sk' + n" class="skeleton" :style="{ '--i': n - 1 }">
+              <div class="shimmer sk-sticker"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div>
+            </div>
+          </div>
+
+          <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
+            <div v-for="(friend, i) in friends" :key="friend.id" class="card" :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }" @click="openFriend(friend)">
+              <span v-if="friend.personality_shared" class="badge" title="Shares their personality">🧠</span>
+              <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
+                <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
+              </div>
+              <div class="name">{{ friend.fullname }}</div>
+              <div class="mood">{{ friend.mood.emoji }} {{ friend.mood.name }}</div>
+              <div class="when" :title="new Date(friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(friend.timestamp)"></span>{{ formatWhen(friend.timestamp) }}</div>
+              <div v-if="friend.note" class="note">“{{ friend.note }}”</div>
+            </div>
+          </transition-group>
+
+          <div v-else class="state">
+            <div class="art">🫂</div>
+            <h2>No friends yet</h2>
+            <p>Share your link so a friend can follow your mood — once they allow you back, they'll show up here.</p>
+            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
+          </div>
+
+          <div v-if="friends.length > 0 && !usingMainButton" class="fab-wrap">
+            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
+          </div>
+        </div>
+
+        <!-- ---------- Personality ---------- -->
+        <div v-else-if="tab === 'personality'" key="personality">
+          <header class="header">
+            <div>
+              <p class="greeting">Approximate, evolving</p>
+              <h1>My personality</h1>
+            </div>
+            <div class="header-right">
+              <span class="pill" v-if="personality?.profile">{{ personality.profile.measured }}/{{ personality.profile.total }} traits</span>
+              <button class="icon-btn" :class="{ spinning: loadingPersonality }" @click="fetchPersonality(true)" aria-label="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <template v-if="loadingPersonality && !personality">
+            <div class="section" v-for="n in 3" :key="'psk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+          </template>
+
+          <template v-else-if="personality">
+            <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey"></personality-view>
+            <div v-else class="state" style="padding-top: 24px">
+              <div class="art">🧠</div>
+              <h2>No profile yet</h2>
+              <p>Take a short test in the chat and your personality will appear here — with a radar, trait bars and everything.</p>
+              <button class="btn" @click="takeTest()">📝 Take a test</button>
+            </div>
+
+            <!-- tests -->
+            <section class="section" :style="{ '--i': 4 }">
+              <h3>Tests <span class="sub">{{ personality.tests.filter(t => t.completed).length }}/{{ personality.tests.length }} done</span></h3>
+              <div v-for="t in personality.tests" :key="t.key" class="test-row" @click="takeTest(t)">
+                <div class="t-ico" :class="{ done: t.completed }">{{ t.completed ? '✅' : '📝' }}</div>
+                <div class="t-body">
+                  <div class="t-title">{{ t.name }}</div>
+                  <div class="t-desc">{{ t.description }}</div>
+                </div>
+                <div class="t-meta">{{ t.question_count }} q</div>
+              </div>
+            </section>
+
+            <!-- sharing -->
+            <section class="section" :style="{ '--i': 5 }">
+              <div class="share-row">
+                <div>
+                  <div class="s-title">Share my personality</div>
+                  <div class="s-desc">Friends who follow your mood can tap your card to see it, and you get a link to share with anyone.</div>
+                </div>
+                <button class="switch" :class="{ on: personality.sharing.enabled }" :disabled="!personality.profile || savingSharing" @click="toggleSharing" role="switch" :aria-checked="personality.sharing.enabled"></button>
+              </div>
+              <template v-if="personality.sharing.enabled && personality.sharing.public_url">
+                <div class="share-actions">
+                  <button class="btn" @click="sharePersonality"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share link</button>
+                  <button class="btn ghost" @click="copyLink(personality.sharing.public_url)">Copy</button>
+                  <a class="btn ghost" :href="personality.sharing.public_url" target="_blank">Preview</a>
+                </div>
+                <div class="link-box">{{ personality.sharing.public_url }}</div>
+              </template>
+              <div v-else-if="!personality.profile" class="s-desc" style="margin-top:10px">Take a test first to have something to share.</div>
+            </section>
+
+            <p class="disclaimer">⚠️ This is an approximate personality profile based on short self-report questionnaires and conversation patterns. It is not a clinical or medical diagnosis.</p>
+          </template>
+        </div>
+
+        <!-- ---------- Admin ---------- -->
+        <div v-else-if="tab === 'admin' && isAdmin" key="admin">
+          <header class="header">
+            <div>
+              <p class="greeting">Admin</p>
+              <h1>All moods</h1>
+            </div>
+            <div class="header-right">
+              <span class="pill" v-if="admin.total_users !== null">{{ admin.total_users }} users · {{ admin.total_moods }} moods</span>
+            </div>
+          </header>
+
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input v-model="admin.query" @input="searchAdmin" placeholder="Search name, @username or id" autocomplete="off">
+          </div>
+
+          <template v-if="admin.loading && admin.users.length === 0">
+            <div v-for="n in 6" :key="'ask' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
+          </template>
+          <template v-else-if="admin.users.length > 0">
+            <div v-for="(u, i) in admin.users" :key="u.id" class="row-card" :style="{ '--i': i, '--hue': hueFor(u.last_mood.mood.code) }" @click="openAdminUser(u)">
+              <div class="avatar">{{ u.last_mood.mood.emoji }}</div>
+              <div class="row-body">
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span></div>
+                <div class="row-sub">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
+              </div>
+              <div class="row-right">
+                <div class="when"><span class="dot" :class="freshness(u.last_mood.timestamp)"></span>{{ formatWhen(u.last_mood.timestamp, true) }}</div>
+                <span class="cnt">{{ u.mood_count }} {{ u.mood_count === 1 ? 'mood' : 'moods' }}</span>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top: 10px" v-if="admin.users.length >= admin.page_size * (admin.page + 1)">
+              <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more' }}</button>
+            </div>
+          </template>
+          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No moods have been set yet.</p></div>
+        </div>
+      </transition>
+
+      <!-- ---------- tab bar ---------- -->
+      <nav class="tabbar">
+        <div class="tabbar-inner" :style="{ '--tabs': tabs.length, '--active': Math.max(0, tabs.findIndex(t => t.key === tab)) }">
+          <div class="tab-indicator"></div>
+          <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: tab === t.key }" @click="setTab(t.key)"><span class="ico">{{ t.icon }}</span>{{ t.label }}</button>
+        </div>
+      </nav>
+
+      <!-- ---------- bottom sheet ---------- -->
+      <transition name="sheet">
+        <div v-if="sheet" key="sheet">
+          <div class="sheet-backdrop" @click="closeSheet"></div>
+          <div class="sheet">
+            <div class="grip"></div>
+            <button class="close" @click="closeSheet" aria-label="Close">✕</button>
+
+            <!-- friend -->
+            <template v-if="sheet.type === 'friend'">
+              <div class="sheet-head">
+                <div class="sticker" :class="{ loaded: loaded.sheet }" data-id="sheet" :data-tgs="sheet.friend.tgs" ref="sheetSticker">
+                  <span v-if="failed.sheet" class="sticker-fallback">{{ sheet.friend.mood.emoji }}</span>
+                </div>
+                <div>
+                  <h2>{{ sheet.friend.fullname }}</h2>
+                  <div class="mood">{{ sheet.friend.mood.emoji }} {{ sheet.friend.mood.name }}</div>
+                  <div class="when" :title="new Date(sheet.friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(sheet.friend.timestamp)"></span>{{ formatWhen(sheet.friend.timestamp) }}</div>
+                </div>
+              </div>
+              <div v-if="sheet.friend.note" class="muted-box">“{{ sheet.friend.note }}”</div>
+              <div class="sheet-actions">
+                <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)">💬 Open chat</a>
+              </div>
+              <div class="sheet-section-title">Personality</div>
+              <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+              <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact></personality-view>
+              <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
+              <div v-else class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their personality.</div>
+            </template>
+
+            <!-- admin: a user's history -->
+            <template v-else-if="sheet.type === 'admin-user'">
+              <div class="sheet-head">
+                <div class="avatar" :style="{ '--hue': hueFor(sheet.user.last_mood.mood.code) }">{{ sheet.user.last_mood.mood.emoji }}</div>
+                <div>
+                  <h2>{{ sheet.user.fullname || 'Unnamed' }}</h2>
+                  <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }} · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</div>
+                </div>
+              </div>
+              <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+              <div v-else class="timeline">
+                <div v-for="(m, i) in sheet.moods" :key="i" class="tl-item" :style="{ '--i': i, '--hue': hueFor(m.mood.code) }">
+                  <div class="tl-head">{{ m.mood.emoji }} {{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                  <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </transition>
+    </template>
+
+    <!-- ================= NOT SIGNED IN ================= -->
     <template v-else>
       <div v-if="authenticating" class="grid" style="margin-top: 60px">
-        <div v-for="n in 4" :key="'auth' + n" class="skeleton" :style="{ '--i': n - 1 }">
-          <div class="shimmer sk-sticker"></div>
-          <div class="shimmer sk-line"></div>
-          <div class="shimmer sk-line short"></div>
-        </div>
+        <div v-for="n in 4" :key="'auth' + n" class="skeleton" :style="{ '--i': n - 1 }"><div class="shimmer sk-sticker"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
       </div>
       <div v-else class="state">
         <div class="art">🔐</div>
@@ -417,9 +783,7 @@
       </div>
     </template>
 
-    <transition name="list">
-      <div v-if="toast" class="toast">{{ toast }}</div>
-    </transition>
+    <transition name="list"><div v-if="toast" class="toast">{{ toast }}</div></transition>
   </div>
 
   <script>
@@ -431,6 +795,7 @@
       bored: 200, uncertain: 240, disappointed: 210, anxious: 280, angry: 0, sad: 215,
       overwhelmed: 300, overthinking: 260, tired: 230, nervous: 40, sick: 120, naughty: 340
     };
+    const CATEGORY_HUES = { big_five: 265, big_five_facet: 290, communication: 200, emotional_style: 340, thinking_style: 160, behavioral: 30 };
 
     // tgs-player registers window.TgsPlayer asynchronously after it fetches lottie/pako
     function waitForTgsPlayer(timeoutMs = 10000) {
@@ -444,25 +809,122 @@
       });
     }
 
+    // ---------- <personality-view> : radar + trait bars, animates in on mount ----------
+    const PersonalityView = {
+      props: { profile: { type: Object, required: true }, animateKey: { type: String, default: '' }, compact: { type: Boolean, default: false } },
+      data() { return { animated: false }; },
+      computed: {
+        // the radar shows the Big Five when measured, otherwise the category with the most traits (max 8 axes)
+        radar() {
+          const usable = this.profile.categories.filter(c => c.traits.length >= 3);
+          const cat = usable.find(c => c.key === 'big_five') || usable.slice().sort((a, b) => b.traits.length - a.traits.length)[0];
+          if (!cat) return null;
+          const traits = cat.traits.slice(0, 8);
+          const n = traits.length, cx = 150, cy = 128, R = 74, minR = 8;
+          const angle = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+          const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+          const rings = [0.25, 0.5, 0.75, 1].map(f => traits.map((_, i) => pt(i, R * f).join(',')).join(' '));
+          const points = traits.map((t, i) => pt(i, minR + t.value * (R - minR)));
+          const labels = traits.map((t, i) => {
+            const [x, y] = pt(i, R + 16);
+            const words = t.name.split(' ');
+            // two lines: split on the space, or hyphenate a single long word
+            let lines = [t.name];
+            if (words.length > 1) lines = [words.slice(0, Math.ceil(words.length / 2)).join(' '), words.slice(Math.ceil(words.length / 2)).join(' ')];
+            else if (t.name.length > 12) { const cut = Math.ceil(t.name.length / 2); lines = [t.name.slice(0, cut) + '-', t.name.slice(cut)]; }
+            const above = y < cy - 4, below = y > cy + 4;
+            return { x, y: above ? y - (lines.length - 1) * 11 : y, lines, pct: Math.round(t.value * 100), anchor: Math.abs(x - cx) < 6 ? 'middle' : x > cx ? 'start' : 'end', dy: above ? -4 : below ? 8 : 2 };
+          });
+          return { title: cat.name, cx, cy, rings, axes: traits.map((_, i) => pt(i, R)), points, polygon: points.map(p => p.join(',')).join(' '), labels };
+        },
+      },
+      methods: { hueFor(key) { return CATEGORY_HUES[key] ?? 210; } },
+      mounted() { requestAnimationFrame(() => requestAnimationFrame(() => { this.animated = true; })); },
+      watch: { animateKey() { this.animated = false; nextTick(() => requestAnimationFrame(() => { this.animated = true; })); } },
+      template: `
+        <div>
+          <section v-if="radar" class="section" :style="{ '--i': 0 }">
+            <h3 v-if="!compact">Overview <span class="sub">{{ radar.title }}</span></h3>
+            <div class="radar-wrap">
+              <svg class="radar" :class="{ animated }" viewBox="0 0 300 256">
+                <polygon v-for="(r, i) in radar.rings" :key="'r' + i" class="ring" :points="r"></polygon>
+                <line v-for="(a, i) in radar.axes" :key="'a' + i" class="axis" :x1="radar.cx" :y1="radar.cy" :x2="a[0]" :y2="a[1]"></line>
+                <polygon class="shape" :points="radar.polygon" :style="{ transformOrigin: radar.cx + 'px ' + radar.cy + 'px' }"></polygon>
+                <circle v-for="(p, i) in radar.points" :key="'p' + i" class="vertex" :cx="p[0]" :cy="p[1]"></circle>
+                <g v-for="(l, i) in radar.labels" :key="'l' + i">
+                  <text class="lbl" :x="l.x" :y="l.y + l.dy" :text-anchor="l.anchor"><tspan v-for="(line, j) in l.lines" :key="j" :x="l.x" :dy="j === 0 ? 0 : 11">{{ line }}</tspan></text>
+                  <text class="pct" :x="l.x" :y="l.y + l.dy + l.lines.length * 11" :text-anchor="l.anchor">{{ l.pct }}%</text>
+                </g>
+              </svg>
+            </div>
+            <div class="stats" v-if="!compact">
+              <div class="stat"><b>{{ profile.measured }}</b><span>traits measured</span></div>
+              <div class="stat"><b>{{ profile.tests_taken.length }}</b><span>tests taken</span></div>
+              <div class="stat"><b>{{ profile.observation_count }}</b><span>observations</span></div>
+            </div>
+          </section>
+
+          <section v-for="(cat, ci) in profile.categories" :key="cat.key" class="section" :style="{ '--i': ci + 1, '--hue': hueFor(cat.key) }">
+            <h3>{{ cat.name }} <span class="sub">{{ cat.traits.length }} traits</span></h3>
+            <div v-for="(t, i) in cat.traits" :key="t.key" class="trait" :title="t.description">
+              <div class="t-name">{{ t.name }}</div>
+              <div class="t-label">{{ t.label }} · {{ Math.round(t.value * 100) }}%</div>
+              <div class="t-bar"><div class="t-fill" :style="{ width: animated ? (t.value * 100) + '%' : '0%', '--i': i }"></div></div>
+              <div class="t-conf" v-if="!compact">confidence {{ Math.round(t.confidence * 100) }}%</div>
+            </div>
+          </section>
+        </div>
+      `,
+    };
+
     createApp({
+      components: { 'personality-view': PersonalityView },
       data() {
         return {
+          mode: location.pathname.startsWith('/p/') ? 'public' : 'app',
           tg: null,
           authenticating: true,
           isAuthenticated: false,
           authReason: null,
+          isAdmin: false,
+          tab: 'friends',
+          // friends
           loadingFriends: false,
           friends: [],
-          loaded: {},   // friend id -> sticker rendered
-          failed: {},   // friend id -> sticker failed, show emoji instead
+          loaded: {},
+          failed: {},
           userId: null,
           firstName: '',
+          myMood: null,
           shareLink: null,
           usingMainButton: false,
+          // personality
+          personality: null,
+          loadingPersonality: false,
+          savingSharing: false,
+          personalityAnimKey: 'p0',
+          // admin
+          admin: { query: '', users: [], page: 0, page_size: 30, total_users: null, total_moods: null, loading: false },
+          // sheet / misc
+          sheet: null,
           toast: '',
           players: {},
           observer: null,
+          // public mode
+          publicLoading: true,
+          publicProfile: null,
+          publicName: '',
+          publicBot: null,
         }
+      },
+
+      computed: {
+        tabs() {
+          const t = [{ key: 'friends', label: 'Friends', icon: '🫂' }, { key: 'personality', label: 'Personality', icon: '🧠' }];
+          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
+          return t;
+        },
+        botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
 
       async mounted() {
@@ -473,25 +935,28 @@
           try { this.tg.setHeaderColor('secondary_bg_color'); } catch {}
         }
 
+        if (this.mode === 'public') return this.loadPublic();
+
         if (!this.tg?.initData) {
           this.authenticating = false;
           return;
         }
 
         try {
-          const res = await fetch('/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData: this.tg.initData })
-          });
+          const res = await fetch('/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: this.tg.initData }) });
           const data = await res.json();
           if (res.ok && data.authenticated) {
             this.isAuthenticated = true;
             this.userId = data.userId;
             this.firstName = data.firstName || this.tg.initDataUnsafe?.user?.first_name || '';
             this.shareLink = data.shareLink;
+            this.myMood = data.myMood || null;
+            this.isAdmin = Boolean(data.isAdmin);
+            try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             this.setupMainButton();
             await this.fetchFriends();
+            if (this.tab === 'personality') this.fetchPersonality();
+            if (this.tab === 'admin') this.fetchAdmin();
           } else {
             this.authReason = data.reason || null;
           }
@@ -503,16 +968,40 @@
       },
 
       methods: {
-        // ----- data -----
+        // ----- api -----
+        async api(path, { method = 'GET', body } = {}) {
+          const res = await fetch(path, {
+            method,
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': this.tg?.initData || '' },
+            body: body ? JSON.stringify(body) : undefined,
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; throw e; }
+          return data;
+        },
+
+        // ----- tabs -----
+        setTab(key) {
+          if (this.tab === key) return;
+          this.haptic('light');
+          this.tab = key;
+          try { localStorage.setItem('moodpal.tab', key); } catch {}
+          const mb = this.tg?.MainButton;
+          if (mb && this.usingMainButton) key === 'friends' ? mb.show() : mb.hide();
+          if (key === 'friends') { this.players = {}; nextTick(() => this.mountStickers()); }
+          if (key === 'personality' && !this.personality) this.fetchPersonality();
+          if (key === 'admin' && this.admin.total_users === null) this.fetchAdmin();
+        },
+
+        // ----- friends -----
         async fetchFriends() {
           this.loadingFriends = true;
           try {
-            const res = await fetch(`/user/${this.userId}/followings`);
-            this.friends = await res.json();
+            this.friends = await this.api('/api/friends');
             await nextTick();
             this.mountStickers();
           } catch (error) {
-            console.error('Get Followings failed:', error);
+            console.error('Get friends failed:', error);
             this.showToast("Couldn't load your friends");
           } finally {
             this.loadingFriends = false;
@@ -524,19 +1013,33 @@
           this.destroyStickers();
           this.loaded = {};
           this.failed = {};
-          await this.fetchFriends();
+          await Promise.all([this.fetchMe(), this.fetchFriends()]);
         },
 
-        // ----- stickers (lazy: only load the ones on screen) -----
+        async fetchMe() {
+          try {
+            const res = await fetch('/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: this.tg.initData }) });
+            const data = await res.json();
+            if (res.ok && data.authenticated) { this.myMood = data.myMood || null; this.isAdmin = Boolean(data.isAdmin); }
+          } catch (error) {
+            console.error('Refreshing my mood failed:', error);
+          }
+        },
+
+        updateMood() {
+          this.haptic('medium');
+          if (this.tg?.close) return this.tg.close();
+          window.open(this.botLink, '_blank');
+        },
+
+        // ----- stickers (lazy) -----
         async mountStickers() {
           let TgsPlayer;
-          try {
-            TgsPlayer = await waitForTgsPlayer();
-          } catch {
+          try { TgsPlayer = await waitForTgsPlayer(); } catch {
             this.friends.forEach(f => { this.failed[f.id] = true; this.loaded[f.id] = true; });
+            if (this.myMood) { this.failed.me = true; this.loaded.me = true; }
             return;
           }
-
           const load = async (el) => {
             const id = el.dataset.id;
             if (this.players[id]) return;
@@ -547,28 +1050,18 @@
               this.loaded[id] = true;
             } catch (error) {
               console.error('Sticker failed:', error);
-              this.failed[id] = true;
-              this.loaded[id] = true;
+              this.failed[id] = true; this.loaded[id] = true;
             }
           };
-
-          const els = Array.isArray(this.$refs.stickers) ? this.$refs.stickers : [this.$refs.stickers].filter(Boolean);
-          if (!('IntersectionObserver' in window)) {
-            els.forEach(load);
-            return;
-          }
+          const friendEls = Array.isArray(this.$refs.stickers) ? this.$refs.stickers : [this.$refs.stickers].filter(Boolean);
+          const els = [...(this.$refs.meSticker ? [this.$refs.meSticker] : []), ...(this.$refs.sheetSticker ? [this.$refs.sheetSticker] : []), ...friendEls];
+          if (!('IntersectionObserver' in window)) { els.forEach(load); return; }
           this.observer?.disconnect();
           this.observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                load(entry.target);
-                this.observer.unobserve(entry.target);
-              }
-            });
+            entries.forEach(entry => { if (entry.isIntersecting) { load(entry.target); this.observer.unobserve(entry.target); } });
           }, { rootMargin: '200px' });
           els.forEach(el => this.observer.observe(el));
         },
-
         destroyStickers() {
           this.observer?.disconnect();
           Object.values(this.players).forEach(p => { try { p.destroy(); } catch {} });
@@ -581,68 +1074,162 @@
           if (!mb || !this.shareLink) return;
           mb.setText('➕  Add a friend');
           mb.onClick(this.addFriend);
-          mb.show();
+          this.tab === 'friends' ? mb.show() : mb.hide();
           this.usingMainButton = true;
         },
-
         addFriend() {
           this.haptic('medium');
           if (!this.shareLink) return;
-          const text = `👀 Follow my mood on MoodPal`;
-          if (this.tg?.openTelegramLink) {
-            this.tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(this.shareLink)}&text=${encodeURIComponent(text)}`);
-            return;
-          }
-          if (navigator.share) {
-            navigator.share({ title: 'MoodPal', text, url: this.shareLink }).catch(() => {});
-            return;
-          }
-          navigator.clipboard?.writeText(this.shareLink)
-            .then(() => this.showToast('Link copied — send it to a friend'))
-            .catch(() => this.showToast(this.shareLink));
+          this.shareUrl(this.shareLink, '👀 Follow my mood on MoodPal');
+        },
+        shareUrl(url, text) {
+          if (this.tg?.openTelegramLink) return this.tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
+          if (navigator.share) return navigator.share({ title: 'MoodPal', text, url }).catch(() => {});
+          this.copyLink(url);
+        },
+        copyLink(url) {
+          this.haptic('light');
+          navigator.clipboard?.writeText(url).then(() => this.showToast('Link copied')).catch(() => this.showToast(url));
         },
 
-        // ----- profile -----
-        profileHref(friend) {
-          return friend.username ? `https://t.me/${friend.username}` : friend.link;
+        // ----- friend sheet -----
+        async openFriend(friend) {
+          this.haptic('light');
+          delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
+          this.sheet = { type: 'friend', friend, loading: true, personality: null };
+          await nextTick();
+          this.mountStickers();
+          try {
+            this.sheet.personality = await this.api(`/api/friends/${friend.id}/personality`);
+          } catch (error) {
+            this.sheet.personality = { shared: false };
+          } finally {
+            if (this.sheet) this.sheet.loading = false;
+          }
         },
+        closeSheet() {
+          this.sheet = null;
+          try { this.players.sheet?.destroy(); } catch {}
+          delete this.players.sheet;
+        },
+        profileHref(friend) { return friend.username ? `https://t.me/${friend.username}` : friend.link; },
         openProfile(event, friend) {
           this.haptic('light');
-          if (friend.username && this.tg?.openTelegramLink) {
-            event.preventDefault();
-            this.tg.openTelegramLink(`https://t.me/${friend.username}`);
+          if (friend.username && this.tg?.openTelegramLink) { event.preventDefault(); this.tg.openTelegramLink(`https://t.me/${friend.username}`); }
+        },
+
+        // ----- personality -----
+        async fetchPersonality(manual = false) {
+          if (manual) this.haptic('light');
+          this.loadingPersonality = true;
+          try {
+            this.personality = await this.api('/api/me/personality');
+            this.personalityAnimKey = 'p' + Date.now();
+          } catch (error) {
+            console.error('Personality failed:', error);
+            this.showToast("Couldn't load your personality");
+          } finally {
+            this.loadingPersonality = false;
+          }
+        },
+        takeTest(t) {
+          this.haptic('medium');
+          // tests run in the chat: close the mini app so the user lands on the keyboard
+          if (this.tg?.close) return this.tg.close();
+          window.open(this.botLink, '_blank');
+        },
+        async toggleSharing() {
+          if (!this.personality || this.savingSharing) return;
+          this.haptic('medium');
+          this.savingSharing = true;
+          const enabled = !this.personality.sharing.enabled;
+          try {
+            this.personality.sharing = await this.api('/api/me/personality/sharing', { method: 'POST', body: { enabled } });
+            this.showToast(enabled ? 'Sharing on — friends can see your personality' : 'Sharing off');
+          } catch (error) {
+            this.showToast("Couldn't update sharing");
+          } finally {
+            this.savingSharing = false;
+          }
+        },
+        sharePersonality() {
+          this.haptic('medium');
+          this.shareUrl(this.personality.sharing.public_url, '🧠 Check out my personality profile on MoodPal');
+        },
+
+        // ----- admin -----
+        async fetchAdmin({ append = false } = {}) {
+          this.admin.loading = true;
+          try {
+            const page = append ? this.admin.page + 1 : 0;
+            const data = await this.api(`/api/admin/users?q=${encodeURIComponent(this.admin.query)}&page=${page}`);
+            this.admin.users = append ? [...this.admin.users, ...data.users] : data.users;
+            this.admin.page = data.page;
+            this.admin.page_size = data.page_size;
+            this.admin.total_users = data.total_users;
+            this.admin.total_moods = data.total_moods;
+          } catch (error) {
+            console.error('Admin list failed:', error);
+            this.showToast(error.status === 403 ? 'Admin access required' : "Couldn't load users");
+          } finally {
+            this.admin.loading = false;
+          }
+        },
+        searchAdmin() {
+          clearTimeout(this._searchTimer);
+          this._searchTimer = setTimeout(() => this.fetchAdmin(), 300);
+        },
+        loadMoreAdmin() { this.fetchAdmin({ append: true }); },
+        async openAdminUser(u) {
+          this.haptic('light');
+          this.sheet = { type: 'admin-user', user: u, loading: true, moods: [] };
+          try {
+            const data = await this.api(`/api/admin/users/${u.id}/moods?limit=100`);
+            if (this.sheet?.type === 'admin-user') this.sheet.moods = data.moods;
+          } catch (error) {
+            this.showToast("Couldn't load history");
+          } finally {
+            if (this.sheet) this.sheet.loading = false;
+          }
+        },
+
+        // ----- public card -----
+        async loadPublic() {
+          const token = location.pathname.split('/p/')[1]?.split('/')[0];
+          try {
+            const res = await fetch(`/api/public/personality/${encodeURIComponent(token)}`);
+            if (!res.ok) throw new Error('not found');
+            const data = await res.json();
+            this.publicName = data.first_name || 'Someone';
+            this.publicBot = data.bot_username;
+            this.publicProfile = data.profile;
+            document.title = `${this.publicName}'s personality · Mood Pal`;
+          } catch {
+            this.publicProfile = null;
+          } finally {
+            this.publicLoading = false;
           }
         },
 
         // ----- presentation -----
-        hueFor(code) {
-          return MOOD_HUES[code] ?? 210;
-        },
+        hueFor(code) { return MOOD_HUES[code] ?? 210; },
         daysAgo(ts) {
           const d = new Date(ts), now = new Date();
           const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
           return Math.round((startOf(now) - startOf(d)) / 86400000);
         },
-        freshness(ts) {
-          const days = this.daysAgo(ts);
-          return days <= 0 ? 'fresh' : days <= 3 ? 'recent' : 'stale';
-        },
-        formatWhen(ts) {
+        freshness(ts) { const days = this.daysAgo(ts); return days <= 0 ? 'fresh' : days <= 3 ? 'recent' : 'stale'; },
+        formatWhen(ts, short = false) {
           const d = new Date(ts);
           const days = this.daysAgo(ts);
           const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-          if (days <= 0) return `Today · ${time}`;
+          if (days <= 0) return short ? time : `Today · ${time}`;
           if (days === 1) return 'Yesterday';
-          if (days < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+          if (days < 7) return d.toLocaleDateString(undefined, { weekday: short ? 'short' : 'long' });
           const sameYear = d.getFullYear() === new Date().getFullYear();
-          return d.toLocaleDateString(undefined, sameYear
-            ? { weekday: 'short', day: 'numeric', month: 'short' }
-            : { day: 'numeric', month: 'short', year: 'numeric' });
+          return d.toLocaleDateString(undefined, sameYear ? { day: 'numeric', month: 'short', ...(short ? {} : { weekday: 'short' }) } : { day: 'numeric', month: 'short', year: 'numeric' });
         },
-
-        haptic(style) {
-          try { this.tg?.HapticFeedback?.impactOccurred(style); } catch {}
-        },
+        haptic(style) { try { this.tg?.HapticFeedback?.impactOccurred(style); } catch {} },
         showToast(message) {
           this.toast = message;
           clearTimeout(this._toastTimer);
@@ -650,9 +1237,7 @@
         }
       },
 
-      beforeUnmount() {
-        this.destroyStickers();
-      }
+      beforeUnmount() { this.destroyStickers(); }
     }).mount('#app');
   </script>
 </body>

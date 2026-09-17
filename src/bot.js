@@ -62,12 +62,13 @@ bot.command('remove_openai_key', removeOpenAIKeyCommand);
 bot.command('personality_test', personalityCommands.personalityTestCommand);
 bot.command('my_personality', (ctx) => personalityCommands.myPersonalityCommand(ctx));
 
-bot.command('mood_2025', getYearlyMoodVideo);
+// hidden: not listed in the command menu, works for any year e.g. /mood_2026
+bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
 
 bot.hears(common.MENU_BUTTONS.SET_MOOD, setMoodCommand)
 bot.hears(common.MENU_BUTTONS.REPORT, showReportCommand)
 bot.hears(common.MENU_BUTTONS.SHARE, createShareLinkCommand)
-bot.hears(common.MENU_BUTTONS.YEAR_REPORT, getYearlyMoodVideo)
+bot.hears(common.MENU_BUTTONS.LEGACY_YEAR_REPORT, getYearlyMoodVideo)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPrivate)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPublic)
 bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityTestCommand)
@@ -91,9 +92,25 @@ bot.catch((err, ctx) => {
   console.error(`Error for ${ctx.updateType}:`, err);
 });
 
+// Commands shown in Telegram's "Menu" button (yearly video stays hidden on purpose)
+const BOT_COMMANDS = [
+  { command: 'start', description: 'Start the bot' },
+  { command: 'set_mood', description: 'Set your current mood' },
+  { command: 'report', description: 'Mood report for the last days' },
+  { command: 'share', description: 'Share your mood with a friend' },
+  { command: 'personality_test', description: 'Take a personality test' },
+  { command: 'my_personality', description: 'See your personality profile' },
+  { command: 'set_public', description: 'Make your mood public (embed codes)' },
+  { command: 'set_private', description: 'Make your mood private' },
+  { command: 'set_openai_key', description: 'Add your OpenAI key for AI insights' },
+  { command: 'remove_openai_key', description: 'Remove your OpenAI key' },
+  { command: 'help', description: 'List all commands' },
+];
+
 // Start the bot
 bot.launch().then(() => {
   console.log('Bot started successfully!');
+  bot.telegram.setMyCommands(BOT_COMMANDS).catch(err => console.error('setMyCommands failed:', err));
 }).catch(err => {
   console.error('Failed to start bot:', err);
 });

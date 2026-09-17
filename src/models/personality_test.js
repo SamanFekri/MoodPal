@@ -18,6 +18,8 @@ const personalityTestSchema = new mongoose.Schema({
     // confidence assigned to traits measured by this test
     confidence: { type: Number, default: 0.7, min: 0, max: 1 },
   },
+  // position in the test list
+  order: { type: Number, default: 100 },
   enabled: { type: Boolean, default: true },
   version: { type: Number, default: 1 },
 }, { timestamps: true, collection: 'personality_tests' });

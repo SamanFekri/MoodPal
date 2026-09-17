@@ -10,13 +10,19 @@ export const CALLBACK = {
 
 export const DISCLAIMER = '⚠️ <i>This is an approximate personality profile, not a clinical or medical diagnosis.</i>';
 
-export const chooseTestMsg = () => `
-🧠 <b>Personality Test</b>
+export const chooseTestMsg = (tests = []) => `
+🧠 <b>Personality Tests</b>
 
 Pick a test to start. You'll answer one question at a time — you can cancel anytime.
+${tests.map(test => `
+${test.completed ? '✅' : '📝'} <b>${test.name}</b> — ${test.question_count} questions (~${estimatedMinutes(test.question_count)} min)
+<i>${test.description}</i>`).join('\n')}
 
 ${DISCLAIMER}
 `;
+
+// ~8 seconds per question
+export const estimatedMinutes = (questionCount) => Math.max(1, Math.round((questionCount * 8) / 60));
 
 export const noTestsMsg = () => `🧠 No personality tests are available right now.`;
 
@@ -43,7 +49,7 @@ ${progressBar(index, total)}
 export const cancelledMsg = () => `❌ Test cancelled. You can start again anytime from 🧠 Personality Test.`;
 export const nothingToCancelMsg = () => `ℹ️ You don't have a test in progress.`;
 export const sessionExpiredMsg = () => `ℹ️ That test is no longer active. Start a new one from 🧠 Personality Test.`;
-export const testCompletedMsg = (test) => `✅ <b>${test.name} completed!</b> Here is your profile:`;
+export const testCompletedMsg = (test) => `✅ <b>${test.name} completed!</b> Here is your profile.\n\n💡 Take another test from 🧠 Personality Test to fill in more of it.`;
 
 export const profileResetConfirmMsg = () => `
 🗑 <b>Reset your personality profile?</b>
@@ -61,7 +67,7 @@ export const progressBar = (index, total, width = 10) => {
 // ---- keyboards ----
 
 export const testListKeyboard = (tests) => tests.map(test => ([
-  { text: `📝 ${test.name}`, callback_data: `${CALLBACK.TEST_PREFIX}start_${test.key}` }
+  { text: `${test.completed ? '✅' : '📝'} ${test.name} (${test.question_count})`, callback_data: `${CALLBACK.TEST_PREFIX}start_${test.key}` }
 ]));
 
 export const resumeKeyboard = (testKey) => [
@@ -90,7 +96,7 @@ const scaleEmoji = (v, min, max) => {
 };
 
 export const profileKeyboard = (hasProfile) => {
-  const rows = [[{ text: hasProfile ? '🔄 Retake test' : '📝 Take the test', callback_data: `${CALLBACK.PROFILE_PREFIX}retake` }]];
+  const rows = [[{ text: hasProfile ? '📝 Take / retake a test' : '📝 Take a test', callback_data: `${CALLBACK.PROFILE_PREFIX}retake` }]];
   if (hasProfile) rows.push([{ text: '🗑 Reset profile', callback_data: `${CALLBACK.PROFILE_PREFIX}reset` }]);
   return rows;
 };

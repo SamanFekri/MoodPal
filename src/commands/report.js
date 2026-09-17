@@ -346,8 +346,10 @@ async function generateYearlyWeeklyReportVideo(
   return { images: [], videoPath, maxScale: fixedMax };
 }
 
+// /mood_<year> (hidden command: not in the menu keyboard or command list). Defaults to the current year.
 async function getYearlyMoodVideo(ctx) {
-  const year = 2025;
+  const match = /\/mood_(\d{4})/.exec(ctx.message?.text || '');
+  const year = match ? parseInt(match[1], 10) : new Date().getFullYear();
   const msg = await ctx.reply(`⏳ Generating reports for video (year ${year})…\n\n🌃 ⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜️⬜ \n\n🏷️ Phase: images`);
 
   const bar = p => {

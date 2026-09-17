@@ -33,9 +33,9 @@ async function personalityTestCommand(ctx) {
         return show(ctx, msgs.resumeOrRestartMsg(loaded.test, active.answers.length, loaded.questions.length), msgs.resumeKeyboard(active.test_key));
       }
     }
-    const tests = await personalityService.listTests();
+    const tests = await personalityService.listTests({ userId: ctx.user._id });
     if (tests.length === 0) return ctx.reply(msgs.noTestsMsg());
-    return show(ctx, msgs.chooseTestMsg(), msgs.testListKeyboard(tests));
+    return show(ctx, msgs.chooseTestMsg(tests), msgs.testListKeyboard(tests));
   } catch (error) {
     console.error('Error in personality_test command:', error);
   }
@@ -122,10 +122,10 @@ async function profileCallback(ctx) {
     await ctx.answerCbQuery();
     switch (data) {
       case 'retake': {
-        const tests = await personalityService.listTests();
+        const tests = await personalityService.listTests({ userId: ctx.user._id });
         if (tests.length === 0) return show(ctx, msgs.noTestsMsg(), null, { edit: true });
         if (tests.length === 1) return startTest(ctx, tests[0].key);
-        return show(ctx, msgs.chooseTestMsg(), msgs.testListKeyboard(tests), { edit: true });
+        return show(ctx, msgs.chooseTestMsg(tests), msgs.testListKeyboard(tests), { edit: true });
       }
       case 'reset':
         return show(ctx, msgs.profileResetConfirmMsg(), msgs.resetConfirmKeyboard(), { edit: true });
