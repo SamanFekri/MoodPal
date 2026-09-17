@@ -17,6 +17,9 @@ RUN apk add --no-cache \
 
 # Set Python for node-gyp explicitly (optional but helps)
 ENV PYTHON=/usr/bin/python3
+# canvas is compiled from source on Alpine (no musl prebuilt); GCC 15 no longer
+# includes <cstdint> implicitly, so force it or the build fails on uint8_t
+ENV CXXFLAGS="-include cstdint"
 
 WORKDIR /app
 
