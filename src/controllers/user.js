@@ -10,18 +10,24 @@ const getFollowings = async (req, res) => {
     let lastMood = await Mood.getLastMood(following.followed._id);
     if (!lastMood) return null;
 
-    let temp = {
+    // only expose what the miniapp needs (never the whole user document)
+    return {
+      id: following.followed.id,
       fullname: [following.followed.first_name, following.followed.last_name].filter(Boolean).join(' '),
+      username: following.followed.username || null,
       link: `tg://user?id=${following.followed.id}`,
       image: `/public/moods/${lastMood.mood.code}.webp`,
       tgs: `/public/tgs/${lastMood.mood.code}.tgs`,
-      ...lastMood._doc
-    }
-    return temp;
+      mood: lastMood.mood,
+      note: lastMood.note || '',
+      timestamp: lastMood.timestamp
+    };
   }));
 
-  // Filter out null values from the array
-  const filteredFollowings = followingsWithLastMood.filter(following => following !== null);
+  // Filter out null values, newest mood first
+  const filteredFollowings = followingsWithLastMood
+    .filter(following => following !== null)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   res.json(filteredFollowings);
 }

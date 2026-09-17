@@ -1,6 +1,9 @@
 const crypto = require('crypto-js');
 const User = require('../models/user');
 
+// initData older than this is refused so a captured payload can't be replayed forever
+const MAX_INIT_DATA_AGE_SECONDS = 24 * 60 * 60;
+
 /**
  * Validates if Telegram WebApp data is authentic (Node.js version)
  *
@@ -36,7 +39,16 @@ function isDataAuthenticated(initData, botToken) {
 
     const expectedHash = crypto.HmacSHA256(dataCheckString, secretKey).toString(crypto.enc.Hex);
 
-    return hash === expectedHash;
+    if (hash !== expectedHash) {
+      return false;
+    }
+
+    const authDate = parseInt(urlParams.get('auth_date'), 10);
+    if (!authDate || (Date.now() / 1000) - authDate > MAX_INIT_DATA_AGE_SECONDS) {
+      return false;
+    }
+
+    return true;
 
   } catch (error) {
     console.error("Authentication error:", error);
@@ -48,21 +60,31 @@ const isAuthenticated = async (req, res) => {
   // request body is a json object with a key initData
   const initData = req.body.initData;
   const botToken = process.env.BOT_TOKEN;
-  const isAuthenticated = isDataAuthenticated(initData, botToken);
-  // parse initData url params
-  const urlParams = new URLSearchParams(initData);
-  
-  // get user id from url params
-  const userParams = urlParams.get('user');
-  
-  const userParamsObj = JSON.parse(userParams);
-  
-  // get user id from userParamsObj
-  const USER_ID = userParamsObj.id;
-  let user = await User.findOne({ id: USER_ID });
 
-  // as a response send isAuthenticated
-  res.json({ authenticated: isAuthenticated, userId: user._id });
+  if (!isDataAuthenticated(initData, botToken)) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  try {
+    const urlParams = new URLSearchParams(initData);
+    const userParamsObj = JSON.parse(urlParams.get('user'));
+    const user = await User.findOne({ id: userParamsObj.id });
+    if (!user) {
+      // the user has never talked to the bot, so there is nothing to show yet
+      return res.status(401).json({ authenticated: false, reason: 'unknown_user' });
+    }
+
+    res.json({
+      authenticated: true,
+      userId: user._id,
+      firstName: user.first_name,
+      // same link the /share command gives, used by the "add a friend" button
+      shareLink: `https://t.me/${process.env.BOT_USERNAME}?start=sm-${user._id}`
+    });
+  } catch (error) {
+    console.error("Authentication error:", error);
+    res.status(400).json({ authenticated: false });
+  }
 }
 module.exports = {
   isAuthenticated

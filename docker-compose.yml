@@ -11,8 +11,9 @@ services:
       - CRON_JOB_TIME=${CRON_JOB_TIME}
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_PORT=${SERVER_PORT}
-      - SERVER_BASE_URL=${SERVER_BASE_URL}
+      - SERVER_BASE_URL=${SERVER_BASE_URL:-https://moodpal.samanfekri.me}
       - WEEKLY_CRON_JOB_TIME=${WEEKLY_CRON_JOB_TIME}
+      - KEY_ENCRYPTION_SECRET=${KEY_ENCRYPTION_SECRET}
     ports:
       - "8080:${SERVER_PORT}"
     restart: unless-stopped

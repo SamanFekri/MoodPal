@@ -72,14 +72,27 @@ Constraints:
 `;
 
 
-export async function analyzeMoodWeek(items) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("Missing OPENAI_API_KEY");
+// Each user brings their own OpenAI key; there is no shared key on the server.
+export function isValidKeyFormat(apiKey) {
+  return typeof apiKey === "string" && /^sk-[A-Za-z0-9_\-]{20,}$/.test(apiKey.trim());
+}
+
+// Checks the key against OpenAI without spending tokens. Throws on invalid key / network error.
+export async function verifyApiKey(apiKey) {
+  const client = new OpenAI({ apiKey });
+  await client.models.list();
+}
+
+export function isAuthError(error) {
+  return error && (error.status === 401 || error.code === "invalid_api_key");
+}
+
+export async function analyzeMoodWeek(items, apiKey) {
+  if (!apiKey) {
+    throw new Error("Missing OpenAI API key for this user");
   }
 
-  const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-  });
+  const client = new OpenAI({ apiKey });
 
   const response = await client.chat.completions.create({
     model: MODEL,

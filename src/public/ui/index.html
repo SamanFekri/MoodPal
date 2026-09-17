@@ -3,127 +3,655 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <title>Mood Pal</title>
   <link rel="icon" type="image/jpeg" href="/public/logo.jpeg">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Helvetica&display=swap" rel="stylesheet">
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
   <script src="/public/lib/tgs-player.js"></script>
+
   <style>
+    /* ---- Theme: follows Telegram's colors, falls back to a light/dark palette in a browser ---- */
+    :root {
+      --bg: var(--tg-theme-secondary-bg-color, #f2f3f7);
+      --card: var(--tg-theme-bg-color, #ffffff);
+      --text: var(--tg-theme-text-color, #111318);
+      --hint: var(--tg-theme-hint-color, #8a8f98);
+      --accent: var(--tg-theme-button-color, #3390ec);
+      --accent-text: var(--tg-theme-button-text-color, #ffffff);
+      --link: var(--tg-theme-link-color, #3390ec);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+      --radius: 20px;
+      --fresh: #34c759;
+      --recent: #ff9f0a;
+      --stale: #9aa0a6;
+      --ease-out: cubic-bezier(.22, 1, .36, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: var(--tg-theme-secondary-bg-color, #0f1115);
+        --card: var(--tg-theme-bg-color, #1b1e25);
+        --text: var(--tg-theme-text-color, #f2f3f5);
+        --hint: var(--tg-theme-hint-color, #8b919c);
+        --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+      }
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    [v-cloak] { display: none; }
+
+    html, body { margin: 0; padding: 0; }
+
     body {
-      font-family: 'Helvetica', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    #app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+    }
+
+    /* ---- Header ---- */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 4px 18px;
+      animation: fade-down .5s var(--ease-out) both;
+    }
+
+    .header .greeting {
+      font-size: 14px;
+      color: var(--hint);
+      margin: 0 0 2px;
+      font-weight: 500;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin: 0;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    .pill {
+      background: var(--card);
+      color: var(--hint);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      width: 36px; height: 36px;
+      border: 0; border-radius: 50%;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: transform .15s var(--ease-out);
+    }
+    .icon-btn:active { transform: scale(.9); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    .icon-btn.spinning svg { animation: spin .8s linear infinite; }
+
+    /* ---- Grid & cards ---- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (min-width: 480px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 12px 14px;
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      transform-origin: center;
+      transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
+      animation: fade-up .55s var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 60ms);
+    }
+    .card:active { transform: scale(.96); }
+
+    /* soft color glow behind the sticker, tinted per mood */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: -30px; left: 50%;
+      width: 150px; height: 150px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(closest-side, hsl(var(--hue, 210) 90% 60% / .22), transparent 70%);
+      pointer-events: none;
+    }
+
+    .sticker {
+      position: relative;
+      width: 96px; height: 96px;
+      margin-bottom: 8px;
+      transform: scale(.6);
+      opacity: 0;
+      transition: transform .6s var(--ease-spring), opacity .35s ease-out;
+    }
+    .sticker.loaded { transform: scale(1); opacity: 1; }
+    .sticker svg { width: 100% !important; height: 100% !important; }
+
+    .sticker-fallback {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      font-size: 52px;
+    }
+
+    .name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mood {
+      font-size: 13px;
+      color: var(--hint);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .when {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--hint);
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--stale);
+      flex: none;
+    }
+    .dot.fresh { background: var(--fresh); box-shadow: 0 0 0 0 rgba(52, 199, 89, .6); animation: pulse 2s infinite; }
+    .dot.recent { background: var(--recent); }
+
+    .note {
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--hint);
+      font-style: italic;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    /* ---- Skeleton ---- */
+    .skeleton {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 12px 14px;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; align-items: center;
+      animation: fade-up .4s var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 60ms);
+    }
+    .shimmer {
+      position: relative;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--hint) 18%, transparent);
+      border-radius: 12px;
+    }
+    .shimmer::after {
+      content: "";
+      position: absolute; inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card) 60%, transparent), transparent);
+      animation: shimmer 1.4s infinite;
+    }
+    .sk-sticker { width: 96px; height: 96px; border-radius: 28px; margin-bottom: 10px; }
+    .sk-line { height: 12px; width: 70%; margin-top: 8px; }
+    .sk-line.short { width: 45%; height: 10px; }
+
+    /* ---- Empty / auth states ---- */
+    .state {
+      text-align: center;
+      padding: 48px 16px 24px;
+      animation: fade-up .5s var(--ease-out) both;
+    }
+    .state .art {
+      font-size: 72px;
+      line-height: 1;
+      margin-bottom: 18px;
+      display: inline-block;
+      animation: float 3.5s ease-in-out infinite;
+      filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .12));
+    }
+    .state h2 { font-size: 20px; font-weight: 800; margin: 0 0 6px; letter-spacing: -.02em; }
+    .state p { color: var(--hint); font-size: 14px; margin: 0 0 20px; line-height: 1.45; }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: transform .15s var(--ease-out), box-shadow .15s var(--ease-out);
+    }
+    .btn:active { transform: scale(.96); box-shadow: 0 4px 10px color-mix(in srgb, var(--accent) 30%, transparent); }
+    .btn svg { width: 18px; height: 18px; }
+
+    /* floating bottom CTA, shown only when Telegram's native main button isn't available */
+    .fab-wrap {
+      position: fixed;
+      left: 0; right: 0;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      display: flex; justify-content: center;
+      pointer-events: none;
+      animation: fade-up .5s var(--ease-out) .3s both;
+    }
+    .fab-wrap .btn { pointer-events: auto; }
+
+    .toast {
+      position: fixed;
+      left: 50%; bottom: calc(88px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--card);
+      font-size: 13px; font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      animation: fade-up .3s var(--ease-out) both;
+    }
+
+    /* ---- Keyframes ---- */
+    @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes fade-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, .55); }
+      70% { box-shadow: 0 0 0 7px rgba(52, 199, 89, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+    }
+
+    .list-move { transition: transform .4s var(--ease-out); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
   </style>
 </head>
 
-<body class="bg-white dark:bg-gray-900">
-  <div id="app" class="container mx-auto p-6">
+<body>
+  <div id="app" v-cloak>
+    <!-- ===== Signed in ===== -->
     <template v-if="isAuthenticated">
-      <h1 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">Find Friends' Mood</h1>
+      <header class="header">
+        <div>
+          <p class="greeting" v-if="firstName">Hi, {{ firstName }} 👋</p>
+          <h1>Friends' moods</h1>
+        </div>
+        <div class="header-right">
+          <span class="pill" v-if="!loadingFriends">{{ friends.length }} {{ friends.length === 1 ? 'friend' : 'friends' }}</span>
+          <button class="icon-btn" :class="{ spinning: loadingFriends }" @click="refresh" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
+            </svg>
+          </button>
+        </div>
+      </header>
 
-      <div v-if="loadingFriends" class="text-center text-gray-600 dark:text-gray-400 py-8">
-        <p class="text-lg">Fetching your friends...</p>
-      </div>
-      <div v-else-if="friends.length > 0" class="flex flex-wrap justify-center w-full">
-        <div class="flex flex-wrap justify-around w-full">
-          <div v-for="friend in friends" :key="friend.id" class="flex justify-center w-1/2 md:w-1/4 mb-4">
-            <!-- <div
-              class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
-              <img :src="friend.image" :alt="friend.name" class="w-24 h-24 object-cover rounded-none mb-2">
-              <a :href="friend.link" target="_blank">
-                <strong class="text-sm text-gray-900 dark:text-white">
-                  {{ friend.fullname }}
-                </strong>
-              </a>
-            </div> -->
-
-            <div
-              class="flex flex-wrap flex-col items-center bg-white dark:bg-gray-800 p-4 border border-blue-400 dark:border-gray-700 rounded">
-              <div :id="`tgs-${friend.user.id}`" class="w-24 h-24 rounded-none mb-2"></div>
-              <a :href="friend.link" target="_blank">
-                <strong class="text-sm text-gray-900 dark:text-white">
-                  {{ friend.fullname }}
-                </strong>
-              </a>
-            </div>
-
-          </div>
+      <!-- loading skeletons -->
+      <div v-if="loadingFriends && friends.length === 0" class="grid">
+        <div v-for="n in 4" :key="'sk' + n" class="skeleton" :style="{ '--i': n - 1 }">
+          <div class="shimmer sk-sticker"></div>
+          <div class="shimmer sk-line"></div>
+          <div class="shimmer sk-line short"></div>
         </div>
       </div>
-      <div v-else class="text-center text-gray-600 dark:text-gray-400 py-8">
-        <p class="text-lg">It seems your friend list is currently empty.</p>
-        <p class="text-sm">Start connecting with people to see their moods!</p>
+
+      <!-- friends -->
+      <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
+        <a v-for="(friend, i) in friends" :key="friend.id"
+           class="card"
+           :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }"
+           :href="profileHref(friend)"
+           @click="openProfile($event, friend)">
+          <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
+            <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
+          </div>
+          <div class="name">{{ friend.fullname }}</div>
+          <div class="mood">{{ friend.mood.emoji }} {{ friend.mood.name }}</div>
+          <div class="when" :title="new Date(friend.timestamp).toLocaleString()">
+            <span class="dot" :class="freshness(friend.timestamp)"></span>
+            {{ formatWhen(friend.timestamp) }}
+          </div>
+          <div v-if="friend.note" class="note">“{{ friend.note }}”</div>
+        </a>
+      </transition-group>
+
+      <!-- empty -->
+      <div v-else class="state">
+        <div class="art">🫂</div>
+        <h2>No friends yet</h2>
+        <p>Share your link so a friend can follow your mood — once they allow you back, they'll show up here.</p>
+        <button class="btn" @click="addFriend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add a friend
+        </button>
+      </div>
+
+      <!-- fallback CTA (outside Telegram or when the native button is unavailable) -->
+      <div v-if="friends.length > 0 && !usingMainButton" class="fab-wrap">
+        <button class="btn" @click="addFriend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add a friend
+        </button>
       </div>
     </template>
+
+    <!-- ===== Checking / not signed in ===== -->
     <template v-else>
-      <div class="text-center py-12">
-        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Authentication Required</h2>
-        <p class="text-gray-600 dark:text-gray-400">Please use telegram miniapp to see your friends' moods.</p>
+      <div v-if="authenticating" class="grid" style="margin-top: 60px">
+        <div v-for="n in 4" :key="'auth' + n" class="skeleton" :style="{ '--i': n - 1 }">
+          <div class="shimmer sk-sticker"></div>
+          <div class="shimmer sk-line"></div>
+          <div class="shimmer sk-line short"></div>
+        </div>
+      </div>
+      <div v-else class="state">
+        <div class="art">🔐</div>
+        <h2>Open in Telegram</h2>
+        <p v-if="authReason === 'unknown_user'">We don't know you yet — send /start to the MoodPal bot first, then open this mini app again.</p>
+        <p v-else>Please open this page from the MoodPal bot to see your friends' moods.</p>
       </div>
     </template>
+
+    <transition name="list">
+      <div v-if="toast" class="toast">{{ toast }}</div>
+    </transition>
   </div>
 
-
   <script>
-    const { createApp } = Vue;
+    const { createApp, nextTick } = Vue;
+
+    // hue per mood so each card gets a matching soft glow
+    const MOOD_HUES = {
+      happy: 45, relaxed: 160, excited: 330, motivated: 25, neutral: 220, confused: 270,
+      bored: 200, uncertain: 240, disappointed: 210, anxious: 280, angry: 0, sad: 215,
+      overwhelmed: 300, overthinking: 260, tired: 230, nervous: 40, sick: 120, naughty: 340
+    };
+
+    // tgs-player registers window.TgsPlayer asynchronously after it fetches lottie/pako
+    function waitForTgsPlayer(timeoutMs = 10000) {
+      return new Promise((resolve, reject) => {
+        const started = Date.now();
+        (function check() {
+          if (window.TgsPlayer) return resolve(window.TgsPlayer);
+          if (Date.now() - started > timeoutMs) return reject(new Error('TgsPlayer not available'));
+          setTimeout(check, 50);
+        })();
+      });
+    }
 
     createApp({
       data() {
         return {
+          tg: null,
+          authenticating: true,
           isAuthenticated: false,
+          authReason: null,
           loadingFriends: false,
           friends: [],
-          tg: null,
-          userId: null
+          loaded: {},   // friend id -> sticker rendered
+          failed: {},   // friend id -> sticker failed, show emoji instead
+          userId: null,
+          firstName: '',
+          shareLink: null,
+          usingMainButton: false,
+          toast: '',
+          players: {},
+          observer: null,
         }
       },
+
       async mounted() {
-        this.tg = window.Telegram?.WebApp
-        if (!this.tg) {
-          return
+        this.tg = window.Telegram?.WebApp;
+        if (this.tg) {
+          this.tg.ready();
+          this.tg.expand();
+          try { this.tg.setHeaderColor('secondary_bg_color'); } catch {}
         }
 
-        // Simulate an API call for authentication
+        if (!this.tg?.initData) {
+          this.authenticating = false;
+          return;
+        }
+
         try {
-          const response = await axios.post(`/auth`, { initData: this.tg.initData });
-          if (response.data.authenticated) {
+          const res = await fetch('/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: this.tg.initData })
+          });
+          const data = await res.json();
+          if (res.ok && data.authenticated) {
             this.isAuthenticated = true;
-            this.userId = response.data.userId;
-            this.fetchFriends();
+            this.userId = data.userId;
+            this.firstName = data.firstName || this.tg.initDataUnsafe?.user?.first_name || '';
+            this.shareLink = data.shareLink;
+            this.setupMainButton();
+            await this.fetchFriends();
           } else {
-            this.isAuthenticated = false;
+            this.authReason = data.reason || null;
           }
         } catch (error) {
-          console.error("Authentication failed:", error);
-          this.isAuthenticated = false;
+          console.error('Authentication failed:', error);
+        } finally {
+          this.authenticating = false;
         }
       },
-      methods: {
-        async fetchFriends() {
-          try {
-            this.loadingFriends = true;
-            const response = await axios.get(`/user/${this.userId}/followings`);
-            this.friends = response.data;
 
-            this.loadingFriends = false;
-            // sleep for 1 second
-            await new Promise(resolve => setTimeout(resolve, 100));
-            // for each friend, load the tgs animation
-            this.friends.forEach(friend => {
-              const tgsPlayer = new TgsPlayer(`#tgs-${friend.user.id}`, friend.tgs);
-              tgsPlayer.load();
-            });
+      methods: {
+        // ----- data -----
+        async fetchFriends() {
+          this.loadingFriends = true;
+          try {
+            const res = await fetch(`/user/${this.userId}/followings`);
+            this.friends = await res.json();
+            await nextTick();
+            this.mountStickers();
           } catch (error) {
-            console.error("Get Followings failed:", error);
+            console.error('Get Followings failed:', error);
+            this.showToast("Couldn't load your friends");
+          } finally {
+            this.loadingFriends = false;
           }
+        },
+
+        async refresh() {
+          this.haptic('light');
+          this.destroyStickers();
+          this.loaded = {};
+          this.failed = {};
+          await this.fetchFriends();
+        },
+
+        // ----- stickers (lazy: only load the ones on screen) -----
+        async mountStickers() {
+          let TgsPlayer;
+          try {
+            TgsPlayer = await waitForTgsPlayer();
+          } catch {
+            this.friends.forEach(f => { this.failed[f.id] = true; this.loaded[f.id] = true; });
+            return;
+          }
+
+          const load = async (el) => {
+            const id = el.dataset.id;
+            if (this.players[id]) return;
+            try {
+              const player = new TgsPlayer(el, el.dataset.tgs);
+              this.players[id] = player;
+              await player.load();
+              this.loaded[id] = true;
+            } catch (error) {
+              console.error('Sticker failed:', error);
+              this.failed[id] = true;
+              this.loaded[id] = true;
+            }
+          };
+
+          const els = Array.isArray(this.$refs.stickers) ? this.$refs.stickers : [this.$refs.stickers].filter(Boolean);
+          if (!('IntersectionObserver' in window)) {
+            els.forEach(load);
+            return;
+          }
+          this.observer?.disconnect();
+          this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                load(entry.target);
+                this.observer.unobserve(entry.target);
+              }
+            });
+          }, { rootMargin: '200px' });
+          els.forEach(el => this.observer.observe(el));
+        },
+
+        destroyStickers() {
+          this.observer?.disconnect();
+          Object.values(this.players).forEach(p => { try { p.destroy(); } catch {} });
+          this.players = {};
+        },
+
+        // ----- add a friend -----
+        setupMainButton() {
+          const mb = this.tg?.MainButton;
+          if (!mb || !this.shareLink) return;
+          mb.setText('➕  Add a friend');
+          mb.onClick(this.addFriend);
+          mb.show();
+          this.usingMainButton = true;
+        },
+
+        addFriend() {
+          this.haptic('medium');
+          if (!this.shareLink) return;
+          const text = `👀 Follow my mood on MoodPal`;
+          if (this.tg?.openTelegramLink) {
+            this.tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(this.shareLink)}&text=${encodeURIComponent(text)}`);
+            return;
+          }
+          if (navigator.share) {
+            navigator.share({ title: 'MoodPal', text, url: this.shareLink }).catch(() => {});
+            return;
+          }
+          navigator.clipboard?.writeText(this.shareLink)
+            .then(() => this.showToast('Link copied — send it to a friend'))
+            .catch(() => this.showToast(this.shareLink));
+        },
+
+        // ----- profile -----
+        profileHref(friend) {
+          return friend.username ? `https://t.me/${friend.username}` : friend.link;
+        },
+        openProfile(event, friend) {
+          this.haptic('light');
+          if (friend.username && this.tg?.openTelegramLink) {
+            event.preventDefault();
+            this.tg.openTelegramLink(`https://t.me/${friend.username}`);
+          }
+        },
+
+        // ----- presentation -----
+        hueFor(code) {
+          return MOOD_HUES[code] ?? 210;
+        },
+        daysAgo(ts) {
+          const d = new Date(ts), now = new Date();
+          const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+          return Math.round((startOf(now) - startOf(d)) / 86400000);
+        },
+        freshness(ts) {
+          const days = this.daysAgo(ts);
+          return days <= 0 ? 'fresh' : days <= 3 ? 'recent' : 'stale';
+        },
+        formatWhen(ts) {
+          const d = new Date(ts);
+          const days = this.daysAgo(ts);
+          const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          if (days <= 0) return `Today · ${time}`;
+          if (days === 1) return 'Yesterday';
+          if (days < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+          const sameYear = d.getFullYear() === new Date().getFullYear();
+          return d.toLocaleDateString(undefined, sameYear
+            ? { weekday: 'short', day: 'numeric', month: 'short' }
+            : { day: 'numeric', month: 'short', year: 'numeric' });
+        },
+
+        haptic(style) {
+          try { this.tg?.HapticFeedback?.impactOccurred(style); } catch {}
+        },
+        showToast(message) {
+          this.toast = message;
+          clearTimeout(this._toastTimer);
+          this._toastTimer = setTimeout(() => { this.toast = ''; }, 2400);
         }
+      },
+
+      beforeUnmount() {
+        this.destroyStickers();
       }
     }).mount('#app');
   </script>

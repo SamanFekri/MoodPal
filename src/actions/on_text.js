@@ -1,10 +1,15 @@
 // write a function that handles the text message from the user
 const { msgs } = require('../constants');
 const Mood = require('../models/mood'); // Assuming you have a Mood model
+const { looksLikeOpenAIKey, saveOpenAIKey } = require('../commands/openai_key');
 
 async function handleTextMessage(ctx) {
   // check if user is a bot return
   if (ctx.user.is_bot) return; // Ignore messages from bots
+  // an OpenAI key (or a reply to the key prompt) must never be saved as a mood note
+  if (looksLikeOpenAIKey(ctx)) {
+    return saveOpenAIKey(ctx, ctx.message.text);
+  }
   // get the last mood of the user
   const lastMood = await Mood.getLastMood(ctx.user._id);
   if (!lastMood) {

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { SERVER_BASE_URL } from './server.constant.js';
 
 export const chooseMoodMsg = () => `It's time to express yourself! Select the <b>mood</b> that best describes how you're feeling right now:`;
 
@@ -13,6 +14,8 @@ Here are some commands you can use:
 /set_public - Set your mood to public
 /report - Get a report of your mood
 /share - Share a link so your friends can see your moods
+/set_openai_key - Add your own OpenAI key to get AI insights with your weekly report
+/remove_openai_key - Remove your OpenAI key and turn off AI insights
 `;
 
 export const welocmeMsg = (name) => `
@@ -43,17 +46,17 @@ export const moodPublicMsg = (id) => `
 👨🏻‍💻 You can add this to your website to share your mood.
 
 ✅ Animated WebP Mood:
-<code>&lt;img src="${process.env.SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
+<code>&lt;img src="${SERVER_BASE_URL}/user/${id}/mood/animated" /&gt;</code>
 
 ✅ Animated TGS Mood:
 Load the script before using the mood-pal tag
-<code>&lt;script src="${process.env.SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;</code>
+<code>&lt;script src="${SERVER_BASE_URL}/public/lib/tgs-player.js"&gt;&lt;/script&gt;</code>
 
 Add this to your HTML body to embed
-<code>&lt;mood-pal src="${process.env.SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;</code>
+<code>&lt;mood-pal src="${SERVER_BASE_URL}/user/${id}/mood/tgs" &gt;&lt;/mood-pal&gt;</code>
 
 ✅ Emoji Mood:
-<code>${process.env.SERVER_BASE_URL}/user/${id}/mood/emoji</code>
+<code>${SERVER_BASE_URL}/user/${id}/mood/emoji</code>
 `
 
 export const showReportMsg = (user, days) => `
@@ -77,3 +80,23 @@ export const shareAllowedMsg = (follower) => `👀 Now ${follower.first_name} ca
 export const sharePermissionGrantedMsg = (followed) => `✅ ${followed.first_name} has allowed you to see their mood.`
 export const hasAlreadySharedMsg = (followed) => `🤩 ${followed.first_name} has already shared their mood with you.`
 export const rejectShareMsg = (follower) => `❌ You have rejected ${follower.first_name}'s request to see your mood.`
+
+// ---- OpenAI key (bring your own key) ----
+export const askOpenAIKeyMsg = () => `
+🧠 <b>AI mood insights</b> use <i>your own</i> OpenAI key, so nobody else spends your credits.
+
+🔑 Reply to this message with your OpenAI API key (it starts with <code>sk-</code>).
+You can create one at https://platform.openai.com/api-keys
+
+🔒 Your key is stored encrypted and is only used to analyze <b>your</b> weekly moods. Your message with the key will be deleted right after it is saved.
+
+Use /remove_openai_key at any time to delete it.
+`
+export const openAIKeyInvalidFormatMsg = () => `❌ That doesn't look like an OpenAI key. It should start with <code>sk-</code>. Please try /set_openai_key again.`
+export const openAIKeyVerifyingMsg = () => `⏳ Checking your key with OpenAI…`
+export const openAIKeySavedMsg = () => `✅ Your OpenAI key is verified and saved. You'll get AI insights with your weekly mood report. 🧠`
+export const openAIKeyRejectedMsg = () => `❌ OpenAI rejected this key. Please check it and try /set_openai_key again.`
+export const openAIKeyErrorMsg = () => `⚠️ Couldn't reach OpenAI to verify your key right now. Please try again in a bit.`
+export const openAIKeyRemovedMsg = () => `🗑 Your OpenAI key has been removed. AI insights are now off.`
+export const openAIKeyNotSetMsg = () => `ℹ️ You don't have an OpenAI key saved. Use /set_openai_key to add one.`
+export const openAIKeyStoppedWorkingMsg = () => `⚠️ OpenAI rejected your saved key, so your weekly AI insight was skipped. Update it with /set_openai_key.`

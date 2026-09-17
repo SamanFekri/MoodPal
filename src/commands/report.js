@@ -91,10 +91,22 @@ async function sendWeeklyReport(ctx) {
       await sendReport(p, user, ctx, 7);
       fs.unlinkSync(p);
       
-      const moods = await Mood.getLastWeekMoods(user._id);
-      if(moods.length === 0) continue;
-      const suggestionText = await llm.analyzeMoodWeek(moods);
-      await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
+      // AI insights only for users who added their own OpenAI key
+      const apiKey = await User.getOpenAIKey(user._id);
+      if (apiKey) {
+        const moods = await Mood.getLastWeekMoods(user._id);
+        if (moods.length > 0) {
+          try {
+            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey);
+            await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
+          } catch (error) {
+            console.error(`AI insight failed for user ${user.id}:`, error.message);
+            if (llm.isAuthError(error)) {
+              await ctx.telegram.sendMessage(user.id, msgs.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
+            }
+          }
+        }
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } catch (error) {

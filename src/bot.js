@@ -24,6 +24,7 @@ const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
 const { showReportCommand, sendWeeklyReport, getReportCallback, getYearlyMoodVideo } = require('./commands/report');
 const { createShareLinkCommand, shareCallback } = require('./commands/share');
+const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
@@ -53,6 +54,8 @@ bot.command('set_private', setVisibilityCommand.setMoodPrivate);
 bot.command('set_public', setVisibilityCommand.setMoodPublic);
 bot.command('report', showReportCommand);
 bot.command('share', createShareLinkCommand);
+bot.command('set_openai_key', setOpenAIKeyCommand);
+bot.command('remove_openai_key', removeOpenAIKeyCommand);
 
 bot.command('mood_2025', getYearlyMoodVideo);
 
