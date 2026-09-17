@@ -22,6 +22,7 @@ const saveUserMiddleware = async (ctx, next) => {
     }
     // get existing user from db and mark them active
     existingUser = await User.findOneAndUpdate({ id: user.id }, { last_active_at: new Date() }, { new: true });
+    // handlers that send the menu keyboard themselves mark it current (see common.markMenuSent)
     ctx.user = existingUser;
 
     next();

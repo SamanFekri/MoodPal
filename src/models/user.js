@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
     default: null,
     index: true
   },
+  // which menu layout this user's Telegram client currently has (see MENU_SIGNATURE)
+  menu_signature: {
+    type: String,
+    default: null
+  },
   // last time the user interacted with the bot; drives "most recently active" ordering
   last_active_at: {
     type: Date,

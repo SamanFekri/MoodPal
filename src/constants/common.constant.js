@@ -12,7 +12,15 @@ export const MENU_BUTTONS = {
   END_TALK: '🛑 End talk'
 }
 
+// Changes whenever the menu changes, so the bot can push the new keyboard to everyone
+export const MENU_SIGNATURE = Object.values(MENU_BUTTONS).join('|');
+
 export const makeKeyboardMenu = (ctx) => {
+  // sending the menu keyboard means this user's client now has the current layout
+  if (ctx && ctx.user && ctx.user.menu_signature !== MENU_SIGNATURE) {
+    ctx.user.menu_signature = MENU_SIGNATURE
+    Promise.resolve(ctx.user.constructor.updateOne({ _id: ctx.user._id }, { menu_signature: MENU_SIGNATURE })).catch(() => {})
+  }
   let keyboard = []
   keyboard.push([MENU_BUTTONS.SET_MOOD])
   keyboard.push([MENU_BUTTONS.REPORT, MENU_BUTTONS.SHARE])
