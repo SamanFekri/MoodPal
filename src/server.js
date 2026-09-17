@@ -48,7 +48,6 @@ app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.l
 app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
 app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAdmin, controllers.admin.userPersonality);
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
-app.get('/api/admin/moods', requireWebAppUser, requireAdmin, controllers.admin.listMoods);
 app.post('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.delete('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 

@@ -17,7 +17,7 @@ export const makeKeyboardMenu = (ctx) => {
   keyboard.push([MENU_BUTTONS.SET_MOOD])
   keyboard.push([MENU_BUTTONS.REPORT, MENU_BUTTONS.SHARE])
   keyboard.push([MENU_BUTTONS.PERSONALITY_TEST, MENU_BUTTONS.MY_PERSONALITY])
-  keyboard.push([MENU_BUTTONS.TALK])
+  keyboard.push([MENU_BUTTONS.TALK, MENU_BUTTONS.END_TALK])
   if(ctx.user.is_mood_private) {
     keyboard.push([MENU_BUTTONS.VISIBILITY_PUBLIC])
   } else {

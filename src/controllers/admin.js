@@ -130,26 +130,6 @@ const setFriend = async (req, res) => {
   res.json({ is_friend: true });
 };
 
-// GET /api/admin/moods?before=<ISO date>&limit= — every mood entry across all users, newest first
-const listMoods = async (req, res) => {
-  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || MOODS_PAGE_SIZE));
-  const before = req.query.before ? new Date(req.query.before) : null;
-  const filter = {};
-  if (before && !isNaN(before)) filter.timestamp = { $lt: before };
-  const moods = await Mood.find(filter).sort({ timestamp: -1 }).limit(limit + 1)
-    .select('mood note timestamp user').populate('user', 'id first_name last_name username is_mood_private').lean();
-  const hasMore = moods.length > limit;
-  const page = moods.slice(0, limit).filter(m => m.user);
-  res.json({
-    moods: page.map(m => ({
-      mood: m.mood, note: m.note || '', timestamp: m.timestamp, tgs: `/public/tgs/${m.mood.code}.tgs`,
-      user: { ...publicUser(m.user), is_mood_private: Boolean(m.user.is_mood_private) },
-    })),
-    has_more: hasMore,
-    next_before: hasMore ? moods[limit - 1].timestamp : null,
-  });
-};
-
 // GET /api/admin/users/:telegramId/personality — anyone's profile, regardless of their sharing setting
 const userPersonality = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) });
@@ -163,4 +143,4 @@ const listTraits = async (req, res) => {
   res.json({ traits: traits.map(t => ({ key: t.key, name: t.name, category: t.category })) });
 };
 
-module.exports = { listUsers, userMoods, setFriend, userPersonality, listTraits, listMoods };
+module.exports = { listUsers, userMoods, setFriend, userPersonality, listTraits };

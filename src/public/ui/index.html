@@ -359,14 +359,14 @@
     .tab {
       position: relative; z-index: 1;
       border: 0; background: none;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      font: inherit; font-size: 13px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      font: inherit; font-size: 12px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; padding: 0 2px;
       color: var(--hint);
       cursor: pointer;
       transition: color .25s;
     }
     .tab.active { color: var(--text); }
-    .tab .ico { font-size: 16px; transition: transform .35s var(--ease-spring); }
+    .tab .ico { font-size: 14px; transition: transform .35s var(--ease-spring); }
     .tab.active .ico { transform: scale(1.15); }
 
     .tab-enter-active, .tab-leave-active { transition: opacity .22s ease, transform .22s var(--ease-out); }
@@ -648,7 +648,7 @@
             </template>
           </section>
 
-          <div v-if="loadingFriends && friends.length === 0" class="grid">
+          <div v-if="(loadingFriends || !fetchedAt.friends) && friends.length === 0 && !friendsError" class="grid">
             <div v-for="n in 4" :key="'sk' + n" class="skeleton" :style="{ '--i': n - 1 }">
               <div class="shimmer sk-sticker"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div>
             </div>
@@ -701,7 +701,7 @@
             </div>
           </header>
 
-          <template v-if="loadingPersonality && !personality">
+          <template v-if="(loadingPersonality || !fetchedAt.personality) && !personality && !personalityError">
             <div class="section" v-for="n in 3" :key="'psk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
           <div v-else-if="!personality && personalityError" class="state"><div class="art">📡</div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
@@ -781,7 +781,7 @@
             </div>
           </div>
 
-          <template v-if="admin.loading && admin.users.length === 0">
+          <template v-if="(admin.loading || !fetchedAt.admin) && admin.users.length === 0 && !admin.error">
             <div v-for="n in 6" :key="'ask' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
           <template v-else-if="admin.users.length > 0">
@@ -814,7 +814,7 @@
         <div v-else-if="tab === 'logs'" key="logs">
           <header class="header">
             <div>
-              <p class="greeting">{{ isAdmin ? 'Everyone' : 'Your history' }}</p>
+              <p class="greeting">Your history</p>
               <h1>Mood log</h1>
             </div>
             <div class="header-right">
@@ -825,22 +825,20 @@
             </div>
           </header>
 
-          <template v-if="logs.loading && logs.moods.length === 0">
+          <template v-if="(logs.loading || !fetchedAt.logs) && logs.moods.length === 0 && !logs.error">
             <div v-for="n in 6" :key="'lsk' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
           <div v-else-if="logs.error" class="state"><div class="art">⚠️</div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
           <template v-else-if="logs.moods.length > 0">
-            <div v-for="(m, i) in logs.moods" :key="m.timestamp + '-' + (m.user ? m.user.id : 'me')" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }" @click="m.user && isAdmin ? openAdminUser({ ...m.user, last_mood: m, mood_count: null, last_active_at: m.timestamp, is_friend: false }) : null">
+            <div v-for="(m, i) in logs.moods" :key="m.timestamp" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
               <div class="avatar anim">
                 <div class="sticker" :class="{ loaded: loaded['log' + i] }" :data-id="'log' + i" :data-tgs="m.tgs" ref="logStickers">
                   <span v-if="failed['log' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
                 </div>
               </div>
               <div class="row-body">
-                <div class="row-title" v-if="m.user"><span class="n">{{ m.user.fullname || 'Unnamed' }}</span><span class="u" v-if="m.user.username">@{{ m.user.username }}</span><span class="lock" v-if="m.user.is_mood_private">🔒</span></div>
-                <div class="row-title" v-else><span class="n">{{ m.mood.name }}</span></div>
-                <div class="row-sub" v-if="m.user">{{ m.mood.name }}<template v-if="m.note"> · <i>“{{ m.note }}”</i></template></div>
-                <div class="row-sub" v-else>{{ m.note ? '“' + m.note + '”' : 'No note' }}</div>
+                <div class="row-title"><span class="n">{{ m.mood.name }}</span></div>
+                <div class="row-sub">{{ m.note ? '“' + m.note + '”' : 'No note' }}</div>
               </div>
               <div class="row-right">
                 <div class="when"><span class="dot" :class="freshness(m.timestamp)"></span>{{ formatWhen(m.timestamp, true) }}</div>
@@ -850,7 +848,7 @@
               <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ logs.loadingMore ? 'Loading…' : 'Load older' }}</button>
             </div>
           </template>
-          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p v-if="isAdmin">Entries will appear here as people set their mood.</p><p v-else>Set your first mood in the bot and it will show up here.</p></div>
+          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
         </div>
       </transition>
 
@@ -1157,11 +1155,12 @@
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             this.setupMainButton();
             this.watchActivation();
-            await this.fetchFriends();
-            hideSplash();
-            if (this.tab === 'personality') this.fetchPersonality();
-            if (this.tab === 'admin') this.fetchAdmin();
-            if (this.tab === 'logs') this.fetchLogs();
+            // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
+            const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs()];
+            if (this.isAdmin) loads.push(this.fetchAdmin());
+            const current = { friends: loads[0], personality: loads[1], logs: loads[2], admin: loads[3] }[this.tab] || loads[0];
+            current.finally(hideSplash);
+            await Promise.allSettled(loads);
           } else {
             this.authReason = data.reason || null;
           }
@@ -1209,9 +1208,9 @@
           const mb = this.tg?.MainButton;
           if (mb && this.usingMainButton) key === 'friends' ? mb.show() : mb.hide();
           if (key === 'friends') { this.players = {}; if (this.isStale('friends')) { this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); } }   // stickers re-mount on the tab transition's after-enter
-          if (key === 'personality' && (!this.personality || this.isStale('personality'))) this.fetchPersonality();
-          if (key === 'admin' && (this.admin.total_users === null || this.isStale('admin'))) this.fetchAdmin();
-          if (key === 'logs' && (this.logs.moods.length === 0 || this.isStale('logs'))) this.fetchLogs();
+          if (key === 'personality' && this.isStale('personality')) this.fetchPersonality();
+          if (key === 'admin' && this.isStale('admin')) this.fetchAdmin();
+          if (key === 'logs' && this.isStale('logs')) this.fetchLogs();
         },
 
         isStale(key) { return Date.now() - (this.fetchedAt[key] || 0) > this.STALE_MS; },
@@ -1499,13 +1498,22 @@
           }
         },
 
-        // ----- mood log (admin) -----
+        // a tab that renders with no data and no fetch on record asks for its data (safety net)
+        ensureLoaded(key) {
+          if (this.fetchedAt[key]) return;
+          if (key === 'friends' && !this.loadingFriends) this.fetchFriends();
+          if (key === 'personality' && !this.loadingPersonality) this.fetchPersonality();
+          if (key === 'admin' && !this.admin.loading) this.fetchAdmin();
+          if (key === 'logs' && !this.logs.loading) this.fetchLogs();
+        },
+
+        // ----- mood log -----
         async fetchLogs({ append = false } = {}) {
           if (append) { if (!this.logs.next_before || this.logs.loadingMore) return; this.logs.loadingMore = true; } else { if (this.logs.loading) return; this.logs.loading = true; }
           try {
             const params = new URLSearchParams();
             if (append) params.set('before', this.logs.next_before);
-            const data = await this.api(`${this.isAdmin ? '/api/admin/moods' : '/api/me/moods'}?${params}`);
+            const data = await this.api(`/api/me/moods?${params}`);
             this.logs.error = '';
             this.logs.moods = append ? [...this.logs.moods, ...data.moods] : data.moods;
             this.logs.has_more = data.has_more;
@@ -1564,6 +1572,8 @@
           this._toastTimer = setTimeout(() => { this.toast = ''; }, 2400);
         }
       },
+
+      watch: { tab(key) { this.ensureLoaded(key); } },
 
       beforeUnmount() { this.destroyStickers(); }
     }).mount('#app');
