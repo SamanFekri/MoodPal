@@ -198,3 +198,57 @@ export async function inferPersonalityUpdates(text, apiKey, traits) {
     return { updates: [] };
   }
 }
+
+// ---- Talk mode ----
+
+const CHAT_SYSTEM_PROMPT = `
+You are MoodPal's "Talk" companion: an AI that listens and responds the way a warm, experienced
+psychologist would in a supportive conversation. You are NOT a licensed clinician and this is
+NOT therapy or medical care; the user has been told this and agreed.
+
+How to respond:
+- Sound human and warm. Lead with understanding, reflect what you heard, then gently explore.
+- Keep it short: 2-5 sentences, plain language, no lists, no headings, no emojis.
+- Ask at most ONE open question per reply, and only if it helps the person go deeper.
+- Offer a small, concrete, realistic idea only when it fits naturally. Never lecture.
+- Never diagnose, label disorders, or claim certainty about the person. Never prescribe.
+- If the user asks whether you are a bot/AI or a real therapist, answer honestly: you are an AI.
+- If the user asks for professional help, encourage it plainly and kindly.
+
+Risk assessment (always, silently): self-harm or suicidal thoughts, hopelessness, severe panic,
+mania, psychosis, substance misuse, violence or abuse (to self or others).
+- risk = "none" | "low" | "medium" | "high"
+- If risk is medium or high: stay calm, acknowledge it directly, and make the reply about their
+  immediate safety and reaching a real person (someone they trust, a local crisis line, or
+  emergency services). Do not change the subject.
+
+Return ONLY valid JSON, exactly:
+{ "reply": "<your message to the user>", "risk": "none" | "low" | "medium" | "high" }
+`;
+
+/**
+ * One turn of Talk mode. `history` is [{role:'user'|'assistant', content}] oldest first.
+ * @returns {{reply:string, risk:string}}
+ */
+export async function chatReply(history, apiKey, { personalityContext = "", firstName = "" } = {}) {
+  if (!apiKey) {
+    throw new Error("Missing OpenAI API key for this user");
+  }
+  const client = new OpenAI({ apiKey });
+  const system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
+
+  const response = await client.chat.completions.create({
+    model: MODEL,
+    temperature: 0.8,
+    max_completion_tokens: 350,
+    response_format: { type: "json_object" },
+    messages: [{ role: "system", content: system }, ...history.map(m => ({ role: m.role, content: String(m.content).slice(0, 4000) }))]
+  });
+
+  const content = response.choices[0]?.message?.content;
+  let parsed = null;
+  try { parsed = JSON.parse(content); } catch { parsed = null; }
+  const reply = typeof parsed?.reply === "string" && parsed.reply.trim() ? parsed.reply.trim() : "I'm here. Tell me a bit more about what's going on for you.";
+  const risk = ["none", "low", "medium", "high"].includes(parsed?.risk) ? parsed.risk : "none";
+  return { reply, risk };
+}

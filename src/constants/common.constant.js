@@ -7,7 +7,9 @@ export const MENU_BUTTONS = {
   VISIBILITY_PUBLIC: '👀 Make Visibility Public',
   VISIBILITY_PRIVATE: '👻 Make Visibility Private',
   PERSONALITY_TEST: '🧠 Personality Test',
-  MY_PERSONALITY: '🧠 My Personality'
+  MY_PERSONALITY: '🧠 My Personality',
+  TALK: '💬 Talk',
+  END_TALK: '🛑 End talk'
 }
 
 export const makeKeyboardMenu = (ctx) => {
@@ -15,6 +17,7 @@ export const makeKeyboardMenu = (ctx) => {
   keyboard.push([MENU_BUTTONS.SET_MOOD])
   keyboard.push([MENU_BUTTONS.REPORT, MENU_BUTTONS.SHARE])
   keyboard.push([MENU_BUTTONS.PERSONALITY_TEST, MENU_BUTTONS.MY_PERSONALITY])
+  keyboard.push([MENU_BUTTONS.TALK])
   if(ctx.user.is_mood_private) {
     keyboard.push([MENU_BUTTONS.VISIBILITY_PUBLIC])
   } else {
@@ -22,3 +25,9 @@ export const makeKeyboardMenu = (ctx) => {
   }
   return keyboard
 }
+
+// keyboard shown while a Talk conversation is running
+export const makeTalkKeyboard = () => [
+  [MENU_BUTTONS.END_TALK],
+  [MENU_BUTTONS.SET_MOOD, MENU_BUTTONS.MY_PERSONALITY]
+]

@@ -26,6 +26,7 @@ const { showReportCommand, sendWeeklyReport, getReportCallback, getYearlyMoodVid
 const { createShareLinkCommand, shareCallback } = require('./commands/share');
 const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
 const personalityCommands = require('./commands/personality');
+const talkCommands = require('./commands/talk');
 const { ensurePersonalityCatalog } = require('./personality/migrate');
 const { personality: personalityConstants } = require('./constants');
 
@@ -64,6 +65,8 @@ bot.command('set_openai_key', setOpenAIKeyCommand);
 bot.command('remove_openai_key', removeOpenAIKeyCommand);
 bot.command('personality_test', personalityCommands.personalityTestCommand);
 bot.command('my_personality', (ctx) => personalityCommands.myPersonalityCommand(ctx));
+bot.command('talk', talkCommands.talkCommand);
+bot.command('end_talk', talkCommands.endTalkCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
 bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
@@ -76,6 +79,8 @@ bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPr
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPublic)
 bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityTestCommand)
 bot.hears(common.MENU_BUTTONS.MY_PERSONALITY, (ctx) => personalityCommands.myPersonalityCommand(ctx))
+bot.hears(common.MENU_BUTTONS.TALK, talkCommands.talkCommand)
+bot.hears(common.MENU_BUTTONS.END_TALK, talkCommands.endTalkCommand)
 
 
 
@@ -83,6 +88,7 @@ bot.hears(common.MENU_BUTTONS.MY_PERSONALITY, (ctx) => personalityCommands.myPer
 bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
+bot.action('talk_note', talkCommands.talkAboutNoteCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.TEST_PREFIX}`), personalityCommands.testCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.ANSWER_PREFIX}`), personalityCommands.answerCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.PROFILE_PREFIX}`), personalityCommands.profileCallback);
@@ -103,6 +109,8 @@ const BOT_COMMANDS = [
   { command: 'share', description: 'Share your mood with a friend' },
   { command: 'personality_test', description: 'Take a personality test' },
   { command: 'my_personality', description: 'See your personality profile' },
+  { command: 'talk', description: 'Talk things through with the AI companion' },
+  { command: 'end_talk', description: 'End the conversation' },
   { command: 'set_public', description: 'Make your mood public (embed codes)' },
   { command: 'set_private', description: 'Make your mood private' },
   { command: 'set_openai_key', description: 'Add your OpenAI key for AI insights' },
