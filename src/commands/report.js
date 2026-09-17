@@ -100,7 +100,7 @@ async function sendWeeklyReport(ctx) {
           try {
             // adapt the reply to the user's personality profile (if they have one)
             const personalityContext = await personalityService.getPersonalityContext(user._id);
-            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext });
+            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: user.openai_model || undefined });
             await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
 
             // let the week's notes refine the profile, gradually

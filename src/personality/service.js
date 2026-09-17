@@ -283,10 +283,10 @@ class PersonalityService {
   }
 
   // Ask the LLM what a piece of conversation reveals, then apply it gradually
-  async inferFromText(userId, text, apiKey) {
+  async inferFromText(userId, text, apiKey, { model = undefined } = {}) {
     if (!apiKey || !text || text.trim().length === 0) return { applied: [], rejected: [], profile: null };
     const traits = await this.getTraits();
-    const raw = await this.llm.inferPersonalityUpdates(text, apiKey, Object.values(traits));
+    const raw = await this.llm.inferPersonalityUpdates(text, apiKey, Object.values(traits), { model });
     return this.recordLLMUpdates(userId, raw);
   }
 }

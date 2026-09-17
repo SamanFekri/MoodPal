@@ -53,4 +53,67 @@ const getPublic = async (req, res) => {
   res.json({ first_name: user.first_name, bot_username: process.env.BOT_USERNAME || null, profile: await personalityService.getProfileView(user._id) });
 };
 
-module.exports = { getMine, setSharing, getFriends, getPublic };
+// ---- taking tests inside the mini app (same service the bot uses) ----
+
+// what the client needs to run a session; questions carry no trait/reverse hints
+const sessionView = (session, test, questions) => ({
+  id: session._id,
+  test: { key: test.key, name: test.name, description: test.description, intro: test.intro, scale: test.scale },
+  questions: questions.map(q => ({ order: q.order, text: q.text })),
+  current_index: session.current_index,
+  answered: session.answers.length,
+  total: questions.length,
+});
+
+// GET /api/me/personality/session — the unfinished test, if any
+const getSession = async (req, res) => {
+  const session = await personalityService.getActiveSession(req.user._id);
+  if (!session) return res.json({ session: null });
+  const loaded = await personalityService.getTest(session.test_key);
+  if (!loaded) return res.json({ session: null });
+  res.json({ session: sessionView(session, loaded.test, loaded.questions) });
+};
+
+// POST /api/me/personality/tests/:key/start — start (or restart) a test
+const startTest = async (req, res) => {
+  try {
+    const { session, test, questions } = await personalityService.startTest(req.user._id, req.params.key);
+    res.json({ session: sessionView(session, test, questions) });
+  } catch (error) {
+    res.status(404).json({ error: 'unknown_test' });
+  }
+};
+
+// POST /api/me/personality/session/:id/answer { order, value }
+const answer = async (req, res) => {
+  const order = Number(req.body?.order), value = Number(req.body?.value);
+  if (!Number.isFinite(order) || !Number.isFinite(value)) return res.status(400).json({ error: 'bad_answer' });
+  try {
+    const state = await personalityService.answerQuestion(req.user._id, req.params.id, order, value);
+    if (!state.session) return res.status(410).json({ error: 'session_gone' });
+    if (!state.done) return res.json({ done: false, session: sessionView(state.session, state.test, state.questions) });
+    const [profile, tests] = await Promise.all([
+      personalityService.getProfileView(req.user._id),
+      personalityService.listTests({ userId: req.user._id }),
+    ]);
+    res.json({
+      done: true,
+      test: { key: state.test.key, name: state.test.name },
+      scores: state.result.traits,
+      profile,
+      tests: tests.map(t => ({ key: t.key, name: t.name, description: t.description, question_count: t.question_count, completed: t.completed })),
+    });
+  } catch (error) {
+    if (/outside/.test(error.message)) return res.status(400).json({ error: 'value_out_of_scale' });
+    console.error('Answer failed:', error);
+    res.status(500).json({ error: 'answer_failed' });
+  }
+};
+
+// POST /api/me/personality/session/cancel
+const cancel = async (req, res) => {
+  const cancelled = await personalityService.cancelTest(req.user._id);
+  res.json({ cancelled });
+};
+
+module.exports = { getMine, setSharing, getFriends, getPublic, getSession, startTest, answer, cancel };

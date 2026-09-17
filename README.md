@@ -78,7 +78,7 @@ Simply paste the provided code into your website or blog to get a live represent
 - AI replies use a compact personality context to adapt tone and length. It is never revealed unless you ask for your profile.
 - ⚠️ This is an approximate self-report profile, **not a clinical or medical diagnosis**.
 
-- **In the mini app**: a *Personality* tab shows your profile as an animated radar and trait bars, lists the tests, and lets you **share** it. Friends who follow your mood can tap your card to see it, and a public link (`/p/<token>`) shows a standalone card to anyone. Sharing is off by default.
+- **In the mini app**: you can take every test right there (one question at a time, resume later, cancel anytime), and a *Personality* tab shows your profile as an animated radar and trait bars, lists the tests, and lets you **share** it. Friends who follow your mood can tap your card to see it, and a public link (`/p/<token>`) shows a standalone card to anyone. Sharing is off by default.
 
 ### 💬 Talk
 `💬 Talk` / `/talk` starts a supportive conversation with the AI companion, which responds the way a warm, experienced psychologist would: reflecting, asking one gentle question at a time, offering small realistic ideas. It also quietly screens every message for risk (self-harm, panic, hopelessness, …). On medium/high risk the reply focuses on immediate safety and adds a crisis footer.
@@ -89,6 +89,9 @@ Important, and stated to the user before every conversation:
 - it runs on the **user's own OpenAI key** (`/set_openai_key`); messages are sent to OpenAI and stored so the chat has context.
 
 Mood notes keep working exactly as before: outside a conversation, text is saved as a note (with a *💬 Talk about it* button). `🛑 End talk` / `/end_talk` ends the conversation (it also ends after 2 idle hours). What the user said is then used to gradually refine their personality profile.
+
+### ⚙️ Settings (mini app)
+A *Settings* tab lets each user add their own OpenAI key (verified once, stored encrypted, shown masked) and pick the model Talk and the weekly insights use. The default is `gpt-5.6`; any model id can be typed in.
 
 ### 🛡️ Admin
 An admin can see every user in the mini app's *Admin* tab, most recently active first and paginated, with their latest mood and note, a search box, and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend. Admins are chosen by hand in the database:

@@ -3,7 +3,17 @@
 
 import OpenAI from "openai";
 
-const MODEL = "gpt-5.2";
+export const DEFAULT_MODEL = "gpt-5.6";
+// models a user may pick in Settings (any other id is accepted if it looks like a model id)
+export const MODEL_CHOICES = [
+  { id: "gpt-5.6", name: "GPT-5.6", note: "Default. Best overall." },
+  { id: "gpt-5.2", name: "GPT-5.2", note: "Previous flagship." },
+  { id: "gpt-5-mini", name: "GPT-5 mini", note: "Faster and cheaper." },
+  { id: "gpt-4.1", name: "GPT-4.1", note: "Solid, lower cost." },
+  { id: "gpt-4o-mini", name: "GPT-4o mini", note: "Cheapest option." },
+];
+export const isValidModelId = (m) => typeof m === "string" && /^[a-z0-9][a-z0-9.\-_]{1,63}$/i.test(m);
+const MODEL = DEFAULT_MODEL;
 
 const SYSTEM_PROMPT = `
 You are a licensed clinical psychologist responding to a client’s recent mood check-ins.
@@ -95,7 +105,7 @@ export function withPersonalityContext(systemPrompt, personalityContext) {
 
 const PERSONALITY_CONTEXT_INSTRUCTIONS = "Use this context only to adapt your tone, length and style to the user. Do not mention, list or reveal these traits unless the user explicitly asks about their personality profile.";
 
-export async function analyzeMoodWeek(items, apiKey, { personalityContext = "" } = {}) {
+export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", model = DEFAULT_MODEL } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
@@ -103,7 +113,7 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "" }
   const client = new OpenAI({ apiKey });
 
   const response = await client.chat.completions.create({
-    model: MODEL,
+    model: model || DEFAULT_MODEL,
     temperature: 1,
     max_completion_tokens: 420,
     response_format: { type: "json_object" },
@@ -172,7 +182,7 @@ Rules:
  * Ask the model which traits a piece of user text gives evidence for.
  * Returns the raw parsed JSON; the caller MUST validate it (see src/personality/evolution.js).
  */
-export async function inferPersonalityUpdates(text, apiKey, traits) {
+export async function inferPersonalityUpdates(text, apiKey, traits, { model = DEFAULT_MODEL } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
@@ -180,7 +190,7 @@ export async function inferPersonalityUpdates(text, apiKey, traits) {
   const catalog = traits.map(t => ({ key: t.key, description: t.description }));
 
   const response = await client.chat.completions.create({
-    model: MODEL,
+    model: model || DEFAULT_MODEL,
     temperature: 0.3,
     max_completion_tokens: 600,
     response_format: { type: "json_object" },
@@ -230,7 +240,7 @@ Return ONLY valid JSON, exactly:
  * One turn of Talk mode. `history` is [{role:'user'|'assistant', content}] oldest first.
  * @returns {{reply:string, risk:string}}
  */
-export async function chatReply(history, apiKey, { personalityContext = "", firstName = "" } = {}) {
+export async function chatReply(history, apiKey, { personalityContext = "", firstName = "", model = DEFAULT_MODEL } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
@@ -238,7 +248,7 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   const system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
 
   const response = await client.chat.completions.create({
-    model: MODEL,
+    model: model || DEFAULT_MODEL,
     temperature: 0.8,
     max_completion_tokens: 350,
     response_format: { type: "json_object" },

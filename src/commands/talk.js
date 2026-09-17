@@ -53,7 +53,7 @@ async function learnFromSession(userId, session) {
 async function respond(ctx, text, apiKey) {
   await ctx.sendChatAction('typing').catch(() => {});
   try {
-    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, apiKey, { firstName: ctx.user.first_name });
+    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, apiKey, { firstName: ctx.user.first_name, model: ctx.user.openai_model || undefined });
     let out = reply;
     if (risk === 'medium' || risk === 'high') out += `\n${msgs.talkSafetyFooterMsg()}`;
     const assistantTurns = session.messages.filter(m => m.role === 'assistant').length;

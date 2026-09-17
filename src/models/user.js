@@ -60,6 +60,11 @@ const userSchema = new mongoose.Schema({
     default: null,
     select: false
   },
+  // which OpenAI model to use for Talk and insights (null = default)
+  openai_model: {
+    type: String,
+    default: null
+  },
 }, { timestamps: true });
 
 // One-off: give users created before last_active_at existed a sensible value

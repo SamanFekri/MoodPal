@@ -121,6 +121,44 @@ describe('mini app API', () => {
     });
   });
 
+  describe('settings', () => {
+    test('key: format check, verification, masked hint, removal; model: choices and validation', async () => {
+      const settings = require('../../src/controllers/settings');
+      const origVerify = settings.verify;
+      try {
+        let r = await api('/api/me/settings', { as: alice });
+        assert.equal(r.status, 200);
+        assert.deepEqual({ has_key: r.body.openai.has_key, model: r.body.openai.model }, { has_key: false, model: 'gpt-5.6' });
+        assert.ok(r.body.openai.models.some(m => m.id === 'gpt-5.6'));
+
+        assert.equal((await api('/api/me/settings/openai-key', { as: alice, method: 'POST', body: { key: 'hello' } })).status, 400);
+        settings.verify = async () => { throw Object.assign(new Error('bad'), { status: 401 }); };
+        assert.equal((await api('/api/me/settings/openai-key', { as: alice, method: 'POST', body: { key: 'sk-proj-abcdefghijklmnopqrstuvwxyz1234' } })).status, 401);
+        settings.verify = async () => {};
+        r = await api('/api/me/settings/openai-key', { as: alice, method: 'POST', body: { key: 'sk-proj-abcdefghijklmnopqrstuvwxyz1234' } });
+        assert.equal(r.status, 200);
+        assert.equal(r.body.openai.has_key, true);
+        assert.equal(r.body.openai.key_hint, 'sk-…1234');
+        assert.equal(await User.getOpenAIKey(alice._id), 'sk-proj-abcdefghijklmnopqrstuvwxyz1234');
+        assert.ok(!JSON.stringify(r.body).includes('abcdefghij'), 'the full key is never returned');
+
+        r = await api('/api/me/settings/model', { as: alice, method: 'POST', body: { model: 'gpt-5-mini' } });
+        assert.equal(r.body.openai.model, 'gpt-5-mini');
+        assert.equal((await User.findById(alice._id)).openai_model, 'gpt-5-mini');
+        assert.equal((await api('/api/me/settings/model', { as: alice, method: 'POST', body: { model: 'not a model!!' } })).status, 400);
+        r = await api('/api/me/settings/model', { as: alice, method: 'POST', body: { model: null } });
+        assert.equal(r.body.openai.model, 'gpt-5.6');
+
+        r = await api('/api/me/settings/openai-key', { as: alice, method: 'DELETE' });
+        assert.equal(r.body.openai.has_key, false);
+        assert.equal(await User.getOpenAIKey(alice._id), null);
+        assert.equal((await api('/api/me/settings')).status, 401);
+      } finally {
+        settings.verify = origVerify;
+      }
+    });
+  });
+
   describe('my personality', () => {
     test('no profile yet: null profile, full test list', async () => {
       const r = await api('/api/me/personality', { as: alice });
@@ -142,6 +180,51 @@ describe('mini app API', () => {
       assert.equal(r.body.profile.measured, 5);
       assert.deepEqual(r.body.profile.tests_taken, ['big_five']);
       assert.ok(r.body.tests.find(t => t.key === 'big_five').completed);
+    });
+  });
+
+  describe('taking a test in the mini app', () => {
+    test('start, answer every question, get the profile back; resume and cancel work', async () => {
+      assert.deepEqual((await api('/api/me/personality/session', { as: alice })).body, { session: null });
+      assert.equal((await api('/api/me/personality/tests/nope/start', { as: alice, method: 'POST' })).status, 404);
+
+      let r = await api('/api/me/personality/tests/big_five/start', { as: alice, method: 'POST' });
+      assert.equal(r.status, 200);
+      const s = r.body.session;
+      assert.equal(s.total, 20);
+      assert.equal(s.current_index, 0);
+      assert.equal(s.test.scale.labels.length, 5);
+      assert.deepEqual(Object.keys(s.questions[0]), ['order', 'text'], 'no trait or reverse hints leak to the client');
+
+      r = await api(`/api/me/personality/session/${s.id}/answer`, { as: alice, method: 'POST', body: { order: 1, value: 5 } });
+      assert.equal(r.body.done, false);
+      assert.equal(r.body.session.current_index, 1);
+      assert.equal((await api(`/api/me/personality/session/${s.id}/answer`, { as: alice, method: 'POST', body: { order: 2, value: 9 } })).status, 400);
+      assert.equal((await api(`/api/me/personality/session/${s.id}/answer`, { as: alice, method: 'POST', body: {} })).status, 400);
+      // another user cannot answer alice's session
+      assert.equal((await api(`/api/me/personality/session/${s.id}/answer`, { as: bob, method: 'POST', body: { order: 2, value: 3 } })).status, 410);
+
+      // resume shows progress
+      r = await api('/api/me/personality/session', { as: alice });
+      assert.equal(r.body.session.answered, 1);
+      assert.equal(r.body.session.id, s.id);
+
+      let last;
+      for (let order = 2; order <= 20; order++) last = await api(`/api/me/personality/session/${s.id}/answer`, { as: alice, method: 'POST', body: { order, value: 5 } });
+      assert.equal(last.body.done, true);
+      assert.equal(last.body.test.key, 'big_five');
+      assert.equal(last.body.scores.extraversion, 0.5);
+      assert.equal(last.body.profile.categories[0].key, 'big_five');
+      assert.ok(last.body.tests.find(t => t.key === 'big_five').completed);
+      assert.deepEqual((await api('/api/me/personality/session', { as: alice })).body, { session: null });
+      assert.equal((await api(`/api/me/personality/session/${s.id}/answer`, { as: alice, method: 'POST', body: { order: 1, value: 1 } })).status, 410);
+
+      // cancel
+      r = await api('/api/me/personality/tests/communication_style/start', { as: alice, method: 'POST' });
+      assert.equal(r.body.session.total, 14);
+      assert.deepEqual((await api('/api/me/personality/session/cancel', { as: alice, method: 'POST' })).body, { cancelled: true });
+      assert.deepEqual((await api('/api/me/personality/session', { as: alice })).body, { session: null });
+      assert.deepEqual((await api('/api/me/personality/session/cancel', { as: alice, method: 'POST' })).body, { cancelled: false });
     });
   });
 
@@ -237,8 +320,9 @@ describe('mini app API', () => {
       await User.updateOne({ _id: alice._id }, { last_active_at: new Date(Date.now() - 20 * 86400000) });
       await User.updateOne({ _id: admin._id }, { last_active_at: new Date(Date.now() - 30 * 86400000) });
       const r = await api('/api/admin/users', { as: admin });
-      // the admin's own request counts as activity, then carol (updated just now, no field), then by last_active_at
-      assert.deepEqual(r.body.users.map(u => u.id), [9, 3, 2, 1]);
+      // carol (updated just now, no field) precedes bob and alice; the admin's own request bumps them to the top (async, so not asserted)
+      const ids = r.body.users.map(u => u.id).filter(id => id !== 9);
+      assert.deepEqual(ids, [3, 2, 1]);
       assert.ok(r.body.users[1].last_active_at, 'fallback activity time is reported');
     });
 

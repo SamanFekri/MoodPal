@@ -30,7 +30,7 @@
       --stale: #9aa0a6;
       --ease-out: cubic-bezier(.22, 1, .36, 1);
       --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
-      --nav-h: 64px;
+      --nav-h: 68px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -341,7 +341,7 @@
       position: relative;
       max-width: 640px; margin: 0 auto;
       display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-      height: 48px;
+      height: 52px;
       background: rgba(138,143,152,0.12);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--hint) 12%, transparent);
       border-radius: 999px;
@@ -359,14 +359,14 @@
     .tab {
       position: relative; z-index: 1;
       border: 0; background: none;
-      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-      font: inherit; font-size: 12px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; padding: 0 2px;
+      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+      font: inherit; font-size: 10px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; padding: 0 2px;
       color: var(--hint);
       cursor: pointer;
       transition: color .25s;
     }
     .tab.active { color: var(--text); }
-    .tab .ico { font-size: 14px; transition: transform .35s var(--ease-spring); }
+    .tab .ico { font-size: 15px; line-height: 1; transition: transform .35s var(--ease-spring); }
     .tab.active .ico { transform: scale(1.15); }
 
     .tab-enter-active, .tab-leave-active { transition: opacity .22s ease, transform .22s var(--ease-out); }
@@ -551,6 +551,59 @@
     .public-foot a { color: var(--link); font-weight: 700; text-decoration: none; }
     .public-foot small { display: block; color: var(--hint); margin-top: 6px; font-size: 12px; }
 
+    /* ---- Settings ---- */
+    .field { display: flex; gap: 8px; margin-top: 12px; }
+    .field input { flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 14px; padding: 12px 14px; outline: none; }
+    .field input::placeholder { color: var(--hint); }
+    .field .btn { padding: 10px 16px; font-size: 14px; box-shadow: none; white-space: nowrap; }
+    .keyrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+    .keyrow code { font-size: 14px; font-weight: 700; background: rgba(52,199,89,0.14); color: var(--fresh); padding: 6px 10px; border-radius: 10px; }
+    .models { display: grid; gap: 8px; margin-top: 12px; }
+    .model { display: flex; align-items: center; gap: 12px; text-align: left; border: 2px solid transparent; background: rgba(138,143,152,0.10); border-radius: 14px; padding: 12px 14px; font: inherit; color: var(--text); cursor: pointer; transition: border-color .2s, background .2s; }
+    .model.on { border-color: var(--accent); background: rgba(51,144,236,0.12); }
+    .model b { display: block; font-size: 14px; }
+    .model span { display: block; font-size: 12px; color: var(--hint); }
+    .model .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--hint); flex: none; display: grid; place-items: center; }
+    .model.on .radio { border-color: var(--accent); }
+    .model.on .radio::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+    .note-box { font-size: 12px; color: var(--hint); line-height: 1.45; margin-top: 10px; }
+
+    /* ---- Quiz (taking a test in the app) ---- */
+    .quiz { position: fixed; inset: 0; z-index: 80; background: var(--bg); display: flex; flex-direction: column; padding: calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
+    .quiz-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .quiz-top .name { font-size: 14px; font-weight: 800; }
+    .quiz-top .count { font-size: 12px; color: var(--hint); font-weight: 700; }
+    .quiz-top .close { position: static; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(138,143,152,0.14); color: var(--hint); font-size: 16px; font-weight: 700; display: grid; place-items: center; cursor: pointer; }
+    .quiz-foot .btn { white-space: nowrap; }
+    .progress { height: 8px; border-radius: 999px; background: rgba(138,143,152,0.18); margin: 14px 0 6px; overflow: hidden; }
+    .progress > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #7c5cff); transition: width .45s var(--ease-out); }
+    .quiz-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .q-label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--hint); margin-bottom: 10px; }
+    .q-text { font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; min-height: 100px; }
+    .q-intro { font-size: 14px; color: var(--hint); line-height: 1.45; margin-top: 10px; }
+    .answers { display: grid; gap: 10px; margin-top: 22px; }
+    .ans { display: flex; align-items: center; gap: 12px; border: 0; text-align: left; font: inherit; font-size: 15px; font-weight: 700; color: var(--text); background: var(--card); border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow); cursor: pointer; transition: transform .15s var(--ease-out), background .2s; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 45ms); }
+    .ans:active { transform: scale(.97); }
+    .ans:disabled { opacity: .55; }
+    .ans .swatch { width: 14px; height: 14px; border-radius: 50%; flex: none; background: hsl(var(--h) 85% 55%); }
+    .ans.picked { background: var(--accent); color: var(--accent-text); }
+    .quiz-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+    .quiz-foot .hint { font-size: 12px; color: var(--hint); }
+    .q-enter-active { transition: opacity .25s ease, transform .3s var(--ease-out); }
+    .q-leave-active { transition: opacity .18s ease, transform .18s var(--ease-out); position: absolute; width: 100%; }
+    .q-enter-from { opacity: 0; transform: translateX(28px); }
+    .q-leave-to { opacity: 0; transform: translateX(-28px); }
+    .quiz-body .q-wrap { position: relative; }
+    .done-art { font-size: 72px; text-align: center; animation: pop-in .6s var(--ease-spring) both; }
+    .done h2 { text-align: center; font-size: 24px; font-weight: 800; margin: 12px 0 6px; }
+    .done p { text-align: center; color: var(--hint); font-size: 14px; margin: 0 0 18px; line-height: 1.45; }
+    .done .btn { display: flex; margin: 0 auto; }
+    .resume { display: flex; align-items: center; gap: 12px; background: rgba(51,144,236,0.12); border-radius: 18px; padding: 12px 14px; margin-bottom: 14px; animation: fade-up .5s var(--ease-out) both; }
+    .resume .t { flex: 1; min-width: 0; }
+    .resume .t b { display: block; font-size: 14px; }
+    .resume .t span { font-size: 12px; color: var(--hint); font-weight: 600; }
+    .resume .btn { padding: 9px 14px; font-size: 13px; box-shadow: none; }
+
     /* ---- Keyframes ---- */
     @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
     @keyframes fade-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
@@ -712,19 +765,25 @@
               <div class="art">🧠</div>
               <h2>No profile yet</h2>
               <p>Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.</p>
-              <button class="btn" @click="takeTest()">📝 Take a test</button>
+              <button class="btn" @click="startTest(personality.tests[0])">📝 Take the Big Five test</button>
+            </div>
+
+            <!-- unfinished test -->
+            <div class="resume" v-if="quizSession && !quiz">
+              <div class="t"><b>Continue {{ quizSession.test.name }}</b><span>{{ quizSession.answered }}/{{ quizSession.total }} answered</span></div>
+              <button class="btn" @click="openQuiz(quizSession)">▶️ Continue</button>
             </div>
 
             <!-- tests -->
             <section class="section" :style="{ '--i': 4 }">
               <h3>Tests <span class="sub">{{ personality.tests.filter(t => t.completed).length }}/{{ personality.tests.length }} done</span></h3>
-              <div v-for="t in personality.tests" :key="t.key" class="test-row" @click="takeTest(t)">
+              <div v-for="t in personality.tests" :key="t.key" class="test-row" @click="startTest(t)">
                 <div class="t-ico" :class="{ done: t.completed }">{{ t.completed ? '✅' : '📝' }}</div>
                 <div class="t-body">
                   <div class="t-title">{{ t.name }}</div>
                   <div class="t-desc">{{ t.description }}</div>
                 </div>
-                <div class="t-meta">{{ t.question_count }} q</div>
+                <div class="t-meta">{{ t.question_count }} q · ~{{ Math.max(1, Math.round(t.question_count * 8 / 60)) }} min</div>
               </div>
             </section>
 
@@ -850,6 +909,52 @@
           </template>
           <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
         </div>
+        <!-- ---------- Settings ---------- -->
+        <div v-else-if="tab === 'settings'" key="settings">
+          <header class="header">
+            <div>
+              <p class="greeting">Your account</p>
+              <h1>Settings</h1>
+            </div>
+          </header>
+
+          <template v-if="!settings && !settingsError">
+            <div class="section" v-for="n in 2" :key="'ssk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+          </template>
+          <div v-else-if="!settings" class="state"><div class="art">📡</div><h2>Couldn't load settings</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">Try again</button></div>
+          <template v-else>
+            <section class="section" :style="{ '--i': 0 }">
+              <h3>OpenAI key <span class="sub">{{ settings.openai.has_key ? 'connected' : 'not set' }}</span></h3>
+              <div class="note-box">Talk and AI insights run on your own OpenAI key, so nobody else spends your credits. The key is verified once, stored encrypted, and only ever used for your account.</div>
+              <div class="keyrow" v-if="settings.openai.has_key">
+                <code>{{ settings.openai.key_hint }}</code>
+                <button class="btn ghost" style="padding:9px 14px;font-size:13px" :disabled="settingsBusy" @click="removeKey">Remove</button>
+              </div>
+              <div class="field">
+                <input v-model="keyInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="settings.openai.has_key ? 'Paste a new key to replace it' : 'sk-…'">
+                <button class="btn" :disabled="settingsBusy || !keyInput.trim()" @click="saveKey">{{ settingsBusy ? 'Checking…' : 'Save' }}</button>
+              </div>
+              <div class="note-box">Create one at platform.openai.com → API keys.</div>
+            </section>
+
+            <section class="section" :style="{ '--i': 1 }">
+              <h3>Model <span class="sub">{{ settings.openai.model }}</span></h3>
+              <div class="note-box">Which model Talk and your weekly insights use. Costs differ per model on your OpenAI account.</div>
+              <div class="models">
+                <button v-for="m in settings.openai.models" :key="m.id" class="model" :class="{ on: settings.openai.model === m.id }" :disabled="settingsBusy" @click="setModel(m.id)">
+                  <span class="radio"></span>
+                  <span><b>{{ m.name }}<template v-if="m.id === settings.openai.default_model"> · default</template></b><span>{{ m.note }} <i>({{ m.id }})</i></span></span>
+                </button>
+              </div>
+              <div class="field">
+                <input v-model="modelInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
+                <button class="btn ghost" :disabled="settingsBusy || !modelInput.trim()" @click="setModel(modelInput.trim())">Use</button>
+              </div>
+            </section>
+
+            <p class="disclaimer">🤖 Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
+          </template>
+        </div>
       </transition>
 
       <!-- ---------- tab bar ---------- -->
@@ -951,6 +1056,45 @@
         <p v-else>Please open this page from the MoodPal bot to see your friends' moods.</p>
       </div>
     </template>
+
+    <!-- ================= QUIZ ================= -->
+    <transition name="sheet">
+      <div class="quiz" v-if="quiz" key="quiz">
+        <div class="quiz-top">
+          <div><div class="name">{{ quiz.session.test.name }}</div><div class="count" v-if="!quiz.done">Question {{ quiz.session.current_index + 1 }} of {{ quiz.session.total }}</div></div>
+          <button class="close" @click="closeQuiz" aria-label="Close">✕</button>
+        </div>
+        <div class="progress" v-if="!quiz.done"><div :style="{ width: (quiz.session.current_index / quiz.session.total * 100) + '%' }"></div></div>
+
+        <div class="quiz-body">
+          <div v-if="quiz.done" class="done">
+            <div class="done-art">🎉</div>
+            <h2>{{ quiz.session.test.name }} done</h2>
+            <p>Your profile has been updated. Take another test to fill in more of it, or share it with friends.</p>
+            <button class="btn" @click="closeQuiz">See my profile</button>
+          </div>
+          <div v-else class="q-wrap">
+            <transition name="q" mode="out-in">
+              <div :key="quiz.session.current_index">
+                <div class="q-label">How accurately does this describe you?</div>
+                <div class="q-text">{{ currentQuestion.text }}</div>
+                <div class="q-intro" v-if="quiz.session.current_index === 0">{{ quiz.session.test.intro }}</div>
+                <div class="answers">
+                  <button v-for="(label, i) in quiz.session.test.scale.labels" :key="i" class="ans" :class="{ picked: quiz.picked === i + quiz.session.test.scale.min }" :style="{ '--i': i, '--h': [0, 25, 210, 140, 130][i] ?? 210 }" :disabled="quiz.saving" @click="answer(i + quiz.session.test.scale.min)">
+                    <span class="swatch"></span>{{ label }}
+                  </button>
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+
+        <div class="quiz-foot" v-if="!quiz.done">
+          <span class="hint">No right or wrong answers. Go with your first instinct.</span>
+          <button class="btn ghost" style="padding:9px 14px;font-size:13px" @click="cancelQuiz">Cancel test</button>
+        </div>
+      </div>
+    </transition>
 
     <transition name="list"><div v-if="toast" class="toast">{{ toast }}</div></transition>
   </div>
@@ -1088,11 +1232,18 @@
           loadingPersonality: false,
           savingSharing: false,
           personalityAnimKey: 'p0',
+          settings: null,
+          settingsError: '',
+          settingsBusy: false,
+          keyInput: '',
+          modelInput: '',
+          quiz: null,            // { session, picked, saving, done }
+          quizSession: null,     // unfinished test from the server
           // admin
           admin: { query: '', trait: '', level: 'any', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
-          fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0 },
+          fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
           logs: { moods: [], has_more: false, next_before: null, loading: false, loadingMore: false, error: '' },
           STALE_MS: 30 * 1000,
           // sheet / misc
@@ -1111,8 +1262,9 @@
       computed: {
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: '🫂' }, { key: 'personality', label: 'Personality', icon: '🧠' }];
-          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
           t.push({ key: 'logs', label: 'Logs', icon: '📜' });
+          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
+          t.push({ key: 'settings', label: 'Settings', icon: '⚙️' });
           return t;
         },
         adminTraitGroups() {
@@ -1121,6 +1273,7 @@
           for (const t of this.admin.traits) (groups[t.category] ||= { category: t.category, name: names[t.category] || t.category, traits: [] }).traits.push(t);
           return Object.values(groups);
         },
+        currentQuestion() { return this.quiz ? this.quiz.session.questions[this.quiz.session.current_index] : null; },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
@@ -1156,9 +1309,9 @@
             this.setupMainButton();
             this.watchActivation();
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
-            const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs()];
+            const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
             if (this.isAdmin) loads.push(this.fetchAdmin());
-            const current = { friends: loads[0], personality: loads[1], logs: loads[2], admin: loads[3] }[this.tab] || loads[0];
+            const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: loads[4] }[this.tab] || loads[0];
             current.finally(hideSplash);
             await Promise.allSettled(loads);
           } else {
@@ -1211,6 +1364,7 @@
           if (key === 'personality' && this.isStale('personality')) this.fetchPersonality();
           if (key === 'admin' && this.isStale('admin')) this.fetchAdmin();
           if (key === 'logs' && this.isStale('logs')) this.fetchLogs();
+          if (key === 'settings' && this.isStale('settings')) this.fetchSettings();
         },
 
         isStale(key) { return Date.now() - (this.fetchedAt[key] || 0) > this.STALE_MS; },
@@ -1368,6 +1522,7 @@
           this.loadingPersonality = true;
           try {
             this.personality = await this.api('/api/me/personality');
+            this.fetchQuizSession();
             this.personalityError = '';
             this.fetchedAt.personality = Date.now();
             this.personalityAnimKey = 'p' + Date.now();
@@ -1378,11 +1533,64 @@
             this.loadingPersonality = false;
           }
         },
-        takeTest(t) {
+        // ----- taking a test in the app -----
+        async fetchQuizSession() {
+          try { this.quizSession = (await this.api('/api/me/personality/session')).session; } catch { this.quizSession = null; }
+        },
+        async startTest(t) {
+          if (!t) return;
           this.haptic('medium');
-          // tests run in the chat: close the mini app so the user lands on the keyboard
-          if (this.tg?.close) return this.tg.close();
-          window.open(this.botLink, '_blank');
+          try {
+            const data = await this.api(`/api/me/personality/tests/${t.key}/start`, { method: 'POST' });
+            this.quizSession = data.session;
+            this.openQuiz(data.session);
+          } catch (error) {
+            this.showToast("Couldn't start the test");
+          }
+        },
+        openQuiz(session) {
+          this.haptic('light');
+          this.quiz = { session, picked: null, saving: false, done: false };
+          try { this.tg?.BackButton?.show?.(); this.tg?.BackButton?.onClick?.(this.closeQuiz); } catch {}
+          if (this.tg?.MainButton && this.usingMainButton) this.tg.MainButton.hide();
+        },
+        async answer(value) {
+          const q = this.quiz;
+          if (!q || q.saving) return;
+          this.haptic('light');
+          q.picked = value; q.saving = true;
+          try {
+            const data = await this.api(`/api/me/personality/session/${q.session.id}/answer`, { method: 'POST', body: { order: this.currentQuestion.order, value } });
+            if (data.done) {
+              q.done = true;
+              this.quizSession = null;
+              this.haptic('medium');
+              if (this.personality) { this.personality.profile = data.profile; this.personality.tests = data.tests; this.personalityAnimKey = 'p' + Date.now(); }
+              else this.fetchPersonality();
+              this.fetchedAt.personality = Date.now();
+            } else {
+              await new Promise(r => setTimeout(r, 160));   // let the pick register visually
+              q.session = data.session; q.picked = null;
+            }
+          } catch (error) {
+            if (error.status === 410) { this.showToast('That test is no longer active'); this.closeQuiz(); this.fetchQuizSession(); }
+            else this.showToast("Couldn't save your answer, try again");
+          } finally {
+            q.saving = false;
+          }
+        },
+        async cancelQuiz() {
+          this.haptic('medium');
+          try { await this.api('/api/me/personality/session/cancel', { method: 'POST' }); } catch {}
+          this.quizSession = null;
+          this.closeQuiz();
+        },
+        closeQuiz() {
+          // keep the latest progress so "Continue" resumes where the user left off
+          if (this.quiz && !this.quiz.done) { this.quizSession = this.quiz.session; this.fetchQuizSession(); }
+          this.quiz = null;
+          try { this.tg?.BackButton?.hide?.(); this.tg?.BackButton?.offClick?.(this.closeQuiz); } catch {}
+          if (this.tg?.MainButton && this.usingMainButton && this.tab === 'friends') this.tg.MainButton.show();
         },
         async toggleSharing() {
           if (!this.personality || this.savingSharing) return;
@@ -1505,6 +1713,49 @@
           if (key === 'personality' && !this.loadingPersonality) this.fetchPersonality();
           if (key === 'admin' && !this.admin.loading) this.fetchAdmin();
           if (key === 'logs' && !this.logs.loading) this.fetchLogs();
+          if (key === 'settings') this.fetchSettings();
+        },
+
+        // ----- settings -----
+        async fetchSettings() {
+          try {
+            this.settings = await this.api('/api/me/settings');
+            this.settingsError = '';
+            this.fetchedAt.settings = Date.now();
+          } catch (error) {
+            this.settingsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+          }
+        },
+        async saveKey() {
+          const key = this.keyInput.trim();
+          if (!key || this.settingsBusy) return;
+          this.haptic('medium');
+          this.settingsBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/openai-key', { method: 'POST', body: { key } });
+            this.keyInput = '';
+            this.showToast('Key verified and saved');
+          } catch (error) {
+            this.showToast(error.status === 400 ? "That doesn't look like an OpenAI key" : error.status === 401 ? 'OpenAI rejected this key' : "Couldn't verify the key right now");
+          } finally {
+            this.settingsBusy = false;
+          }
+        },
+        async removeKey() {
+          if (this.settingsBusy) return;
+          this.haptic('medium');
+          this.settingsBusy = true;
+          try { this.settings = await this.api('/api/me/settings/openai-key', { method: 'DELETE' }); this.showToast('Key removed'); }
+          catch { this.showToast("Couldn't remove the key"); }
+          finally { this.settingsBusy = false; }
+        },
+        async setModel(model) {
+          if (this.settingsBusy) return;
+          this.haptic('light');
+          this.settingsBusy = true;
+          try { this.settings = await this.api('/api/me/settings/model', { method: 'POST', body: { model } }); this.modelInput = ''; this.showToast(`Using ${this.settings.openai.model}`); }
+          catch (error) { this.showToast(error.status === 400 ? "That doesn't look like a model id" : "Couldn't save the model"); }
+          finally { this.settingsBusy = false; }
         },
 
         // ----- mood log -----
