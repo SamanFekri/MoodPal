@@ -143,3 +143,10 @@ dist
 
 # folder temp
 temp/
+
+# graphify: keep graph.json (has a merge driver), GRAPH_REPORT.md and manifest.json
+# tracked; ignore only what is machine-local or regenerated on every run.
+graphify-out/graph.html
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/.graphify_*
