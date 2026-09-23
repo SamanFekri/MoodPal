@@ -10,9 +10,9 @@
     "semantic_hash": "fc1d990e864552a07454fc4e21dd8ede"
   },
   "src/bot.js": {
-    "mtime": 1790180551.4954593,
-    "ast_hash": "0a0d0a597f4f76d01fcc553ad0a5ff4e",
-    "semantic_hash": ""
+    "mtime": 1789659176.2654662,
+    "ast_hash": "d87664f71e36094352c23d594f5a0373",
+    "semantic_hash": "d87664f71e36094352c23d594f5a0373"
   },
   "src/chat/service.js": {
     "mtime": 1789660099.2308059,
@@ -105,9 +105,9 @@
     "semantic_hash": "0d9d67493caa44f04c5af762532f1622"
   },
   "src/controllers/admin.js": {
-    "mtime": 1790180535.0980563,
-    "ast_hash": "607daf6766bdef6a23cb28314809f8d8",
-    "semantic_hash": ""
+    "mtime": 1789658874.7741966,
+    "ast_hash": "4ecb62f88056a71cfed862eaf9eb56bb",
+    "semantic_hash": "4ecb62f88056a71cfed862eaf9eb56bb"
   },
   "src/controllers/auth.js": {
     "mtime": 1789655373.5570672,
@@ -170,9 +170,9 @@
     "semantic_hash": "4e39b2447653be78581df32e851f028a"
   },
   "src/middlewares/webapp.middleware.js": {
-    "mtime": 1790180551.465255,
-    "ast_hash": "552561df189a27a9a63ee1de77d64718",
-    "semantic_hash": ""
+    "mtime": 1789656450.7766995,
+    "ast_hash": "4b5471243d647686c5d0e25299d5deab",
+    "semantic_hash": "4b5471243d647686c5d0e25299d5deab"
   },
   "src/models/chat_session.js": {
     "mtime": 1789655962.9542809,
@@ -260,9 +260,9 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1790180551.4646683,
-    "ast_hash": "4eb3ad561479b970f082644c825b977e",
-    "semantic_hash": ""
+    "mtime": 1789660099.2337792,
+    "ast_hash": "73e4e8ff55e01714ca16488554992030",
+    "semantic_hash": "73e4e8ff55e01714ca16488554992030"
   },
   "src/utils/cache.js": {
     "mtime": 1747033394.7237036,
@@ -335,14 +335,14 @@
     "semantic_hash": "ce02972eb80b44353108bab5976a5024"
   },
   "test/webapp/api.test.js": {
-    "mtime": 1790180578.632098,
-    "ast_hash": "b11c0ea4d03c91247a64723117a348c6",
-    "semantic_hash": ""
+    "mtime": 1790146111.007969,
+    "ast_hash": "e1126a2a5e423cc8b8b6743274a5e1c1",
+    "semantic_hash": "e1126a2a5e423cc8b8b6743274a5e1c1"
   },
   "README.md": {
-    "mtime": 1790180751.8488297,
-    "ast_hash": "2d046452390baa7a1e3379e0f476810e",
-    "semantic_hash": ""
+    "mtime": 1789660258.0489964,
+    "ast_hash": "f8e4363ee27f7828e61cf96c0c636228",
+    "semantic_hash": "f8e4363ee27f7828e61cf96c0c636228"
   },
   "docker-compose.yml": {
     "mtime": 1789640684.6302495,
@@ -350,328 +350,13 @@
     "semantic_hash": "6da93a48aa0535cc0c22d3cf43915409"
   },
   "src/public/ui/index.html": {
-    "mtime": 1790180709.5495925,
-    "ast_hash": "0fdf1a2a1e771370862c72b265a6f49b",
-    "semantic_hash": ""
+    "mtime": 1790146111.007504,
+    "ast_hash": "7721f81c1f9258beefd8a22bcdf3690c",
+    "semantic_hash": "7721f81c1f9258beefd8a22bcdf3690c"
   },
   "src/public/logo.jpeg": {
     "mtime": 1747338009.1809223,
     "ast_hash": "6c95cd05cd9a79747369af211519aec3",
     "semantic_hash": "6c95cd05cd9a79747369af211519aec3"
-  },
-  "brag-output/composition/assets/audio-data.js": {
-    "mtime": 1789656886.6335034,
-    "ast_hash": "604bd768c1940c848ad7a919f31c2ca6",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/music/cues/happy-beats-business-moves-vol-11-by-ende-dot-app.music-cues.json": {
-    "mtime": 1789656870.5593753,
-    "ast_hash": "d759f14e11c1f16f56a68d76b7cc1ad6",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/anxious.json": {
-    "mtime": 1789656870.6031868,
-    "ast_hash": "0f87ec09a25d81c9d17062b714599ac5",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/excited.json": {
-    "mtime": 1789656870.605352,
-    "ast_hash": "5ea7e13b74ab406fd40d2be6bd068824",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/happy.json": {
-    "mtime": 1789656870.5986528,
-    "ast_hash": "a5e47e4eecc99fb99876749f12eac276",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/motivated.json": {
-    "mtime": 1789656870.5965178,
-    "ast_hash": "7625a1880ba7bdf9f6bf33e8d8278a63",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/overwhelmed.json": {
-    "mtime": 1789656870.5939803,
-    "ast_hash": "c768ade1fa3fe499644e077663c48333",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/relaxed.json": {
-    "mtime": 1789656870.6073487,
-    "ast_hash": "d2ebe569144aa5c10759b49c8266817c",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/stickers/tired.json": {
-    "mtime": 1789656870.6008308,
-    "ast_hash": "2aaff6ca75aa4ad3d222aaab68cfd56c",
-    "semantic_hash": ""
-  },
-  "src/middlewares/block.middleware.js": {
-    "mtime": 1790180551.470908,
-    "ast_hash": "65b357d958ecd4075374b6ef5ebd6755",
-    "semantic_hash": ""
-  },
-  "src/public/lib/vendor/lottie.min.js": {
-    "mtime": 1789658027.6245446,
-    "ast_hash": "55bf86203909151984bef8cbe4739d64",
-    "semantic_hash": ""
-  },
-  "src/public/lib/vendor/pako.min.js": {
-    "mtime": 1789658027.6881244,
-    "ast_hash": "e647868246b70926c4d716f7640bd51a",
-    "semantic_hash": ""
-  },
-  "src/public/lib/vendor/vue.global.prod.js": {
-    "mtime": 1789658027.5347273,
-    "ast_hash": "432517bddc4abaebfc32fe9598be7c12",
-    "semantic_hash": ""
-  },
-  "brag-output/brag-plan.md": {
-    "mtime": 1789656708.3044674,
-    "ast_hash": "971c9f62594763b2df5efc6b55236bea",
-    "semantic_hash": ""
-  },
-  "brag-output/composition-brief.md": {
-    "mtime": 1789656856.550407,
-    "ast_hash": "22462461985a0fa9221425de5b4374ca",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/index.html": {
-    "mtime": 1789657413.1536882,
-    "ast_hash": "90244837046bac4c045884772b662616",
-    "semantic_hash": ""
-  },
-  "brag-output/share-copy.txt": {
-    "mtime": 1789657571.210217,
-    "ast_hash": "a34a1420b542ef43d1e91940551b26bf",
-    "semantic_hash": ""
-  },
-  "brag-output/brag.jpg": {
-    "mtime": 1789657557.0051153,
-    "ast_hash": "5559b6814924387641344b9c855b0508",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/img/logo.jpeg": {
-    "mtime": 1789656870.588217,
-    "ast_hash": "6c95cd05cd9a79747369af211519aec3",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/contact-sheet.jpg": {
-    "mtime": 1789657445.8729045,
-    "ast_hash": "81a2fa11740ee3b5fc0db97dc55d836f",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-00-at-3.2s.png": {
-    "mtime": 1789657444.6258373,
-    "ast_hash": "15259db97bd367411cc9c1237d9c7e9b",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-01-at-7.9s.png": {
-    "mtime": 1789657444.8351738,
-    "ast_hash": "be5a6f26300f92e2fcf131d550dfb3f4",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-02-at-12.8s.png": {
-    "mtime": 1789657445.0662866,
-    "ast_hash": "97515096c9033f62b291c9c73c77bdc3",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-03-at-17s.png": {
-    "mtime": 1789657445.2270298,
-    "ast_hash": "2590afe9212923e44efa0df7ce56c9ab",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-04-at-18.9s.png": {
-    "mtime": 1789657445.3918128,
-    "ast_hash": "fae251eb36ad431c89d0e6bff27688e6",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/snapshots/frame-05-at-20.389s.png": {
-    "mtime": 1789657445.5847797,
-    "ast_hash": "0057bf2c5ca0ad4b59a336035ee0a37b",
-    "semantic_hash": ""
-  },
-  "src/public/moods/angry.webp": {
-    "mtime": 1747036542.2353394,
-    "ast_hash": "9149c3d8e6625adfe745f3732c89fb8d",
-    "semantic_hash": ""
-  },
-  "src/public/moods/anxious.webp": {
-    "mtime": 1747036734.6626244,
-    "ast_hash": "2cf3777fc827ed5bc3789ad8c343229e",
-    "semantic_hash": ""
-  },
-  "src/public/moods/bored.webp": {
-    "mtime": 1747036604.978166,
-    "ast_hash": "f96ddf108cffa77d920dd1634416c1d5",
-    "semantic_hash": ""
-  },
-  "src/public/moods/confused.webp": {
-    "mtime": 1747036478.0873315,
-    "ast_hash": "cd359ba203e8e021d6d4dc03d03b433d",
-    "semantic_hash": ""
-  },
-  "src/public/moods/disappointed.webp": {
-    "mtime": 1747036683.1371765,
-    "ast_hash": "20493b78dc4698dd20d62cf6d4f8ffa9",
-    "semantic_hash": ""
-  },
-  "src/public/moods/excited.webp": {
-    "mtime": 1747036772.6405766,
-    "ast_hash": "706beb0a096d643d00d3644131e7c313",
-    "semantic_hash": ""
-  },
-  "src/public/moods/happy.webp": {
-    "mtime": 1747036260.8300862,
-    "ast_hash": "bc85b13d096d2dec602160806def4538",
-    "semantic_hash": ""
-  },
-  "src/public/moods/motivated.webp": {
-    "mtime": 1747036385.2594764,
-    "ast_hash": "ead82d41438fcf3d2f69e5839286b3c7",
-    "semantic_hash": ""
-  },
-  "src/public/moods/naughty.webp": {
-    "mtime": 1747036902.3586943,
-    "ast_hash": "a1be9abf7a62cd3ae696d8a2832793a1",
-    "semantic_hash": ""
-  },
-  "src/public/moods/nervous.webp": {
-    "mtime": 1747036868.5951002,
-    "ast_hash": "9c62c021a697aab98424325768e24ea6",
-    "semantic_hash": ""
-  },
-  "src/public/moods/neutral.webp": {
-    "mtime": 1747036576.1013274,
-    "ast_hash": "3a0c876f306031f768d34a1f72e4f2a7",
-    "semantic_hash": ""
-  },
-  "src/public/moods/overthinking.webp": {
-    "mtime": 1747037276.00243,
-    "ast_hash": "fa30d910948eaae6728f441fdd9ffe09",
-    "semantic_hash": ""
-  },
-  "src/public/moods/overwhelmed.webp": {
-    "mtime": 1747036996.089242,
-    "ast_hash": "cac67084a30bfba28a2cb35f74364b9d",
-    "semantic_hash": ""
-  },
-  "src/public/moods/relaxed.webp": {
-    "mtime": 1747036367.5388882,
-    "ast_hash": "dd05cb7bade586d827124899c6dbe3a0",
-    "semantic_hash": ""
-  },
-  "src/public/moods/sad.webp": {
-    "mtime": 1747036795.910972,
-    "ast_hash": "617768a1213194305d16bbf00c9e3b06",
-    "semantic_hash": ""
-  },
-  "src/public/moods/sick.webp": {
-    "mtime": 1747036847.3009586,
-    "ast_hash": "d3e4a6075b10d39be88d93f2f91b4ddc",
-    "semantic_hash": ""
-  },
-  "src/public/moods/tired.webp": {
-    "mtime": 1747036888.358158,
-    "ast_hash": "427328ad109b9aadd716ceede59f1fc1",
-    "semantic_hash": ""
-  },
-  "src/public/moods/uncertain.webp": {
-    "mtime": 1747037058.0348547,
-    "ast_hash": "27d7d3c9b66ebfa289b9deab6b6ebbe7",
-    "semantic_hash": ""
-  },
-  "brag-output/brag.mp4": {
-    "mtime": 1789657571.0675852,
-    "ast_hash": "25b62cfbc464b7ae3b795c9019372b98",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/music/happy-beats-business-moves-vol-11-by-ende-dot-app.mp3": {
-    "mtime": 1789656870.5569372,
-    "ast_hash": "94be0c264f983b524bd7807c10df8984",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/casino/card-slide-1.ogg": {
-    "mtime": 1789656870.567881,
-    "ast_hash": "de1affbe9a474646b72943f875301215",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/casino/card-slide-2.ogg": {
-    "mtime": 1789656870.5683117,
-    "ast_hash": "c95f5054aa26d3baa779a3ace09eb2e5",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/impact/impactBell_heavy_000.ogg": {
-    "mtime": 1789656870.5657456,
-    "ast_hash": "59698e3609b413aedcd7d96c27badd4d",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/impact/impactSoft_medium_001.ogg": {
-    "mtime": 1789656870.5650315,
-    "ast_hash": "daf869c83db8d9799689a01836439d2c",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/impact/impactSoft_medium_003.ogg": {
-    "mtime": 1789656870.5653784,
-    "ast_hash": "544f03b7af6b7471160dfcbfd4eb3772",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/interface/click_002.ogg": {
-    "mtime": 1789656870.5618668,
-    "ast_hash": "722ec540eb252470b8b0cf3577ceba27",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/interface/click_003.ogg": {
-    "mtime": 1789656870.562229,
-    "ast_hash": "4ca9982997589cb0f2f823741545ef4f",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/interface/drop_001.ogg": {
-    "mtime": 1789656870.5625393,
-    "ast_hash": "fdb7c6bd1abf0e06c75f5ef3ee29d5a2",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/interface/drop_002.ogg": {
-    "mtime": 1789656870.5628366,
-    "ast_hash": "c93648d84483c6ba9c375ba570ab1648",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-001.wav": {
-    "mtime": 1789656870.5705075,
-    "ast_hash": "e290f59e2fbbc40412a36c43031b83c0",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-004.wav": {
-    "mtime": 1789656870.5725002,
-    "ast_hash": "ba38527435827df4557cee2d3d7c1579",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-007.wav": {
-    "mtime": 1789656870.5743313,
-    "ast_hash": "5965e256b4303e1ce8cecab16ccd0762",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-010.wav": {
-    "mtime": 1789656870.5761147,
-    "ast_hash": "c82bdb949036ad64fea4f42b4a43519d",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-013.wav": {
-    "mtime": 1789656870.5778563,
-    "ast_hash": "08d4f756395058cceb476d5b61064bcc",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-016.wav": {
-    "mtime": 1789656870.579986,
-    "ast_hash": "34ced343e4a3060acd56179bfb71c2b6",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-019.wav": {
-    "mtime": 1789656870.5829568,
-    "ast_hash": "9e9d8968badbdfe17f9a157646e21cba",
-    "semantic_hash": ""
-  },
-  "brag-output/composition/assets/sfx/keyboard/keypress-022.wav": {
-    "mtime": 1789656870.585638,
-    "ast_hash": "f8fd19021b73be81dbd78812bdd55c1c",
-    "semantic_hash": ""
   }
 }
