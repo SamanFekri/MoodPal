@@ -83,6 +83,9 @@ describe('mini app API', () => {
       assert.equal(r.body[0].id, 2);
       assert.equal(r.body[0].mood.code, 'happy');
       assert.equal(r.body[0].personality_shared, false);
+      // notes are private: a friend only ever sees the mood, never what was written with it
+      assert.equal(r.body[0].note, undefined);
+      assert.ok(!JSON.stringify(r.body).includes('sunny'), "bob's note never reaches alice");
       assert.deepEqual(await api('/api/friends', { as: bob }).then(r => r.body), []);
     });
   });

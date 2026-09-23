@@ -10,7 +10,8 @@ const getFollowings = async (req, res) => {
     let lastMood = await Mood.getLastMood(following.followed._id);
     if (!lastMood) return null;
 
-    // only expose what the miniapp needs (never the whole user document)
+    // only expose what the miniapp needs. Notes are private: they stay between the
+    // user, the bot and (for their own history) themselves, so they are never sent here.
     return {
       id: following.followed.id,
       fullname: [following.followed.first_name, following.followed.last_name].filter(Boolean).join(' '),
@@ -19,7 +20,6 @@ const getFollowings = async (req, res) => {
       image: `/public/moods/${lastMood.mood.code}.webp`,
       tgs: `/public/tgs/${lastMood.mood.code}.tgs`,
       mood: lastMood.mood,
-      note: lastMood.note || '',
       timestamp: lastMood.timestamp,
       personality_shared: Boolean(following.followed.is_personality_shared)
     };

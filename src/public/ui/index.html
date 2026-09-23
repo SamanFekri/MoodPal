@@ -716,7 +716,6 @@
               <div class="name">{{ friend.fullname }}</div>
               <div class="mood">{{ friend.mood.name }}</div>
               <div class="when" :title="new Date(friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(friend.timestamp)"></span>{{ formatWhen(friend.timestamp) }}</div>
-              <div v-if="friend.note" class="note">“{{ friend.note }}”</div>
             </div>
           </transition-group>
 
@@ -985,7 +984,6 @@
                   <div class="when" :title="new Date(sheet.friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(sheet.friend.timestamp)"></span>{{ formatWhen(sheet.friend.timestamp) }}</div>
                 </div>
               </div>
-              <div v-if="sheet.friend.note" class="muted-box">“{{ sheet.friend.note }}”</div>
               <div class="sheet-actions">
                 <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)">💬 Open chat</a>
               </div>
