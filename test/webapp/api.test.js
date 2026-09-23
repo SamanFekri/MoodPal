@@ -400,18 +400,91 @@ describe('mini app API', () => {
       assert.deepEqual(r.body.users.map(u => u.id), [2]);
       assert.equal(r.body.users[0].trait_value, 1);
       assert.equal(r.body.total_users, 1);
-      assert.deepEqual(r.body.filter, { trait: 'openness', min: 0.6, max: 1 });
+      assert.deepEqual(r.body.filter.trait, { trait: 'openness', min: 0.6, max: 1 });
       r = await api('/api/admin/users?trait=openness&max=0.4', { as: admin });
       assert.deepEqual(r.body.users.map(u => u.id), [1]);
       r = await api('/api/admin/users?trait=openness', { as: admin });
       assert.deepEqual(new Set(r.body.users.map(u => u.id)), new Set([1, 2]));    // only users with a profile
       r = await api('/api/admin/users?trait=openness&q=bob', { as: admin });
       assert.deepEqual(r.body.users.map(u => u.id), [2]);
-      assert.equal((await api('/api/admin/users?trait=$where', { as: admin })).body.filter, null);
+      assert.equal((await api('/api/admin/users?trait=$where', { as: admin })).body.filter.trait, null);
     });
 
     test('there is no global mood feed, not even for admins', async () => {
       assert.equal((await api('/api/admin/moods', { as: admin })).status, 404);
+    });
+
+    test('notes filter keeps only users whose last mood has (or lacks) a note', async () => {
+      // alice: "long day", bob: "sunny", carol: a mood with no note, admin: no mood at all
+      await Mood.create({ user: carol._id, mood: { code: 'bored', emoji: '🥱', name: 'Bored' }, note: '   ', timestamp: new Date() });
+      const withNote = await api('/api/admin/users?notes=with', { as: admin });
+      assert.deepEqual(withNote.body.users.map(u => u.id).sort(), [1, 2]);
+      assert.ok(withNote.body.users.every(u => u.has_note));
+      assert.equal(withNote.body.total_users, 2);
+      assert.equal(withNote.body.filter.notes, 'with');
+
+      const without = await api('/api/admin/users?notes=without', { as: admin });
+      const ids = without.body.users.map(u => u.id).sort();
+      assert.deepEqual(ids, [3, 9], 'whitespace-only note counts as no note, and so does having no mood');
+      assert.ok(without.body.users.every(u => !u.has_note));
+
+      // filters compose with search and with the trait filter
+      assert.deepEqual((await api('/api/admin/users?notes=with&q=bob', { as: admin })).body.users.map(u => u.id), [2]);
+      assert.equal((await api('/api/admin/users?notes=bogus', { as: admin })).body.filter.notes, null);
+    });
+
+    test('sort=mood orders by the last mood registered, not by activity', async () => {
+      const t = Date.now();
+      // activity order is the reverse of mood order, so the two sorts cannot coincide
+      await Mood.create({ user: carol._id, mood: { code: 'sad', emoji: '😢', name: 'Sad' }, timestamp: new Date(t - 1000) });
+      await User.updateOne({ _id: bob._id },   { last_active_at: new Date(t - 30000) });   // mood: t-1000 (newest)
+      await User.updateOne({ _id: carol._id }, { last_active_at: new Date(t - 20000) });
+      await User.updateOne({ _id: alice._id }, { last_active_at: new Date(t - 10000) });
+      await Mood.updateOne({ user: bob._id },   { timestamp: new Date(t - 100) });
+      await Mood.updateOne({ user: alice._id }, { timestamp: new Date(t - 5000) });
+
+      const byMood = await api('/api/admin/users?sort=mood', { as: admin });
+      assert.equal(byMood.body.sort, 'mood');
+      assert.deepEqual(byMood.body.users.map(u => u.id), [2, 3, 1, 9], 'newest mood first, no-mood user last');
+
+      const byActivity = await api('/api/admin/users', { as: admin });
+      assert.equal(byActivity.body.sort, 'activity');
+      assert.equal(byActivity.body.users[0].id, 9, "the admin's own request counts as activity");
+      assert.notDeepEqual(byActivity.body.users.map(u => u.id), byMood.body.users.map(u => u.id));
+    });
+
+    test('admin can block and unblock a user, and a blocked user is refused everywhere', async () => {
+      assert.equal((await api('/api/friends', { as: bob })).status, 200);
+
+      let r = await api('/api/admin/users/2/block', { as: admin, method: 'POST' });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.is_blocked, true);
+      assert.equal((await User.findById(bob._id)).is_blocked, true);
+      assert.equal((await api('/api/admin/users', { as: admin })).body.users.find(u => u.id === 2).is_blocked, true);
+
+      // blocked: every mini app route refuses them
+      assert.equal((await api('/api/friends', { as: bob })).status, 403);
+      assert.equal((await api('/api/me/settings', { as: bob })).status, 403);
+      assert.equal((await api('/api/me/moods', { as: bob })).status, 403);
+
+      // and the bot ignores them
+      const blockMiddleware = require('../../src/middlewares/block.middleware');
+      let ran = false;
+      await blockMiddleware({ user: await User.findById(bob._id) }, async () => { ran = true; });
+      assert.equal(ran, false, 'no handler runs for a blocked user');
+      await blockMiddleware({ user: await User.findById(alice._id) }, async () => { ran = true; });
+      assert.equal(ran, true, 'unblocked users pass through');
+
+      r = await api('/api/admin/users/2/block', { as: admin, method: 'DELETE' });
+      assert.equal(r.body.is_blocked, false);
+      assert.equal((await api('/api/friends', { as: bob })).status, 200);
+
+      // guards
+      assert.equal((await api('/api/admin/users/9/block', { as: admin, method: 'POST' })).status, 400, 'cannot block yourself');
+      const admin2 = await User.create({ id: 10, first_name: 'Root2', is_admin: true });
+      assert.equal((await api(`/api/admin/users/${admin2.id}/block`, { as: admin, method: 'POST' })).status, 400, 'cannot block an admin');
+      assert.equal((await api('/api/admin/users/999/block', { as: admin, method: 'POST' })).status, 404);
+      assert.equal((await api('/api/admin/users/2/block', { as: alice, method: 'POST' })).status, 403, 'non-admins cannot block');
     });
 
     test('admins can read a user\'s full history including private moods and notes', async () => {

@@ -94,7 +94,7 @@ Mood notes keep working exactly as before: outside a conversation, text is saved
 A *Settings* tab lets each user add their own OpenAI key (verified once, stored encrypted, shown masked) and pick the model Talk and the weekly insights use. The default is `gpt-5.6`; any model id can be typed in.
 
 ### 🛡️ Admin
-An admin can see every user in the mini app's *Admin* tab, most recently active first and paginated, with their latest mood and note, a search box, and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend. Admins are chosen by hand in the database:
+An admin can see every user in the mini app's *Admin* tab, paginated, with their latest mood and note, a search box, a sort toggle (most recently **active** or most recent **last mood**), a notes filter (all / with a note / without one), and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend, or **block** them. A blocked user is ignored by the bot (no handler runs for their messages) and refused by every mini app endpoint; admins cannot be blocked. Admins are chosen by hand in the database:
 ```js
 db.users.updateOne({ id: <telegram user id> }, { $set: { is_admin: true } })
 ```

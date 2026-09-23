@@ -58,6 +58,8 @@ app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAd
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
 app.post('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.delete('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
+app.post('/api/admin/users/:telegramId/block', requireWebAppUser, requireAdmin, controllers.admin.setBlocked);
+app.delete('/api/admin/users/:telegramId/block', requireWebAppUser, requireAdmin, controllers.admin.setBlocked);
 
 // allow all requests to /public
 app.use('/public', express.static(path.join(__dirname, 'public')));

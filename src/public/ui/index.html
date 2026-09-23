@@ -486,6 +486,11 @@
     .seg { display: inline-flex; background: var(--card); border-radius: 14px; padding: 3px; box-shadow: var(--shadow); flex: none; }
     .seg button { border: 0; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--hint); padding: 7px 10px; border-radius: 11px; cursor: pointer; transition: background .2s, color .2s; }
     .seg button.on { background: var(--accent); color: var(--accent-text); }
+    .seg.grow { flex: 1; display: flex; }
+    .seg.grow button { flex: 1; min-width: 0; white-space: nowrap; padding: 8px 4px; font-size: 11px; }
+    .filters + .filters { margin-top: -4px; }
+    .btn.danger { background: rgba(255,95,109,0.16); color: #ff5f6d; box-shadow: none; }
+    .blocked-note { font-size: 12px; color: #ff5f6d; font-weight: 600; margin-top: 8px; }
     .trait-pill { font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(51,144,236,0.14); padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 4px; }  /* fallback for WebViews without color-mix */
     .trait-pill { font-size: 11px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; margin-top: 4px; }
 
@@ -818,7 +823,7 @@
               <h1>All moods</h1>
             </div>
             <div class="header-right">
-              <span class="pill" v-if="admin.total_users !== null">{{ admin.total_users }} users · {{ admin.total_moods }} moods</span>
+              <span class="pill" v-if="admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
             </div>
           </header>
 
@@ -839,6 +844,18 @@
             </div>
           </div>
 
+          <div class="filters">
+            <div class="seg grow">
+              <button :class="{ on: admin.notes === '' }" @click="setAdminNotes('')">All</button>
+              <button :class="{ on: admin.notes === 'with' }" @click="setAdminNotes('with')">📝 Noted</button>
+              <button :class="{ on: admin.notes === 'without' }" @click="setAdminNotes('without')">No note</button>
+            </div>
+            <div class="seg grow">
+              <button :class="{ on: admin.sort === 'activity' }" @click="setAdminSort('activity')">Active</button>
+              <button :class="{ on: admin.sort === 'mood' }" @click="setAdminSort('mood')">Last mood</button>
+            </div>
+          </div>
+
           <template v-if="(admin.loading || !fetchedAt.admin) && admin.users.length === 0 && !admin.error">
             <div v-for="n in 6" :key="'ask' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
@@ -851,13 +868,17 @@
               </div>
               <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="chip" v-if="u.is_friend">friend</span></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="lock" v-if="u.is_blocked" title="Blocked">🚫</span><span class="chip" v-if="u.is_friend">friend</span></div>
                 <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
                 <div class="row-sub" v-else>No mood yet</div>
                 <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
               </div>
               <div class="row-right">
-                <div class="when"><span class="dot" :class="freshness(u.last_active_at)"></span>{{ formatWhen(u.last_active_at, true) }}</div>
+                <div class="when" v-if="admin.sort === 'mood' && !u.last_mood"><span class="dot grey"></span>no mood</div>
+                <div class="when" v-else :title="admin.sort === 'mood' ? 'Last mood' : 'Last active'">
+                  <span class="dot" :class="freshness(admin.sort === 'mood' ? u.last_mood.timestamp : u.last_active_at)"></span>
+                  {{ formatWhen(admin.sort === 'mood' ? u.last_mood.timestamp : u.last_active_at, true) }}
+                </div>
                 <span class="cnt">{{ u.mood_count }} {{ u.mood_count === 1 ? 'mood' : 'moods' }}</span>
               </div>
             </div>
@@ -1013,7 +1034,11 @@
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
                   {{ sheet.savingFriend ? '…' : sheet.user.is_friend ? '✓ Friend · remove' : '➕ Add as friend' }}
                 </button>
+                <button class="btn" :class="sheet.user.is_blocked ? 'ghost' : 'danger'" :disabled="sheet.savingBlock || sheet.user.is_admin" @click="toggleAdminBlock(sheet.user)">
+                  {{ sheet.savingBlock ? '…' : sheet.user.is_blocked ? '↩︎ Unblock' : '🚫 Block' }}
+                </button>
               </div>
+              <div class="blocked-note" v-if="sheet.user.is_blocked">🚫 Blocked: the bot ignores their messages and the mini app refuses them.</div>
               <div class="sheet-section-title">Personality</div>
               <div v-if="sheet.personalityLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
               <personality-view v-else-if="sheet.personality?.profile" :profile="sheet.personality.profile" :animate-key="'adm-' + sheet.user.id" compact></personality-view>
@@ -1238,7 +1263,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { query: '', trait: '', level: 'any', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { query: '', trait: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
           fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
@@ -1616,7 +1641,8 @@
           try {
             const page = append ? this.admin.page + 1 : 0;
             const level = this.TRAIT_LEVELS.find(l => l.key === this.admin.level) || this.TRAIT_LEVELS[0];
-            const params = new URLSearchParams({ q: this.admin.query, page });
+            const params = new URLSearchParams({ q: this.admin.query, page, sort: this.admin.sort });
+            if (this.admin.notes) params.set('notes', this.admin.notes);
             if (this.admin.trait) { params.set('trait', this.admin.trait); params.set('min', level.min); params.set('max', level.max); }
             if (this.admin.traits.length === 0) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
             const data = await this.api(`/api/admin/users?${params}`);
@@ -1644,12 +1670,14 @@
         },
         loadMoreAdmin() { this.fetchAdmin({ append: true }); },
         applyAdminFilter() { this.haptic('light'); if (!this.admin.trait) this.admin.level = 'any'; this.fetchAdmin(); },
+        setAdminNotes(v) { this.admin.notes = v; this.applyAdminFilter(); },
+        setAdminSort(v) { this.admin.sort = v; this.applyAdminFilter(); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
         async openAdminUser(u) {
           this.haptic('light');
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', user: u, loading: true, loadingMore: false, savingFriend: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true };
+          this.sheet = { type: 'admin-user', user: u, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true };
           this.api(`/api/admin/users/${u.id}/personality`).then(d => { if (this.sheet?.user?.id === u.id) this.sheet.personality = d; }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.personalityLoading = false; });
           await nextTick();
           this.mountStickers();
@@ -1683,6 +1711,22 @@
             this.showToast("Couldn't load older moods");
           } finally {
             sheet.loadingMore = false;
+          }
+        },
+        async toggleAdminBlock(u) {
+          if (this.sheet?.savingBlock || u.is_admin) return;
+          this.haptic('medium');
+          this.sheet.savingBlock = true;
+          try {
+            const data = await this.api(`/api/admin/users/${u.id}/block`, { method: u.is_blocked ? 'DELETE' : 'POST' });
+            u.is_blocked = data.is_blocked;
+            const row = this.admin.users.find(x => x.id === u.id);
+            if (row) row.is_blocked = data.is_blocked;
+            this.showToast(data.is_blocked ? `${u.fullname || 'User'} is blocked` : `${u.fullname || 'User'} is unblocked`);
+          } catch (error) {
+            this.showToast(error.status === 400 ? "That user can't be blocked" : "Couldn't update block");
+          } finally {
+            if (this.sheet) this.sheet.savingBlock = false;
           }
         },
         async toggleAdminFriend(u) {

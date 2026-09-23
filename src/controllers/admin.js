@@ -16,11 +16,15 @@ const publicUser = (u) => ({
   username: u.username || null,
 });
 
-// GET /api/admin/users?q=&page=&trait=<key>&min=&max= — every user, most recently active first, with their
-// latest mood. With `trait`, only users whose personality profile has that trait within [min,max] (0..1).
+// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood
+// Every user with their latest mood. `sort` picks recency of activity (default) or of the
+// last mood they registered. `notes` keeps only users whose last mood has (or lacks) a note.
+// `trait` keeps only users whose personality profile has that trait within [min,max] (0..1).
 const listUsers = async (req, res) => {
   const q = (req.query.q || '').trim();
   const page = Math.max(0, parseInt(req.query.page, 10) || 0);
+  const sortBy = req.query.sort === 'mood' ? 'mood' : 'activity';
+  const notes = req.query.notes === 'with' || req.query.notes === 'without' ? req.query.notes : null;
 
   const filter = { is_bot: { $ne: true } };
   if (q) {
@@ -39,23 +43,40 @@ const listUsers = async (req, res) => {
     { $match: { [`profile.traits.${traitKey}`]: { $gte: min, $lte: max } } },
   ] : [];
 
-  const countPipeline = [{ $match: filter }, ...profileStages, { $count: 'n' }];
+  // the latest mood has to be joined before paging, because both the notes filter and the
+  // "last mood" sort are derived from it (uses the { user, timestamp } index)
+  const shapeStages = [
+    { $lookup: {
+      from: 'moods', let: { uid: '$_id' },
+      pipeline: [{ $match: { $expr: { $eq: ['$user', '$$uid'] } } }, { $sort: { timestamp: -1 } }, { $limit: 1 }, { $project: { mood: 1, note: 1, timestamp: 1 } }],
+      as: 'last_mood',
+    } },
+    { $addFields: {
+      last_mood_doc: { $arrayElemAt: ['$last_mood', 0] },
+      // users from before last_active_at existed fall back to their last write
+      active_at: { $ifNull: ['$last_active_at', { $ifNull: ['$updatedAt', '$createdAt'] }] },
+    } },
+    { $addFields: {
+      last_mood_at: '$last_mood_doc.timestamp',
+      has_note: { $gt: [{ $strLenCP: { $trim: { input: { $ifNull: ['$last_mood_doc.note', ''] } } } }, 0] },
+    } },
+  ];
+  const notesStages = notes ? [{ $match: { has_note: notes === 'with' } }] : [];
+  const sortStage = sortBy === 'mood'
+    ? { $sort: { last_mood_at: -1, _id: -1 } }   // users with no mood sort last
+    : { $sort: { active_at: -1, _id: -1 } };
+
+  const countPipeline = [{ $match: filter }, ...profileStages, ...(notes ? [...shapeStages, ...notesStages] : []), { $count: 'n' }];
 
   const [rows, countRows, moodCount] = await Promise.all([
     User.aggregate([
       { $match: filter },
       ...profileStages,
-      // users from before last_active_at existed fall back to their last write
-      { $addFields: { active_at: { $ifNull: ['$last_active_at', { $ifNull: ['$updatedAt', '$createdAt'] }] } } },
-      { $sort: { active_at: -1, _id: -1 } },
+      ...shapeStages,
+      ...notesStages,
+      sortStage,
       { $skip: page * USERS_PAGE_SIZE },
       { $limit: USERS_PAGE_SIZE },
-      // latest mood only (uses the { user, timestamp } index)
-      { $lookup: {
-        from: 'moods', let: { uid: '$_id' },
-        pipeline: [{ $match: { $expr: { $eq: ['$user', '$$uid'] } } }, { $sort: { timestamp: -1 } }, { $limit: 1 }, { $project: { mood: 1, note: 1, timestamp: 1 } }],
-        as: 'last_mood',
-      } },
       { $lookup: {
         from: 'moods', let: { uid: '$_id' },
         pipeline: [{ $match: { $expr: { $eq: ['$user', '$$uid'] } } }, { $count: 'n' }],
@@ -68,7 +89,7 @@ const listUsers = async (req, res) => {
         as: 'friend',
       } },
       // $arrayElemAt instead of $first: works on MongoDB 4.2+
-      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, is_mood_private: 1, last_active_at: '$active_at', last_mood: { $arrayElemAt: ['$last_mood', 0] }, mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
+      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
     ]),
     User.aggregate(countPipeline),
     Mood.estimatedDocumentCount(),
@@ -81,11 +102,18 @@ const listUsers = async (req, res) => {
     has_more: (page + 1) * USERS_PAGE_SIZE < total,
     total_users: total,
     total_moods: moodCount,
-    filter: traitKey ? { trait: traitKey, min, max } : null,
+    sort: sortBy,
+    filter: {
+      trait: traitKey ? { trait: traitKey, min, max } : null,
+      notes,
+    },
     users: rows.map(u => ({
       ...publicUser(u),
       is_mood_private: Boolean(u.is_mood_private),
+      is_blocked: Boolean(u.is_blocked),
+      is_admin: Boolean(u.is_admin),
       is_friend: Boolean(u.is_friend),
+      has_note: Boolean(u.has_note),
       last_active_at: u.last_active_at,
       mood_count: u.mood_count,
       trait_value: traitKey ? u.trait_value : undefined,
@@ -130,6 +158,19 @@ const setFriend = async (req, res) => {
   res.json({ is_friend: true });
 };
 
+// POST /api/admin/users/:telegramId/block   — block a user (bot ignores them, mini app refuses)
+// DELETE /api/admin/users/:telegramId/block — unblock
+const setBlocked = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) });
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (String(user._id) === String(req.user._id)) return res.status(400).json({ error: 'cannot_block_self' });
+  if (user.is_admin) return res.status(400).json({ error: 'cannot_block_admin' });
+
+  const blocked = req.method !== 'DELETE';
+  await User.updateOne({ _id: user._id }, { is_blocked: blocked });
+  res.json({ is_blocked: blocked });
+};
+
 // GET /api/admin/users/:telegramId/personality — anyone's profile, regardless of their sharing setting
 const userPersonality = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) });
@@ -143,4 +184,4 @@ const listTraits = async (req, res) => {
   res.json({ traits: traits.map(t => ({ key: t.key, name: t.name, category: t.category })) });
 };
 
-module.exports = { listUsers, userMoods, setFriend, userPersonality, listTraits };
+module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, listTraits };

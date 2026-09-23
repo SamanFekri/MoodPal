@@ -14,6 +14,7 @@ const requireWebAppUser = async (req, res, next) => {
     const tgUser = JSON.parse(params.get('user'));
     const user = await User.findOne({ id: tgUser.id });
     if (!user) return res.status(401).json({ error: 'unknown_user' });
+    if (user.is_blocked) return res.status(403).json({ error: 'blocked' });
     req.user = user;
     // using the mini app counts as activity too
     if (!user.last_active_at || Date.now() - user.last_active_at.getTime() > 5 * 60 * 1000) {
