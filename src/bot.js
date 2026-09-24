@@ -30,6 +30,8 @@ const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/open
 const personalityCommands = require('./commands/personality');
 const talkCommands = require('./commands/talk');
 const { ensurePersonalityCatalog } = require('./personality/migrate');
+const backupScheduler = require('./backup/scheduler');
+const { backupNowCommand } = require('./commands/backup');
 const { personality: personalityConstants } = require('./constants');
 
 // Import actions
@@ -40,6 +42,7 @@ const handleTextMessage = require('./actions/on_text');
 connectDB()
   .then(() => ensurePersonalityCatalog())
   .then(() => require('./models/user').backfillLastActive())
+  .then(() => backupScheduler.reschedule())
   .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server
@@ -71,6 +74,7 @@ bot.command('personality_test', personalityCommands.personalityTestCommand);
 bot.command('my_personality', (ctx) => personalityCommands.myPersonalityCommand(ctx));
 bot.command('talk', talkCommands.talkCommand);
 bot.command('end_talk', talkCommands.endTalkCommand);
+bot.command('backup', backupNowCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
 bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
@@ -85,6 +89,7 @@ bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityT
 bot.hears(common.MENU_BUTTONS.MY_PERSONALITY, (ctx) => personalityCommands.myPersonalityCommand(ctx))
 bot.hears(common.MENU_BUTTONS.TALK, talkCommands.talkCommand)
 bot.hears(common.MENU_BUTTONS.END_TALK, talkCommands.endTalkCommand)
+bot.hears(common.MENU_BUTTONS.BACKUP_NOW, backupNowCommand)
 
 
 
@@ -119,6 +124,7 @@ const BOT_COMMANDS = [
   { command: 'set_private', description: 'Make your mood private' },
   { command: 'set_openai_key', description: 'Add your OpenAI key for AI insights' },
   { command: 'remove_openai_key', description: 'Remove your OpenAI key' },
+  { command: 'backup', description: 'Admins: send a database backup now' },
   { command: 'help', description: 'List all commands' },
 ];
 

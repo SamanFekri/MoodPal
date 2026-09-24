@@ -18,6 +18,7 @@ Here are some commands you can use:
 /my_personality - See your personality profile
 /talk - Talk things through with the AI companion (needs your OpenAI key)
 /end_talk - End the conversation and go back to notes
+/backup - (admins) send a database backup now
 /set_openai_key - Add your own OpenAI key to get AI insights with your weekly report
 /remove_openai_key - Remove your OpenAI key and turn off AI insights
 `;
@@ -135,3 +136,26 @@ export const talkSafetyFooterMsg = () => `
 🛟 <b>If you might be in danger, please don't wait on a bot.</b> Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.`
 export const talkAboutNoteMsg = () => `💬 Want to talk about it?`
 export const talkReminderMsg = () => `<i>🤖 Reminder: I'm an AI, not a therapist, and I can be wrong.</i>`
+
+// ---- database backup (admins) ----
+export const backupStartedMsg = () => `💾 Building the backup and uploading it…`
+export const backupDoneMsg = (r) => `
+✅ <b>Backup sent.</b>
+
+📦 ${r.total_parts} file${r.total_parts === 1 ? '' : 's'} · ${r.total_documents} documents
+🗂 ${formatBytes(r.bytes)} uploaded
+`
+export const backupPartialMsg = (r) => `
+⚠️ <b>Backup partly sent.</b>
+
+${r.parts.filter(p => !p.error).length}/${r.total_parts} files went through. ${r.message}
+`
+export const backupFailedMsg = (message) => `❌ Backup failed: ${message}`
+export const backupNotAdminMsg = () => `ℹ️ This command is for admins only.`
+
+const formatBytes = (n) => {
+  if (!n) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  return `${(n / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
+};

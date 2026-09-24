@@ -9,7 +9,8 @@ export const MENU_BUTTONS = {
   PERSONALITY_TEST: '🧠 Personality Test',
   MY_PERSONALITY: '🧠 My Personality',
   TALK: '💬 Talk',
-  END_TALK: '🛑 End talk'
+  END_TALK: '🛑 End talk',
+  BACKUP_NOW: '💾 Backup now'
 }
 
 // Changes whenever the menu changes, so the bot can push the new keyboard to everyone
@@ -27,6 +28,10 @@ export const makeKeyboardMenu = (ctx) => {
   keyboard.push([MENU_BUTTONS.REPORT, MENU_BUTTONS.SHARE])
   keyboard.push([MENU_BUTTONS.PERSONALITY_TEST, MENU_BUTTONS.MY_PERSONALITY])
   keyboard.push([MENU_BUTTONS.TALK])
+  // admins only: trigger a database backup straight from the chat
+  if (ctx.user.is_admin) {
+    keyboard.push([MENU_BUTTONS.BACKUP_NOW])
+  }
   if(ctx.user.is_mood_private) {
     keyboard.push([MENU_BUTTONS.VISIBILITY_PUBLIC])
   } else {

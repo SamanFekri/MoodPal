@@ -573,6 +573,24 @@
     .model.on .radio::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
     .note-box { font-size: 12px; color: var(--hint); line-height: 1.45; margin-top: 10px; }
 
+    /* ---- Backup ---- */
+    .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 6px 0; }
+    .kv + .kv { border-top: 1px solid rgba(138,143,152,0.12); }
+    .kv .k { color: var(--hint); font-weight: 600; }
+    .kv .v { font-weight: 700; text-align: right; word-break: break-word; }
+    .kv .v.ok { color: var(--fresh); }
+    .kv .v.bad { color: #ff5f6d; }
+    .kv .v.warn { color: #ff9f0a; }
+    .row-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .row-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
+    .time-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .time-row input[type=time] { font: inherit; font-size: 16px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 12px; padding: 10px 12px; }
+    .time-row select { flex: 1; min-width: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 12px; padding: 11px 12px; -webkit-appearance: none; appearance: none; }
+    .file-drop { display: block; border: 2px dashed rgba(138,143,152,0.35); border-radius: 16px; padding: 18px; text-align: center; font-size: 13px; color: var(--hint); font-weight: 600; cursor: pointer; margin-top: 12px; }
+    .file-drop input { display: none; }
+    .file-list { font-size: 12px; color: var(--hint); margin-top: 8px; line-height: 1.5; }
+    .danger-note { font-size: 12px; color: #ff9f0a; font-weight: 600; margin-top: 10px; line-height: 1.4; }
+
     /* ---- Quiz (taking a test in the app) ---- */
     .quiz { position: fixed; inset: 0; z-index: 80; background: var(--bg); display: flex; flex-direction: column; padding: calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
     .quiz-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -820,13 +838,21 @@
           <header class="header">
             <div>
               <p class="greeting">Admin</p>
-              <h1>All moods</h1>
+              <h1>{{ admin.view === 'backup' ? 'Backup' : 'All moods' }}</h1>
             </div>
             <div class="header-right">
-              <span class="pill" v-if="admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
+              <span class="pill" v-if="admin.view === 'users' && admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
             </div>
           </header>
 
+          <div class="filters">
+            <div class="seg grow">
+              <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'">👥 Users</button>
+              <button :class="{ on: admin.view === 'backup' }" @click="showBackup()">💾 Backup</button>
+            </div>
+          </div>
+
+          <template v-if="admin.view === 'users'">
           <div class="search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input v-model="admin.query" @input="searchAdmin" placeholder="Search name, @username or id" autocomplete="off">
@@ -888,6 +914,98 @@
           </template>
           <div v-else-if="admin.error" class="state"><div class="art">⚠️</div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
           <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
+          </template>
+
+          <!-- ---------- Admin · Backup ---------- -->
+          <template v-else>
+            <template v-if="!backup && !backupError">
+              <div class="section" v-for="n in 3" :key="'bsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+            </template>
+            <div v-else-if="!backup" class="state"><div class="art">📡</div><h2>Couldn't load backup settings</h2><p>{{ backupError }}</p><button class="btn" @click="fetchBackup()">Try again</button></div>
+            <template v-else>
+              <section class="section" :style="{ '--i': 0 }">
+                <h3>GotYouBro <span class="sub">{{ backup.connected ? 'connected' : 'not set' }}</span></h3>
+                <div class="note-box">Backups and health pings go to <b>{{ backup.base_url.replace('https://', '') }}</b>, which forwards them to your Telegram. The token is stored encrypted.</div>
+                <div class="keyrow" v-if="backup.connected">
+                  <code>{{ backup.token_hint }}</code>
+                  <button class="btn ghost" style="padding:9px 14px;font-size:13px" :disabled="backupBusy" @click="saveBackup({ token: '' })">Remove</button>
+                </div>
+                <div class="field">
+                  <input v-model="gybToken" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="backup.connected ? 'Paste a new token to replace it' : 'gyb_…'">
+                  <button class="btn" :disabled="backupBusy || !gybToken.trim()" @click="saveBackup({ token: gybToken.trim() })">Save</button>
+                </div>
+                <div class="row-actions">
+                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="testBackup">{{ backupBusy === 'test' ? 'Checking…' : '🔌 Test connection' }}</button>
+                </div>
+              </section>
+
+              <section class="section" :style="{ '--i': 1 }">
+                <div class="share-row">
+                  <div>
+                    <div class="s-title">Daily backup</div>
+                    <div class="s-desc">Zips every collection and uploads it at the time you pick. Larger than {{ formatBytes(backup.backup.max_part_bytes) }} is split into several files.</div>
+                  </div>
+                  <button class="switch" :class="{ on: backup.backup.enabled }" :disabled="backupBusy || !backup.connected" @click="saveBackup({ backup_enabled: !backup.backup.enabled })" role="switch" :aria-checked="backup.backup.enabled"></button>
+                </div>
+                <div class="time-row">
+                  <input type="time" :value="backup.backup.time" @change="saveBackup({ backup_time: $event.target.value })">
+                  <select :value="backup.backup.timezone" @change="saveBackup({ backup_timezone: $event.target.value })">
+                    <option v-for="tz in TIMEZONES" :key="tz" :value="tz">{{ tz }}</option>
+                  </select>
+                </div>
+                <div class="row-actions">
+                  <button class="btn" :disabled="backupBusy || !backup.connected" @click="runBackupNow">{{ backupBusy === 'run' ? 'Backing up…' : '💾 Back up now' }}</button>
+                </div>
+                <div class="kv" v-if="backup.backup.last_at"><span class="k">Last backup</span><span class="v" :class="{ ok: backup.backup.last_status === 'success', bad: backup.backup.last_status === 'failed', warn: backup.backup.last_status === 'partial' }">{{ backup.backup.last_status }} · {{ formatWhen(backup.backup.last_at) }}</span></div>
+                <div class="kv" v-if="backup.backup.last_message"><span class="k">Detail</span><span class="v">{{ backup.backup.last_message }}</span></div>
+                <div class="kv" v-if="backup.backup.last_parts"><span class="k">Size</span><span class="v">{{ backup.backup.last_parts }} file{{ backup.backup.last_parts === 1 ? '' : 's' }} · {{ formatBytes(backup.backup.last_bytes) }}</span></div>
+                <div class="note-box">A backup holds every user's moods, notes and personality data. {{ backup.backup.excluded_collections.join(', ') }} is left out so restoring never overwrites these settings.</div>
+              </section>
+
+              <section class="section" :style="{ '--i': 2 }">
+                <div class="share-row">
+                  <div>
+                    <div class="s-title">Health check</div>
+                    <div class="s-desc">Pings the service on a schedule. If a ping is missed you get an alert on Telegram.</div>
+                  </div>
+                  <button class="switch" :class="{ on: backup.health.enabled }" :disabled="backupBusy || !backup.connected" @click="saveBackup({ health_enabled: !backup.health.enabled })" role="switch" :aria-checked="backup.health.enabled"></button>
+                </div>
+                <div class="time-row">
+                  <select :value="backup.health.interval_minutes" @change="saveBackup({ health_interval_minutes: Number($event.target.value) })">
+                    <option v-for="m in [1, 5, 10, 15, 30, 60, 180, 720, 1440]" :key="m" :value="m">every {{ m < 60 ? m + ' min' : (m / 60) + ' h' }}</option>
+                  </select>
+                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="heartbeatNow">{{ backupBusy === 'heartbeat' ? '…' : '❤️ Ping now' }}</button>
+                </div>
+                <div class="kv" v-if="backup.health.last_at"><span class="k">Last ping</span><span class="v" :class="{ ok: backup.health.last_status === 'HEALTHY', bad: backup.health.last_status === 'ERROR' }">{{ backup.health.last_status }} · {{ formatWhen(backup.health.last_at) }}</span></div>
+                <div class="kv" v-if="backup.health.last_message"><span class="k">Detail</span><span class="v">{{ backup.health.last_message }}</span></div>
+              </section>
+
+              <section class="section" :style="{ '--i': 3 }">
+                <h3>Restore</h3>
+                <div class="note-box">Pick the zip files from a backup. Several parts can be selected at once; they are applied one after another.</div>
+                <label class="file-drop">
+                  <input type="file" accept=".zip,application/zip" multiple @change="pickRestoreFiles($event)">
+                  {{ restoreFiles.length ? '📦 ' + restoreFiles.length + ' file' + (restoreFiles.length === 1 ? '' : 's') + ' selected' : '📂 Choose backup files' }}
+                </label>
+                <div class="file-list" v-if="restoreFiles.length">{{ restoreFiles.map(f => f.name).join(', ') }}</div>
+                <div class="time-row">
+                  <select v-model="restoreMode">
+                    <option value="merge">Merge (keep anything newer)</option>
+                    <option value="replace">Replace (empty each collection first)</option>
+                  </select>
+                </div>
+                <div class="row-actions">
+                  <button class="btn ghost" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(true)">{{ backupBusy === 'dry' ? 'Checking…' : '🔎 Preview' }}</button>
+                  <button class="btn" :class="{ danger: restoreMode === 'replace' }" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(false)">{{ backupBusy === 'restore' ? 'Restoring…' : '⬆️ Restore' }}</button>
+                </div>
+                <div class="danger-note" v-if="restoreMode === 'replace'">Replace deletes everything in each collection the backup contains before inserting. This cannot be undone.</div>
+                <template v-if="restoreResult">
+                  <div class="kv"><span class="k">{{ restoreResult.dry_run ? 'Preview' : 'Restored' }}</span><span class="v">{{ restoreResult.documents }} documents · {{ restoreResult.parts }} file{{ restoreResult.parts === 1 ? '' : 's' }}</span></div>
+                  <div class="kv" v-for="(v, name) in restoreResult.collections" :key="name"><span class="k">{{ name }}</span><span class="v">{{ v.documents }}</span></div>
+                </template>
+              </section>
+            </template>
+          </template>
         </div>
         <!-- ---------- Logs (admin) ---------- -->
         <div v-else-if="tab === 'logs'" key="logs">
@@ -1255,6 +1373,14 @@
           loadingPersonality: false,
           savingSharing: false,
           personalityAnimKey: 'p0',
+          backup: null,
+          backupError: '',
+          backupBusy: '',
+          gybToken: '',
+          restoreFiles: [],
+          restoreMode: 'merge',
+          restoreResult: null,
+          TIMEZONES: ['UTC', 'Europe/Berlin', 'Europe/London', 'Europe/Istanbul', 'Asia/Tehran', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'America/New_York', 'America/Los_Angeles'],
           settings: null,
           settingsError: '',
           settingsBusy: false,
@@ -1263,7 +1389,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { query: '', trait: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', query: '', trait: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
           fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
@@ -1756,6 +1882,115 @@
           if (key === 'admin' && !this.admin.loading) this.fetchAdmin();
           if (key === 'logs' && !this.logs.loading) this.fetchLogs();
           if (key === 'settings') this.fetchSettings();
+        },
+
+        // ----- backup / restore / health (admin) -----
+        showBackup() { this.admin.view = 'backup'; this.haptic('light'); if (!this.backup) this.fetchBackup(); },
+        async fetchBackup() {
+          try {
+            this.backup = await this.api('/api/admin/backup');
+            this.backupError = '';
+          } catch (error) {
+            this.backupError = error.status === 403 ? 'This account is not an admin.' : "Couldn't reach the server.";
+          }
+        },
+        async saveBackup(patch) {
+          if (this.backupBusy) return;
+          this.haptic('medium');
+          this.backupBusy = 'save';
+          try {
+            this.backup = await this.api('/api/admin/backup/settings', { method: 'POST', body: patch });
+            if (patch.token !== undefined) { this.gybToken = ''; this.showToast(patch.token ? 'Token saved' : 'Token removed'); }
+          } catch (error) {
+            const reason = { invalid_time: 'That time is not valid', invalid_timezone: 'Unknown timezone', invalid_interval: 'Interval must be 1 to 1440 minutes', invalid_token: 'That token looks too short', invalid_base_url: 'That URL is not valid' }[error.message];
+            this.showToast(reason || "Couldn't save the settings");
+            this.fetchBackup();
+          } finally {
+            this.backupBusy = '';
+          }
+        },
+        async testBackup() {
+          if (this.backupBusy) return;
+          this.haptic('medium');
+          this.backupBusy = 'test';
+          try {
+            const data = await this.api('/api/admin/backup/test', { method: 'POST' });
+            this.showToast(`Connected: ${data.service?.name || data.service?.id || 'ok'}`);
+          } catch (error) {
+            this.showToast(error.status === 400 ? 'Add a token first' : 'The service refused the token');
+          } finally {
+            this.backupBusy = '';
+          }
+        },
+        async runBackupNow() {
+          if (this.backupBusy) return;
+          this.haptic('medium');
+          this.backupBusy = 'run';
+          try {
+            const r = await this.api('/api/admin/backup/run', { method: 'POST' });
+            this.showToast(r.status === 'success' ? `Backed up ${r.total_documents} documents in ${r.total_parts} file${r.total_parts === 1 ? '' : 's'}` : `Backup ${r.status}: ${r.message}`);
+          } catch (error) {
+            this.showToast("Backup failed, check the last status");
+          } finally {
+            this.backupBusy = '';
+            this.fetchBackup();
+          }
+        },
+        async heartbeatNow() {
+          if (this.backupBusy) return;
+          this.haptic('light');
+          this.backupBusy = 'heartbeat';
+          try {
+            const r = await this.api('/api/admin/backup/heartbeat', { method: 'POST' });
+            this.showToast(`Health: ${r.healthStatus || 'sent'}`);
+          } catch (error) {
+            this.showToast("The ping did not go through");
+          } finally {
+            this.backupBusy = '';
+            this.fetchBackup();
+          }
+        },
+        pickRestoreFiles(event) {
+          this.restoreFiles = [...(event.target.files || [])];
+          this.restoreResult = null;
+        },
+        async doRestore(dryRun) {
+          if (this.backupBusy || !this.restoreFiles.length) return;
+          if (!dryRun && this.restoreMode === 'replace' && !confirm('Replace deletes the current documents in every collection this backup contains. Continue?')) return;
+          this.haptic('medium');
+          this.backupBusy = dryRun ? 'dry' : 'restore';
+          const totals = { dry_run: dryRun, parts: 0, documents: 0, collections: {} };
+          try {
+            for (const file of this.restoreFiles) {
+              const buffer = await file.arrayBuffer();
+              const res = await fetch(`/api/admin/backup/restore?mode=${this.restoreMode}${dryRun ? '&dry_run=1' : ''}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/zip', 'X-Telegram-Init-Data': this.tg?.initData || '' },
+                body: buffer,
+              });
+              const data = await res.json().catch(() => null);
+              if (!res.ok) throw new Error(data?.message || `${file.name} was rejected`);
+              totals.parts += data.parts;
+              totals.documents += data.documents;
+              for (const [name, v] of Object.entries(data.collections)) {
+                totals.collections[name] = totals.collections[name] || { documents: 0 };
+                totals.collections[name].documents += v.documents;
+              }
+            }
+            this.restoreResult = totals;
+            this.showToast(dryRun ? `Preview: ${totals.documents} documents` : `Restored ${totals.documents} documents`);
+            if (!dryRun) { this.destroyStickers(); this.loaded = {}; this.failed = {}; this.fetchAdmin(); }
+          } catch (error) {
+            this.showToast(error.message.slice(0, 80));
+          } finally {
+            this.backupBusy = '';
+          }
+        },
+        formatBytes(n) {
+          if (!n) return '0 B';
+          const units = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+          return `${(n / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
         },
 
         // ----- settings -----

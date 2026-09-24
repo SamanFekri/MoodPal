@@ -186,6 +186,104 @@ describe('mini app API', () => {
     });
   });
 
+  describe('backup and health (admin)', () => {
+    const AdmZip = require('adm-zip');
+    const AppConfig = require('../../src/models/app_config');
+    const backupController = require('../../src/controllers/backup');
+    const backupService = require('../../src/backup/service');
+
+    test('settings: token is masked, time/timezone/interval are validated', async () => {
+      assert.equal((await api('/api/admin/backup', { as: alice })).status, 403, 'non-admins are refused');
+
+      let r = await api('/api/admin/backup', { as: admin });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.connected, false);
+      assert.equal(r.body.backup.time, '03:30');
+      assert.equal(r.body.backup.max_part_bytes, 45 * 1024 * 1024);
+      assert.deepEqual(r.body.backup.excluded_collections, ['app_config']);
+
+      r = await api('/api/admin/backup/settings', { as: admin, method: 'POST', body: {
+        token: 'gyb_live_abcdef123456', backup_enabled: true, backup_time: '2:05', backup_timezone: 'Europe/Berlin',
+        health_enabled: true, health_interval_minutes: 10,
+      } });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.connected, true);
+      assert.equal(r.body.token_hint, 'gyb_liv…3456');
+      assert.ok(!JSON.stringify(r.body).includes('abcdef123456'), 'the full token is never returned');
+      assert.equal(r.body.backup.time, '02:05', 'a short hour is normalised');
+      assert.equal(r.body.backup.timezone, 'Europe/Berlin');
+      assert.equal(r.body.health.interval_minutes, 10);
+      assert.equal(await AppConfig.getToken(), 'gyb_live_abcdef123456', 'stored decryptable');
+      const raw = await AppConfig.findOne({ key: 'main' }).select('+gyb_token');
+      assert.ok(!raw.gyb_token.includes('abcdef123456'), 'stored encrypted at rest');
+
+      for (const [field, value] of [['backup_time', '25:00'], ['backup_time', 'noon'], ['backup_timezone', 'Mars/Olympus'], ['health_interval_minutes', 0], ['health_interval_minutes', 9999], ['base_url', 'not-a-url']]) {
+        assert.equal((await api('/api/admin/backup/settings', { as: admin, method: 'POST', body: { [field]: value } })).status, 400, `${field}=${value}`);
+      }
+      // a rejected field leaves the stored value untouched
+      assert.equal((await api('/api/admin/backup', { as: admin })).body.backup.time, '02:05');
+    });
+
+    test('test connection reports the service, or the API error when it fails', async () => {
+      const original = backupController.makeClient;
+      try {
+        assert.equal((await api('/api/admin/backup/test', { as: admin, method: 'POST' })).status, 400, 'no token yet');
+        await api('/api/admin/backup/settings', { as: admin, method: 'POST', body: { token: 'gyb_live_abcdef123456' } });
+
+        backupController.makeClient = () => ({ describeService: async () => ({ id: 'svc_1', name: 'MoodPal' }) });
+        let r = await api('/api/admin/backup/test', { as: admin, method: 'POST' });
+        assert.equal(r.status, 200);
+        assert.deepEqual(r.body.service, { id: 'svc_1', name: 'MoodPal' });
+
+        backupController.makeClient = () => ({ describeService: async () => { throw Object.assign(new Error('Invalid token'), { code: 'INVALID_TOKEN', status: 401 }); } });
+        r = await api('/api/admin/backup/test', { as: admin, method: 'POST' });
+        assert.equal(r.status, 502);
+        assert.equal(r.body.code, 'INVALID_TOKEN');
+      } finally {
+        backupController.makeClient = original;
+      }
+    });
+
+    test('restore accepts a zip part, supports dry run, and rejects junk', async () => {
+      await Mood.create({ user: carol._id, mood: { code: 'happy', emoji: '😊', name: 'Happy' }, note: 'to restore' });
+      const { parts } = await backupService.buildParts();
+      const zip = parts[0].buffer;
+      const post = (body, query = '') => fetch(`${base}/api/admin/backup/restore${query}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/zip', 'X-Telegram-Init-Data': signInitData({ id: admin.id, first_name: admin.first_name }) },
+        body,
+      }).then(async r => ({ status: r.status, body: await r.json().catch(() => null) }));
+
+      let r = await post(zip, '?dry_run=1');
+      assert.equal(r.status, 200);
+      assert.equal(r.body.dry_run, true);
+      assert.ok(r.body.collections.moods.documents >= 1);
+
+      await Mood.deleteMany({});
+      r = await post(zip);
+      assert.equal(r.status, 200);
+      assert.equal(r.body.mode, 'merge');
+      assert.ok(await Mood.findOne({ note: 'to restore' }), 'the mood came back');
+
+      assert.equal((await post(Buffer.from('junk'))).status, 400);
+      assert.equal((await post(Buffer.alloc(0))).status, 400);
+      // non-admins cannot restore
+      const asAlice = await fetch(`${base}/api/admin/backup/restore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/zip', 'X-Telegram-Init-Data': signInitData({ id: alice.id, first_name: alice.first_name }) },
+        body: zip,
+      });
+      assert.equal(asAlice.status, 403);
+    });
+
+    test('run and heartbeat surface upstream failures instead of pretending they worked', async () => {
+      assert.equal((await api('/api/admin/backup/run', { as: admin, method: 'POST' })).status, 502, 'no token configured');
+      const r = await api('/api/admin/backup/heartbeat', { as: admin, method: 'POST' });
+      assert.equal(r.status, 502);
+      assert.equal((await AppConfig.get()).last_heartbeat_status, 'ERROR');
+    });
+  });
+
   describe('taking a test in the mini app', () => {
     test('start, answer every question, get the profile back; resume and cancel work', async () => {
       assert.deepEqual((await api('/api/me/personality/session', { as: alice })).body, { session: null });

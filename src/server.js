@@ -56,6 +56,14 @@ app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.l
 app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
 app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAdmin, controllers.admin.userPersonality);
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
+// backup / restore / health (GotYouBro)
+app.get('/api/admin/backup', requireWebAppUser, requireAdmin, controllers.backup.getSettings);
+app.post('/api/admin/backup/settings', requireWebAppUser, requireAdmin, controllers.backup.saveSettings);
+app.post('/api/admin/backup/test', requireWebAppUser, requireAdmin, controllers.backup.testConnection);
+app.post('/api/admin/backup/run', requireWebAppUser, requireAdmin, controllers.backup.runNow);
+app.post('/api/admin/backup/heartbeat', requireWebAppUser, requireAdmin, controllers.backup.heartbeatNow);
+// one zip part per request; the body is the raw file
+app.post('/api/admin/backup/restore', express.raw({ type: ['application/zip', 'application/octet-stream'], limit: '50mb' }), requireWebAppUser, requireAdmin, controllers.backup.restore);
 app.post('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.delete('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.post('/api/admin/users/:telegramId/block', requireWebAppUser, requireAdmin, controllers.admin.setBlocked);

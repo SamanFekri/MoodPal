@@ -5,6 +5,7 @@ const personality = require('./personality');
 const admin = require('./admin');
 const mood = require('./mood');
 const settings = require('./settings');
+const backup = require('./backup');
 
 module.exports = {
   embed: embed,
@@ -13,5 +14,6 @@ module.exports = {
   personality: personality,
   admin: admin,
   mood: mood,
-  settings: settings
+  settings: settings,
+  backup: backup
 }
