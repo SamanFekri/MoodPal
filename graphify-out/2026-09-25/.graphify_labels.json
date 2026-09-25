@@ -7,8 +7,8 @@
   "5": "bot.js",
   "6": "models/user.js",
   "7": "personality.constant.js",
-  "8": "context.js",
-  "9": "llm.js",
+  "8": "catalog.seed.js",
+  "9": "auth.js",
   "10": "service.test.js",
   "11": "constants/index.js",
   "12": "Cache",
@@ -48,7 +48,7 @@
   "46": "src/db.js",
   "47": "controllers/index.js",
   "48": "embed.js",
-  "49": "catalog.seed.js",
+  "49": ".recordLLMUpdates",
   "50": "personality_test_session.js",
   "51": "personality_trait.js",
   "52": "formatWhen",
@@ -57,6 +57,9 @@
   "55": "models/mood.js",
   "56": "menu.middleware.js",
   "57": "app_config.js",
-  "58": "personality_test.js",
-  "59": "personality_test_question.js"
+  "58": "menu.test.js",
+  "59": "ChatService",
+  "60": "chat/service.js",
+  "61": "personality_observation.js",
+  "62": "personality_profile.js"
 }
