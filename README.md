@@ -93,6 +93,9 @@ Mood notes keep working exactly as before: outside a conversation, text is saved
 ### ⚙️ Settings (mini app)
 A *Settings* tab lets each user add their own OpenAI key (verified once, stored encrypted, shown masked) and pick the model Talk and the weekly insights use. The default is `gpt-5.6`; any model id can be typed in.
 
+### 🕸 Follow graph
+*Admin → Graph* draws who can see whose mood: one node per person (their latest mood as the emoji, size by how many connections they have, a dashed red ring if blocked) and an arrow from a follower to the person they watch. Tapping someone focuses them: outgoing links turn blue, incoming green, everyone else dims, and a card lists both sides by name with a shortcut to their profile. The layout is a small deterministic force simulation drawn as inline SVG, so the same data always produces the same picture and no charting library is needed. Large graphs are capped to the busiest 400 people.
+
 ### 💾 Backup, restore and health checks
 The *Admin → Backup* sub-tab talks to [GotYouBro](https://gotyoubro.samanfekri.me/api/docs), which forwards files and alerts to Telegram.
 

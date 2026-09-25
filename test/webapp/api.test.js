@@ -186,6 +186,59 @@ describe('mini app API', () => {
     });
   });
 
+  describe('follow graph (admin)', () => {
+    test('returns who follows whose mood, with degrees and the latest mood per node', async () => {
+      assert.equal((await api('/api/admin/graph', { as: alice })).status, 403, 'non-admins are refused');
+
+      // alice -> bob already exists from the fixture; add bob -> carol and carol -> bob
+      await Share.createShare(bob._id, carol._id);
+      await Share.createShare(carol._id, bob._id);
+      // a disabled share must not appear
+      await Share.createShare(admin._id, carol._id);
+      await Share.disableShare(admin._id, carol._id);
+
+      const r = await api('/api/admin/graph', { as: admin });
+      assert.equal(r.status, 200);
+      const edges = r.body.edges.map(e => `${e.source}->${e.target}`).sort();
+      assert.deepEqual(edges, ['1->2', '2->3', '3->2'], 'only active shares, pointing follower -> followed');
+
+      const byId = Object.fromEntries(r.body.nodes.map(n => [n.id, n]));
+      assert.deepEqual(Object.keys(byId).map(Number).sort(), [1, 2, 3], 'admin has no active share, so is not a node');
+      assert.equal(byId[2].followers, 2, 'bob is followed by alice and carol');
+      assert.equal(byId[2].following, 1);
+      assert.equal(byId[1].following, 1);
+      assert.equal(byId[1].followers, 0);
+      assert.equal(byId[2].mood.code, 'happy', 'nodes carry the latest mood');
+      assert.equal(byId[2].username, 'bobby');
+      assert.equal(byId[3].mood, null, 'carol has no mood yet');
+      assert.ok(!JSON.stringify(r.body).includes('sunny'), 'mood notes are not part of the graph');
+
+      assert.equal(r.body.stats.total_shares, 3);
+      assert.equal(r.body.stats.users_in_graph, 3);
+      assert.equal(r.body.stats.total_users, 4);
+      assert.equal(r.body.stats.truncated, false);
+    });
+
+    test('an empty graph is valid, and a big graph is capped to the busiest users', async () => {
+      await Share.deleteMany({});                       // the fixture seeds alice -> bob
+      const empty = await api('/api/admin/graph', { as: admin });
+      assert.deepEqual(empty.body.edges, []);
+      assert.deepEqual(empty.body.nodes, []);
+      assert.equal(empty.body.stats.truncated, false);
+
+      // carol follows everyone, so she is the busiest node and must survive truncation
+      const extras = [];
+      for (let i = 0; i < 12; i++) extras.push(await User.create({ id: 200 + i, first_name: `N${i}` }));
+      for (const u of extras) await Share.createShare(carol._id, u._id);
+
+      const r = await api('/api/admin/graph?limit=10', { as: admin });
+      assert.equal(r.body.nodes.length, 10);
+      assert.equal(r.body.stats.truncated, true);
+      assert.ok(r.body.nodes.some(n => n.id === 3), 'the hub is kept');
+      assert.ok(r.body.edges.every(e => r.body.nodes.some(n => n.id === e.source) && r.body.nodes.some(n => n.id === e.target)), 'no dangling edges');
+    });
+  });
+
   describe('backup and health (admin)', () => {
     const AdmZip = require('adm-zip');
     const AppConfig = require('../../src/models/app_config');

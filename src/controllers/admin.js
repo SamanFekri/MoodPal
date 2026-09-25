@@ -1,4 +1,5 @@
 // Admin-only mini app API (req.user.is_admin, set by hand in the database).
+const mongoose = require('mongoose');
 const User = require('../models/user');
 const Mood = require('../models/mood');
 const Share = require('../models/share');
@@ -178,10 +179,74 @@ const userPersonality = async (req, res) => {
   res.json({ user: publicUser(user), shared: Boolean(user.is_personality_shared), profile: await personalityService.getProfileView(user._id) });
 };
 
+// GET /api/admin/graph?limit= — who follows whose mood.
+// Nodes are the users involved in at least one active share; an edge points from the
+// follower to the person whose mood they can see.
+const MAX_GRAPH_NODES = 400;
+const followGraph = async (req, res) => {
+  const limit = Math.min(MAX_GRAPH_NODES, Math.max(10, parseInt(req.query.limit, 10) || MAX_GRAPH_NODES));
+
+  const shares = await Share.find({ disabled: false }).select('follower followed').lean();
+  // rank users by how many edges they touch, so a truncated graph keeps the busiest part
+  const degree = new Map();
+  for (const s of shares) {
+    for (const side of [String(s.follower), String(s.followed)]) degree.set(side, (degree.get(side) || 0) + 1);
+  }
+  const keep = new Set([...degree.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id));
+  const edges = shares.filter(s => keep.has(String(s.follower)) && keep.has(String(s.followed)));
+
+  const ids = [...keep].map(id => new mongoose.Types.ObjectId(id));
+  const [users, latestMoods, totalUsers] = await Promise.all([
+    User.find({ _id: { $in: ids } }).select('id first_name last_name username is_admin is_blocked is_mood_private').lean(),
+    Mood.aggregate([
+      { $match: { user: { $in: ids } } },
+      { $sort: { user: 1, timestamp: -1 } },
+      { $group: { _id: '$user', mood: { $first: '$mood' }, timestamp: { $first: '$timestamp' } } },
+    ]),
+    User.countDocuments({ is_bot: { $ne: true } }),
+  ]);
+
+  const moodByUser = new Map(latestMoods.map(m => [String(m._id), m]));
+  const followers = new Map();
+  const following = new Map();
+  for (const e of edges) {
+    following.set(String(e.follower), (following.get(String(e.follower)) || 0) + 1);
+    followers.set(String(e.followed), (followers.get(String(e.followed)) || 0) + 1);
+  }
+
+  const nodes = users.map(u => {
+    const last = moodByUser.get(String(u._id));
+    return {
+      id: u.id,
+      ...publicUser(u),
+      is_admin: Boolean(u.is_admin),
+      is_blocked: Boolean(u.is_blocked),
+      is_mood_private: Boolean(u.is_mood_private),
+      followers: followers.get(String(u._id)) || 0,
+      following: following.get(String(u._id)) || 0,
+      mood: last ? { name: last.mood.name, code: last.mood.code, emoji: last.mood.emoji, timestamp: last.timestamp } : null,
+    };
+  });
+
+  const byObjectId = new Map(users.map(u => [String(u._id), u.id]));
+  res.json({
+    nodes,
+    edges: edges
+      .map(e => ({ source: byObjectId.get(String(e.follower)), target: byObjectId.get(String(e.followed)) }))
+      .filter(e => e.source !== undefined && e.target !== undefined),
+    stats: {
+      users_in_graph: nodes.length,
+      total_users: totalUsers,
+      total_shares: shares.length,
+      truncated: degree.size > keep.size,
+    },
+  });
+};
+
 // GET /api/admin/traits — catalog for the filter UI
 const listTraits = async (req, res) => {
   const traits = await PersonalityTrait.find({ enabled: true }).sort({ category: 1, name: 1 }).select('key name category').lean();
   res.json({ traits: traits.map(t => ({ key: t.key, name: t.name, category: t.category })) });
 };
 
-module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, listTraits };
+module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, listTraits, followGraph };

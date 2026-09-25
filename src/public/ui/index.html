@@ -573,6 +573,29 @@
     .model.on .radio::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
     .note-box { font-size: 12px; color: var(--hint); line-height: 1.45; margin-top: 10px; }
 
+    /* ---- Follow graph ---- */
+    .graph-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
+    .graph-card svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
+    .g-edge { stroke: rgba(138,143,152,0.45); stroke-width: 1.4; transition: stroke .2s, opacity .2s; }
+    .g-edge.in { stroke: var(--fresh); stroke-width: 2.4; }
+    .g-edge.out { stroke: var(--accent); stroke-width: 2.4; }
+    .g-edge.dim { opacity: .12; }
+    .g-node { cursor: pointer; }
+    .g-node circle { fill: var(--card); stroke: rgba(138,143,152,0.5); stroke-width: 1.5; transition: stroke .2s, opacity .2s; }
+    .g-node.sel circle { stroke: var(--accent); stroke-width: 3; }
+    .g-node.blocked circle { stroke: #ff5f6d; stroke-dasharray: 3 2; }
+    .g-node.dim { opacity: .25; }
+    .g-node text.emoji { font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .g-node text.name { font-size: 7px; font-weight: 700; text-anchor: middle; fill: var(--text); pointer-events: none; }
+    .g-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--hint); font-weight: 600; padding: 8px 4px 2px; }
+    .g-legend i { font-style: normal; }
+    .g-legend .sw { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+    .g-sel { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 12px 14px; margin-bottom: 10px; animation: fade-up .35s var(--ease-out) both; }
+    .g-sel .t { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .g-sel .s { font-size: 12px; color: var(--hint); font-weight: 600; margin-top: 2px; }
+    .g-sel .lists { font-size: 12px; margin-top: 8px; line-height: 1.5; }
+    .g-sel .lists b { font-weight: 700; }
+
     /* ---- Backup ---- */
     .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 6px 0; }
     .kv + .kv { border-top: 1px solid rgba(138,143,152,0.12); }
@@ -838,7 +861,7 @@
           <header class="header">
             <div>
               <p class="greeting">Admin</p>
-              <h1>{{ admin.view === 'backup' ? 'Backup' : 'All moods' }}</h1>
+              <h1>{{ { backup: 'Backup', graph: 'Follow graph' }[admin.view] || 'All moods' }}</h1>
             </div>
             <div class="header-right">
               <span class="pill" v-if="admin.view === 'users' && admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
@@ -848,6 +871,7 @@
           <div class="filters">
             <div class="seg grow">
               <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'">👥 Users</button>
+              <button :class="{ on: admin.view === 'graph' }" @click="showGraph()">🕸 Graph</button>
               <button :class="{ on: admin.view === 'backup' }" @click="showBackup()">💾 Backup</button>
             </div>
           </div>
@@ -914,6 +938,60 @@
           </template>
           <div v-else-if="admin.error" class="state"><div class="art">⚠️</div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
           <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
+          </template>
+
+          <!-- ---------- Admin · Follow graph ---------- -->
+          <template v-else-if="admin.view === 'graph'">
+            <template v-if="!graph && !graphError">
+              <div class="section" :style="{ '--i': 1 }"><div class="shimmer sk-line" style="width:40%;margin-top:0"></div><div class="shimmer" style="height:280px;border-radius:16px;margin-top:10px"></div></div>
+            </template>
+            <div v-else-if="!graph" class="state"><div class="art">📡</div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">Try again</button></div>
+            <div v-else-if="graph.nodes.length === 0" class="state"><div class="art">🕸</div><h2>Nobody follows anyone yet</h2><p>When people share their mood with each other, the connections show up here.</p></div>
+            <template v-else>
+              <div class="g-sel" v-if="graphSelected">
+                <div class="t">{{ graphSelected.mood ? graphSelected.mood.emoji : '👤' }} {{ graphSelected.fullname || 'Unnamed' }}<span class="u" v-if="graphSelected.username" style="font-size:12px;color:var(--hint);font-weight:500">@{{ graphSelected.username }}</span></div>
+                <div class="s">{{ graphSelected.mood ? graphSelected.mood.name + ' · ' + formatWhen(graphSelected.mood.timestamp) : 'No mood yet' }}</div>
+                <div class="lists">
+                  <div><b>Sees the mood of ({{ graphSelected.following }}):</b> {{ graphFollowingNames.join(', ') || '—' }}</div>
+                  <div><b>Watched by ({{ graphSelected.followers }}):</b> {{ graphFollowerNames.join(', ') || '—' }}</div>
+                </div>
+                <div class="row-actions">
+                  <button class="btn ghost" @click="openAdminUserById(graphSelected.id)">Open profile</button>
+                  <button class="btn ghost" @click="graphSelectedId = null">Clear</button>
+                </div>
+              </div>
+
+              <div class="graph-card">
+                <!-- .camel: an in-DOM template lowercases bound attribute names, and SVG needs viewBox exactly -->
+                <svg :view-box.camel="`0 0 ${graphLayout.width} ${graphLayout.height}`" @click="graphSelectedId = null">
+                  <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(138,143,152,0.6)"></path>
+                    </marker>
+                  </defs>
+                  <line v-for="(e, i) in graphLayout.edges" :key="'e' + i"
+                        class="g-edge" :class="edgeClass(e)"
+                        :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2" marker-end="url(#arrow)"></line>
+                  <g v-for="n in graphLayout.nodes" :key="n.id" class="g-node"
+                     :class="{ sel: graphSelectedId === n.id, blocked: n.is_blocked, dim: graphSelectedId && graphSelectedId !== n.id && !graphNeighbours.has(n.id) }"
+                     @click.stop="graphSelectedId = graphSelectedId === n.id ? null : n.id">
+                    <circle :cx="n.x" :cy="n.y" :r="n.r"></circle>
+                    <text class="emoji" :x="n.x" :y="n.y">{{ n.mood ? n.mood.emoji : '👤' }}</text>
+                    <text class="name" :x="n.x" :y="n.y + n.r + 7">{{ n.short }}</text>
+                  </g>
+                </svg>
+                <div class="g-legend">
+                  <span><i class="sw" style="background:var(--accent)"></i>sees their mood</span>
+                  <span><i class="sw" style="background:var(--fresh)"></i>is watched by</span>
+                  <span>⭕️ dashed = blocked</span>
+                  <span>tap a person to focus</span>
+                </div>
+              </div>
+
+              <div class="kv"><span class="k">In this graph</span><span class="v">{{ graph.stats.users_in_graph }} of {{ graph.stats.total_users }} users · {{ graph.edges.length }} connections</span></div>
+              <div class="kv" v-if="graph.stats.truncated"><span class="k">Note</span><span class="v warn">showing the busiest {{ graph.stats.users_in_graph }} people</span></div>
+              <div class="row-actions"><button class="btn ghost" :disabled="graphBusy" @click="fetchGraph()">{{ graphBusy ? 'Loading…' : '↻ Refresh' }}</button></div>
+            </template>
           </template>
 
           <!-- ---------- Admin · Backup ---------- -->
@@ -1262,6 +1340,95 @@
     };
     const CATEGORY_HUES = { big_five: 265, big_five_facet: 290, communication: 200, emotional_style: 340, thinking_style: 160, behavioral: 30 };
 
+    // Force-directed layout for the admin follow graph. Deterministic (no randomness, so
+    // the same data always draws the same picture) and dependency-free.
+    function layoutGraph(nodes, edges) {
+      const n = nodes.length;
+      const width = 360;
+      const height = Math.max(260, Math.min(520, 150 + n * 12));
+      if (n === 0) return { width, height, nodes: [], edges: [] };
+
+      const cx = width / 2, cy = height / 2;
+      const radius = Math.min(width, height) * 0.36;
+      const pos = nodes.map((node, i) => {
+        const angle = (i / n) * Math.PI * 2;
+        return { id: node.id, x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+      });
+      const index = new Map(pos.map((p, i) => [p.id, i]));
+      const links = edges.map(e => [index.get(e.source), index.get(e.target)]).filter(([a, b]) => a !== undefined && b !== undefined);
+
+      const iterations = n < 2 ? 0 : Math.max(60, Math.min(220, Math.round(6000 / Math.max(4, n))));
+      const area = width * height;
+      const k = Math.sqrt(area / n) * 0.62;          // ideal edge length
+      for (let it = 0; it < iterations; it++) {
+        const temperature = (1 - it / iterations) * k * 0.55;
+        const dx = new Array(n).fill(0), dy = new Array(n).fill(0);
+        // repulsion between every pair
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            let vx = pos[i].x - pos[j].x, vy = pos[i].y - pos[j].y;
+            let dist = Math.hypot(vx, vy) || 0.01;
+            const force = (k * k) / dist;
+            vx = (vx / dist) * force; vy = (vy / dist) * force;
+            dx[i] += vx; dy[i] += vy; dx[j] -= vx; dy[j] -= vy;
+          }
+        }
+        // attraction along edges
+        for (const [a, b] of links) {
+          let vx = pos[a].x - pos[b].x, vy = pos[a].y - pos[b].y;
+          const dist = Math.hypot(vx, vy) || 0.01;
+          const force = (dist * dist) / k;
+          vx = (vx / dist) * force; vy = (vy / dist) * force;
+          dx[a] -= vx; dy[a] -= vy; dx[b] += vx; dy[b] += vy;
+        }
+        for (let i = 0; i < n; i++) {
+          const dist = Math.hypot(dx[i], dy[i]) || 0.01;
+          const step = Math.min(dist, temperature);
+          pos[i].x += (dx[i] / dist) * step + (cx - pos[i].x) * 0.012;   // gentle pull to centre
+          pos[i].y += (dy[i] / dist) * step + (cy - pos[i].y) * 0.012;
+        }
+      }
+
+      // scale to fill the frame, leaving room for the circle radius and the name under it
+      const radiusOf = (node) => 9 + Math.min(7, (node.followers + node.following) * 1.2);
+      const maxR = Math.max(...nodes.map(radiusOf));
+      const padX = maxR + 6, padTop = maxR + 6, padBottom = maxR + 18;
+      const xs = pos.map(p => p.x), ys = pos.map(p => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      const spanX = Math.max(1, maxX - minX), spanY = Math.max(1, maxY - minY);
+      const boxW = width - padX * 2, boxH = height - padTop - padBottom;
+      const scale = Math.min(boxW / spanX, boxH / spanY);
+      // centre whatever is left over, so the drawing is not pinned to a corner
+      const offsetX = padX + (boxW - spanX * scale) / 2;
+      const offsetY = padTop + (boxH - spanY * scale) / 2;
+      const place = (p) => ({ x: offsetX + (p.x - minX) * scale, y: offsetY + (p.y - minY) * scale });
+
+      const laidOut = nodes.map((node, i) => {
+        const { x, y } = place(pos[i]);
+        const full = node.fullname || ('id ' + node.id);
+        return {
+          ...node, x, y,
+          r: radiusOf(node),
+          short: full.length > 12 ? full.slice(0, 11) + '…' : full,
+        };
+      });
+      const byId = new Map(laidOut.map(node => [node.id, node]));
+      const drawnEdges = edges.map(e => {
+        const a = byId.get(e.source), b = byId.get(e.target);
+        if (!a || !b) return null;
+        // stop the line at the circle edge so the arrow head is visible
+        const vx = b.x - a.x, vy = b.y - a.y;
+        const dist = Math.hypot(vx, vy) || 1;
+        return {
+          source: e.source, target: e.target,
+          x1: a.x + (vx / dist) * a.r, y1: a.y + (vy / dist) * a.r,
+          x2: b.x - (vx / dist) * (b.r + 4), y2: b.y - (vy / dist) * (b.r + 4),
+        };
+      }).filter(Boolean);
+
+      return { width, height, nodes: laidOut, edges: drawnEdges };
+    }
+
     // tgs-player registers window.TgsPlayer asynchronously after it fetches lottie/pako
     function waitForTgsPlayer(timeoutMs = 10000) {
       return new Promise((resolve, reject) => {
@@ -1373,6 +1540,10 @@
           loadingPersonality: false,
           savingSharing: false,
           personalityAnimKey: 'p0',
+          graph: null,
+          graphError: '',
+          graphBusy: false,
+          graphSelectedId: null,
           backup: null,
           backupError: '',
           backupBusy: '',
@@ -1423,6 +1594,24 @@
           return Object.values(groups);
         },
         currentQuestion() { return this.quiz ? this.quiz.session.questions[this.quiz.session.current_index] : null; },
+        // deterministic force-directed layout, computed once per graph payload
+        graphLayout() { return this.graph ? layoutGraph(this.graph.nodes, this.graph.edges) : { width: 360, height: 360, nodes: [], edges: [] }; },
+        graphSelected() { return this.graph?.nodes.find(n => n.id === this.graphSelectedId) || null; },
+        graphNeighbours() {
+          const set = new Set();
+          if (!this.graph || !this.graphSelectedId) return set;
+          for (const e of this.graph.edges) {
+            if (e.source === this.graphSelectedId) set.add(e.target);
+            if (e.target === this.graphSelectedId) set.add(e.source);
+          }
+          return set;
+        },
+        graphName() {
+          const byId = new Map((this.graph?.nodes || []).map(n => [n.id, n.fullname || ('id ' + n.id)]));
+          return (id) => byId.get(id) || ('id ' + id);
+        },
+        graphFollowingNames() { return (this.graph?.edges || []).filter(e => e.source === this.graphSelectedId).map(e => this.graphName(e.target)); },
+        graphFollowerNames() { return (this.graph?.edges || []).filter(e => e.target === this.graphSelectedId).map(e => this.graphName(e.source)); },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
@@ -1882,6 +2071,33 @@
           if (key === 'admin' && !this.admin.loading) this.fetchAdmin();
           if (key === 'logs' && !this.logs.loading) this.fetchLogs();
           if (key === 'settings') this.fetchSettings();
+        },
+
+        // ----- follow graph (admin) -----
+        showGraph() { this.admin.view = 'graph'; this.haptic('light'); if (!this.graph) this.fetchGraph(); },
+        async fetchGraph() {
+          if (this.graphBusy) return;
+          this.graphBusy = true;
+          try {
+            this.graph = await this.api('/api/admin/graph');
+            this.graphError = '';
+            this.graphSelectedId = null;
+          } catch (error) {
+            this.graphError = error.status === 403 ? 'This account is not an admin.' : "Couldn't reach the server.";
+          } finally {
+            this.graphBusy = false;
+          }
+        },
+        edgeClass(e) {
+          if (!this.graphSelectedId) return {};
+          if (e.source === this.graphSelectedId) return { out: true };
+          if (e.target === this.graphSelectedId) return { in: true };
+          return { dim: true };
+        },
+        openAdminUserById(id) {
+          const node = this.graph.nodes.find(n => n.id === id);
+          if (!node) return;
+          this.openAdminUser({ id: node.id, fullname: node.fullname, username: node.username, is_blocked: node.is_blocked, is_admin: node.is_admin, is_friend: false, mood_count: null, last_active_at: node.mood?.timestamp || null, last_mood: node.mood ? { mood: node.mood, note: '', timestamp: node.mood.timestamp, tgs: `/public/tgs/${node.mood.code}.tgs` } : null });
         },
 
         // ----- backup / restore / health (admin) -----

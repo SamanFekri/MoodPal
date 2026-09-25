@@ -56,6 +56,7 @@ app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.l
 app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
 app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAdmin, controllers.admin.userPersonality);
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
+app.get('/api/admin/graph', requireWebAppUser, requireAdmin, controllers.admin.followGraph);
 // backup / restore / health (GotYouBro)
 app.get('/api/admin/backup', requireWebAppUser, requireAdmin, controllers.backup.getSettings);
 app.post('/api/admin/backup/settings', requireWebAppUser, requireAdmin, controllers.backup.saveSettings);
