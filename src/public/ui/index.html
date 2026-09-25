@@ -575,16 +575,67 @@
 
     /* ---- Follow graph ---- */
     .graph-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
-    .graph-card svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
-    .g-edge { stroke: rgba(138,143,152,0.45); stroke-width: 1.4; transition: stroke .2s, opacity .2s; }
+    .g-stage > svg { width: 100%; height: auto; display: block; }
+    .g-stage > svg.pannable { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+    .g-stage > svg.pannable.grabbing { cursor: grabbing; }
+    .g-viewport { transform-origin: 0 0; }
+    .g-viewport.smooth { transition: transform .45s var(--ease-out); }
+    .g-edge { fill: none; stroke: rgba(138,143,152,0.45); stroke-width: 1.4; transition: stroke .2s, opacity .2s; animation: g-fade .6s ease both; }
+    .g-edge.mutual { stroke: rgba(175,82,222,0.5); }
     .g-edge.in { stroke: var(--fresh); stroke-width: 2.4; }
     .g-edge.out { stroke: var(--accent); stroke-width: 2.4; }
-    .g-edge.dim { opacity: .12; }
+    .g-edge.in, .g-edge.out, .g-edge.flow { stroke-dasharray: 6 4; animation: g-flow .9s linear infinite; }
+    .g-edge.dim { opacity: .1; }
     .g-node { cursor: pointer; }
-    .g-node circle { fill: var(--card); stroke: rgba(138,143,152,0.5); stroke-width: 1.5; transition: stroke .2s, opacity .2s; }
-    .g-node.sel circle { stroke: var(--accent); stroke-width: 3; }
-    .g-node.blocked circle { stroke: #ff5f6d; stroke-dasharray: 3 2; }
-    .g-node.dim { opacity: .25; }
+    .g-node circle { stroke: rgba(138,143,152,0.5); stroke-width: 1.5; transition: stroke .2s, opacity .2s; }
+    .g-node circle.body { transform-box: fill-box; transform-origin: center; animation: g-pop .5s var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 14ms); }
+    .g-node circle.halo { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+    .g-node.sel circle.body { stroke: var(--accent); stroke-width: 3; }
+    .g-node.sel circle.halo { animation: g-halo 1.6s ease-out infinite; }
+    .g-node.blocked circle.body { stroke: #ff5f6d; stroke-dasharray: 3 2; }
+    .g-node.dim { opacity: .22; }
+    .g-node.dragging circle.body { stroke: var(--accent); stroke-width: 2.5; }
+    @keyframes g-flow { to { stroke-dashoffset: -10; } }
+    @keyframes g-fade { from { opacity: 0; } }
+    @keyframes g-pop { from { transform: scale(0); } }
+    @keyframes g-halo { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+    .g-tools { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .g-tools .search { flex: 1; min-width: 0; margin: 0; padding: 8px 10px; box-shadow: none; background: rgba(138,143,152,0.10); animation: none; }
+    .g-tools .search input { font-size: 14px; }
+    .g-btn { flex: none; width: 34px; height: 34px; border-radius: 10px; border: 0; background: rgba(138,143,152,0.14); color: var(--text); font: inherit; font-size: 16px; font-weight: 800; display: grid; place-items: center; cursor: pointer; transition: transform .15s var(--ease-out), background .2s; }
+    .g-btn:active { transform: scale(.92); }
+    .g-btn:disabled { opacity: .4; cursor: default; }
+    .g-btn.on { background: var(--accent); color: var(--accent-text); }
+    .g-stage { position: relative; }
+    .g-float { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); max-width: calc(100% - 16px); display: flex; align-items: center; gap: 6px; border: 0; font: inherit; font-size: 12px; color: var(--text); background: var(--card); box-shadow: var(--shadow), 0 0 0 1px rgba(138,143,152,0.18); border-radius: 999px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+    .g-float-enter-active, .g-float-leave-active { transition: opacity .25s ease, bottom .3s var(--ease-out); }
+    .g-float-enter-from, .g-float-leave-to { opacity: 0; bottom: 0; }
+    .g-float b { overflow: hidden; text-overflow: ellipsis; }
+    .g-float span { color: var(--hint); font-weight: 600; }
+    .g-matches { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 8px; }
+    .g-pill { border: 0; font: inherit; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(138,143,152,0.14); color: var(--text); cursor: pointer; }
+    .g-pill.mutual { box-shadow: inset 0 0 0 1.5px rgba(175,82,222,0.6); }
+    .g-pill:active { transform: scale(.95); }
+    .g-sel .people { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+    /* ego graph (admin · one person's connections) */
+    .ego-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .ego-stats div { background: rgba(138,143,152,0.08); border-radius: 12px; padding: 8px; text-align: center; }
+    .ego-stats b { display: block; font-size: 18px; font-weight: 800; }
+    .ego-stats span { font-size: 11px; color: var(--hint); font-weight: 600; }
+    .ego-card { background: rgba(138,143,152,0.06); border-radius: 16px; padding: 6px; }
+    .ego-card svg { width: 100%; height: auto; display: block; }
+    .ego-list { margin-top: 10px; }
+    .ego-list h4 { margin: 12px 0 6px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .ego-list h4 .sw { display: inline-block; width: 14px; height: 3px; border-radius: 2px; }
+    .ego-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; cursor: pointer; transition: background .15s; }
+    .ego-row:hover, .ego-row:active { background: rgba(138,143,152,0.10); }
+    .ego-row .e { font-size: 20px; width: 26px; text-align: center; flex: none; }
+    .ego-row .n { font-size: 14px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ego-row .n small { font-weight: 500; color: var(--hint); margin-left: 4px; }
+    .ego-row .d { font-size: 11px; color: var(--hint); font-weight: 600; flex: none; text-align: right; }
+    .ego-row .tag { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: rgba(175,82,222,0.16); color: #af52de; margin-left: 6px; }
+    .sheet-back { border: 0; background: none; color: var(--link); font: inherit; font-size: 13px; font-weight: 700; padding: 0 0 8px; cursor: pointer; }
+    .g-node text { user-select: none; -webkit-user-select: none; }
     .g-node text.emoji { font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
     .g-node text.name { font-size: 7px; font-weight: 700; text-anchor: middle; fill: var(--text); pointer-events: none; }
     .g-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--hint); font-weight: 600; padding: 8px 4px 2px; }
@@ -948,43 +999,21 @@
             <div v-else-if="!graph" class="state"><div class="art">📡</div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">Try again</button></div>
             <div v-else-if="graph.nodes.length === 0" class="state"><div class="art">🕸</div><h2>Nobody follows anyone yet</h2><p>When people share their mood with each other, the connections show up here.</p></div>
             <template v-else>
-              <div class="g-sel" v-if="graphSelected">
+              <follow-graph ref="followGraph" :nodes="graph.nodes" :edges="graph.edges" :selected-id="graphSelectedId"
+                            @select="graphSelectedId = $event" @open="openAdminUserById" @details="$refs.graphCard?.scrollIntoView({ behavior: 'smooth', block: 'center' })"></follow-graph>
+
+              <div class="g-sel" v-if="graphSelected" ref="graphCard">
                 <div class="t">{{ graphSelected.mood ? graphSelected.mood.emoji : '👤' }} {{ graphSelected.fullname || 'Unnamed' }}<span class="u" v-if="graphSelected.username" style="font-size:12px;color:var(--hint);font-weight:500">@{{ graphSelected.username }}</span></div>
                 <div class="s">{{ graphSelected.mood ? graphSelected.mood.name + ' · ' + formatWhen(graphSelected.mood.timestamp) : 'No mood yet' }}</div>
                 <div class="lists">
-                  <div><b>Sees the mood of ({{ graphSelected.following }}):</b> {{ graphFollowingNames.join(', ') || '—' }}</div>
-                  <div><b>Watched by ({{ graphSelected.followers }}):</b> {{ graphFollowerNames.join(', ') || '—' }}</div>
+                  <div><b>Sees the mood of ({{ graphFollowing.length }})</b></div>
+                  <div class="people"><button v-for="p in graphFollowing" :key="'o' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)">{{ p.mood ? p.mood.emoji : '👤' }} {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowing.length">—</span></div>
+                  <div><b>Watched by ({{ graphFollowers.length }})</b></div>
+                  <div class="people"><button v-for="p in graphFollowers" :key="'i' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)">{{ p.mood ? p.mood.emoji : '👤' }} {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowers.length">—</span></div>
                 </div>
                 <div class="row-actions">
                   <button class="btn ghost" @click="openAdminUserById(graphSelected.id)">Open profile</button>
                   <button class="btn ghost" @click="graphSelectedId = null">Clear</button>
-                </div>
-              </div>
-
-              <div class="graph-card">
-                <!-- .camel: an in-DOM template lowercases bound attribute names, and SVG needs viewBox exactly -->
-                <svg :view-box.camel="`0 0 ${graphLayout.width} ${graphLayout.height}`" @click="graphSelectedId = null">
-                  <defs>
-                    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(138,143,152,0.6)"></path>
-                    </marker>
-                  </defs>
-                  <line v-for="(e, i) in graphLayout.edges" :key="'e' + i"
-                        class="g-edge" :class="edgeClass(e)"
-                        :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2" marker-end="url(#arrow)"></line>
-                  <g v-for="n in graphLayout.nodes" :key="n.id" class="g-node"
-                     :class="{ sel: graphSelectedId === n.id, blocked: n.is_blocked, dim: graphSelectedId && graphSelectedId !== n.id && !graphNeighbours.has(n.id) }"
-                     @click.stop="graphSelectedId = graphSelectedId === n.id ? null : n.id">
-                    <circle :cx="n.x" :cy="n.y" :r="n.r"></circle>
-                    <text class="emoji" :x="n.x" :y="n.y">{{ n.mood ? n.mood.emoji : '👤' }}</text>
-                    <text class="name" :x="n.x" :y="n.y + n.r + 7">{{ n.short }}</text>
-                  </g>
-                </svg>
-                <div class="g-legend">
-                  <span><i class="sw" style="background:var(--accent)"></i>sees their mood</span>
-                  <span><i class="sw" style="background:var(--fresh)"></i>is watched by</span>
-                  <span>⭕️ dashed = blocked</span>
-                  <span>tap a person to focus</span>
                 </div>
               </div>
 
@@ -1213,9 +1242,10 @@
 
             <!-- admin: a user's history -->
             <template v-else-if="sheet.type === 'admin-user'">
+              <button class="sheet-back" v-if="sheet.trail.length" @click="backInTrail">‹ Back to {{ sheet.trail[sheet.trail.length - 1].fullname || 'previous' }}</button>
               <div class="sheet-head">
                 <div v-if="sheet.user.last_mood" class="avatar anim" :style="{ '--hue': hueFor(sheet.user.last_mood.mood.code) }">
-                  <div class="sticker" :class="{ loaded: loaded.sheet }" data-id="sheet" :data-tgs="sheet.user.last_mood.tgs" ref="sheetSticker">
+                  <div class="sticker" :key="'adm-av' + sheet.user.id" :class="{ loaded: loaded.sheet }" data-id="sheet" :data-tgs="sheet.user.last_mood.tgs" ref="sheetSticker">
                     <span v-if="failed.sheet" class="sticker-fallback">{{ sheet.user.last_mood.mood.emoji }}</span>
                   </div>
                 </div>
@@ -1235,6 +1265,39 @@
                 </button>
               </div>
               <div class="blocked-note" v-if="sheet.user.is_blocked">🚫 Blocked: the bot ignores their messages and the mini app refuses them.</div>
+
+              <div class="sheet-section-title">Mood connections <span style="text-transform:none;letter-spacing:0;font-weight:600">· admin only</span></div>
+              <div v-if="sheet.connectionsLoading" class="section" style="margin:0"><div class="shimmer" style="height:200px;border-radius:14px"></div></div>
+              <div v-else-if="!sheet.connections" class="muted-box">Couldn't load connections.</div>
+              <template v-else>
+                <div class="ego-stats">
+                  <div><b style="color:var(--accent)">{{ sheet.connections.sees.length }}</b><span>sees their mood</span></div>
+                  <div><b style="color:var(--fresh)">{{ sheet.connections.seen_by.length }}</b><span>can see {{ (sheet.user.fullname || 'them').split(' ')[0] }}</span></div>
+                  <div><b style="color:#af52de">{{ sheet.connections.mutual.length }}</b><span>mutual</span></div>
+                </div>
+                <div v-if="!sheet.connections.sees.length && !sheet.connections.seen_by.length" class="muted-box">Nobody sees {{ sheet.user.fullname || 'this person' }}'s mood, and they don't see anyone's.</div>
+                <template v-else>
+                  <ego-graph :data="sheet.connections" @open="openConnection"></ego-graph>
+                  <div class="ego-list">
+                    <h4><i class="sw" style="background:var(--fresh)"></i>Can see {{ sheet.user.fullname || 'their' }}'s mood ({{ sheet.connections.seen_by.length }})</h4>
+                    <div v-if="!sheet.connections.seen_by.length" class="muted-box">Nobody.</div>
+                    <div v-for="p in sheet.connections.seen_by" :key="'sb' + p.id" class="ego-row" @click="openConnection(p)">
+                      <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                      <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
+                      <span class="d">since {{ formatWhen(p.since, true) }}</span>
+                    </div>
+                    <h4><i class="sw" style="background:var(--accent)"></i>{{ sheet.user.fullname || 'They' }} can see ({{ sheet.connections.sees.length }})</h4>
+                    <div v-if="!sheet.connections.sees.length" class="muted-box">Nobody.</div>
+                    <div v-for="p in sheet.connections.sees" :key="'s' + p.id" class="ego-row" @click="openConnection(p)">
+                      <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                      <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
+                      <span class="d">since {{ formatWhen(p.since, true) }}</span>
+                    </div>
+                  </div>
+                  <div class="row-actions"><button class="btn ghost" @click="showInGraph(sheet.user.id)">🕸 Show in the full graph</button></div>
+                </template>
+              </template>
+
               <div class="sheet-section-title">Personality</div>
               <div v-if="sheet.personalityLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
               <personality-view v-else-if="sheet.personality?.profile" :profile="sheet.personality.profile" :animate-key="'adm-' + sheet.user.id" compact></personality-view>
@@ -1382,10 +1445,12 @@
           dx[a] -= vx; dy[a] -= vy; dx[b] += vx; dy[b] += vy;
         }
         for (let i = 0; i < n; i++) {
+          // gravity: keeps separate groups (people who only follow each other) from drifting to the corners
+          dx[i] += (cx - pos[i].x) * 0.3; dy[i] += (cy - pos[i].y) * 0.3;
           const dist = Math.hypot(dx[i], dy[i]) || 0.01;
           const step = Math.min(dist, temperature);
-          pos[i].x += (dx[i] / dist) * step + (cx - pos[i].x) * 0.012;   // gentle pull to centre
-          pos[i].y += (dy[i] / dist) * step + (cy - pos[i].y) * 0.012;
+          pos[i].x += (dx[i] / dist) * step;
+          pos[i].y += (dy[i] / dist) * step;
         }
       }
 
@@ -1412,21 +1477,51 @@
           short: full.length > 12 ? full.slice(0, 11) + '…' : full,
         };
       });
-      const byId = new Map(laidOut.map(node => [node.id, node]));
-      const drawnEdges = edges.map(e => {
+      // push overlapping circles apart (leaving room for the name), staying inside the frame
+      for (let pass = 0; pass < 40; pass++) {
+        let moved = false;
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            const a = laidOut[i], b = laidOut[j];
+            const min = a.r + b.r + 10;
+            let vx = b.x - a.x, vy = b.y - a.y;
+            let dist = Math.hypot(vx, vy);
+            if (dist >= min) continue;
+            if (dist < 0.01) { vx = Math.cos(i + j); vy = Math.sin(i + j); dist = 1; }   // deterministic nudge
+            const push = (min - dist) / 2;
+            a.x -= (vx / dist) * push; a.y -= (vy / dist) * push;
+            b.x += (vx / dist) * push; b.y += (vy / dist) * push;
+            moved = true;
+          }
+        }
+        for (const p of laidOut) {
+          p.x = Math.max(p.r + 4, Math.min(width - p.r - 4, p.x));
+          p.y = Math.max(p.r + 4, Math.min(height - p.r - 14, p.y));
+        }
+        if (!moved) break;
+      }
+      return { width, height, nodes: laidOut };
+    }
+
+    // Edge geometry between laid-out nodes: a straight line, or a gentle curve when the link
+    // goes both ways so the two arrows don't sit on top of each other. Stops at the circle
+    // edges so the arrow head stays visible.
+    function edgePaths(byId, edges) {
+      const links = new Set(edges.map(e => e.source + '>' + e.target));
+      return edges.map(e => {
         const a = byId.get(e.source), b = byId.get(e.target);
         if (!a || !b) return null;
-        // stop the line at the circle edge so the arrow head is visible
+        const mutual = links.has(e.target + '>' + e.source);
         const vx = b.x - a.x, vy = b.y - a.y;
         const dist = Math.hypot(vx, vy) || 1;
-        return {
-          source: e.source, target: e.target,
-          x1: a.x + (vx / dist) * a.r, y1: a.y + (vy / dist) * a.r,
-          x2: b.x - (vx / dist) * (b.r + 4), y2: b.y - (vy / dist) * (b.r + 4),
-        };
+        const bend = mutual ? Math.min(14, dist * 0.18) : 0;
+        const qx = (a.x + b.x) / 2 - (vy / dist) * bend, qy = (a.y + b.y) / 2 + (vx / dist) * bend;
+        const sx = qx - a.x, sy = qy - a.y, sd = Math.hypot(sx, sy) || 1;
+        const ex = b.x - qx, ey = b.y - qy, ed = Math.hypot(ex, ey) || 1;
+        const x1 = a.x + (sx / sd) * a.r, y1 = a.y + (sy / sd) * a.r;
+        const x2 = b.x - (ex / ed) * (b.r + 4), y2 = b.y - (ey / ed) * (b.r + 4);
+        return { source: e.source, target: e.target, mutual, d: `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${qx.toFixed(1)} ${qy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}` };
       }).filter(Boolean);
-
-      return { width, height, nodes: laidOut, edges: drawnEdges };
     }
 
     // tgs-player registers window.TgsPlayer asynchronously after it fetches lottie/pako
@@ -1511,8 +1606,312 @@
       `,
     };
 
+    const moodFill = (node) => node.mood ? `hsla(${MOOD_HUES[node.mood.code] ?? 210}, 80%, 60%, 0.22)` : 'rgba(138,143,152,0.14)';
+    const shortName = (node, max = 12) => { const full = node.fullname || ('id ' + node.id); return full.length > max ? full.slice(0, max - 1) + '…' : full; };
+
+    // ---------- <follow-graph> : the admin's whole follow graph, pan / pinch / wheel zoom, drag people around ----------
+    const FollowGraph = {
+      props: { nodes: { type: Array, required: true }, edges: { type: Array, required: true }, selectedId: { default: null } },
+      emits: ['select', 'open', 'details'],
+      data() {
+        // gesture bookkeeping is not reactive: it changes on every pointer move
+        this._pointers = new Map();
+        this._gesture = null;
+        this._lastTap = { id: null, at: 0 };
+        return {
+          view: { k: 1, x: 0, y: 0 }, moved: {}, smooth: false, dragging: null, query: '', mutualOnly: false,
+          markers: [{ id: 'plain', fill: 'rgba(138,143,152,0.7)' }, { id: 'mutual', fill: 'rgba(175,82,222,0.7)' }, { id: 'out', fill: 'var(--accent)' }, { id: 'in', fill: 'var(--fresh)' }],
+        };
+      },
+      computed: {
+        base() { return layoutGraph(this.nodes, this.edges); },
+        placed() {
+          return this.base.nodes.map((n, i) => {
+            const m = this.moved[n.id];
+            return { ...n, i, x: m ? m.x : n.x, y: m ? m.y : n.y, fill: moodFill(n), label: shortName(n) };
+          });
+        },
+        byId() { return new Map(this.placed.map(n => [n.id, n])); },
+        selectedNode() { return this.selectedId !== null ? this.nodes.find(n => n.id === this.selectedId) || null : null; },
+        paths() {
+          const all = edgePaths(this.byId, this.edges);
+          return this.mutualOnly ? all.filter(e => e.mutual) : all;
+        },
+        neighbours() {
+          const set = new Set();
+          for (const e of this.paths) {
+            if (e.source === this.selectedId) set.add(e.target);
+            if (e.target === this.selectedId) set.add(e.source);
+          }
+          return set;
+        },
+        // in "mutual only", people with no two-way link fade out
+        mutualIds() { return new Set(this.paths.flatMap(e => [e.source, e.target])); },
+        matches() {
+          const q = this.query.trim().toLowerCase().replace(/^@/, '');
+          if (!q) return [];
+          return this.nodes.filter(n => (n.fullname || '').toLowerCase().includes(q) || (n.username || '').toLowerCase().includes(q) || String(n.id) === q).slice(0, 8);
+        },
+        transform() { return `translate(${this.view.x}px, ${this.view.y}px) scale(${this.view.k})`; },
+        hasMoved() { return Object.keys(this.moved).length > 0 || this.view.k !== 1 || this.view.x !== 0 || this.view.y !== 0; },
+      },
+      methods: {
+        markerFor(e) {
+          if (this.selectedId === e.source) return 'out';
+          if (this.selectedId === e.target) return 'in';
+          return e.mutual ? 'mutual' : 'plain';
+        },
+        edgeClass(e) {
+          const c = { mutual: e.mutual };
+          if (!this.selectedId) return c;
+          if (e.source === this.selectedId) c.out = true;
+          else if (e.target === this.selectedId) c.in = true;
+          else c.dim = true;
+          return c;
+        },
+        nodeClass(n) {
+          return {
+            sel: this.selectedId === n.id,
+            blocked: n.is_blocked,
+            dragging: this.dragging === n.id,
+            dim: this.selectedId ? this.selectedId !== n.id && !this.neighbours.has(n.id) : this.mutualOnly && !this.mutualIds.has(n.id),
+          };
+        },
+        // screen -> viewBox coordinates, and viewBox -> graph coordinates (before pan / zoom)
+        svgPoint(e) {
+          const svg = this.$refs.svg;
+          const ctm = svg.getScreenCTM();
+          if (!ctm) return { x: 0, y: 0 };
+          const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+          const p = pt.matrixTransform(ctm.inverse());
+          return { x: p.x, y: p.y };
+        },
+        toGraph(p) { return { x: (p.x - this.view.x) / this.view.k, y: (p.y - this.view.y) / this.view.k }; },
+        setView(v, smooth = false) {
+          const k = Math.max(0.5, Math.min(5, v.k));
+          this.smooth = smooth;
+          this.view = { k, x: v.x, y: v.y };
+        },
+        zoomAt(p, factor, smooth = false) {
+          const k = Math.max(0.5, Math.min(5, this.view.k * factor));
+          const g = this.toGraph(p);
+          this.setView({ k, x: p.x - g.x * k, y: p.y - g.y * k }, smooth);
+        },
+        zoomBy(factor) { this.zoomAt({ x: this.base.width / 2, y: this.base.height / 2 }, factor, true); },
+        reset() { this.moved = {}; this.setView({ k: 1, x: 0, y: 0 }, true); },
+        focusOn(id) {
+          const n = this.byId.get(id);
+          if (!n) return;
+          const k = Math.max(this.view.k, 1.6);
+          this.setView({ k, x: this.base.width / 2 - n.x * k, y: this.base.height / 2 - n.y * k }, true);
+        },
+        pick(n) { this.query = ''; this.$emit('select', n.id); this.focusOn(n.id); },
+
+        onDown(e) {
+          if (e.button !== undefined && e.button !== 0) return;
+          const svg = this.$refs.svg;
+          try { svg.setPointerCapture(e.pointerId); } catch {}
+          const p = this.svgPoint(e);
+          this._pointers.set(e.pointerId, p);
+          this.smooth = false;
+          if (this._pointers.size === 2) {
+            const [a, b] = [...this._pointers.values()];
+            this.dragging = null;
+            this._gesture = { type: 'pinch', dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, view: { ...this.view }, moved: true };
+            return;
+          }
+          if (this._pointers.size > 2) return;
+          const el = e.target.closest?.('[data-node]');
+          const id = el ? Number(el.dataset.node) : null;
+          const node = id !== null ? this.byId.get(id) : null;
+          if (node) {
+            const g = this.toGraph(p);
+            this._gesture = { type: 'node', id, start: p, grab: { x: g.x - node.x, y: g.y - node.y }, moved: false };
+          } else {
+            this._gesture = { type: 'pan', start: p, view: { ...this.view }, moved: false };
+          }
+        },
+        onMove(e) {
+          if (!this._pointers.has(e.pointerId) || !this._gesture) return;
+          const p = this.svgPoint(e);
+          this._pointers.set(e.pointerId, p);
+          const g = this._gesture;
+          if (g.type === 'pinch') {
+            const [a, b] = [...this._pointers.values()];
+            const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+            const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+            const k = Math.max(0.5, Math.min(5, g.view.k * dist / g.dist));
+            // keep the point that was under the fingers under them, then follow the fingers
+            const gx = (g.mid.x - g.view.x) / g.view.k, gy = (g.mid.y - g.view.y) / g.view.k;
+            this.setView({ k, x: mid.x - gx * k, y: mid.y - gy * k });
+            return;
+          }
+          if (!g.moved && Math.hypot(p.x - g.start.x, p.y - g.start.y) < 4) return;   // still a tap
+          g.moved = true;
+          if (g.type === 'pan') {
+            this.setView({ k: g.view.k, x: g.view.x + p.x - g.start.x, y: g.view.y + p.y - g.start.y });
+          } else if (g.type === 'node') {
+            this.dragging = g.id;
+            const q = this.toGraph(p);
+            this.moved = { ...this.moved, [g.id]: { x: q.x - g.grab.x, y: q.y - g.grab.y } };
+          }
+        },
+        onUp(e) {
+          if (!this._pointers.delete(e.pointerId)) return;
+          const g = this._gesture;
+          if (this._pointers.size > 0) { this._gesture = null; return; }   // lifting one finger of a pinch
+          this._gesture = null;
+          this.dragging = null;
+          if (!g || g.moved || e.type === 'pointercancel') return;
+          if (g.type === 'pan') return this.$emit('select', null);
+          // a tap selects; a second tap on the same person within 350ms opens their profile
+          const now = Date.now();
+          if (this._lastTap.id === g.id && now - this._lastTap.at < 350) { this._lastTap = { id: null, at: 0 }; return this.$emit('open', g.id); }
+          this._lastTap = { id: g.id, at: now };
+          this.$emit('select', this.selectedId === g.id ? null : g.id);
+        },
+        onWheel(e) {
+          const p = this.svgPoint(e);
+          this.zoomAt(p, Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)));
+        },
+      },
+      watch: { nodes() { this.moved = {}; this.view = { k: 1, x: 0, y: 0 }; } },
+      template: `
+        <div class="graph-card">
+          <div class="g-tools">
+            <label class="search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+              <input v-model="query" type="search" placeholder="Find a person" autocomplete="off" @keydown.enter="matches[0] && pick(matches[0])">
+            </label>
+            <button class="g-btn" :class="{ on: mutualOnly }" title="Only two-way links" @click="mutualOnly = !mutualOnly">⇄</button>
+            <button class="g-btn" title="Zoom in" @click="zoomBy(1.4)">+</button>
+            <button class="g-btn" title="Zoom out" @click="zoomBy(1 / 1.4)">−</button>
+            <button class="g-btn" title="Reset view" :disabled="!hasMoved" @click="reset">⟲</button>
+          </div>
+          <div class="g-matches" v-if="query.trim()">
+            <button v-for="n in matches" :key="'m' + n.id" class="g-pill" @click="pick(n)">{{ n.mood ? n.mood.emoji : '👤' }} {{ n.fullname || 'id ' + n.id }}</button>
+            <span v-if="!matches.length" style="font-size:12px;color:var(--hint)">Nobody by that name in the graph.</span>
+          </div>
+          <div class="g-stage">
+            <svg ref="svg" class="pannable" :class="{ grabbing: !!dragging }" :viewBox="'0 0 ' + base.width + ' ' + base.height"
+                 @pointerdown="onDown" @pointermove="onMove" @pointerup="onUp" @pointercancel="onUp" @wheel.prevent="onWheel">
+              <defs>
+                <marker v-for="m in markers" :key="m.id" :id="'fg-' + m.id" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" :style="{ fill: m.fill }"></path>
+                </marker>
+              </defs>
+              <rect :width="base.width" :height="base.height" fill="transparent"></rect>
+              <g class="g-viewport" :class="{ smooth }" :style="{ transform }">
+                <path v-for="e in paths" :key="e.source + '>' + e.target" class="g-edge" :class="edgeClass(e)" :d="e.d" :marker-end="'url(#fg-' + markerFor(e) + ')'"></path>
+                <g v-for="n in placed" :key="n.id" class="g-node" :class="nodeClass(n)" :data-node="n.id">
+                  <title>{{ n.fullname || 'id ' + n.id }} · sees {{ n.following }} · seen by {{ n.followers }}</title>
+                  <circle class="halo" :cx="n.x" :cy="n.y" :r="n.r"></circle>
+                  <circle class="body" :cx="n.x" :cy="n.y" :r="n.r" :style="{ fill: n.fill, '--i': Math.min(n.i, 40) }"></circle>
+                  <text class="emoji" :x="n.x" :y="n.y">{{ n.mood ? n.mood.emoji : '👤' }}</text>
+                  <text class="name" :x="n.x" :y="n.y + n.r + 7">{{ n.label }}</text>
+                </g>
+              </g>
+            </svg>
+            <transition name="g-float">
+              <button v-if="selectedNode" :key="selectedNode.id" class="g-float" @click="$emit('details', selectedNode.id)">
+                {{ selectedNode.mood ? selectedNode.mood.emoji : '👤' }} <b>{{ selectedNode.fullname || 'id ' + selectedNode.id }}</b>
+                <span>sees {{ selectedNode.following }} · seen by {{ selectedNode.followers }}</span> ↓
+              </button>
+            </transition>
+          </div>
+          <div class="g-legend">
+            <span><i class="sw" style="background:var(--accent)"></i>sees their mood</span>
+            <span><i class="sw" style="background:var(--fresh)"></i>is watched by</span>
+            <span><i class="sw" style="background:#af52de"></i>both ways</span>
+            <span>⭕️ dashed = blocked</span>
+          </div>
+          <div class="g-legend" style="padding-top:2px">tap to focus · double-tap for profile · drag people · pinch or scroll to zoom</div>
+        </div>
+      `,
+    };
+
+    // ---------- <ego-graph> : one person in the middle, who they see and who sees them around them ----------
+    const EgoGraph = {
+      props: { data: { type: Object, required: true } },
+      emits: ['open'],
+      computed: {
+        layout() {
+          const mutual = new Set(this.data.mutual);
+          const seenBy = new Set(this.data.seen_by.map(p => p.id));
+          const people = new Map();
+          for (const p of this.data.sees) people.set(p.id, { ...p, kind: mutual.has(p.id) ? 'mutual' : 'sees' });
+          for (const p of this.data.seen_by) if (!people.has(p.id)) people.set(p.id, { ...p, kind: 'seen_by' });
+          // mutual links on top, the people they see on the right, the people who see them on the left
+          const order = { mutual: 0, sees: 1, seen_by: 2 };
+          const MAX = 60;
+          const all = [...people.values()].sort((a, b) => order[a.kind] - order[b.kind]);
+          const list = all.slice(0, MAX);
+          const n = list.length;
+          const twoRings = n > 30;
+          const R = twoRings ? 150 : Math.max(92, Math.min(150, (n * 30) / (2 * Math.PI)));
+          const nodeR = n > 20 ? 12 : 15;
+          const width = 340, height = 2 * (R + nodeR + 20);
+          const cx = width / 2, cy = height / 2;
+          const slot = (2 * Math.PI) / Math.max(1, n);
+          const mutualCount = list.filter(p => p.kind === 'mutual').length;
+          const start = -Math.PI / 2 - (mutualCount * slot) / 2 + slot / 2;
+          const nodes = list.map((p, i) => {
+            const a = start + i * slot;
+            const r = twoRings && i % 2 ? R - 42 : R;
+            return { ...p, i, x: cx + r * Math.cos(a), y: cy + r * Math.sin(a), r: nodeR, fill: moodFill(p), label: shortName(p, 10) };
+          });
+          const centre = { ...this.data.user, x: cx, y: cy, r: 26, fill: moodFill(this.data.user), label: shortName(this.data.user, 16) };
+          // one line per direction; a mutual pair gets two lines side by side, each flowing its way
+          const line = (from, to, offset) => {
+            const vx = to.x - from.x, vy = to.y - from.y, d = Math.hypot(vx, vy) || 1;
+            const ox = (-vy / d) * offset, oy = (vx / d) * offset;
+            return { x1: from.x + (vx / d) * from.r + ox, y1: from.y + (vy / d) * from.r + oy, x2: to.x - (vx / d) * (to.r + 4) + ox, y2: to.y - (vy / d) * (to.r + 4) + oy };
+          };
+          const edges = [];
+          for (const p of nodes) {
+            if (p.kind !== 'seen_by') edges.push({ key: 'o' + p.id, cls: 'out', ...line(centre, p, p.kind === 'mutual' ? 3 : 0) });
+            if (p.kind !== 'sees' && seenBy.has(p.id)) edges.push({ key: 'i' + p.id, cls: 'in', ...line(p, centre, p.kind === 'mutual' ? 3 : 0) });
+          }
+          // crop to what is drawn (a person with two links doesn't need a full circle of space)
+          const top = Math.min(centre.y - centre.r, ...nodes.map(p => p.y - p.r)) - 10;
+          const bottom = Math.max(centre.y + centre.r + 14, ...nodes.map(p => p.y + p.r + 12)) + 10;
+          return { width, height, top, viewHeight: bottom - top, nodes, centre, edges, hidden: all.length - list.length };
+        },
+      },
+      template: `
+        <div class="ego-card">
+          <svg :viewBox="'0 ' + layout.top + ' ' + layout.width + ' ' + layout.viewHeight">
+            <defs>
+              <marker id="ego-out" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--accent)"></path></marker>
+              <marker id="ego-in" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--fresh)"></path></marker>
+            </defs>
+            <line v-for="e in layout.edges" :key="e.key" class="g-edge flow" :class="e.cls" :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2" :marker-end="'url(#ego-' + e.cls + ')'"></line>
+            <g v-for="p in layout.nodes" :key="p.id" class="g-node" :class="{ blocked: p.is_blocked }" @click="$emit('open', p)">
+              <title>{{ p.fullname || 'id ' + p.id }} · {{ { mutual: 'both ways', sees: 'their mood is visible to ' + (data.user.fullname || 'them'), seen_by: 'can see ' + (data.user.fullname || 'their') + '\\'s mood' }[p.kind] }}</title>
+              <circle class="body" :cx="p.x" :cy="p.y" :r="p.r" :style="{ fill: p.fill, '--i': p.i, stroke: p.kind === 'mutual' ? '#af52de' : p.kind === 'sees' ? 'var(--accent)' : 'var(--fresh)' }"></circle>
+              <text class="emoji" :x="p.x" :y="p.y" :style="{ fontSize: p.r > 12 ? '15px' : '12px' }">{{ p.mood ? p.mood.emoji : '👤' }}</text>
+              <text class="name" :x="p.x" :y="p.y + p.r + 8">{{ p.label }}</text>
+            </g>
+            <g class="g-node sel">
+              <circle class="halo" :cx="layout.centre.x" :cy="layout.centre.y" :r="layout.centre.r"></circle>
+              <circle class="body" :cx="layout.centre.x" :cy="layout.centre.y" :r="layout.centre.r" :style="{ fill: layout.centre.fill }"></circle>
+              <text class="emoji" :x="layout.centre.x" :y="layout.centre.y" style="font-size:24px">{{ data.user.mood ? data.user.mood.emoji : '👤' }}</text>
+              <text class="name" :x="layout.centre.x" :y="layout.centre.y + layout.centre.r + 10" style="font-size:9px">{{ layout.centre.label }}</text>
+            </g>
+            <text v-if="layout.hidden" :x="layout.width - 8" :y="layout.top + layout.viewHeight - 8" text-anchor="end" style="font-size:9px;font-weight:700;fill:var(--hint)">+{{ layout.hidden }} more in the lists below</text>
+          </svg>
+          <div class="g-legend">
+            <span><i class="sw" style="background:var(--accent)"></i>{{ (data.user.fullname || 'they').split(' ')[0] }} sees</span>
+            <span><i class="sw" style="background:var(--fresh)"></i>sees {{ (data.user.fullname || 'them').split(' ')[0] }}</span>
+            <span><i class="sw" style="background:#af52de"></i>both ways</span>
+            <span>tap someone to open them</span>
+          </div>
+        </div>
+      `,
+    };
+
     createApp({
-      components: { 'personality-view': PersonalityView },
+      components: { 'personality-view': PersonalityView, 'follow-graph': FollowGraph, 'ego-graph': EgoGraph },
       data() {
         this._inflight = {};
         return {
@@ -1594,24 +1993,10 @@
           return Object.values(groups);
         },
         currentQuestion() { return this.quiz ? this.quiz.session.questions[this.quiz.session.current_index] : null; },
-        // deterministic force-directed layout, computed once per graph payload
-        graphLayout() { return this.graph ? layoutGraph(this.graph.nodes, this.graph.edges) : { width: 360, height: 360, nodes: [], edges: [] }; },
         graphSelected() { return this.graph?.nodes.find(n => n.id === this.graphSelectedId) || null; },
-        graphNeighbours() {
-          const set = new Set();
-          if (!this.graph || !this.graphSelectedId) return set;
-          for (const e of this.graph.edges) {
-            if (e.source === this.graphSelectedId) set.add(e.target);
-            if (e.target === this.graphSelectedId) set.add(e.source);
-          }
-          return set;
-        },
-        graphName() {
-          const byId = new Map((this.graph?.nodes || []).map(n => [n.id, n.fullname || ('id ' + n.id)]));
-          return (id) => byId.get(id) || ('id ' + id);
-        },
-        graphFollowingNames() { return (this.graph?.edges || []).filter(e => e.source === this.graphSelectedId).map(e => this.graphName(e.target)); },
-        graphFollowerNames() { return (this.graph?.edges || []).filter(e => e.target === this.graphSelectedId).map(e => this.graphName(e.source)); },
+        // the selected person's two sides, as nodes, with a flag for links that go both ways
+        graphFollowing() { return this.graphSide('source', 'target'); },
+        graphFollowers() { return this.graphSide('target', 'source'); },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
@@ -1988,11 +2373,21 @@
         setAdminNotes(v) { this.admin.notes = v; this.applyAdminFilter(); },
         setAdminSort(v) { this.admin.sort = v; this.applyAdminFilter(); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
-        async openAdminUser(u) {
+        async openAdminUser(u, { trail = [] } = {}) {
           this.haptic('light');
+          try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', user: u, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true };
+          this.sheet = { type: 'admin-user', user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true };
+          document.querySelector('.sheet')?.scrollTo({ top: 0 });
+          // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag
+          // and mood count, which a row opened from the graph or another profile doesn't carry.
+          this.api(`/api/admin/users/${u.id}/connections`).then(d => {
+            if (this.sheet?.user?.id !== u.id) return;
+            this.sheet.connections = d;
+            this.sheet.user.is_friend = d.user.is_friend;
+            if (this.sheet.user.mood_count === null || this.sheet.user.mood_count === undefined) this.sheet.user.mood_count = d.user.mood_count;
+          }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.connectionsLoading = false; });
           this.api(`/api/admin/users/${u.id}/personality`).then(d => { if (this.sheet?.user?.id === u.id) this.sheet.personality = d; }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.personalityLoading = false; });
           await nextTick();
           this.mountStickers();
@@ -2088,16 +2483,45 @@
             this.graphBusy = false;
           }
         },
-        edgeClass(e) {
-          if (!this.graphSelectedId) return {};
-          if (e.source === this.graphSelectedId) return { out: true };
-          if (e.target === this.graphSelectedId) return { in: true };
-          return { dim: true };
+        graphSide(from, to) {
+          if (!this.graph || !this.graphSelectedId) return [];
+          const byId = new Map(this.graph.nodes.map(n => [n.id, n]));
+          const links = new Set(this.graph.edges.map(e => e.source + '>' + e.target));
+          return this.graph.edges
+            .filter(e => e[from] === this.graphSelectedId && byId.has(e[to]))
+            .map(e => ({ ...byId.get(e[to]), mutual: links.has(e.target + '>' + e.source) }));
+        },
+        // select someone and pan the graph to them
+        focusGraphNode(id) {
+          this.haptic('light');
+          this.graphSelectedId = id;
+          this.$refs.followGraph?.focusOn(id);
         },
         openAdminUserById(id) {
           const node = this.graph.nodes.find(n => n.id === id);
-          if (!node) return;
-          this.openAdminUser({ id: node.id, fullname: node.fullname, username: node.username, is_blocked: node.is_blocked, is_admin: node.is_admin, is_friend: false, mood_count: null, last_active_at: node.mood?.timestamp || null, last_mood: node.mood ? { mood: node.mood, note: '', timestamp: node.mood.timestamp, tgs: `/public/tgs/${node.mood.code}.tgs` } : null });
+          if (node) this.openAdminUser(this.toAdminSheetUser(node));
+        },
+        // a graph node or a connection row, shaped like a row of the admin user list
+        toAdminSheetUser(p) {
+          return { id: p.id, fullname: p.fullname, username: p.username, is_blocked: p.is_blocked, is_admin: p.is_admin, is_friend: Boolean(p.is_friend), mood_count: null, last_active_at: p.last_active_at || p.mood?.timestamp || null, last_mood: p.mood ? { mood: p.mood, note: '', timestamp: p.mood.timestamp, tgs: `/public/tgs/${p.mood.code}.tgs` } : null };
+        },
+        // hop from one profile to someone in its connections, keeping a trail to come back
+        openConnection(p) {
+          const trail = this.sheet?.type === 'admin-user' ? [...this.sheet.trail, this.sheet.user] : [];
+          this.openAdminUser(this.toAdminSheetUser(p), { trail });
+        },
+        backInTrail() {
+          const trail = [...this.sheet.trail];
+          const prev = trail.pop();
+          this.openAdminUser(prev, { trail });
+        },
+        async showInGraph(id) {
+          this.closeSheet();
+          this.admin.view = 'graph';
+          if (!this.graph) await this.fetchGraph();
+          if (!this.graph?.nodes.some(n => n.id === id)) return this.showToast(this.graph?.stats.truncated ? 'Not among the people shown in the graph' : 'Not connected to anyone');
+          await nextTick();
+          this.focusGraphNode(id);
         },
 
         // ----- backup / restore / health (admin) -----

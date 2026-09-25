@@ -243,10 +243,66 @@ const followGraph = async (req, res) => {
   });
 };
 
+// GET /api/admin/users/:telegramId/connections — one person's side of the follow graph:
+// whose mood they can see (`sees`) and who can see theirs (`seen_by`), with the latest mood
+// of everyone involved. Admin-only, regardless of anyone's privacy setting.
+const userConnections = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) }).lean();
+  if (!user) return res.status(404).json({ error: 'not_found' });
+
+  const shares = await Share.find({ disabled: false, $or: [{ follower: user._id }, { followed: user._id }] })
+    .select('follower followed createdAt updatedAt').lean();
+  const sees = shares.filter(s => String(s.follower) === String(user._id) && String(s.followed) !== String(user._id));
+  const seenBy = shares.filter(s => String(s.followed) === String(user._id) && String(s.follower) !== String(user._id));
+
+  const otherIds = [...new Set([...sees.map(s => String(s.followed)), ...seenBy.map(s => String(s.follower))])]
+    .map(id => new mongoose.Types.ObjectId(id));
+  const [others, latestMoods, adminFollows, moodCount] = await Promise.all([
+    User.find({ _id: { $in: otherIds } }).select('id first_name last_name username is_admin is_blocked last_active_at').lean(),
+    Mood.aggregate([
+      { $match: { user: { $in: [...otherIds, user._id] } } },
+      { $sort: { user: 1, timestamp: -1 } },
+      { $group: { _id: '$user', mood: { $first: '$mood' }, timestamp: { $first: '$timestamp' } } },
+    ]),
+    Share.find({ follower: req.user._id, disabled: false, followed: { $in: [...otherIds, user._id] } }).select('followed').lean(),
+    Mood.countDocuments({ user: user._id }),
+  ]);
+
+  const moodByUser = new Map(latestMoods.map(m => [String(m._id), m]));
+  const friendIds = new Set(adminFollows.map(s => String(s.followed)));
+  const byId = new Map(others.map(u => [String(u._id), u]));
+  const person = (u) => {
+    const last = moodByUser.get(String(u._id));
+    return {
+      ...publicUser(u),
+      is_admin: Boolean(u.is_admin),
+      is_blocked: Boolean(u.is_blocked),
+      is_friend: friendIds.has(String(u._id)),
+      last_active_at: u.last_active_at || null,
+      mood: last ? { name: last.mood.name, code: last.mood.code, emoji: last.mood.emoji, timestamp: last.timestamp } : null,
+    };
+  };
+  // a share that was switched off and on again keeps its createdAt, so updatedAt is when it last became active
+  const side = (list, key) => list
+    .filter(s => byId.has(String(s[key])))
+    .map(s => ({ ...person(byId.get(String(s[key]))), since: s.updatedAt || s.createdAt }))
+    .sort((a, b) => new Date(b.since) - new Date(a.since));
+
+  const seesList = side(sees, 'followed');
+  const seenByList = side(seenBy, 'follower');
+  const seenByIds = new Set(seenByList.map(p => p.id));
+  res.json({
+    user: { ...person(user), mood_count: moodCount },
+    sees: seesList,
+    seen_by: seenByList,
+    mutual: seesList.filter(p => seenByIds.has(p.id)).map(p => p.id),
+  });
+};
+
 // GET /api/admin/traits — catalog for the filter UI
 const listTraits = async (req, res) => {
   const traits = await PersonalityTrait.find({ enabled: true }).sort({ category: 1, name: 1 }).select('key name category').lean();
   res.json({ traits: traits.map(t => ({ key: t.key, name: t.name, category: t.category })) });
 };
 
-module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, listTraits, followGraph };
+module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph };

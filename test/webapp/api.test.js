@@ -239,6 +239,38 @@ describe('mini app API', () => {
     });
   });
 
+  describe('user connections (admin)', () => {
+    test("lists whose mood a person sees and who sees theirs, admin only", async () => {
+      assert.equal((await api('/api/admin/users/2/connections', { as: alice })).status, 403, 'non-admins are refused');
+      assert.equal((await api('/api/admin/users/777/connections', { as: admin })).status, 404);
+
+      // alice -> bob from the fixture; add bob -> carol, carol -> bob, and a disabled carol -> alice
+      await Share.createShare(bob._id, carol._id);
+      await Share.createShare(carol._id, bob._id);
+      await Share.createShare(carol._id, alice._id);
+      await Share.disableShare(carol._id, alice._id);
+      await Share.createShare(admin._id, carol._id);   // the admin follows carol
+
+      const r = await api('/api/admin/users/2/connections', { as: admin });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.user.id, 2);
+      assert.equal(r.body.user.mood_count, 1);
+      assert.equal(r.body.user.mood.code, 'happy');
+      assert.deepEqual(r.body.sees.map(p => p.id), [3], 'bob sees carol');
+      assert.deepEqual(r.body.seen_by.map(p => p.id).sort(), [1, 3], 'alice and carol see bob');
+      assert.deepEqual(r.body.mutual, [3]);
+      const carolRow = r.body.sees[0];
+      assert.equal(carolRow.is_friend, true, 'flags people the admin follows');
+      assert.ok(carolRow.since, 'each link says since when');
+      assert.equal(r.body.seen_by.find(p => p.id === 1).mood.code, 'tired');
+      assert.ok(!JSON.stringify(r.body).includes('sunny'), 'mood notes are not exposed');
+
+      const a = await api('/api/admin/users/1/connections', { as: admin });
+      assert.deepEqual(a.body.seen_by, [], 'disabled shares do not count');
+      assert.deepEqual(a.body.sees.map(p => p.id), [2]);
+    });
+  });
+
   describe('backup and health (admin)', () => {
     const AdmZip = require('adm-zip');
     const AppConfig = require('../../src/models/app_config');
