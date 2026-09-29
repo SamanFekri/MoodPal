@@ -1,6 +1,7 @@
 // Mini app settings: the user's own OpenAI key (verified, stored encrypted) and model choice.
 const User = require('../models/user');
 const llm = require('../utils/llm');
+const reminders = require('../reminders/service');
 
 const view = async (user) => {
   const key = await User.getOpenAIKey(user._id);
@@ -12,6 +13,10 @@ const view = async (user) => {
       default_model: llm.DEFAULT_MODEL,
       models: llm.MODEL_CHOICES,
     },
+    ...(await (async () => {
+      const fresh = await User.findById(user._id).select('reminder timezone').lean() || user;
+      return { reminders: reminders.viewFor(fresh, await reminders.getSettings()), timezone: await reminders.timezoneView(fresh) };
+    })()),
   };
 };
 
@@ -45,7 +50,30 @@ const setModel = async (req, res) => {
   res.json(await view(user));
 };
 
+// POST /api/me/settings/reminders { enabled?, times?: ["HH:MM", …] | null, timezone?: IANA | null }
+const setReminders = async (req, res) => {
+  try {
+    await reminders.updateForUser(req.user._id, req.body || {});
+  } catch (error) {
+    if (error instanceof reminders.ReminderInputError) return res.status(400).json({ error: error.code });
+    throw error;
+  }
+  res.json(await view(req.user));
+};
+
+// POST /api/me/settings/timezone { timezone: IANA | null } — null goes back to the default
+const setTimezone = async (req, res) => {
+  const tz = req.body?.timezone ?? null;
+  try {
+    await reminders.setTimezone(req.user._id, tz === null ? null : String(tz).trim());
+  } catch (error) {
+    if (error instanceof reminders.ReminderInputError) return res.status(400).json({ error: error.code });
+    throw error;
+  }
+  res.json(await view(req.user));
+};
+
 // separate so tests can swap the OpenAI round-trip
 const verify = (key) => llm.verifyApiKey(key);
 
-module.exports = { getSettings, setKey, removeKey, setModel, verify };
+module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, verify };

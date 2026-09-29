@@ -27,6 +27,22 @@ const appConfigSchema = new mongoose.Schema({
   last_heartbeat_at: { type: Date, default: null },
   last_heartbeat_status: { type: String, default: null },
   last_heartbeat_message: { type: String, default: null },
+
+  // ---- mood reminders (see src/reminders) ----
+  // master switch: off stops scheduling and sending; queued reminders wait (and expire after the grace window)
+  reminders_enabled: { type: Boolean, default: true },
+  // everyone who hasn't picked their own times gets these; null = derived from CRON_JOB_TIME in .env
+  reminder_default_times: { type: [String], default: null },
+  // null = REMINDER_TIMEZONE / TZ from the environment, else UTC
+  reminder_default_timezone: { type: String, default: null },
+  // the most reminders a user may pick per day (everyone starts with the default times, i.e. 2)
+  reminder_max_per_day: { type: Number, default: 5, min: 1, max: 5 },
+  // queue drain speed; Telegram allows about 30 messages/second per bot, so stay well under
+  reminder_rate_per_second: { type: Number, default: 10, min: 1, max: 25 },
+  // a reminder that couldn't go out within this many minutes of its time is dropped, not sent late
+  reminder_grace_minutes: { type: Number, default: 120, min: 5, max: 720 },
+  // don't remind someone who logged a mood this recently (0 = always remind)
+  reminder_skip_if_logged_minutes: { type: Number, default: 120, min: 0, max: 720 },
 }, { timestamps: true, collection: 'app_config' });
 
 appConfigSchema.statics.get = async function () {

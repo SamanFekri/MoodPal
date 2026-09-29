@@ -634,6 +634,34 @@
     .ego-row .n small { font-weight: 500; color: var(--hint); margin-left: 4px; }
     .ego-row .d { font-size: 11px; color: var(--hint); font-weight: 600; flex: none; text-align: right; }
     .ego-row .tag { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: rgba(175,82,222,0.16); color: #af52de; margin-left: 6px; }
+    .rem-times { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .rem-time { display: flex; gap: 4px; align-items: center; background: rgba(138,143,152,0.12); border-radius: 12px; padding: 2px 4px 2px 2px; }
+    .rem-time input[type=time] { font: inherit; font-size: 16px; font-weight: 700; color: var(--text); background: none; border: 0; padding: 8px 8px; }
+    .rem-time .g-btn { width: 28px; height: 28px; background: none; color: var(--hint); }
+    .rem-add { padding: 9px 12px !important; font-size: 13px !important; box-shadow: none !important; }
+    .warn-box { font-size: 13px; line-height: 1.4; margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(255,159,10,0.14); color: var(--recent); }
+    .tz-now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 2px 0 6px; }
+    .tz-now b { font-size: 17px; font-weight: 800; }
+    .tz-now span { font-size: 13px; color: var(--hint); font-weight: 600; }
+    .tz-search { margin: 12px 0 0; box-shadow: none; background: rgba(138,143,152,0.10); animation: none; }
+    .tz-results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+    .tz-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 0; background: rgba(138,143,152,0.08); color: var(--text); font: inherit; text-align: left; padding: 10px 12px; border-radius: 12px; cursor: pointer; }
+    .tz-row.on { box-shadow: inset 0 0 0 2px var(--accent); }
+    .tz-row .z { font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tz-row .o { font-size: 12px; color: var(--hint); font-weight: 600; flex: none; }
+    .rem-queue { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 8px; }
+    .rem-queue div { background: rgba(138,143,152,0.08); border-radius: 12px; padding: 8px 4px; text-align: center; }
+    .rem-queue b { display: block; font-size: 18px; font-weight: 800; }
+    .rem-queue span { font-size: 10px; color: var(--hint); font-weight: 700; }
+    .rem-limit { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; }
+    .rem-limit + .rem-limit { border-top: 1px solid rgba(138,143,152,0.12); }
+    .rem-limit span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .rem-limit b { font-size: 14px; font-weight: 700; }
+    .rem-limit i { font-style: normal; font-size: 12px; color: var(--hint); line-height: 1.35; }
+    .rem-limit select { flex: none; font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 10px; padding: 8px 10px; }
+    .sheet-tabs { position: sticky; top: -10px; z-index: 2; margin: 4px 0 12px; box-shadow: 0 1px 0 rgba(138,143,152,0.14), 0 6px 14px -10px rgba(0,0,0,.25); }
+    .sheet-tabs button { font-size: 12px !important; padding: 9px 4px !important; }
+    .sheet-pane { animation: fade-up .35s var(--ease-out) both; }
     .sheet-back { border: 0; background: none; color: var(--link); font: inherit; font-size: 13px; font-weight: 700; padding: 0 0 8px; cursor: pointer; }
     .g-node text { user-select: none; -webkit-user-select: none; }
     .g-node text.emoji { font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
@@ -912,7 +940,7 @@
           <header class="header">
             <div>
               <p class="greeting">Admin</p>
-              <h1>{{ { backup: 'Backup', graph: 'Follow graph' }[admin.view] || 'All moods' }}</h1>
+              <h1>{{ { backup: 'Backup', graph: 'Follow graph', reminders: 'Reminders' }[admin.view] || 'All moods' }}</h1>
             </div>
             <div class="header-right">
               <span class="pill" v-if="admin.view === 'users' && admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
@@ -923,6 +951,7 @@
             <div class="seg grow">
               <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'">👥 Users</button>
               <button :class="{ on: admin.view === 'graph' }" @click="showGraph()">🕸 Graph</button>
+              <button :class="{ on: admin.view === 'reminders' }" @click="showReminderAdmin()">⏰ Reminders</button>
               <button :class="{ on: admin.view === 'backup' }" @click="showBackup()">💾 Backup</button>
             </div>
           </div>
@@ -1023,6 +1052,105 @@
             </template>
           </template>
 
+          <!-- ---------- Admin · Reminders ---------- -->
+          <template v-else-if="admin.view === 'reminders'">
+            <template v-if="!remAdmin && !remAdminError">
+              <div class="section" v-for="n in 3" :key="'rsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+            </template>
+            <div v-else-if="!remAdmin" class="state"><div class="art">📡</div><h2>Couldn't load reminders</h2><p>{{ remAdminError }}</p><button class="btn" @click="fetchReminderAdmin()">Try again</button></div>
+            <template v-else>
+              <section class="section" :style="{ '--i': 0 }">
+                <div class="share-row">
+                  <div>
+                    <div class="s-title">Send reminders</div>
+                    <div class="s-desc">The master switch. Off stops scheduling and sending for everyone; people keep their own times.</div>
+                  </div>
+                  <button class="switch" :class="{ on: remAdmin.settings.enabled }" :disabled="!!remAdminBusy" @click="saveReminderAdmin({ enabled: !remAdmin.settings.enabled })" role="switch" :aria-checked="remAdmin.settings.enabled"></button>
+                </div>
+                <div class="ego-stats" style="margin-top:12px">
+                  <div><b style="color:var(--fresh)">{{ remAdmin.users.on }}</b><span>reminders on</span></div>
+                  <div><b>{{ remAdmin.users.off }}</b><span>turned off</span></div>
+                  <div><b style="color:var(--recent)">{{ remAdmin.users.unreachable }}</b><span>can't be reached</span></div>
+                </div>
+                <div class="kv"><span class="k">Own times</span><span class="v">{{ remAdmin.users.custom_times }} of {{ remAdmin.users.total }} people</span></div>
+                <div class="kv" v-if="remAdmin.next_due_at"><span class="k">Next reminder due</span><span class="v">{{ formatWhen(remAdmin.next_due_at) }}</span></div>
+              </section>
+
+              <section class="section" :style="{ '--i': 1 }">
+                <h3>Queue <span class="sub">{{ remAdmin.worker.running ? 'live · refreshes every 5s' : 'worker not running' }}</span></h3>
+                <div class="rem-queue">
+                  <div><b>{{ remAdmin.queue.queued + remAdmin.queue.sending }}</b><span>waiting</span></div>
+                  <div><b style="color:var(--fresh)">{{ remAdmin.queue.sent_24h }}</b><span>sent · 24h</span></div>
+                  <div><b>{{ remAdmin.queue.skipped_24h }}</b><span>skipped · 24h</span></div>
+                  <div><b :style="{ color: remAdmin.queue.failed_24h ? '#ff5f6d' : '' }">{{ remAdmin.queue.failed_24h }}</b><span>failed · 24h</span></div>
+                </div>
+                <div class="kv" v-if="Object.keys(remAdmin.skipped_reasons_24h).length"><span class="k">Skipped because</span><span class="v">{{ Object.entries(remAdmin.skipped_reasons_24h).map(([k, n]) => (REMINDER_REASONS[k] || k) + ' ' + n).join(' · ') }}</span></div>
+                <div class="kv" v-if="remAdmin.worker.paused_until && new Date(remAdmin.worker.paused_until) > new Date()"><span class="k">Paused</span><span class="v warn">Telegram asked us to slow down · until {{ new Date(remAdmin.worker.paused_until).toLocaleTimeString() }}</span></div>
+                <div class="kv" v-if="remAdmin.worker.last_tick_at"><span class="k">Last scheduler run</span><span class="v">{{ new Date(remAdmin.worker.last_tick_at).toLocaleTimeString() }}</span></div>
+                <div class="kv" v-if="remAdmin.worker.last_error"><span class="k">Last error</span><span class="v bad">{{ remAdmin.worker.last_error }}</span></div>
+                <div class="row-actions">
+                  <button class="btn ghost" :disabled="!!remAdminBusy" @click="testReminder">{{ remAdminBusy === 'test' ? '…' : '📨 Send me a test' }}</button>
+                  <button class="btn ghost" :disabled="!!remAdminBusy || !remAdmin.queue.queued" @click="clearReminderQueue">🧹 Clear waiting</button>
+                </div>
+              </section>
+
+              <section class="section" :style="{ '--i': 2 }">
+                <h3>Default times <span class="sub">{{ remAdmin.settings.default_times_from_env ? 'from .env' : 'set here' }}</span></h3>
+                <div class="note-box">For everyone who hasn't picked their own. <template v-if="remAdmin.settings.default_times_from_env">Read from CRON_JOB_TIME in .env.</template><template v-else>.env would give {{ remAdmin.settings.env_default_times.join(' & ') }}.</template></div>
+                <div class="rem-times">
+                  <div v-for="(t, i) in remAdmin.settings.default_times" :key="'dt' + i + t" class="rem-time" :style="{ opacity: i < remAdmin.settings.max_per_day ? 1 : .45 }">
+                    <input type="time" :value="t" :disabled="!!remAdminBusy" @change="setDefaultTime(i, $event.target.value)">
+                    <button class="g-btn" v-if="remAdmin.settings.default_times.length > 1" :disabled="!!remAdminBusy" title="Remove" @click="saveReminderAdmin({ default_times: remAdmin.settings.default_times.filter((_, j) => j !== i) })">×</button>
+                  </div>
+                  <button class="btn ghost rem-add" v-if="remAdmin.settings.default_times.length < 5" :disabled="!!remAdminBusy" @click="addDefaultTime">＋ Add</button>
+                </div>
+                <div class="note-box" v-if="remAdmin.settings.default_times.length > remAdmin.settings.max_per_day">Only the first {{ remAdmin.settings.max_per_day }} are used (the per-person limit below).</div>
+                <div class="time-row">
+                  <select :value="remAdmin.settings.default_timezone" :disabled="!!remAdminBusy" @change="saveReminderAdmin({ default_timezone: $event.target.value })">
+                    <option v-for="tz in [...new Set([remAdmin.settings.default_timezone, ...TIMEZONES])]" :key="tz" :value="tz">{{ tz }}</option>
+                  </select>
+                  <button class="btn ghost" v-if="!remAdmin.settings.default_times_from_env" :disabled="!!remAdminBusy" @click="saveReminderAdmin({ default_times: null })">Use .env</button>
+                </div>
+              </section>
+
+              <section class="section" :style="{ '--i': 3 }">
+                <h3>Limits</h3>
+                <div class="rem-limit">
+                  <span><b>Reminders per person</b><i>the most anyone can pick in a day; everyone starts with the default times</i></span>
+                  <select :value="remAdmin.settings.max_per_day" :disabled="!!remAdminBusy" @change="saveReminderAdmin({ max_per_day: Number($event.target.value) })">
+                    <option v-for="n in 5" :key="n" :value="n">up to {{ n }} a day</option>
+                  </select>
+                </div>
+                <div class="rem-limit">
+                  <span><b>Send speed</b><i>Telegram allows about 30 messages a second, so stay under it</i></span>
+                  <select :value="remAdmin.settings.rate_per_second" :disabled="!!remAdminBusy" @change="saveReminderAdmin({ rate_per_second: Number($event.target.value) })">
+                    <option v-for="n in [1, 2, 5, 10, 15, 20, 25]" :key="n" :value="n">{{ n }} / second</option>
+                  </select>
+                </div>
+                <div class="rem-limit">
+                  <span><b>Give up after</b><i>a reminder that's this late is dropped instead of arriving at an odd hour</i></span>
+                  <select :value="remAdmin.settings.grace_minutes" :disabled="!!remAdminBusy" @change="saveReminderAdmin({ grace_minutes: Number($event.target.value) })">
+                    <option v-for="n in [15, 30, 60, 120, 240, 480]" :key="n" :value="n">{{ n < 60 ? n + ' min' : n / 60 + ' h' }}</option>
+                  </select>
+                </div>
+                <div class="rem-limit">
+                  <span><b>Skip if they just logged</b><i>no reminder for someone who set a mood this recently</i></span>
+                  <select :value="remAdmin.settings.skip_if_logged_minutes" :disabled="!!remAdminBusy" @change="saveReminderAdmin({ skip_if_logged_minutes: Number($event.target.value) })">
+                    <option v-for="n in [0, 30, 60, 120, 240, 480]" :key="n" :value="n">{{ n === 0 ? 'never skip' : n < 60 ? n + ' min' : n / 60 + ' h' }}</option>
+                  </select>
+                </div>
+              </section>
+
+              <section class="section" :style="{ '--i': 4 }" v-if="remAdmin.recent_failures.length">
+                <h3>Recent failures <span class="sub">last 24h</span></h3>
+                <div v-for="(f, i) in remAdmin.recent_failures" :key="'rf' + i" class="kv">
+                  <span class="k">{{ f.user ? (f.user.fullname || (f.user.username ? '@' + f.user.username : 'id ' + f.user.id)) : 'deleted user' }}</span>
+                  <span class="v bad">{{ REMINDER_REASONS[f.reason] || f.reason }} · {{ formatWhen(f.at, true) }}</span>
+                </div>
+              </section>
+            </template>
+          </template>
+
           <!-- ---------- Admin · Backup ---------- -->
           <template v-else>
             <template v-if="!backup && !backupError">
@@ -1066,7 +1194,7 @@
                 <div class="kv" v-if="backup.backup.last_at"><span class="k">Last backup</span><span class="v" :class="{ ok: backup.backup.last_status === 'success', bad: backup.backup.last_status === 'failed', warn: backup.backup.last_status === 'partial' }">{{ backup.backup.last_status }} · {{ formatWhen(backup.backup.last_at) }}</span></div>
                 <div class="kv" v-if="backup.backup.last_message"><span class="k">Detail</span><span class="v">{{ backup.backup.last_message }}</span></div>
                 <div class="kv" v-if="backup.backup.last_parts"><span class="k">Size</span><span class="v">{{ backup.backup.last_parts }} file{{ backup.backup.last_parts === 1 ? '' : 's' }} · {{ formatBytes(backup.backup.last_bytes) }}</span></div>
-                <div class="note-box">A backup holds every user's moods, notes and personality data. {{ backup.backup.excluded_collections.join(', ') }} is left out so restoring never overwrites these settings.</div>
+                <div class="note-box">A backup holds every user's moods, notes and personality data. {{ backup.backup.excluded_collections.join(' and ') }} {{ backup.backup.excluded_collections.length === 1 ? 'is' : 'are' }} left out, so restoring never overwrites these settings or replays old reminders.</div>
               </section>
 
               <section class="section" :style="{ '--i': 2 }">
@@ -1197,6 +1325,61 @@
               </div>
             </section>
 
+            <section class="section" :style="{ '--i': 2 }" v-if="settings.timezone">
+              <h3>🌍 Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
+              <div class="tz-now">
+                <b>{{ settings.timezone.timezone }}</b>
+                <span>it's {{ localTimeIn(settings.timezone.timezone) }} there</span>
+              </div>
+              <div class="note-box" v-if="!settings.timezone.is_set">This is the default. Set yours so reminders arrive at your local time.</div>
+              <div class="row-actions" v-if="browserTimezone && browserTimezone !== settings.timezone.timezone">
+                <button class="btn" :disabled="timezoneBusy" @click="setTimezone(browserTimezone)">📍 Use this device · {{ browserTimezone }} ({{ tzOffset(browserTimezone) }})</button>
+              </div>
+              <label class="search tz-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                <input v-model="tzQuery" type="search" autocomplete="off" placeholder="City or offset, e.g. Tehran or +3:30" @keydown.enter="tzMatches[0] && setTimezone(tzMatches[0])">
+              </label>
+              <div class="tz-results" v-if="tzQuery.trim()">
+                <button v-for="z in tzMatches" :key="z" class="tz-row" :class="{ on: z === settings.timezone.timezone }" :disabled="timezoneBusy" @click="setTimezone(z)">
+                  <span class="z">{{ z.replace(/_/g, ' ') }}</span>
+                  <span class="o">{{ tzOffset(z) }} · {{ localTimeIn(z) }}</span>
+                </button>
+                <div v-if="!tzMatches.length" class="muted-box">No timezone matches “{{ tzQuery.trim() }}”. Try a big city nearby or your UTC offset.</div>
+              </div>
+              <div class="row-actions" v-if="settings.timezone.is_set">
+                <button class="btn ghost" :disabled="timezoneBusy" @click="setTimezone(null)">Back to default ({{ settings.timezone.default }})</button>
+              </div>
+              <div class="note-box">You can also set it from the bot: <code>/timezone Berlin</code> or <code>/timezone +2</code>.</div>
+            </section>
+
+            <section class="section" :style="{ '--i': 3 }" v-if="settings.reminders">
+              <div class="share-row">
+                <div>
+                  <div class="s-title">⏰ Mood reminders</div>
+                  <div class="s-desc">The bot sends you a quick mood picker {{ settings.reminders.times.length === 1 ? 'once' : settings.reminders.times.length === 2 ? 'twice' : settings.reminders.times.length + ' times' }} a day. If you've just logged a mood, it skips that one.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.reminders.enabled }" :disabled="remindersBusy" @click="saveReminders({ enabled: !settings.reminders.enabled })" role="switch" :aria-checked="settings.reminders.enabled"></button>
+              </div>
+              <div class="warn-box" v-if="settings.reminders.enabled && settings.reminders.bot_blocked">We couldn't reach you on Telegram. Send any message to the bot and your reminders will start again.</div>
+              <div class="note-box" v-if="!settings.reminders.service_enabled">Reminders are paused for everyone at the moment. Your times are kept.</div>
+              <template v-if="settings.reminders.enabled">
+                <div class="rem-times">
+                  <div v-for="(t, i) in settings.reminders.times" :key="'rt' + i + t" class="rem-time">
+                    <input type="time" :value="t" :disabled="remindersBusy" @change="setReminderTime(i, $event.target.value)">
+                    <button class="g-btn" v-if="settings.reminders.times.length > 1" :disabled="remindersBusy" title="Remove this reminder" @click="removeReminderTime(i)">×</button>
+                  </div>
+                  <button class="btn ghost rem-add" v-if="settings.reminders.times.length < settings.reminders.max_per_day" :disabled="remindersBusy" @click="addReminderTime">＋ Add a reminder</button>
+                </div>
+                <div class="kv"><span class="k">In your timezone</span><span class="v">{{ settings.reminders.timezone }} · {{ tzOffset(settings.reminders.timezone) }}</span></div>
+                <div class="kv" v-if="settings.reminders.next_at"><span class="k">Next reminder</span><span class="v">{{ formatInTz(settings.reminders.next_at, settings.reminders.timezone) }}</span></div>
+                <div class="kv" v-if="settings.reminders.last_sent_at"><span class="k">Last sent</span><span class="v">{{ formatInTz(settings.reminders.last_sent_at, settings.reminders.timezone) }}</span></div>
+                <div class="row-actions" v-if="settings.reminders.custom_times">
+                  <button class="btn ghost" :disabled="remindersBusy" @click="saveReminders({ times: null })">Back to default ({{ settings.reminders.default_times.join(' & ') }})</button>
+                </div>
+                <div class="note-box">Up to {{ settings.reminders.max_per_day }} a day. You can also turn them off from the bot with /reminders or the 🔕 button under a reminder.</div>
+              </template>
+            </section>
+
             <p class="disclaimer">🤖 Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
           </template>
         </div>
@@ -1254,6 +1437,7 @@
                   <h2>{{ sheet.user.fullname || 'Unnamed' }}</h2>
                   <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }}<template v-if="sheet.user.mood_count !== null && sheet.user.mood_count !== undefined"> · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</template></div>
                   <div class="mood">Active {{ formatWhen(sheet.user.last_active_at).toLowerCase() }}</div>
+                  <div class="mood" v-if="sheet.user.timezone">🌍 {{ sheet.user.timezone }} · {{ localTimeIn(sheet.user.timezone) }} there</div>
                 </div>
               </div>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
@@ -1266,59 +1450,70 @@
               </div>
               <div class="blocked-note" v-if="sheet.user.is_blocked">🚫 Blocked: the bot ignores their messages and the mini app refuses them.</div>
 
-              <div class="sheet-section-title">Mood connections <span style="text-transform:none;letter-spacing:0;font-weight:600">· admin only</span></div>
-              <div v-if="sheet.connectionsLoading" class="section" style="margin:0"><div class="shimmer" style="height:200px;border-radius:14px"></div></div>
-              <div v-else-if="!sheet.connections" class="muted-box">Couldn't load connections.</div>
-              <template v-else>
-                <div class="ego-stats">
-                  <div><b style="color:var(--accent)">{{ sheet.connections.sees.length }}</b><span>sees their mood</span></div>
-                  <div><b style="color:var(--fresh)">{{ sheet.connections.seen_by.length }}</b><span>can see {{ (sheet.user.fullname || 'them').split(' ')[0] }}</span></div>
-                  <div><b style="color:#af52de">{{ sheet.connections.mutual.length }}</b><span>mutual</span></div>
+              <div class="seg grow sheet-tabs">
+                <button :class="{ on: sheet.tab === 'moods' }" @click="setSheetTab('moods')">📜 Moods<template v-if="sheet.user.mood_count"> · {{ sheet.user.mood_count }}</template></button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')">🧠 Personality</button>
+                <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')">🕸 Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
+              </div>
+
+              <!-- v-show keeps the timeline (and its stickers) alive while another tab is open -->
+              <div v-show="sheet.tab === 'moods'" class="sheet-pane">
+                <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+                <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
+                <div v-else class="timeline">
+                  <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
+                    <div class="tl-ico">
+                      <div class="sticker" :class="{ loaded: loaded['tl' + i] }" :data-id="'tl' + i" :data-tgs="m.tgs" ref="timelineStickers">
+                        <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
+                      </div>
+                    </div>
+                    <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                    <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                  </div>
                 </div>
-                <div v-if="!sheet.connections.sees.length && !sheet.connections.seen_by.length" class="muted-box">Nobody sees {{ sheet.user.fullname || 'this person' }}'s mood, and they don't see anyone's.</div>
-                <template v-else>
-                  <ego-graph :data="sheet.connections" @open="openConnection"></ego-graph>
-                  <div class="ego-list">
-                    <h4><i class="sw" style="background:var(--fresh)"></i>Can see {{ sheet.user.fullname || 'their' }}'s mood ({{ sheet.connections.seen_by.length }})</h4>
-                    <div v-if="!sheet.connections.seen_by.length" class="muted-box">Nobody.</div>
-                    <div v-for="p in sheet.connections.seen_by" :key="'sb' + p.id" class="ego-row" @click="openConnection(p)">
-                      <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
-                      <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
-                      <span class="d">since {{ formatWhen(p.since, true) }}</span>
-                    </div>
-                    <h4><i class="sw" style="background:var(--accent)"></i>{{ sheet.user.fullname || 'They' }} can see ({{ sheet.connections.sees.length }})</h4>
-                    <div v-if="!sheet.connections.sees.length" class="muted-box">Nobody.</div>
-                    <div v-for="p in sheet.connections.sees" :key="'s' + p.id" class="ego-row" @click="openConnection(p)">
-                      <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
-                      <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
-                      <span class="d">since {{ formatWhen(p.since, true) }}</span>
-                    </div>
-                  </div>
-                  <div class="row-actions"><button class="btn ghost" @click="showInGraph(sheet.user.id)">🕸 Show in the full graph</button></div>
-                </template>
-              </template>
-
-              <div class="sheet-section-title">Personality</div>
-              <div v-if="sheet.personalityLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
-              <personality-view v-else-if="sheet.personality?.profile" :profile="sheet.personality.profile" :animate-key="'adm-' + sheet.user.id" compact></personality-view>
-              <div v-else class="muted-box">No personality test taken yet.</div>
-
-              <div class="sheet-section-title">Mood history</div>
-              <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
-              <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
-              <div v-else class="timeline">
-                <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
-                  <div class="tl-ico">
-                    <div class="sticker" :class="{ loaded: loaded['tl' + i] }" :data-id="'tl' + i" :data-tgs="m.tgs" ref="timelineStickers">
-                      <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
-                    </div>
-                  </div>
-                  <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
-                  <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                <div class="load-more" v-if="!sheet.loading && sheet.has_more">
+                  <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
                 </div>
               </div>
-              <div class="load-more" v-if="!sheet.loading && sheet.has_more">
-                <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
+
+              <div v-if="sheet.tab === 'personality'" class="sheet-pane">
+                <div v-if="sheet.personalityLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+                <personality-view v-else-if="sheet.personality?.profile" :profile="sheet.personality.profile" :animate-key="'adm-' + sheet.user.id" compact></personality-view>
+                <div v-else class="muted-box">No personality test taken yet.</div>
+              </div>
+
+              <div v-if="sheet.tab === 'connections'" class="sheet-pane">
+                <div class="note-box" style="margin:0 0 10px">Only admins can see this: whose mood {{ sheet.user.fullname || 'they' }} can see, and who can see theirs.</div>
+                <div v-if="sheet.connectionsLoading" class="section" style="margin:0"><div class="shimmer" style="height:200px;border-radius:14px"></div></div>
+                <div v-else-if="!sheet.connections" class="muted-box">Couldn't load connections.</div>
+                <template v-else>
+                  <div class="ego-stats">
+                    <div><b style="color:var(--accent)">{{ sheet.connections.sees.length }}</b><span>sees their mood</span></div>
+                    <div><b style="color:var(--fresh)">{{ sheet.connections.seen_by.length }}</b><span>can see {{ (sheet.user.fullname || 'them').split(' ')[0] }}</span></div>
+                    <div><b style="color:#af52de">{{ sheet.connections.mutual.length }}</b><span>mutual</span></div>
+                  </div>
+                  <div v-if="!sheet.connections.sees.length && !sheet.connections.seen_by.length" class="muted-box">Nobody sees {{ sheet.user.fullname || 'this person' }}'s mood, and they don't see anyone's.</div>
+                  <template v-else>
+                    <ego-graph :data="sheet.connections" @open="openConnection"></ego-graph>
+                    <div class="ego-list">
+                      <h4><i class="sw" style="background:var(--fresh)"></i>Can see {{ sheet.user.fullname || 'their' }}'s mood ({{ sheet.connections.seen_by.length }})</h4>
+                      <div v-if="!sheet.connections.seen_by.length" class="muted-box">Nobody.</div>
+                      <div v-for="p in sheet.connections.seen_by" :key="'sb' + p.id" class="ego-row" @click="openConnection(p)">
+                        <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                        <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
+                        <span class="d">since {{ formatWhen(p.since, true) }}</span>
+                      </div>
+                      <h4><i class="sw" style="background:var(--accent)"></i>{{ sheet.user.fullname || 'They' }} can see ({{ sheet.connections.sees.length }})</h4>
+                      <div v-if="!sheet.connections.sees.length" class="muted-box">Nobody.</div>
+                      <div v-for="p in sheet.connections.sees" :key="'s' + p.id" class="ego-row" @click="openConnection(p)">
+                        <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                        <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
+                        <span class="d">since {{ formatWhen(p.since, true) }}</span>
+                      </div>
+                    </div>
+                    <div class="row-actions"><button class="btn ghost" @click="showInGraph(sheet.user.id)">🕸 Show in the full graph</button></div>
+                  </template>
+                </template>
               </div>
             </template>
           </div>
@@ -1945,6 +2140,10 @@
           graphSelectedId: null,
           backup: null,
           backupError: '',
+          remAdmin: null,
+          remAdminError: '',
+          remAdminBusy: '',
+          REMINDER_REASONS: { recent_mood: 'just logged', late: 'too late', turned_off: 'turned off', user_blocked: 'blocked user', cleared_by_admin: 'cleared', user_gone: 'user deleted', bot_blocked: "bot blocked / chat closed", rate_limited: 'rate limited' },
           backupBusy: '',
           gybToken: '',
           restoreFiles: [],
@@ -1954,6 +2153,11 @@
           settings: null,
           settingsError: '',
           settingsBusy: false,
+          remindersBusy: false,
+          timezoneBusy: false,
+          tzQuery: '',
+          nowTick: Date.now(),
+          browserTimezone: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { return ''; } })(),
           keyInput: '',
           modelInput: '',
           quiz: null,            // { session, picked, saving, done }
@@ -1998,10 +2202,32 @@
         graphFollowing() { return this.graphSide('source', 'target'); },
         graphFollowers() { return this.graphSide('target', 'source'); },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
+        // every zone the browser knows (falls back to the short list on old WebViews)
+        allTimezones() {
+          try { return [...new Set(['UTC', ...Intl.supportedValuesOf('timeZone')])]; } catch { return this.TIMEZONES; }
+        },
+        // city / region name, or a UTC offset like +3:30 (same rules as the bot's /timezone)
+        tzMatches() {
+          const q = this.tzQuery.trim();
+          if (!q) return [];
+          const m = /^(?:utc|gmt)?\s*([+-])?\s*(\d{1,2})(?:[:.h]?(\d{2}))?$/i.exec(q);
+          if (m && (m[1] || /^(utc|gmt)/i.test(q) || q.length <= 2) && Number(m[2]) <= 14) {
+            const mins = (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0));
+            const rank = (z) => ['Europe', 'Asia', 'America', 'Africa', 'Australia', 'Pacific', 'Atlantic', 'Indian'].indexOf(z.split('/')[0]) + 1 || 99;
+            return this.allTimezones.filter(z => !z.startsWith('Etc/') && this.tzOffsetMinutes(z) === mins).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).slice(0, 8);
+          }
+          if (/^(utc|gmt)$/i.test(q)) return ['UTC'];
+          const needle = q.toLowerCase().replace(/\s+/g, '_');
+          return this.allTimezones
+            .map(z => { const l = z.toLowerCase(), c = l.split('/').pop(); return [c === needle ? 0 : c.startsWith(needle) ? 1 : l.startsWith(needle) ? 2 : l.includes(needle) ? 3 : -1, z]; })
+            .filter(([score]) => score >= 0).sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).slice(0, 8).map(([, z]) => z);
+        },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
 
       async mounted() {
+        // keeps "it's 21:04 there" current
+        setInterval(() => { this.nowTick = Date.now(); }, 30 * 1000);
         this.tg = window.Telegram?.WebApp;
         if (this.tg) {
           this.tg.ready();
@@ -2373,12 +2599,12 @@
         setAdminNotes(v) { this.admin.notes = v; this.applyAdminFilter(); },
         setAdminSort(v) { this.admin.sort = v; this.applyAdminFilter(); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
-        async openAdminUser(u, { trail = [] } = {}) {
+        async openAdminUser(u, { trail = [], tab = 'moods' } = {}) {
           this.haptic('light');
           try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true };
+          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true };
           document.querySelector('.sheet')?.scrollTo({ top: 0 });
           // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag
           // and mood count, which a row opened from the graph or another profile doesn't carry.
@@ -2386,6 +2612,7 @@
             if (this.sheet?.user?.id !== u.id) return;
             this.sheet.connections = d;
             this.sheet.user.is_friend = d.user.is_friend;
+            this.sheet.user.timezone = d.user.timezone;
             if (this.sheet.user.mood_count === null || this.sheet.user.mood_count === undefined) this.sheet.user.mood_count = d.user.mood_count;
           }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.connectionsLoading = false; });
           this.api(`/api/admin/users/${u.id}/personality`).then(d => { if (this.sheet?.user?.id === u.id) this.sheet.personality = d; }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.personalityLoading = false; });
@@ -2503,17 +2730,24 @@
         },
         // a graph node or a connection row, shaped like a row of the admin user list
         toAdminSheetUser(p) {
-          return { id: p.id, fullname: p.fullname, username: p.username, is_blocked: p.is_blocked, is_admin: p.is_admin, is_friend: Boolean(p.is_friend), mood_count: null, last_active_at: p.last_active_at || p.mood?.timestamp || null, last_mood: p.mood ? { mood: p.mood, note: '', timestamp: p.mood.timestamp, tgs: `/public/tgs/${p.mood.code}.tgs` } : null };
+          return { id: p.id, fullname: p.fullname, username: p.username, timezone: p.timezone || null, is_blocked: p.is_blocked, is_admin: p.is_admin, is_friend: Boolean(p.is_friend), mood_count: null, last_active_at: p.last_active_at || p.mood?.timestamp || null, last_mood: p.mood ? { mood: p.mood, note: '', timestamp: p.mood.timestamp, tgs: `/public/tgs/${p.mood.code}.tgs` } : null };
         },
         // hop from one profile to someone in its connections, keeping a trail to come back
-        openConnection(p) {
+        // (and landing on the Connections tab again, so you can keep exploring)
+        async openConnection(p) {
           const trail = this.sheet?.type === 'admin-user' ? [...this.sheet.trail, this.sheet.user] : [];
-          this.openAdminUser(this.toAdminSheetUser(p), { trail });
+          const tab = this.sheet?.tab || 'moods';
+          await this.openAdminUser(this.toAdminSheetUser(p), { trail, tab });
+        },
+        setSheetTab(tab) {
+          if (!this.sheet || this.sheet.tab === tab) return;
+          this.haptic('light');
+          this.sheet.tab = tab;
         },
         backInTrail() {
           const trail = [...this.sheet.trail];
           const prev = trail.pop();
-          this.openAdminUser(prev, { trail });
+          this.openAdminUser(prev, { trail, tab: this.sheet.tab });
         },
         async showInGraph(id) {
           this.closeSheet();
@@ -2525,6 +2759,66 @@
         },
 
         // ----- backup / restore / health (admin) -----
+        // ----- mood reminders (admin) -----
+        showReminderAdmin() { this.admin.view = 'reminders'; this.haptic('light'); this.fetchReminderAdmin(); },
+        async fetchReminderAdmin({ quiet = false } = {}) {
+          try {
+            this.remAdmin = await this.api('/api/admin/reminders', { retries: quiet ? 0 : 2 });
+            this.remAdminError = '';
+          } catch (error) {
+            if (!quiet) this.remAdminError = error.status === 403 ? 'This account is not an admin.' : "Couldn't reach the server.";
+          }
+        },
+        async saveReminderAdmin(patch, busy = 'save') {
+          if (this.remAdminBusy) return;
+          this.haptic('light');
+          this.remAdminBusy = busy;
+          try {
+            this.remAdmin = await this.api('/api/admin/reminders/settings', { method: 'POST', body: patch });
+            if (patch.enabled !== undefined) this.showToast(patch.enabled ? 'Reminders are on' : 'Reminders are paused for everyone');
+            else this.showToast('Saved');
+            this.fetchSettings();              // your own reminder card follows the defaults
+          } catch (error) {
+            this.showToast(error.status === 400 ? "That value isn't allowed" : "Couldn't save");
+          } finally {
+            this.remAdminBusy = '';
+          }
+        },
+        setDefaultTime(i, value) {
+          if (!value) return;
+          const times = [...this.remAdmin.settings.default_times];
+          times[i] = value;
+          if (new Set(times).size !== times.length) return this.showToast('That time is already in the list');
+          this.saveReminderAdmin({ default_times: times });
+        },
+        addDefaultTime() {
+          const used = new Set(this.remAdmin.settings.default_times);
+          const pick = ['12:00', '15:00', '18:00', '09:00', '06:00', '23:00'].find(t => !used.has(t));
+          this.saveReminderAdmin({ default_times: [...this.remAdmin.settings.default_times, pick] });
+        },
+        async testReminder() {
+          if (this.remAdminBusy) return;
+          this.remAdminBusy = 'test';
+          try { this.remAdmin = await this.api('/api/admin/reminders/test', { method: 'POST' }); this.showToast('Queued: check your chat with the bot'); }
+          catch { this.showToast("Couldn't queue a test"); }
+          finally { this.remAdminBusy = ''; }
+        },
+        async clearReminderQueue() {
+          if (this.remAdminBusy) return;
+          const n = this.remAdmin.queue.queued;
+          if (!window.confirm(`Drop ${n} waiting reminder${n === 1 ? '' : 's'}? They won't be sent.`)) return;
+          this.remAdminBusy = 'clear';
+          try { const d = await this.api('/api/admin/reminders/clear', { method: 'POST' }); this.remAdmin = d; this.showToast(`Dropped ${d.cleared}`); }
+          catch { this.showToast("Couldn't clear the queue"); }
+          finally { this.remAdminBusy = ''; }
+        },
+
+        // the reminder dashboard refreshes itself while it's on screen
+        syncReminderPolling() {
+          const on = this.tab === 'admin' && this.admin.view === 'reminders';
+          if (on && !this._remTimer) this._remTimer = setInterval(() => { if (!document.hidden) this.fetchReminderAdmin({ quiet: true }); }, 5000);
+          if (!on && this._remTimer) { clearInterval(this._remTimer); this._remTimer = null; }
+        },
         showBackup() { this.admin.view = 'backup'; this.haptic('light'); if (!this.backup) this.fetchBackup(); },
         async fetchBackup() {
           try {
@@ -2675,6 +2969,89 @@
           finally { this.settingsBusy = false; }
         },
 
+        // ----- timezone -----
+        tzOffsetMinutes(tz) {
+          try {
+            const name = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'longOffset' }).formatToParts(new Date(this.nowTick)).find(p => p.type === 'timeZoneName')?.value || 'GMT';
+            const m = /GMT([+-])(\d{2}):?(\d{2})?/.exec(name);
+            return m ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0)) : 0;
+          } catch { return 0; }
+        },
+        tzOffset(tz) {
+          const m = this.tzOffsetMinutes(tz), a = Math.abs(m);
+          return `UTC${m < 0 ? '-' : '+'}${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`;
+        },
+        // "Today · 07:00" / "Tomorrow · 21:00" as seen in tz (reminder times read in the person's own zone)
+        formatInTz(ts, tz) {
+          try {
+            const day = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+            const d = new Date(ts), now = new Date(this.nowTick);
+            const diff = Math.round((Date.parse(day(d)) - Date.parse(day(now))) / 86400000);
+            const time = d.toLocaleTimeString(undefined, { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+            const label = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
+            return `${label} · ${time}`;
+          } catch { return this.formatWhen(ts); }
+        },
+        // nowTick makes this re-render every half minute, so the clock stays right
+        localTimeIn(tz) {
+          try { return new Date(this.nowTick).toLocaleTimeString(undefined, { timeZone: tz, hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
+        },
+        async setTimezone(timezone) {
+          if (this.timezoneBusy) return;
+          this.haptic('light');
+          this.timezoneBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/timezone', { method: 'POST', body: { timezone } });
+            this.tzQuery = '';
+            const r = this.settings.reminders;
+            this.showToast(`Timezone: ${this.settings.timezone.timezone}` + (r?.enabled && r.next_at ? ` · next reminder ${this.formatInTz(r.next_at, r.timezone).toLowerCase()}` : ''));
+          } catch (error) {
+            this.showToast(error.status === 400 ? 'Unknown timezone' : "Couldn't save your timezone");
+          } finally {
+            this.timezoneBusy = false;
+          }
+        },
+
+        // ----- mood reminders -----
+        async saveReminders(patch) {
+          if (this.remindersBusy) return;
+          this.haptic('light');
+          const r = this.settings.reminders;
+          const body = { ...patch };
+          // first time someone touches reminders, use this device's timezone instead of the server default
+          if (body.timezone === undefined && !r.custom_timezone && this.browserTimezone && this.browserTimezone !== r.timezone) body.timezone = this.browserTimezone;
+          this.remindersBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/reminders', { method: 'POST', body });
+            const now = this.settings.reminders;
+            if (patch.enabled === false) this.showToast('Reminders are off');
+            else if (patch.enabled === true) this.showToast('Reminders are on');
+            else if (now.next_at) this.showToast(`Next reminder ${this.formatInTz(now.next_at, now.timezone).toLowerCase()}`);
+          } catch (error) {
+            const messages = { too_many_times: `At most ${r.max_per_day} a day`, invalid_times: "That time doesn't look right", invalid_timezone: 'Unknown timezone' };
+            this.showToast(messages[error.message] || "Couldn't save reminders");
+          } finally {
+            this.remindersBusy = false;
+          }
+        },
+        setReminderTime(i, value) {
+          if (!value) return;
+          const times = [...this.settings.reminders.times];
+          times[i] = value;
+          if (new Set(times).size !== times.length) return this.showToast('You already have a reminder then');
+          this.saveReminders({ times });
+        },
+        removeReminderTime(i) { this.saveReminders({ times: this.settings.reminders.times.filter((_, j) => j !== i) }); },
+        addReminderTime() {
+          const times = this.settings.reminders.times;
+          // a default slot they don't have yet, else midday, else an hour after the last one
+          const used = new Set(times);
+          const pick = this.settings.reminders.default_times.find(t => !used.has(t))
+            || ['12:00', '15:00', '18:00', '09:00'].find(t => !used.has(t))
+            || `${String((Number(times[times.length - 1].slice(0, 2)) + 1) % 24).padStart(2, '0')}:00`;
+          this.saveReminders({ times: [...times, pick] });
+        },
+
         // ----- mood log -----
         async fetchLogs({ append = false } = {}) {
           if (append) { if (!this.logs.next_before || this.logs.loadingMore) return; this.logs.loadingMore = true; } else { if (this.logs.loading) return; this.logs.loading = true; }
@@ -2741,7 +3118,10 @@
         }
       },
 
-      watch: { tab(key) { this.ensureLoaded(key); } },
+      watch: {
+        tab(key) { this.ensureLoaded(key); this.syncReminderPolling(); },
+        'admin.view'() { this.syncReminderPolling(); },
+      },
 
       beforeUnmount() { this.destroyStickers(); }
     }).mount('#app');

@@ -25,7 +25,8 @@ const FORMAT_VERSION = 1;
 
 // app_config holds the upload token and the schedule. Restoring it from an old dump
 // would silently change this deployment's configuration, so it never goes in a backup.
-const EXCLUDED_COLLECTIONS = new Set(['app_config']);
+// reminder_jobs is a short-lived send queue, not user data
+const EXCLUDED_COLLECTIONS = new Set(['app_config', 'reminder_jobs']);
 
 const pad = (n) => String(n).padStart(2, '0');
 const stamp = (d = new Date()) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}_${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}`;

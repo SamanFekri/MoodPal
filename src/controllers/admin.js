@@ -90,7 +90,7 @@ const listUsers = async (req, res) => {
         as: 'friend',
       } },
       // $arrayElemAt instead of $first: works on MongoDB 4.2+
-      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
+      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, timezone: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
     ]),
     User.aggregate(countPipeline),
     Mood.estimatedDocumentCount(),
@@ -115,6 +115,7 @@ const listUsers = async (req, res) => {
       is_admin: Boolean(u.is_admin),
       is_friend: Boolean(u.is_friend),
       has_note: Boolean(u.has_note),
+      timezone: u.timezone || null,
       last_active_at: u.last_active_at,
       mood_count: u.mood_count,
       trait_value: traitKey ? u.trait_value : undefined,
@@ -292,7 +293,7 @@ const userConnections = async (req, res) => {
   const seenByList = side(seenBy, 'follower');
   const seenByIds = new Set(seenByList.map(p => p.id));
   res.json({
-    user: { ...person(user), mood_count: moodCount },
+    user: { ...person(user), mood_count: moodCount, timezone: user.timezone || null },
     sees: seesList,
     seen_by: seenByList,
     mutual: seesList.filter(p => seenByIds.has(p.id)).map(p => p.id),

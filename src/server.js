@@ -45,6 +45,8 @@ app.get('/api/me/settings', requireWebAppUser, controllers.settings.getSettings)
 app.post('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.setKey);
 app.delete('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.removeKey);
 app.post('/api/me/settings/model', requireWebAppUser, controllers.settings.setModel);
+app.post('/api/me/settings/reminders', requireWebAppUser, controllers.settings.setReminders);
+app.post('/api/me/settings/timezone', requireWebAppUser, controllers.settings.setTimezone);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/me/personality/session', requireWebAppUser, controllers.personality.getSession);
@@ -58,6 +60,11 @@ app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAd
 app.get('/api/admin/users/:telegramId/connections', requireWebAppUser, requireAdmin, controllers.admin.userConnections);
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
 app.get('/api/admin/graph', requireWebAppUser, requireAdmin, controllers.admin.followGraph);
+// mood reminders
+app.get('/api/admin/reminders', requireWebAppUser, requireAdmin, controllers.reminders.getReminders);
+app.post('/api/admin/reminders/settings', requireWebAppUser, requireAdmin, controllers.reminders.saveSettings);
+app.post('/api/admin/reminders/test', requireWebAppUser, requireAdmin, controllers.reminders.sendTest);
+app.post('/api/admin/reminders/clear', requireWebAppUser, requireAdmin, controllers.reminders.clearQueue);
 // backup / restore / health (GotYouBro)
 app.get('/api/admin/backup', requireWebAppUser, requireAdmin, controllers.backup.getSettings);
 app.post('/api/admin/backup/settings', requireWebAppUser, requireAdmin, controllers.backup.saveSettings);

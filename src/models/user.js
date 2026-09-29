@@ -65,7 +65,25 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // IANA timezone the user picked (mini app Settings or /timezone); null = the admin's default.
+  // Reminders fire in this zone.
+  timezone: {
+    type: String,
+    default: null
+  },
+  // Mood check-in reminders. times null = the admin's defaults. next_at is the next due
+  // reminder (UTC); unset means "recompute", which the scheduler does on its next tick.
+  reminder: {
+    enabled: { type: Boolean, default: true },
+    times: { type: [String], default: null },
+    next_at: { type: Date, default: undefined },
+    last_sent_at: { type: Date, default: null },
+    // Telegram refused delivery (user blocked the bot / never opened a chat); cleared when they come back
+    bot_blocked: { type: Boolean, default: false },
+  },
 }, { timestamps: true });
+
+userSchema.index({ 'reminder.next_at': 1 });
 
 // One-off: give users created before last_active_at existed a sensible value
 userSchema.statics.backfillLastActive = async function() {

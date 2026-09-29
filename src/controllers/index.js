@@ -6,6 +6,7 @@ const admin = require('./admin');
 const mood = require('./mood');
 const settings = require('./settings');
 const backup = require('./backup');
+const reminders = require('./reminders');
 
 module.exports = {
   embed: embed,
@@ -15,5 +16,6 @@ module.exports = {
   admin: admin,
   mood: mood,
   settings: settings,
-  backup: backup
+  backup: backup,
+  reminders: reminders
 }

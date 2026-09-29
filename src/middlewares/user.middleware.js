@@ -22,6 +22,10 @@ const saveUserMiddleware = async (ctx, next) => {
     }
     // get existing user from db and mark them active
     existingUser = await User.findOneAndUpdate({ id: user.id }, { last_active_at: new Date() }, { new: true });
+    // reminders stopped because Telegram said we couldn't reach them; a private message means we can again
+    if (existingUser.reminder?.bot_blocked && ctx.chat?.type === 'private') {
+      await require('../reminders/service').markReachable(existingUser._id).catch(() => {});
+    }
     // handlers that send the menu keyboard themselves mark it current (see common.markMenuSent)
     ctx.user = existingUser;
 

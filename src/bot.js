@@ -32,6 +32,8 @@ const talkCommands = require('./commands/talk');
 const { ensurePersonalityCatalog } = require('./personality/migrate');
 const backupScheduler = require('./backup/scheduler');
 const { backupNowCommand } = require('./commands/backup');
+const { remindersCommand, toggleCallback: remindersToggle, timezoneCommand, timezoneCallback, TZ_PREFIX, TZ_RESET } = require('./commands/reminders');
+const reminderService = require('./reminders/service');
 const { personality: personalityConstants } = require('./constants');
 
 // Import actions
@@ -43,6 +45,7 @@ connectDB()
   .then(() => ensurePersonalityCatalog())
   .then(() => require('./models/user').backfillLastActive())
   .then(() => backupScheduler.reschedule())
+  .then(() => reminderService.start())
   .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server
@@ -75,6 +78,8 @@ bot.command('my_personality', (ctx) => personalityCommands.myPersonalityCommand(
 bot.command('talk', talkCommands.talkCommand);
 bot.command('end_talk', talkCommands.endTalkCommand);
 bot.command('backup', backupNowCommand);
+bot.command('reminders', remindersCommand);
+bot.command('timezone', timezoneCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
 bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
@@ -98,6 +103,8 @@ bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
 bot.action('talk_note', talkCommands.talkAboutNoteCallback);
+bot.action([reminderService.CALLBACK_OFF, reminderService.CALLBACK_ON], remindersToggle);
+bot.action([new RegExp(`^${TZ_PREFIX}`), TZ_RESET], timezoneCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.TEST_PREFIX}`), personalityCommands.testCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.ANSWER_PREFIX}`), personalityCommands.answerCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.PROFILE_PREFIX}`), personalityCommands.profileCallback);
@@ -120,6 +127,8 @@ const BOT_COMMANDS = [
   { command: 'my_personality', description: 'See your personality profile' },
   { command: 'talk', description: 'Talk things through with the AI companion' },
   { command: 'end_talk', description: 'End the conversation' },
+  { command: 'reminders', description: 'Mood check-in reminders on or off' },
+  { command: 'timezone', description: 'Set your timezone (e.g. /timezone Berlin)' },
   { command: 'set_public', description: 'Make your mood public (embed codes)' },
   { command: 'set_private', description: 'Make your mood private' },
   { command: 'set_openai_key', description: 'Add your OpenAI key for AI insights' },
