@@ -90,7 +90,8 @@ describe('personality scoring', () => {
     assert.equal(new Set(seed.QUESTIONS.map(q => q.trait)).size, seed.TRAITS.length, 'every trait is measured by some test');
     for (const t of seed.TRAITS) {
       assert.ok(t.default_value >= 0 && t.default_value <= 1);
-      assert.ok(t.learning_rate > 0 && t.learning_rate <= 1);
+      // 0 = only tests set it (the MBTI-style letters); conversations never move it
+      assert.ok(t.learning_rate >= 0 && t.learning_rate <= 1);
       assert.ok(t.stability >= 0 && t.stability <= 1);
     }
     const required = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism',

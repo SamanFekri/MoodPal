@@ -49,6 +49,15 @@ ${progressBar(index, total)}
 export const cancelledMsg = () => `❌ Test cancelled. You can start again anytime from 🧠 Personality Test.`;
 export const nothingToCancelMsg = () => `ℹ️ You don't have a test in progress.`;
 export const sessionExpiredMsg = () => `ℹ️ That test is no longer active. Start a new one from 🧠 Personality Test.`;
+// after the MBTI-style test: the character, and a link anyone can open
+export const mbtiResultMsg = (type, character, url) => `<b>You're ${type}: ${character.name}, ${character.title}!</b>
+<i>${character.tagline}</i>
+
+${character.description}
+
+See your character and share it: ${url}
+<i>Just for fun, inspired by MBTI. Not a scientific or clinical assessment.</i>`;
+
 export const testCompletedMsg = (test) => `✅ <b>${test.name} completed!</b> Here is your profile.\n\n💡 Take another test from 🧠 Personality Test to fill in more of it.`;
 
 export const profileResetConfirmMsg = () => `

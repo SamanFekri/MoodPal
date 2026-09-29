@@ -30,6 +30,29 @@ const miniApp = (req, res) => res.sendFile(path.join(__dirname, 'public', 'ui', 
 app.get('/', miniApp);
 // public personality card (share link); the page reads the token from the URL
 app.get('/p/:token', miniApp);
+// shareable MBTI-style result (/result/ENFP): the same page, with a link preview for that character
+const mbti = require('./public/ui/mbti');
+let miniAppHtml = null;
+app.get('/result/:type', (req, res) => {
+  const type = String(req.params.type || '').toUpperCase();
+  if (!mbti.isType(type)) return miniApp(req, res);
+  miniAppHtml ||= require('fs').readFileSync(path.join(__dirname, 'public', 'ui', 'index.html'), 'utf8');
+  const c = mbti.CHARACTERS[type];
+  const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const title = `${type} — ${c.title} · MoodPal`;
+  const description = `${c.name}: ${c.tagline} Which MBTI character are you?`;
+  const meta = [
+    `<meta name="description" content="${attr(description)}">`,
+    `<meta property="og:type" content="website">`,
+    `<meta property="og:title" content="${attr(title)}">`,
+    `<meta property="og:description" content="${attr(description)}">`,
+    `<meta name="twitter:card" content="summary">`,
+    `<meta name="twitter:title" content="${attr(title)}">`,
+    `<meta name="twitter:description" content="${attr(description)}">`,
+    `<meta name="moodpal-bot" content="${attr(process.env.BOT_USERNAME || '')}">`,
+  ].join('\n  ');
+  res.type('html').send(miniAppHtml.replace('<title>Mood Pal</title>', `<title>${attr(title)}</title>\n  ${meta}`));
+});
 
 // mini app data must never be served from a WebView cache
 app.use(['/auth', '/api'], (req, res, next) => { res.set('Cache-Control', 'no-store, max-age=0'); res.set('Pragma', 'no-cache'); next(); });

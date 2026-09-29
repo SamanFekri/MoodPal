@@ -12,6 +12,8 @@
   <!-- libraries are served by this app itself, never from a public CDN -->
   <script src="/public/lib/vendor/vue.global.prod.js"></script>
   <script src="/public/lib/tgs-player.js"></script>
+  <!-- the 16 Moodlings of the MBTI-style test (also used by the server) -->
+  <script src="/public/ui/mbti.js"></script>
 
   <style>
     /* ---- Theme: follows Telegram's colors, falls back to a light/dark palette in a browser ---- */
@@ -649,6 +651,89 @@
     .tz-row.on { box-shadow: inset 0 0 0 2px var(--accent); }
     .tz-row .z { font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tz-row .o { font-size: 12px; color: var(--hint); font-weight: 600; flex: none; }
+    /* ---- MBTI-style test: Moodlings cast, result card, share (see /public/ui/mbti.js) ---- */
+    .mb-char { display: block; line-height: 0; }
+    .mb-char svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .mb-char.enter { animation: mb-enter .8s var(--ease-spring) both; }
+    /* slow idle loop: breathe, blink, sway, bob. --mb-delay (set per character) keeps a grid out of sync */
+    .mb-char .mb-breathe, .mb-char .mb-arm, .mb-char .mb-bits, .mb-char .mb-shadow, .mb-icon .mb-eyes, .mb-char .mb-eyes { transform-box: view-box; }
+    .mb-char .mb-breathe { animation: mb-breathe 4.2s ease-in-out infinite; animation-delay: var(--mb-delay, 0s); }
+    .mb-char .mb-shadow { animation: mb-shadow 4.2s ease-in-out infinite; animation-delay: var(--mb-delay, 0s); }
+    .mb-char .mb-eyes, .mb-icon .mb-eyes { animation: mb-blink 6s ease-in-out infinite; animation-delay: var(--mb-delay, 0s); }
+    .mb-char .mb-arm-l { --sway: -5deg; } .mb-char .mb-arm-r { --sway: 5deg; }
+    .mb-char .mb-arm { animation: mb-sway 3.4s ease-in-out infinite alternate; animation-delay: var(--mb-delay, 0s); }
+    .mb-char .mb-arm-r { animation-duration: 3.9s; }
+    .mb-char .mb-bits { animation: mb-bob 3s ease-in-out infinite alternate; animation-delay: var(--mb-delay, 0s); }
+    @keyframes mb-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.018, 1.04); } }
+    @keyframes mb-shadow { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(.95, 1); } }
+    @keyframes mb-blink { 0%, 90%, 100% { transform: scaleY(1); } 93% { transform: scaleY(.1); } 96% { transform: scaleY(1); } }
+    @keyframes mb-sway { from { transform: rotate(calc(var(--sway) * -1)); } to { transform: rotate(var(--sway)); } }
+    @keyframes mb-bob { from { transform: translateY(2px); } to { transform: translateY(-5px); } }
+    .mb-icon { display: inline-block; width: 22px; height: 22px; vertical-align: middle; flex: none; line-height: 0; }
+    .mb-icon svg { width: 100%; height: 100%; overflow: visible; }
+    .mb-dim .ends span { display: inline-flex; align-items: center; gap: 4px; }
+    .mb-h { display: flex; align-items: center; gap: 6px; }
+    .mb-h .mb-icon { width: 24px; height: 24px; }
+    .mb-group { display: inline-flex !important; align-items: center; gap: 6px; }
+    .mb-group .mb-icon { width: 20px; height: 20px; }
+    .mb-li { display: inline-flex; width: 18px; height: 18px; margin-right: 6px; } .mb-li svg { width: 100%; height: 100%; }
+    .mb-list li i { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; background: var(--c2); }
+    .mb-mystery { width: 120px; margin: 0 auto 8px; filter: brightness(0) opacity(.3); }
+    @keyframes mb-enter { 0% { opacity: 0; transform: translateY(40px) scale(.6) rotate(-6deg); } 60% { opacity: 1; transform: translateY(-6px) scale(1.04) rotate(2deg); } 100% { transform: none; } }
+    .mb-card { border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: var(--shadow); margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
+    .mb-hero { position: relative; text-align: center; color: #fff; padding: 16px 16px 18px; background: radial-gradient(circle at 50% 38%, rgba(255,255,255,.22), transparent 55%), linear-gradient(160deg, var(--c1), var(--c2)); overflow: hidden; }
+    .mb-hero::before, .mb-hero::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.08); }
+    .mb-hero::before { width: 180px; height: 180px; left: -60px; top: -50px; }
+    .mb-hero::after { width: 120px; height: 120px; right: -30px; bottom: -40px; }
+    .mb-hero .mb-char { width: min(210px, 56vw); margin: 0 auto -4px; position: relative; z-index: 1; }
+    .mb-card.compact .mb-hero .mb-char { width: 130px; }
+    .mb-kicker { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .85; position: relative; z-index: 1; }
+    .mb-letters { display: flex; justify-content: center; gap: 6px; margin: 8px 0 4px; position: relative; z-index: 1; }
+    .mb-letters span { width: 42px; height: 46px; display: grid; place-items: center; font-size: 26px; font-weight: 900; color: var(--c1); background: #fff; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.18); animation: pop-in .5s var(--ease-spring) both; animation-delay: calc(.35s + var(--i) * .09s); }
+    .mb-card.compact .mb-letters span { width: 32px; height: 36px; font-size: 19px; border-radius: 10px; }
+    .mb-hero h2 { margin: 6px 0 0; font-size: 24px; font-weight: 900; letter-spacing: -.02em; position: relative; z-index: 1; }
+    .mb-hero .mb-tag { margin: 4px auto 0; max-width: 320px; font-size: 14px; font-weight: 600; opacity: .92; position: relative; z-index: 1; }
+    .mb-group { display: inline-block; margin-top: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.2); font-size: 12px; font-weight: 800; position: relative; z-index: 1; }
+    .mb-body { padding: 14px 16px 16px; }
+    .mb-desc { font-size: 14px; line-height: 1.5; margin: 0 0 12px; }
+    .mb-h { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--hint); margin: 16px 0 8px; }
+    .mb-dim { margin: 10px 0; animation: fade-up .45s var(--ease-out) both; animation-delay: calc(var(--i) * 70ms); }
+    .mb-dim .ends { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--hint); margin-bottom: 5px; }
+    .mb-dim .ends b { color: var(--text); }
+    .mb-dim .ends .win { color: var(--c2); }
+    .mb-dim .track { position: relative; height: 12px; border-radius: 999px; background: rgba(138,143,152,0.16); overflow: hidden; }
+    .mb-dim .fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, var(--c2), var(--c1)); transition: width 1s var(--ease-out); }
+    .mb-dim .fill.left { right: 50%; } .mb-dim .fill.right { left: 50%; }
+    .mb-dim .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--card); }
+    .mb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mb-chips span { font-size: 13px; font-weight: 700; padding: 6px 10px; border-radius: 999px; background: color-mix(in srgb, var(--c2) 14%, transparent); color: var(--text); animation: pop-in .4s var(--ease-spring) both; animation-delay: calc(var(--i) * 60ms); }
+    .mb-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .mb-list li { font-size: 14px; line-height: 1.4; padding: 8px 10px; border-radius: 12px; background: rgba(138,143,152,0.08); display: flex; gap: 8px; }
+    .mb-list li i { font-style: normal; flex: none; }
+    .mb-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .mb-actions .btn { flex: 1 1 auto; justify-content: center; }
+    .mb-share { background: linear-gradient(135deg, var(--c1), var(--c2)) !important; color: #fff !important; font-size: 16px !important; padding: 14px 18px !important; width: 100%; box-shadow: 0 6px 18px -6px var(--c2) !important; transition: transform .15s var(--ease-out); }
+    .mb-share:hover { transform: translateY(-1px); } .mb-share:active { transform: scale(.97); }
+    .mb-note { font-size: 11px; color: var(--hint); text-align: center; margin-top: 12px; line-height: 1.4; }
+    .mb-cta { position: relative; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; color: #fff; background: linear-gradient(135deg, #6f4fd0, #ff4f97); box-shadow: var(--shadow); overflow: hidden; cursor: pointer; animation: fade-up .5s var(--ease-out) both; transition: transform .15s var(--ease-out); }
+    .mb-cta:active { transform: scale(.98); }
+    .mb-cta h3 { margin: 0; font-size: 19px; font-weight: 900; } .mb-cta p { margin: 4px 0 10px; font-size: 13px; opacity: .92; max-width: 60%; }
+    .mb-cta .btn { background: #fff; color: #6f4fd0; box-shadow: none; }
+    .mb-cta .cast { position: absolute; right: -6px; bottom: -10px; display: flex; }
+    .mb-cta .cast .mb-char { width: 62px; margin-left: -18px; }
+    .mb-cast { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mb-cast button { border: 0; font: inherit; color: #fff; border-radius: 14px; padding: 6px 4px 8px; cursor: pointer; background: linear-gradient(160deg, var(--c1), var(--c2)); transition: transform .15s var(--ease-out); }
+    .mb-cast button:hover { transform: translateY(-2px); } .mb-cast button.on { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .mb-cast b { display: block; font-size: 12px; font-weight: 900; } .mb-cast small { display: block; font-size: 10px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mb-peek { width: 84px; margin: 0 auto 6px; animation: mb-enter .6s var(--ease-spring) both; }
+    .quiz-body.scroll { justify-content: flex-start; overflow-y: auto; margin: 8px -16px 0; padding: 0 16px 8px; }
+    .mb-drumroll { text-align: center; padding: 30px 0; }
+    .mb-drumroll .mb-char { width: 140px; margin: 0 auto; filter: brightness(0) opacity(.25); animation: mb-shake .18s linear infinite alternate; }
+    .mb-drumroll p { font-weight: 800; color: var(--hint); }
+    @keyframes mb-shake { from { transform: rotate(-4deg) scale(.96); } to { transform: rotate(4deg) scale(1.04); } }
+    .confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+    .confetti-layer i { position: absolute; top: -20px; width: 9px; height: 14px; border-radius: 2px; animation: confetti-fall var(--d) cubic-bezier(.2,.6,.4,1) forwards; animation-delay: var(--delay); }
+    @keyframes confetti-fall { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--x), 105vh) rotate(var(--r)); opacity: .9; } }
     .rem-queue { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 8px; }
     .rem-queue div { background: rgba(138,143,152,0.08); border-radius: 12px; padding: 8px 4px; text-align: center; }
     .rem-queue b { display: block; font-size: 18px; font-weight: 800; }
@@ -754,7 +839,7 @@
     <button id="splash-retry" onclick="location.reload()">Reload</button>
   </div>
 
-  <div id="app" v-cloak :class="{ public: mode === 'public' }">
+  <div id="app" v-cloak :class="{ public: mode === 'public' || mode === 'result' }">
 
     <!-- ================= PUBLIC SHARE CARD (/p/:token) ================= -->
     <template v-if="mode === 'public'">
@@ -777,6 +862,28 @@
         <p>This personality profile is private or the link has expired.</p>
         <a class="btn" :href="botLink">Open MoodPal</a>
       </div>
+    </template>
+
+    <!-- ================= SHARED MBTI-STYLE RESULT (/result/ENFP) ================= -->
+    <template v-else-if="mode === 'result'">
+      <template v-if="isMbtiType(resultType)">
+        <mbti-card :mbti="{ type: resultType }" actions :retake="false" kicker="MoodPal personality" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @save-image="saveMbtiCard"></mbti-card>
+        <a class="btn mb-share" :href="mbtiTestLink" target="_blank" :style="mbtiStyleFor(resultType)" style="display:flex;text-decoration:none;margin-bottom:14px">Which one are you? Take the test</a>
+        <section class="section">
+          <h3>Meet the cast <span class="sub">16 Moodlings</span></h3>
+          <mbti-cast :current="resultType" @pick="goToResult"></mbti-cast>
+        </section>
+        <div class="public-foot"><small>A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.</small></div>
+      </template>
+      <template v-else>
+        <div class="state">
+          <div class="mb-mystery"><mbti-character type="ENFP"></mbti-character></div>
+          <h2>That's not one of the 16 types</h2>
+          <p>Pick a Moodling below, or take the test to find yours.</p>
+          <a class="btn" :href="mbtiTestLink" target="_blank">Take the test</a>
+        </div>
+        <section class="section"><mbti-cast @pick="goToResult"></mbti-cast></section>
+      </template>
     </template>
 
     <!-- ================= SIGNED IN ================= -->
@@ -884,7 +991,14 @@
           <div v-else-if="!personality && personalityError" class="state"><div class="art">📡</div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
 
           <template v-else-if="personality">
-            <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey"></personality-view>
+            <mbti-card v-if="personality.profile?.mbti" :mbti="personality.profile.mbti" actions :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
+            <div v-else-if="mbtiTest" class="mb-cta" @click="startTest(mbtiTest)">
+              <h3>Which Moodling are you?</h3>
+              <p>{{ mbtiTest.question_count }} quick questions, 16 cartoon characters. Just for fun, inspired by MBTI.</p>
+              <button class="btn">Take the test</button>
+              <div class="cast"><mbti-character v-for="t in ['ENFP', 'INTP', 'ESFJ', 'ISTP']" :key="t" :type="t"></mbti-character></div>
+            </div>
+            <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey" :show-mbti="false"></personality-view>
             <div v-else class="state" style="padding-top: 24px">
               <div class="art">🧠</div>
               <h2>No profile yet</h2>
@@ -1543,8 +1657,23 @@
         </div>
         <div class="progress" v-if="!quiz.done"><div :style="{ width: (quiz.session.current_index / quiz.session.total * 100) + '%' }"></div></div>
 
-        <div class="quiz-body">
-          <div v-if="quiz.done" class="done">
+        <div class="quiz-body" :class="{ scroll: quiz.done && quiz.mbti }">
+          <div v-if="quiz.done && quiz.mbti">
+            <div v-if="quiz.revealing" class="mb-drumroll">
+              <mbti-character :type="quiz.shuffle"></mbti-character>
+              <p>Finding your Moodling…</p>
+            </div>
+            <template v-else>
+              <mbti-card :mbti="quiz.mbti" actions kicker="You are…" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
+              <mbti-card v-if="quiz.preview && quiz.preview !== quiz.mbti.type" :key="quiz.preview" :mbti="{ type: quiz.preview }" compact kicker="Meet"></mbti-card>
+              <section class="section">
+                <h3>Meet the whole cast <span class="sub">tap one</span></h3>
+                <mbti-cast :current="quiz.preview || quiz.mbti.type" @pick="quiz.preview = $event"></mbti-cast>
+              </section>
+              <button class="btn ghost" style="width:100%" @click="closeQuiz">See my profile</button>
+            </template>
+          </div>
+          <div v-else-if="quiz.done" class="done">
             <div class="done-art">🎉</div>
             <h2>{{ quiz.session.test.name }} done</h2>
             <p>Your profile has been updated. Take another test to fill in more of it, or share it with friends.</p>
@@ -1553,7 +1682,8 @@
           <div v-else class="q-wrap">
             <transition name="q" mode="out-in">
               <div :key="quiz.session.current_index">
-                <div class="q-label">How accurately does this describe you?</div>
+                <div class="mb-peek" v-if="quiz.session.test.key === 'mbti'"><mbti-character :type="MBTI_TYPES[quiz.session.current_index % MBTI_TYPES.length]"></mbti-character></div>
+                <div class="q-label">{{ quiz.session.test.key === 'mbti' ? 'Is this you?' : 'How accurately does this describe you?' }}</div>
                 <div class="q-text">{{ currentQuestion.text }}</div>
                 <div class="q-intro" v-if="quiz.session.current_index === 0">{{ quiz.session.test.intro }}</div>
                 <div class="answers">
@@ -1731,9 +1861,117 @@
       });
     }
 
+    // ---------- MBTI-style test: <mbti-character>, <mbti-card>, <mbti-cast> (data + art in /public/ui/mbti.js) ----------
+    const mbtiStyle = (type) => { const c = MBTI.CHARACTERS[type]?.colors; return c ? { '--c1': c.bg[0], '--c2': c.bg[1] } : {}; };
+    const MbtiCharacter = {
+      props: { type: { type: String, required: true }, enter: { type: Boolean, default: false }, float: { type: Boolean, default: false } },
+      computed: { svg() { return MBTI.svg(this.type); } },
+      template: `<div class="mb-char" :class="{ enter, float }" v-html="svg"></div>`,
+    };
+    // a tiny Moodling used as an icon (letters, groups, section headings) instead of emoji
+    const MbtiIcon = {
+      props: { kind: { type: String, required: true }, color: { type: String, default: '' } },
+      computed: { svg() { return MBTI.icon(this.kind, this.color || undefined); } },
+      template: `<span class="mb-icon" v-html="svg"></span>`,
+    };
+    // plain line icons for the buttons
+    const LINE_ICONS = {
+      share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>',
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
+      image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>',
+      retake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><polyline points="3 3 3 9 9 9"/></svg>',
+    };
+    const MbtiCard = {
+      components: { 'mbti-character': MbtiCharacter, 'mbti-icon': MbtiIcon },
+      props: {
+        mbti: { type: Object, required: true },            // { type, dimensions: [{ key, value, letter, percent }] }
+        compact: { type: Boolean, default: false },
+        actions: { type: Boolean, default: false },         // share / copy / retake buttons
+        retake: { type: Boolean, default: true },
+        canSaveImage: { type: Boolean, default: false },
+        kicker: { type: String, default: 'Your Moodling' },
+      },
+      emits: ['share', 'copy', 'retake', 'save-image'],
+      data() { return { LINE_ICONS }; },
+      computed: {
+        type() { return this.mbti.type; },
+        groupKey() { return MBTI.groupOf(this.type); },
+        c() { return MBTI.CHARACTERS[this.type]; },
+        group() { return MBTI.GROUPS[MBTI.groupOf(this.type)]; },
+        style() { return mbtiStyle(this.type); },
+        dims() {
+          const given = new Map((this.mbti.dimensions || MBTI.dimensionsForType(this.type)).map(d => [d.key, d]));
+          return MBTI.DIMENSIONS.map(d => {
+            const g = given.get(d.key) || {};
+            const value = typeof g.value === 'number' ? g.value : (this.type.includes(d.right.letter) ? 1 : 0);
+            const right = value >= 0.5;
+            // bar grows from the middle towards the winning side; a bare type (no answers) fills that half
+            const width = g.percent === null || g.percent === undefined ? 50 : Math.max(4, Math.abs(value - 0.5) * 100);
+            return { ...d, right: d.right, left: d.left, isRight: right, width, percent: g.percent ?? null };
+          });
+        },
+      },
+      template: `
+        <div class="mb-card" :class="{ compact }" :style="style">
+          <div class="mb-hero">
+            <div class="mb-kicker">{{ kicker }}</div>
+            <mbti-character :type="type" enter :key="type"></mbti-character>
+            <div class="mb-letters"><span v-for="(l, i) in type.split('')" :key="type + i" :style="{ '--i': i }">{{ l }}</span></div>
+            <h2>{{ c.name }}, {{ c.title }}</h2>
+            <p class="mb-tag">“{{ c.tagline }}”</p>
+            <span class="mb-group"><mbti-icon :kind="groupKey"></mbti-icon>{{ group.name }}</span>
+          </div>
+          <div class="mb-body">
+            <p class="mb-desc" v-if="!compact">{{ c.description }}</p>
+            <div class="mb-h" :style="{ marginTop: compact ? 0 : '' }">Your four letters</div>
+            <div v-for="(d, i) in dims" :key="d.key" class="mb-dim" :style="{ '--i': i }">
+              <div class="ends">
+                <span :class="{ win: !d.isRight }"><mbti-icon :kind="d.left.letter"></mbti-icon><b>{{ d.left.letter }}</b> {{ d.left.name }}<template v-if="d.percent !== null && !d.isRight"> · {{ d.percent }}%</template></span>
+                <span :class="{ win: d.isRight }"><template v-if="d.percent !== null && d.isRight">{{ d.percent }}% · </template>{{ d.right.name }} <b>{{ d.right.letter }}</b><mbti-icon :kind="d.right.letter"></mbti-icon></span>
+              </div>
+              <div class="track"><div class="fill" :class="d.isRight ? 'right' : 'left'" :style="{ width: d.width + '%' }"></div><div class="mid"></div></div>
+            </div>
+            <template v-if="!compact">
+              <div class="mb-h"><mbti-icon kind="strengths" :color="c.colors.body"></mbti-icon>Strengths</div>
+              <div class="mb-chips"><span v-for="(t, i) in c.strengths" :key="t" :style="{ '--i': i }">{{ t }}</span></div>
+              <div class="mb-h"><mbti-icon kind="tendencies" :color="c.colors.body"></mbti-icon>Common tendencies</div>
+              <ul class="mb-list"><li v-for="t in c.tendencies" :key="t"><i></i>{{ t }}</li></ul>
+              <div class="mb-h"><mbti-icon kind="fun" :color="c.colors.body"></mbti-icon>Fun traits</div>
+              <ul class="mb-list"><li v-for="t in c.funTraits" :key="t"><i></i>{{ t }}</li></ul>
+              <div class="mb-h"><mbti-icon kind="behaviors" :color="c.colors.body"></mbti-icon>You, probably</div>
+              <ul class="mb-list"><li v-for="t in c.behaviors" :key="t"><i></i>{{ t }}</li></ul>
+            </template>
+            <div class="mb-actions" v-if="actions">
+              <button class="btn mb-share" @click="$emit('share', type)"><span class="mb-li" v-html="LINE_ICONS.share"></span>Share my result</button>
+              <button class="btn ghost" @click="$emit('copy', type)"><span class="mb-li" v-html="LINE_ICONS.link"></span>Copy link</button>
+              <button class="btn ghost" v-if="canSaveImage" @click="$emit('save-image', type)"><span class="mb-li" v-html="LINE_ICONS.image"></span>Save card</button>
+              <button class="btn ghost" v-if="retake" @click="$emit('retake')"><span class="mb-li" v-html="LINE_ICONS.retake"></span>Retake test</button>
+            </div>
+            <div class="mb-note" v-if="!compact">A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.</div>
+          </div>
+        </div>
+      `,
+    };
+    const MbtiCast = {
+      components: { 'mbti-character': MbtiCharacter },
+      props: { current: { type: String, default: '' } },
+      emits: ['pick'],
+      data() { return { types: MBTI.TYPES, chars: MBTI.CHARACTERS }; },
+      methods: { style: mbtiStyle },
+      template: `
+        <div class="mb-cast">
+          <button v-for="t in types" :key="t" :class="{ on: t === current }" :style="style(t)" @click="$emit('pick', t)">
+            <mbti-character :type="t"></mbti-character>
+            <b>{{ t }}</b><small>{{ chars[t].title }}</small>
+          </button>
+        </div>
+      `,
+    };
+
     // ---------- <personality-view> : radar + trait bars, animates in on mount ----------
     const PersonalityView = {
-      props: { profile: { type: Object, required: true }, animateKey: { type: String, default: '' }, compact: { type: Boolean, default: false } },
+      components: { 'mbti-card': MbtiCard },
+      props: { profile: { type: Object, required: true }, animateKey: { type: String, default: '' }, compact: { type: Boolean, default: false }, showMbti: { type: Boolean, default: true } },
       data() { return { animated: false }; },
       computed: {
         // the radar shows the Big Five when measured, otherwise the category with the most traits (max 8 axes)
@@ -1766,6 +2004,7 @@
       watch: { animateKey() { this.animated = false; nextTick(() => requestAnimationFrame(() => { this.animated = true; })); } },
       template: `
         <div>
+          <mbti-card v-if="showMbti && profile.mbti" :mbti="profile.mbti" :compact="compact" kicker="Moodling"></mbti-card>
           <section v-if="radar" class="section" :style="{ '--i': 0 }">
             <h3>Overview <span class="sub">{{ radar.title }}</span></h3>
             <div class="radar-wrap">
@@ -2106,11 +2345,11 @@
     };
 
     createApp({
-      components: { 'personality-view': PersonalityView, 'follow-graph': FollowGraph, 'ego-graph': EgoGraph },
+      components: { 'personality-view': PersonalityView, 'follow-graph': FollowGraph, 'ego-graph': EgoGraph, 'mbti-card': MbtiCard, 'mbti-character': MbtiCharacter, 'mbti-cast': MbtiCast, 'mbti-icon': MbtiIcon },
       data() {
         this._inflight = {};
         return {
-          mode: location.pathname.startsWith('/p/') ? 'public' : 'app',
+          mode: location.pathname.startsWith('/p/') ? 'public' : location.pathname.startsWith('/result/') ? 'result' : 'app',
           tg: null,
           authenticating: true,
           isAuthenticated: false,
@@ -2177,6 +2416,10 @@
           // public mode
           publicLoading: true,
           publicProfile: null,
+          // MBTI-style test
+          MBTI_TYPES: MBTI.TYPES,
+          resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
+          canSaveImage: false,
           publicName: '',
           publicBot: null,
         }
@@ -2196,6 +2439,9 @@
           for (const t of this.admin.traits) (groups[t.category] ||= { category: t.category, name: names[t.category] || t.category, traits: [] }).traits.push(t);
           return Object.values(groups);
         },
+        mbtiTest() { return this.personality?.tests?.find(t => t.key === 'mbti') || null; },
+        // shared-result visitors land in the bot, which starts the test right away
+        mbtiTestLink() { return `https://t.me/${this.publicBot || 'MoodPalBot'}?start=mbti`; },
         currentQuestion() { return this.quiz ? this.quiz.session.questions[this.quiz.session.current_index] : null; },
         graphSelected() { return this.graph?.nodes.find(n => n.id === this.graphSelectedId) || null; },
         // the selected person's two sides, as nodes, with a flag for links that go both ways
@@ -2236,6 +2482,8 @@
         }
 
         if (this.mode === 'public') { hideSplash(); return this.loadPublic(); }
+        this.detectImageSharing();
+        if (this.mode === 'result') { hideSplash(); return this.initResultPage(); }
 
         if (!this.tg?.initData) {
           this.authenticating = false;
@@ -2499,7 +2747,7 @@
         },
         openQuiz(session) {
           this.haptic('light');
-          this.quiz = { session, picked: null, saving: false, done: false };
+          this.quiz = { session, picked: null, saving: false, done: false, mbti: null, revealing: false, shuffle: 'ENFP', preview: null };
           try { this.tg?.BackButton?.show?.(); this.tg?.BackButton?.onClick?.(this.closeQuiz); } catch {}
           if (this.tg?.MainButton && this.usingMainButton) this.tg.MainButton.hide();
         },
@@ -2511,6 +2759,7 @@
           try {
             const data = await this.api(`/api/me/personality/session/${q.session.id}/answer`, { method: 'POST', body: { order: this.currentQuestion.order, value } });
             if (data.done) {
+              if (q.session.test.key === 'mbti' && data.profile?.mbti) this.revealMbti(q, data.profile.mbti);
               q.done = true;
               this.quizSession = null;
               this.haptic('medium');
@@ -3004,7 +3253,7 @@
             this.settings = await this.api('/api/me/settings/timezone', { method: 'POST', body: { timezone } });
             this.tzQuery = '';
             const r = this.settings.reminders;
-            this.showToast(`Timezone: ${this.settings.timezone.timezone}` + (r?.enabled && r.next_at ? ` · next reminder ${this.formatInTz(r.next_at, r.timezone).toLowerCase()}` : ''));
+            this.showToast(r?.enabled && r.next_at ? `Saved · next reminder ${this.formatInTz(r.next_at, r.timezone).toLowerCase()}` : `Timezone: ${this.settings.timezone.timezone}`);
           } catch (error) {
             this.showToast(error.status === 400 ? 'Unknown timezone' : "Couldn't save your timezone");
           } finally {
@@ -3072,6 +3321,137 @@
           } finally {
             this.logs.loading = false; this.logs.loadingMore = false;
           }
+        },
+
+        // ----- MBTI-style test: reveal, share, shared-result page -----
+        isMbtiType(t) { return MBTI.isType(t); },
+        mbtiStyleFor(t) { return mbtiStyle(t); },
+        mbtiUrl(type) { return `${location.origin}/result/${type}`; },
+        // a short "drumroll" through the cast, then the real one with confetti
+        revealMbti(q, mbti) {
+          q.mbti = mbti; q.revealing = true; q.preview = null;
+          const started = Date.now();
+          const timer = setInterval(() => {
+            q.shuffle = MBTI.TYPES[Math.floor(Math.random() * MBTI.TYPES.length)];
+            if (Date.now() - started > 1400) {
+              clearInterval(timer);
+              q.revealing = false;
+              this.haptic('heavy');
+              try { this.tg?.HapticFeedback?.notificationOccurred?.('success'); } catch {}
+              this.celebrate(MBTI.CHARACTERS[mbti.type].colors);
+            }
+          }, 110);
+        },
+        // Telegram's share sheet inside the mini app, the Web Share API in a browser, else copy
+        shareMbti(type) {
+          this.haptic('medium');
+          const url = this.mbtiUrl(type), text = MBTI.shareText(type);
+          if (this.tg?.initData) return this.shareUrl(url, text);
+          if (navigator.share) return navigator.share({ title: `${type} · MoodPal`, text, url }).catch(() => {});
+          this.copyText(`${text}\n${url}`, 'Result copied, paste it anywhere');
+        },
+        copyMbti(type) { this.copyText(this.mbtiUrl(type), 'Link copied'); },
+        copyText(text, done) {
+          this.haptic('light');
+          const fallback = () => {
+            try {
+              const ta = Object.assign(document.createElement('textarea'), { value: text });
+              ta.style.cssText = 'position:fixed;opacity:0';
+              document.body.appendChild(ta); ta.select();
+              const ok = document.execCommand('copy'); ta.remove();
+              this.showToast(ok ? done : text);
+            } catch { this.showToast(text); }
+          };
+          if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => this.showToast(done)).catch(fallback);
+          else fallback();
+        },
+        // image sharing works in browsers, and in Telegram only where files can be shared natively
+        detectImageSharing() {
+          try {
+            const probe = new File([new Blob(['x'])], 'x.png', { type: 'image/png' });
+            this.canSaveImage = !this.tg?.initData || Boolean(navigator.canShare?.({ files: [probe] }));
+          } catch { this.canSaveImage = !this.tg?.initData; }
+        },
+        // a 1080 x 1350 card (Instagram / story friendly) drawn from the same SVG
+        async buildMbtiCard(type) {
+          const c = MBTI.CHARACTERS[type];
+          const W = 1080, H = 1350, font = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+          const cv = Object.assign(document.createElement('canvas'), { width: W, height: H });
+          const g = cv.getContext('2d');
+          const grad = g.createLinearGradient(0, 0, W * 0.5, H);
+          grad.addColorStop(0, c.colors.bg[0]); grad.addColorStop(1, c.colors.bg[1]);
+          g.fillStyle = grad; g.fillRect(0, 0, W, H);
+          g.fillStyle = 'rgba(255,255,255,.08)';
+          for (const [x, y, r] of [[80, 120, 260], [1000, 1180, 220], [980, 180, 90]]) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+          const img = new Image();
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(MBTI.svg(type, { title: false }));
+          await img.decode();
+          g.drawImage(img, 215, 70, 650, 772);
+          g.textAlign = 'center'; g.fillStyle = '#fff';
+          g.font = `900 170px ${font}`; g.fillText(type, W / 2, 1010);
+          g.font = `800 58px ${font}`; g.fillText(`${c.name}, ${c.title}`, W / 2, 1095);
+          g.font = `600 38px ${font}`; g.globalAlpha = 0.92;
+          const words = `“${c.tagline}”`.split(' '); let line = '', y = 1165;
+          for (const w of words) { if (g.measureText(line + w).width > 900) { g.fillText(line.trim(), W / 2, y); line = ''; y += 50; } line += w + ' '; }
+          g.fillText(line.trim(), W / 2, y);
+          g.globalAlpha = 0.8; g.font = `700 32px ${font}`;
+          g.fillText('Which MBTI character are you?  ·  MoodPal', W / 2, 1300);
+          return new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+        },
+        async saveMbtiCard(type) {
+          this.haptic('light');
+          try {
+            const blob = await this.buildMbtiCard(type);
+            const file = new File([blob], `moodpal-${type}.png`, { type: 'image/png' });
+            if (navigator.canShare?.({ files: [file] })) {
+              return await navigator.share({ files: [file], title: `${type} · MoodPal`, text: `${MBTI.shareText(type)}\n${this.mbtiUrl(type)}` }).catch(() => {});
+            }
+            const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: file.name });
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            this.showToast('Card saved');
+          } catch (error) {
+            console.error('Share card failed:', error);
+            this.showToast("Couldn't make the card");
+          }
+        },
+        celebrate(colors = {}) {
+          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+          const palette = [colors.body, colors.accent, colors.belly, '#ffe14d', '#5ad1ff', '#7cf29c', '#ff5fa2'].filter(Boolean);
+          const layer = Object.assign(document.createElement('div'), { className: 'confetti-layer' });
+          for (let i = 0; i < 70; i++) {
+            const bit = document.createElement('i');
+            bit.style.left = `${Math.random() * 100}vw`;
+            bit.style.background = palette[i % palette.length];
+            bit.style.setProperty('--x', `${Math.round(Math.random() * 160 - 80)}px`);
+            bit.style.setProperty('--r', `${Math.round(Math.random() * 720 - 360)}deg`);
+            bit.style.setProperty('--d', `${(1.6 + Math.random() * 1.4).toFixed(2)}s`);
+            bit.style.setProperty('--delay', `${(Math.random() * 0.4).toFixed(2)}s`);
+            layer.appendChild(bit);
+          }
+          document.body.appendChild(layer);
+          setTimeout(() => layer.remove(), 3800);
+        },
+        initResultPage() {
+          this.publicBot = document.querySelector('meta[name="moodpal-bot"]')?.content || null;
+          const apply = () => {
+            if (this.isMbtiType(this.resultType)) {
+              const c = MBTI.CHARACTERS[this.resultType];
+              document.title = `${this.resultType} — ${c.title} · MoodPal`;
+            }
+          };
+          apply();
+          if (this.isMbtiType(this.resultType)) setTimeout(() => this.celebrate(MBTI.CHARACTERS[this.resultType].colors), 500);
+          window.addEventListener('popstate', () => { this.resultType = (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(); apply(); });
+          this._applyResultTitle = apply;
+        },
+        // browse the cast without reloading; the address bar stays a shareable /result/XXXX link
+        goToResult(type) {
+          this.haptic('light');
+          history.pushState({}, '', `/result/${type}`);
+          this.resultType = type;
+          this._applyResultTitle?.();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         },
 
         // ----- public card -----

@@ -108,6 +108,13 @@ async function answerCallback(ctx) {
 
     await ctx.answerCbQuery('✅ Done!');
     await show(ctx, msgs.testCompletedMsg(state.test), null, { edit: true });
+    if (state.test.key === 'mbti') {
+      const mbti = require('../public/ui/mbti').fromTraits(state.result.traits);
+      if (mbti) {
+        const url = `${require('../constants').server.SERVER_BASE_URL}/result/${mbti.type}`;
+        await ctx.reply(msgs.mbtiResultMsg(mbti.type, require('../public/ui/mbti').CHARACTERS[mbti.type], url), { parse_mode: 'HTML' });
+      }
+    }
     return await myPersonalityCommand(ctx);
   } catch (error) {
     console.error('Error in personality answer callback:', error);
@@ -140,7 +147,17 @@ async function profileCallback(ctx) {
   }
 }
 
+// start a specific test from outside the test menu (e.g. a /start deep link)
+async function startTestByKey(ctx, testKey) {
+  try {
+    return await startTest(ctx, testKey);
+  } catch (error) {
+    console.error(`Error starting test ${testKey}:`, error);
+  }
+}
+
 module.exports = {
+  startTestByKey,
   personalityTestCommand,
   myPersonalityCommand,
   testCallback,

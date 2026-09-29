@@ -212,7 +212,7 @@ describe('personality service (database)', () => {
     });
 
     test('unknown test key throws', async () => {
-      await assert.rejects(service.startTest(alice._id, 'mbti'), /Unknown or empty test/);
+      await assert.rejects(service.startTest(alice._id, 'no_such_test'), /Unknown or empty test/);
     });
   });
 

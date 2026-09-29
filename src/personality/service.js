@@ -253,6 +253,7 @@ class PersonalityService {
     const { describe, MIN_CONFIDENCE_FOR_CONTEXT } = require('./context');
     const categories = [];
     for (const [key, name] of Object.entries(CATEGORY_NAMES)) {
+      if (key === 'mbti') continue;   // shown as a character card instead (see mbti below)
       const rows = Object.values(traits)
         .filter(t => t.category === key)
         .filter(t => profile.traits[t.key] !== undefined && (profile.confidence[t.key] ?? 0) >= MIN_CONFIDENCE_FOR_CONTEXT)
@@ -266,9 +267,14 @@ class PersonalityService {
         }));
       if (rows.length) categories.push({ key, name, traits: rows });
     }
-    if (categories.length === 0) return null;
+    // MBTI-style result, once the test has measured all four letter pairs
+    const mbti = require('../public/ui/mbti').fromTraits(
+      Object.fromEntries(Object.keys(profile.traits).filter(k => k.startsWith('mbti_') && (profile.confidence[k] ?? 0) >= MIN_CONFIDENCE_FOR_CONTEXT).map(k => [k, profile.traits[k]])),
+    );
+    if (categories.length === 0 && !mbti) return null;
     return {
       categories,
+      mbti: mbti ? { type: mbti.type, dimensions: mbti.dimensions.map(d => ({ key: d.key, value: d.value, letter: d.letter, percent: d.percent })) } : null,
       measured: categories.reduce((n, c) => n + c.traits.length, 0),
       total: Object.keys(traits).length,
       tests_taken: [...new Set((profile.sources || []).map(s => s.test_key))],

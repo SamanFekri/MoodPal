@@ -13,6 +13,8 @@ const CATEGORY_DEFAULTS = {
   emotional_style:     { stability: 0.5,  learning_rate: 0.12 },
   thinking_style:      { stability: 0.6,  learning_rate: 0.1 },
   behavioral:          { stability: 0.6,  learning_rate: 0.1 },
+  // MBTI-style letters only come from the test: conversations never nudge them
+  mbti:                { stability: 0.9,  learning_rate: 0 },
 };
 
 const CATEGORY_NAMES = {
@@ -22,6 +24,7 @@ const CATEGORY_NAMES = {
   emotional_style: 'Conversation & emotional style',
   thinking_style: 'Thinking & decision style',
   behavioral: 'Behavioral preferences',
+  mbti: 'MBTI-style dimensions',
 };
 
 // [key, name, description]
@@ -95,6 +98,13 @@ const TRAIT_ROWS = {
     ['goal_orientation', 'Goal orientation', 'Focus on outcomes and targets.'],
     ['curiosity', 'Curiosity', 'Desire to explore and learn.'],
   ],
+  // high = the right-hand letter (E, N, F, P); see src/public/ui/mbti.js
+  mbti: [
+    ['mbti_extraversion', 'Extraversion (vs Introversion)', 'Recharging with people and action (high) versus quiet time alone (low).'],
+    ['mbti_intuition', 'Intuition (vs Sensing)', 'Focusing on patterns, ideas and possibilities (high) versus concrete facts and details (low).'],
+    ['mbti_feeling', 'Feeling (vs Thinking)', 'Deciding by values and people (high) versus logic and consistency (low).'],
+    ['mbti_perceiving', 'Perceiving (vs Judging)', 'Keeping options open and spontaneous (high) versus planned and settled (low).'],
+  ],
 };
 
 const TRAITS = Object.entries(TRAIT_ROWS).flatMap(([category, rows]) =>
@@ -128,6 +138,42 @@ const INTRO = 'For each statement, pick how accurately it describes you. There a
 
 // items: [trait, text, reverse]
 const TEST_DEFINITIONS = [
+  {
+    key: 'mbti',
+    order: 15,
+    name: 'Which Moodling are you? (MBTI-style)',
+    description: '24 quick statements, 16 cartoon characters. A fun test inspired by MBTI, not a scientific or clinical assessment.',
+    intro: 'Just for fun: a playful test inspired by the MBTI framework (not a scientific or clinical assessment). Say how much each statement sounds like you. Your answers save as you go.',
+    scale: { min: 1, max: 5, labels: ['Nope, not me', 'Not really', 'Kinda?', 'Pretty much', "That's so me!"] },
+    // 6 items per letter pair, half reverse-keyed, interleaved so no dimension comes in a block
+    scoring: { method: 'likert_mean', confidence: 0.6 },
+    items: [
+      ['mbti_extraversion', 'After a long week, a party with friends sounds like the perfect recharge.', false],
+      ['mbti_intuition', 'I often get lost imagining how things could be.', false],
+      ['mbti_feeling', 'When I decide something, I think about how everyone will feel.', false],
+      ['mbti_perceiving', 'I like to keep my options open instead of locking in plans.', false],
+      ['mbti_extraversion', 'I need quiet time alone to get my energy back after socialising.', true],
+      ['mbti_intuition', 'I trust what I can see and touch more than hunches.', true],
+      ['mbti_feeling', "I'd rather be honest than tactful.", true],
+      ['mbti_perceiving', 'I feel best when my to-do list is all checked off.', true],
+      ['mbti_extraversion', 'I think out loud. Talking helps me figure out what I think.', false],
+      ['mbti_intuition', 'Big-picture ideas excite me more than step-by-step details.', false],
+      ['mbti_feeling', "I'd rather keep the peace than win an argument.", false],
+      ['mbti_perceiving', 'I often start things at the last minute, and it works out.', false],
+      ['mbti_extraversion', "I'd rather have one deep chat than meet ten new people.", true],
+      ['mbti_intuition', 'I prefer instructions that are practical and concrete.', true],
+      ['mbti_feeling', 'Logic should win over feelings when making decisions.', true],
+      ['mbti_perceiving', 'I plan trips down to the hour.', true],
+      ['mbti_extraversion', "I'll happily start a conversation with a stranger.", false],
+      ['mbti_intuition', 'I like reading between the lines and finding hidden meanings.', false],
+      ['mbti_feeling', 'A friend\'s feelings matter more to me than being right.', false],
+      ['mbti_perceiving', 'A surprise change of plans feels exciting.', false],
+      ['mbti_extraversion', 'In a group, I usually listen more than I talk.', true],
+      ['mbti_intuition', 'I notice small details that other people miss.', true],
+      ['mbti_feeling', 'I can criticise an idea without taking it personally, and I expect the same.', true],
+      ['mbti_perceiving', 'I like to finish one thing before starting the next.', true],
+    ],
+  },
   {
     key: 'big_five',
     order: 10,
