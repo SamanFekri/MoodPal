@@ -721,12 +721,29 @@
     .mb-cta .btn { background: #fff; color: #6f4fd0; box-shadow: none; }
     .mb-cta .cast { position: absolute; right: -6px; bottom: -10px; display: flex; }
     .mb-cta .cast .mb-char { width: 62px; margin-left: -18px; }
-    .mb-cast { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mb-cast { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .mb-cast button { min-width: 0; }
     .mb-cast button { border: 0; font: inherit; color: #fff; border-radius: 14px; padding: 6px 4px 8px; cursor: pointer; background: linear-gradient(160deg, var(--c1), var(--c2)); transition: transform .15s var(--ease-out); }
     .mb-cast button:hover { transform: translateY(-2px); } .mb-cast button.on { outline: 3px solid var(--accent); outline-offset: 2px; }
     .mb-cast b { display: block; font-size: 12px; font-weight: 900; } .mb-cast small { display: block; font-size: 10px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card .mb-chip { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 900; letter-spacing: .04em; color: #fff; padding: 3px 8px; border-radius: 999px; background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+    .mb-visibility { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--hint); background: none; padding: 0 4px 12px; margin-top: -4px; cursor: pointer; text-align: left; }
+    .mb-visibility b { margin-left: auto; color: var(--link); font-weight: 700; }
+    .mb-visibility .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--stale); flex: none; }
+    .mb-visibility .dot.on { background: var(--fresh); }
     .mb-peek { width: 84px; margin: 0 auto 6px; animation: mb-enter .6s var(--ease-spring) both; }
     .quiz-body.scroll { justify-content: flex-start; overflow-y: auto; margin: 8px -16px 0; padding: 0 16px 8px; }
+    /* MBTI test: the question (peeking character + statement + 5 answers) can be taller than a small
+       phone, so the body scrolls; min-height: 0 lets a flex child actually shrink and scroll, and the
+       auto margins keep it centered when it fits */
+    .quiz-body.mb-quiz, .quiz-body.scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .quiz-body.mb-quiz { justify-content: flex-start; margin: 0 -16px; padding: 4px 16px; }
+    .quiz-body.mb-quiz > .q-wrap { margin: auto 0; }
+    @media (max-height: 720px) {
+      .quiz-body.mb-quiz .mb-peek { width: 58px; margin-bottom: 2px; }
+      .quiz-body.mb-quiz .q-text { font-size: 22px; min-height: 0; }
+      .quiz-body.mb-quiz .answers .ans { padding: 12px 14px; }
+    }
     .mb-drumroll { text-align: center; padding: 30px 0; }
     .mb-drumroll .mb-char { width: 140px; margin: 0 auto; filter: brightness(0) opacity(.25); animation: mb-shake .18s linear infinite alternate; }
     .mb-drumroll p { font-weight: 800; color: var(--hint); }
@@ -867,7 +884,7 @@
     <!-- ================= SHARED MBTI-STYLE RESULT (/result/ENFP) ================= -->
     <template v-else-if="mode === 'result'">
       <template v-if="isMbtiType(resultType)">
-        <mbti-card :mbti="{ type: resultType }" actions :retake="false" kicker="MoodPal personality" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @save-image="saveMbtiCard"></mbti-card>
+        <mbti-card :mbti="{ type: resultType }" actions :retake="false" kicker="MoodPal personality" letters-label="The four letters" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @save-image="saveMbtiCard"></mbti-card>
         <a class="btn mb-share" :href="mbtiTestLink" target="_blank" :style="mbtiStyleFor(resultType)" style="display:flex;text-decoration:none;margin-bottom:14px">Which one are you? Take the test</a>
         <section class="section">
           <h3>Meet the cast <span class="sub">16 Moodlings</span></h3>
@@ -942,6 +959,7 @@
           <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
             <div v-for="(friend, i) in friends" :key="friend.id" class="card" :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }" @click="openFriend(friend)">
               <span v-if="friend.personality_shared" class="badge" title="Shares their personality">🧠</span>
+              <span v-if="friend.mbti" class="mb-chip" :style="mbtiStyleFor(friend.mbti)" :title="friend.mbti + ' · ' + mbtiTitle(friend.mbti)">{{ friend.mbti }}</span>
               <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
                 <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
               </div>
@@ -992,6 +1010,11 @@
 
           <template v-else-if="personality">
             <mbti-card v-if="personality.profile?.mbti" :mbti="personality.profile.mbti" actions :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
+            <button v-if="personality.profile?.mbti && settings?.privacy" class="mb-visibility" @click="setTab('settings')">
+              <span class="dot" :class="{ on: settings.privacy.mbti_shared }"></span>
+              {{ settings.privacy.mbti_shared ? 'Friends who follow your mood can see your Moodling' : 'Your Moodling is hidden from friends' }}
+              <b>Change</b>
+            </button>
             <div v-else-if="mbtiTest" class="mb-cta" @click="startTest(mbtiTest)">
               <h3>Which Moodling are you?</h3>
               <p>{{ mbtiTest.question_count }} quick questions, 16 cartoon characters. Just for fun, inspired by MBTI.</p>
@@ -1005,6 +1028,12 @@
               <p>Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.</p>
               <button class="btn" @click="startTest(personality.tests[0])">📝 Take the Big Five test</button>
             </div>
+
+            <!-- all 16 Moodlings -->
+            <section class="section" :style="{ '--i': 3 }">
+              <h3>Meet the Moodlings <span class="sub">16 characters · tap one</span></h3>
+              <mbti-cast :current="personality.profile?.mbti?.type || ''" @pick="openMbtiCharacter"></mbti-cast>
+            </section>
 
             <!-- unfinished test -->
             <div class="resume" v-if="quizSession && !quiz">
@@ -1439,6 +1468,19 @@
               </div>
             </section>
 
+            <section class="section" :style="{ '--i': 2 }" v-if="settings.privacy">
+              <div class="share-row">
+                <div>
+                  <div class="s-title">Show my Moodling to friends</div>
+                  <div class="s-desc">Your MBTI-style character appears on your card and profile for friends who follow your mood, and on your public personality link.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.privacy.mbti_shared }" :disabled="privacyBusy" @click="setMbtiShared(!settings.privacy.mbti_shared)" role="switch" :aria-checked="settings.privacy.mbti_shared"></button>
+              </div>
+              <div class="note-box" v-if="settings.privacy.mbti_type && settings.privacy.mbti_shared">Friends see <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>.</div>
+              <div class="note-box" v-else-if="settings.privacy.mbti_type">You're <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>. Friends can't see it right now.</div>
+              <div class="note-box" v-else>You haven't taken the test yet. Your Moodling shows up here once you have.</div>
+            </section>
+
             <section class="section" :style="{ '--i': 2 }" v-if="settings.timezone">
               <h3>🌍 Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
               <div class="tz-now">
@@ -1530,11 +1572,25 @@
               <div class="sheet-actions">
                 <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)">💬 Open chat</a>
               </div>
+              <template v-if="sheet.personality?.mbti || sheet.friend.mbti">
+                <div class="sheet-section-title">Moodling</div>
+                <mbti-card :mbti="sheet.personality?.mbti || { type: sheet.friend.mbti }" compact :kicker="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s Moodling'" :letters-label="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s four letters'"></mbti-card>
+              </template>
               <div class="sheet-section-title">Personality</div>
               <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
-              <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact></personality-view>
+              <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact :show-mbti="false"></personality-view>
               <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
               <div v-else class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their personality.</div>
+            </template>
+
+            <!-- one Moodling, from the cast gallery -->
+            <template v-else-if="sheet.type === 'mbti'">
+              <mbti-card :key="sheet.mbtiType" :mbti="{ type: sheet.mbtiType }" :kicker="sheet.mbtiType === personality?.profile?.mbti?.type ? 'Your Moodling' : 'Meet'" letters-label="The four letters"></mbti-card>
+              <div class="row-actions" style="margin-top:0">
+                <button class="btn ghost" @click="openMbtiCharacter(MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 15) % 16])">‹ {{ MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 15) % 16] }}</button>
+                <button class="btn ghost" @click="openMbtiCharacter(MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 1) % 16])">{{ MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 1) % 16] }} ›</button>
+                <button class="btn" v-if="!personality?.profile?.mbti && mbtiTest" @click="closeSheet(); startTest(mbtiTest)">Which one are you?</button>
+              </div>
             </template>
 
             <!-- admin: a user's history -->
@@ -1657,7 +1713,7 @@
         </div>
         <div class="progress" v-if="!quiz.done"><div :style="{ width: (quiz.session.current_index / quiz.session.total * 100) + '%' }"></div></div>
 
-        <div class="quiz-body" :class="{ scroll: quiz.done && quiz.mbti }">
+        <div class="quiz-body" :class="{ scroll: quiz.done && quiz.mbti, 'mb-quiz': quiz.session.test.key === 'mbti' }">
           <div v-if="quiz.done && quiz.mbti">
             <div v-if="quiz.revealing" class="mb-drumroll">
               <mbti-character :type="quiz.shuffle"></mbti-character>
@@ -1665,7 +1721,7 @@
             </div>
             <template v-else>
               <mbti-card :mbti="quiz.mbti" actions kicker="You are…" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
-              <mbti-card v-if="quiz.preview && quiz.preview !== quiz.mbti.type" :key="quiz.preview" :mbti="{ type: quiz.preview }" compact kicker="Meet"></mbti-card>
+              <mbti-card v-if="quiz.preview && quiz.preview !== quiz.mbti.type" :key="quiz.preview" :mbti="{ type: quiz.preview }" compact kicker="Meet" letters-label="The four letters"></mbti-card>
               <section class="section">
                 <h3>Meet the whole cast <span class="sub">tap one</span></h3>
                 <mbti-cast :current="quiz.preview || quiz.mbti.type" @pick="quiz.preview = $event"></mbti-cast>
@@ -1890,6 +1946,7 @@
         retake: { type: Boolean, default: true },
         canSaveImage: { type: Boolean, default: false },
         kicker: { type: String, default: 'Your Moodling' },
+        lettersLabel: { type: String, default: 'Your four letters' },
       },
       emits: ['share', 'copy', 'retake', 'save-image'],
       data() { return { LINE_ICONS }; },
@@ -1923,7 +1980,7 @@
           </div>
           <div class="mb-body">
             <p class="mb-desc" v-if="!compact">{{ c.description }}</p>
-            <div class="mb-h" :style="{ marginTop: compact ? 0 : '' }">Your four letters</div>
+            <div class="mb-h" :style="{ marginTop: compact ? 0 : '' }">{{ lettersLabel }}</div>
             <div v-for="(d, i) in dims" :key="d.key" class="mb-dim" :style="{ '--i': i }">
               <div class="ends">
                 <span :class="{ win: !d.isRight }"><mbti-icon :kind="d.left.letter"></mbti-icon><b>{{ d.left.letter }}</b> {{ d.left.name }}<template v-if="d.percent !== null && !d.isRight"> · {{ d.percent }}%</template></span>
@@ -2004,7 +2061,7 @@
       watch: { animateKey() { this.animated = false; nextTick(() => requestAnimationFrame(() => { this.animated = true; })); } },
       template: `
         <div>
-          <mbti-card v-if="showMbti && profile.mbti" :mbti="profile.mbti" :compact="compact" kicker="Moodling"></mbti-card>
+          <mbti-card v-if="showMbti && profile.mbti" :mbti="profile.mbti" :compact="compact" kicker="Moodling" letters-label="The four letters"></mbti-card>
           <section v-if="radar" class="section" :style="{ '--i': 0 }">
             <h3>Overview <span class="sub">{{ radar.title }}</span></h3>
             <div class="radar-wrap">
@@ -2420,6 +2477,7 @@
           MBTI_TYPES: MBTI.TYPES,
           resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
           canSaveImage: false,
+          privacyBusy: false,
           publicName: '',
           publicBot: null,
         }
@@ -2748,6 +2806,8 @@
         openQuiz(session) {
           this.haptic('light');
           this.quiz = { session, picked: null, saving: false, done: false, mbti: null, revealing: false, shuffle: 'ENFP', preview: null };
+          // scrolling up inside the MBTI test must not pull the whole mini app down
+          if (session.test?.key === 'mbti') { try { this.tg?.disableVerticalSwipes?.(); this._swipesOff = true; } catch {} }
           try { this.tg?.BackButton?.show?.(); this.tg?.BackButton?.onClick?.(this.closeQuiz); } catch {}
           if (this.tg?.MainButton && this.usingMainButton) this.tg.MainButton.hide();
         },
@@ -2787,6 +2847,7 @@
           // keep the latest progress so "Continue" resumes where the user left off
           if (this.quiz && !this.quiz.done) { this.quizSession = this.quiz.session; this.fetchQuizSession(); }
           this.quiz = null;
+          if (this._swipesOff) { try { this.tg?.enableVerticalSwipes?.(); } catch {} this._swipesOff = false; }
           try { this.tg?.BackButton?.hide?.(); this.tg?.BackButton?.offClick?.(this.closeQuiz); } catch {}
           if (this.tg?.MainButton && this.usingMainButton && this.tab === 'friends') this.tg.MainButton.show();
         },
@@ -3325,11 +3386,29 @@
 
         // ----- MBTI-style test: reveal, share, shared-result page -----
         isMbtiType(t) { return MBTI.isType(t); },
+        mbtiTitle(t) { return MBTI.CHARACTERS[t]?.title || ''; },
+        openMbtiCharacter(type) {
+          if (!MBTI.isType(type)) return;
+          this.haptic('light');
+          this.sheet = { type: 'mbti', mbtiType: type };
+          nextTick(() => document.querySelector('.sheet')?.scrollTo({ top: 0 }));
+        },
+        async setMbtiShared(on) {
+          if (this.privacyBusy) return;
+          this.haptic('medium');
+          this.privacyBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/privacy', { method: 'POST', body: { mbti_shared: on } });
+            this.showToast(on ? 'Friends can see your Moodling' : 'Your Moodling is hidden from friends');
+          } catch { this.showToast("Couldn't save that"); }
+          finally { this.privacyBusy = false; }
+        },
         mbtiStyleFor(t) { return mbtiStyle(t); },
         mbtiUrl(type) { return `${location.origin}/result/${type}`; },
         // a short "drumroll" through the cast, then the real one with confetti
         revealMbti(q, mbti) {
           q.mbti = mbti; q.revealing = true; q.preview = null;
+          this.fetchSettings();   // Settings shows your type next to the "show to friends" switch
           const started = Date.now();
           const timer = setInterval(() => {
             q.shuffle = MBTI.TYPES[Math.floor(Math.random() * MBTI.TYPES.length)];

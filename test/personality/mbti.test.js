@@ -171,6 +171,54 @@ describe('MBTI-style test', () => {
       assert.equal(r.body.tests.find(t => t.key === 'mbti').completed, true);
     });
 
+    test('friends see your Moodling unless you hide it in Settings (hidden everywhere others look)', async () => {
+      const Share = require('../../src/models/share');
+      const Mood = require('../../src/models/mood');
+      const me = await User.create({ id: 1, first_name: 'Me' });
+      const friend = await User.create({ id: 2, first_name: 'Friend' });
+      const stranger = await User.create({ id: 3, first_name: 'Stranger' });
+      await Mood.create({ user: me._id, mood: { code: 'happy', emoji: '😊', name: 'Happy' } });
+      await Share.createShare(friend._id, me._id);   // friend follows my mood
+
+      // before the test there is nothing to show
+      let r = await api('/api/friends', { as: friend });
+      assert.equal(r.body[0].mbti, null);
+      assert.equal((await api('/api/me/settings', { as: me })).body.privacy.mbti_shared, true, 'shown by default');
+
+      const { questions } = await personalityService.getTest('mbti');
+      const { session } = await personalityService.startTest(me._id, 'mbti');
+      for (const q of questions) await personalityService.answerQuestion(me._id, session._id, q.order, answerFor('ISFJ', q));
+
+      r = await api('/api/friends', { as: friend });
+      assert.equal(r.body[0].mbti, 'ISFJ', 'on my card in their friends grid');
+      r = await api('/api/friends/1/personality', { as: friend });
+      assert.equal(r.body.shared, false, 'the rest of my personality is still private');
+      assert.equal(r.body.profile, null);
+      assert.equal(r.body.mbti.type, 'ISFJ', 'but my Moodling is visible on my profile');
+      assert.equal((await api('/api/friends/1/personality', { as: stranger })).status, 403, 'only people who follow me');
+      assert.equal((await api('/api/me/settings', { as: me })).body.privacy.mbti_type, 'ISFJ');
+
+      // share the whole personality publicly, then hide the Moodling
+      const sharing = await api('/api/me/personality/sharing', { method: 'POST', as: me, body: { enabled: true } });
+      const token = sharing.body.public_url.split('/p/')[1];
+      assert.equal((await api(`/api/public/personality/${token}`)).body.profile.mbti.type, 'ISFJ');
+
+      assert.equal((await api('/api/me/settings/privacy', { method: 'POST', as: me, body: { mbti_shared: 'no' } })).status, 400);
+      r = await api('/api/me/settings/privacy', { method: 'POST', as: me, body: { mbti_shared: false } });
+      assert.equal(r.body.privacy.mbti_shared, false);
+
+      assert.equal((await api('/api/friends', { as: friend })).body[0].mbti, null, 'gone from their grid');
+      r = await api('/api/friends/1/personality', { as: friend });
+      assert.equal(r.body.shared, true);
+      assert.equal(r.body.mbti, undefined, 'gone from my profile');
+      assert.equal(r.body.profile.mbti, null, 'and from the shared personality');
+      assert.equal((await api(`/api/public/personality/${token}`)).body.profile.mbti, null, 'and from the public link');
+      assert.equal((await personalityService.getProfileView(me._id)).mbti.type, 'ISFJ', 'I still see it myself');
+
+      await api('/api/me/settings/privacy', { method: 'POST', as: me, body: { mbti_shared: true } });
+      assert.equal((await api('/api/friends', { as: friend })).body[0].mbti, 'ISFJ', 'and back');
+    });
+
     test('/result/<type> serves the app with a link preview; anything else still serves the app', async () => {
       const ok = await fetch(`${base}/result/enfp`);
       assert.equal(ok.status, 200);

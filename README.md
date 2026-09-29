@@ -115,6 +115,8 @@ Each of the 16 types has a cartoon character, the *Moodlings* (e.g. ENFP is Pip,
 
 After the test the app reveals the character with confetti: the four letters with a bar per pair, strengths, tendencies, fun traits and "you, probably" behaviors, the whole cast to browse, and *Retake test*. *Share my result* uses Telegram's share sheet in the mini app and the Web Share API in a browser (else it copies the text and link); *Copy link* and *Save card* (a 1080×1350 image) are there too. The link is `/result/<TYPE>` (e.g. `/result/ENFP`): anyone can open it, it has link-preview tags for that character, and *Take the test* opens the bot with `?start=mbti`, which starts the test. The bot also sends the result and the link when someone finishes the test in chat.
 
+*Personality → Meet the Moodlings* shows all 16 characters; tapping one opens its full card. Friends who follow your mood see your character: a type chip on your card in their Friends grid and a character card on your profile (even if the rest of your personality stays private). *Settings → Show my Moodling to friends* (`is_mbti_shared`, on by default, `POST /api/me/settings/privacy`) hides it from friends and from your public personality link; you and admins still see it. On short phones the test screen scrolls, and Telegram's swipe-to-close is paused while the test is open.
+
 ### 💾 Backup, restore and health checks
 The *Admin → Backup* sub-tab talks to [GotYouBro](https://gotyoubro.samanfekri.me/api/docs), which forwards files and alerts to Telegram.
 

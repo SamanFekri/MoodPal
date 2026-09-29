@@ -283,6 +283,25 @@ class PersonalityService {
     };
   }
 
+  // MBTI-style result for one user, or several at once (for the friends list): { type, dimensions } or null
+  async getMbti(userId) {
+    return (await this.getMbtiMany([userId])).get(String(userId)) || null;
+  }
+
+  async getMbtiMany(userIds) {
+    const { MIN_CONFIDENCE_FOR_CONTEXT } = require('./context');
+    const MBTI = require('../public/ui/mbti');
+    const profiles = await PersonalityProfile.find({ user: { $in: userIds } });
+    const out = new Map();
+    for (const doc of profiles) {
+      const p = doc.toPlain();
+      const letters = Object.fromEntries(Object.keys(p.traits).filter(k => k.startsWith('mbti_') && (p.confidence[k] ?? 0) >= MIN_CONFIDENCE_FOR_CONTEXT).map(k => [k, p.traits[k]]));
+      const r = MBTI.fromTraits(letters);
+      if (r) out.set(String(p.user), { type: r.type, dimensions: r.dimensions.map(d => ({ key: d.key, value: d.value, letter: d.letter, percent: d.percent })) });
+    }
+    return out;
+  }
+
   async getProfileSummary(userId) {
     const [profile, traits] = await Promise.all([this.getProfile(userId), this.getTraits()]);
     return formatProfileSummary(profile, traits);

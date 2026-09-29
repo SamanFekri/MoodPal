@@ -14,8 +14,14 @@ const view = async (user) => {
       models: llm.MODEL_CHOICES,
     },
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone').lean() || user;
-      return { reminders: reminders.viewFor(fresh, await reminders.getSettings()), timezone: await reminders.timezoneView(fresh) };
+      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared').lean() || user;
+      const mbti = await require('../personality/service').getMbti(user._id);
+      return {
+        reminders: reminders.viewFor(fresh, await reminders.getSettings()),
+        timezone: await reminders.timezoneView(fresh),
+        // who can see your Moodling (MBTI-style character)
+        privacy: { mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null },
+      };
     })()),
   };
 };
@@ -73,7 +79,14 @@ const setTimezone = async (req, res) => {
   res.json(await view(req.user));
 };
 
+// POST /api/me/settings/privacy { mbti_shared: boolean } — show or hide your Moodling from friends and your public link
+const setPrivacy = async (req, res) => {
+  if (typeof req.body?.mbti_shared !== 'boolean') return res.status(400).json({ error: 'invalid_value' });
+  await User.updateOne({ _id: req.user._id }, { is_mbti_shared: req.body.mbti_shared });
+  res.json(await view(req.user));
+};
+
 // separate so tests can swap the OpenAI round-trip
 const verify = (key) => llm.verifyApiKey(key);
 
-module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, verify };
+module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, verify };

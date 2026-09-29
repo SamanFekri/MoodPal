@@ -1,5 +1,6 @@
 const Share = require('../models/share');
 const Mood = require('../models/mood');
+const personalityService = require('../personality/service');
 
 // get followings of a user
 const getFollowings = async (req, res) => {
@@ -21,9 +22,21 @@ const getFollowings = async (req, res) => {
       tgs: `/public/tgs/${lastMood.mood.code}.tgs`,
       mood: lastMood.mood,
       timestamp: lastMood.timestamp,
-      personality_shared: Boolean(following.followed.is_personality_shared)
+      personality_shared: Boolean(following.followed.is_personality_shared),
+      _uid: following.followed._id,
+      _mbtiShared: following.followed.is_mbti_shared !== false,
     };
   }));
+
+  // their MBTI-style character (type only), unless they hide it
+  const visible = followingsWithLastMood.filter(f => f && f._mbtiShared);
+  const types = visible.length ? await personalityService.getMbtiMany(visible.map(f => f._uid)) : new Map();
+  for (const f of followingsWithLastMood) {
+    if (!f) continue;
+    const mbti = f._mbtiShared ? types.get(String(f._uid)) : null;
+    f.mbti = mbti ? mbti.type : null;
+    delete f._uid; delete f._mbtiShared;
+  }
 
   // Filter out null values, newest mood first
   const filteredFollowings = followingsWithLastMood

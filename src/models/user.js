@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // MBTI-style character (Moodling): shown to friends who follow this user and on the public
+  // personality link. On by default; the user can hide it in Settings.
+  is_mbti_shared: {
+    type: Boolean,
+    default: true
+  },
   personality_share_token: {
     type: String,
     default: null,

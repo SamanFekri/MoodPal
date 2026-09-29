@@ -42,15 +42,22 @@ const getFriends = async (req, res) => {
   if (!friend) return res.status(404).json({ error: 'not_found' });
   const share = await Share.findOne({ follower: req.user._id, followed: friend._id, disabled: false });
   if (!share) return res.status(403).json({ error: 'not_following' });
-  if (!friend.is_personality_shared) return res.json({ shared: false, profile: null });
-  res.json({ shared: true, profile: await personalityService.getProfileView(friend._id) });
+  // the Moodling has its own switch (is_mbti_shared), separate from sharing the whole personality
+  const mbti = friend.is_mbti_shared !== false ? await personalityService.getMbti(friend._id) : null;
+  const extra = mbti ? { mbti } : {};
+  if (!friend.is_personality_shared) return res.json({ shared: false, profile: null, ...extra });
+  const profile = await personalityService.getProfileView(friend._id);
+  if (profile && friend.is_mbti_shared === false) profile.mbti = null;
+  res.json({ shared: true, profile, ...extra });
 };
 
 // GET /api/public/personality/:token — no auth; what the share link shows
 const getPublic = async (req, res) => {
   const user = await User.findOne({ personality_share_token: req.params.token, is_personality_shared: true });
   if (!user) return res.status(404).json({ error: 'not_found' });
-  res.json({ first_name: user.first_name, bot_username: process.env.BOT_USERNAME || null, profile: await personalityService.getProfileView(user._id) });
+  const profile = await personalityService.getProfileView(user._id);
+  if (profile && user.is_mbti_shared === false) profile.mbti = null;   // hidden Moodling stays hidden here too
+  res.json({ first_name: user.first_name, bot_username: process.env.BOT_USERNAME || null, profile });
 };
 
 // ---- taking tests inside the mini app (same service the bot uses) ----

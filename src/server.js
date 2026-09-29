@@ -70,6 +70,7 @@ app.delete('/api/me/settings/openai-key', requireWebAppUser, controllers.setting
 app.post('/api/me/settings/model', requireWebAppUser, controllers.settings.setModel);
 app.post('/api/me/settings/reminders', requireWebAppUser, controllers.settings.setReminders);
 app.post('/api/me/settings/timezone', requireWebAppUser, controllers.settings.setTimezone);
+app.post('/api/me/settings/privacy', requireWebAppUser, controllers.settings.setPrivacy);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/me/personality/session', requireWebAppUser, controllers.personality.getSession);
