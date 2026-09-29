@@ -35,9 +35,9 @@
     "semantic_hash": "b43ff63ed0fcdcadabdd77592cbd48bd"
   },
   "src/commands/personality.js": {
-    "mtime": 1789647946.2151556,
-    "ast_hash": "3793d1fe3a32ca4b99a1a8dd08da1f74",
-    "semantic_hash": "3793d1fe3a32ca4b99a1a8dd08da1f74"
+    "mtime": 1790705808.6911795,
+    "ast_hash": "a0da37d8bb74d4e6e9bfacf357565091",
+    "semantic_hash": ""
   },
   "src/commands/report.js": {
     "mtime": 1789660099.2318213,
@@ -55,9 +55,9 @@
     "semantic_hash": "6ffafa75cac41d8a7ae7287403b2f711"
   },
   "src/commands/start.js": {
-    "mtime": 1761571140.4575663,
-    "ast_hash": "7846c9583c1f877f8fbd714df70d60b0",
-    "semantic_hash": "7846c9583c1f877f8fbd714df70d60b0"
+    "mtime": 1790705808.6909676,
+    "ast_hash": "845815f718ccdaf45ec4c319ef58392e",
+    "semantic_hash": ""
   },
   "src/commands/talk.js": {
     "mtime": 1789660099.2312567,
@@ -85,9 +85,9 @@
     "semantic_hash": ""
   },
   "src/constants/personality.constant.js": {
-    "mtime": 1789656643.1925697,
-    "ast_hash": "705ec980e9e3d2100c536eb6a91425c4",
-    "semantic_hash": "705ec980e9e3d2100c536eb6a91425c4"
+    "mtime": 1790706445.7313125,
+    "ast_hash": "fab3c23558b3645299fc7f4a38d37eb8",
+    "semantic_hash": ""
   },
   "src/constants/report.constant.js": {
     "mtime": 1747224104.4033766,
@@ -225,9 +225,9 @@
     "semantic_hash": ""
   },
   "src/personality/catalog.seed.js": {
-    "mtime": 1789656643.1924448,
-    "ast_hash": "8a7eeda3d061dc191fa8b06dc045ff3a",
-    "semantic_hash": "8a7eeda3d061dc191fa8b06dc045ff3a"
+    "mtime": 1790706528.7724998,
+    "ast_hash": "da74c9f1096338f88d15ab433cc2d16b",
+    "semantic_hash": ""
   },
   "src/personality/context.js": {
     "mtime": 1789647981.7338076,
@@ -250,9 +250,9 @@
     "semantic_hash": "ab18e537113fffe4a2bb371d49a824b8"
   },
   "src/personality/service.js": {
-    "mtime": 1789660099.2325253,
-    "ast_hash": "ab87582dbe512c9689612aef5e5682b4",
-    "semantic_hash": "ab87582dbe512c9689612aef5e5682b4"
+    "mtime": 1790705618.2296362,
+    "ast_hash": "6c2f28f11b4b30c1ee5ab0ecc1ae76f1",
+    "semantic_hash": ""
   },
   "src/public/lib/tgs-player.js": {
     "mtime": 1789658054.2052612,
@@ -260,8 +260,8 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1790704856.4983795,
-    "ast_hash": "3179e8b8660153924b61ef68c27ee361",
+    "mtime": 1790706445.7310433,
+    "ast_hash": "80c06d4328102e665d6f8f9c8ddc694d",
     "semantic_hash": ""
   },
   "src/utils/cache.js": {
@@ -325,14 +325,14 @@
     "semantic_hash": "df024eb3228cd551c19d7f20c967f02f"
   },
   "test/personality/scoring.test.js": {
-    "mtime": 1789647995.9080384,
-    "ast_hash": "b884978b90fcfe5da9ca3b9bb7f99f94",
-    "semantic_hash": "b884978b90fcfe5da9ca3b9bb7f99f94"
+    "mtime": 1790706528.7745876,
+    "ast_hash": "f926bd8f34d065211f78de7815fa82cb",
+    "semantic_hash": ""
   },
   "test/personality/service.test.js": {
-    "mtime": 1789647981.7345862,
-    "ast_hash": "ce02972eb80b44353108bab5976a5024",
-    "semantic_hash": "ce02972eb80b44353108bab5976a5024"
+    "mtime": 1790706528.774458,
+    "ast_hash": "8db1fc34130003c6a5d979b778fa993e",
+    "semantic_hash": ""
   },
   "test/webapp/api.test.js": {
     "mtime": 1790704643.5560837,
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790704673.1691391,
-    "ast_hash": "624f3b488136cc6f144525c185ee85f9",
+    "mtime": 1790706705.9374409,
+    "ast_hash": "69c0f28c87fee23d85972d4441ea71d8",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -350,8 +350,8 @@
     "semantic_hash": "6da93a48aa0535cc0c22d3cf43915409"
   },
   "src/public/ui/index.html": {
-    "mtime": 1790705018.0130618,
-    "ast_hash": "3cb0129fcbc91ea7093a3789d98a40d9",
+    "mtime": 1790706705.936895,
+    "ast_hash": "e5e97ae446dc7dbc55355bc64300b278",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -742,6 +742,16 @@
   "test/reminders/reminders.test.js": {
     "mtime": 1790704954.8752236,
     "ast_hash": "5f234da520b11b1689986838db867612",
+    "semantic_hash": ""
+  },
+  "src/public/ui/mbti.js": {
+    "mtime": 1790706401.7745156,
+    "ast_hash": "5236a98a98b0f976863cecac23ba76ae",
+    "semantic_hash": ""
+  },
+  "test/personality/mbti.test.js": {
+    "mtime": 1790706528.7748678,
+    "ast_hash": "105ababd7c09dee94687d37ad23cc011",
     "semantic_hash": ""
   }
 }
