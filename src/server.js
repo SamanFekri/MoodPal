@@ -88,6 +88,13 @@ app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAd
 app.get('/api/admin/users/:telegramId/connections', requireWebAppUser, requireAdmin, controllers.admin.userConnections);
 app.get('/api/admin/traits', requireWebAppUser, requireAdmin, controllers.admin.listTraits);
 app.get('/api/admin/graph', requireWebAppUser, requireAdmin, controllers.admin.followGraph);
+// broadcasts: one message / photo / video / file to every user, through a rate-limited queue
+app.get('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.broadcast.list);
+app.post('/api/admin/broadcasts/media', express.raw({ type: () => true, limit: '50mb' }), requireWebAppUser, requireAdmin, controllers.broadcast.upload);
+app.post('/api/admin/broadcasts/test', requireWebAppUser, requireAdmin, controllers.broadcast.test);
+app.post('/api/admin/broadcasts/settings', requireWebAppUser, requireAdmin, controllers.broadcast.settings);
+app.post('/api/admin/broadcasts/:id/cancel', requireWebAppUser, requireAdmin, controllers.broadcast.cancel);
+app.post('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.broadcast.create);
 // mood reminders
 app.get('/api/admin/reminders', requireWebAppUser, requireAdmin, controllers.reminders.getReminders);
 app.post('/api/admin/reminders/settings', requireWebAppUser, requireAdmin, controllers.reminders.saveSettings);

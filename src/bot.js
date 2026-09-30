@@ -34,6 +34,7 @@ const backupScheduler = require('./backup/scheduler');
 const { backupNowCommand } = require('./commands/backup');
 const { remindersCommand, toggleCallback: remindersToggle, timezoneCommand, timezoneCallback, TZ_PREFIX, TZ_RESET } = require('./commands/reminders');
 const reminderService = require('./reminders/service');
+const broadcastService = require('./broadcast/service');
 const { personality: personalityConstants } = require('./constants');
 
 // Import actions
@@ -46,6 +47,7 @@ connectDB()
   .then(() => require('./models/user').backfillLastActive())
   .then(() => backupScheduler.reschedule())
   .then(() => reminderService.start())
+  .then(() => broadcastService.start())
   .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server

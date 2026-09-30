@@ -731,6 +731,25 @@
     .mb-visibility b { margin-left: auto; color: var(--link); font-weight: 700; }
     .mb-visibility .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--stale); flex: none; }
     .mb-visibility .dot.on { background: var(--fresh); }
+    .bc-text { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; line-height: 1.4; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 14px; padding: 12px 14px; outline: none; resize: vertical; min-height: 110px; margin-top: 6px; }
+    .bc-count { text-align: right; font-size: 11px; color: var(--hint); font-weight: 600; margin-top: 4px; }
+    .bc-media { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: rgba(51,144,236,.1); }
+    .bc-media .kind, .bc-row .kind { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+    .bc-media .name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bc-link { border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; color: var(--link); padding: 12px 0 0; cursor: pointer; }
+    .bc-button input { font-size: 14px; padding: 10px 12px; }
+    .bc-row { padding: 12px 0; border-top: 1px solid rgba(138,143,152,0.12); }
+    .bc-row .top { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .bc-row .st { font-weight: 800; color: var(--hint); } .bc-row .st.sending { color: var(--recent); } .bc-row .st.done { color: var(--fresh); }
+    .bc-row .when { margin-left: auto; color: var(--hint); font-weight: 600; }
+    .bc-row .txt { font-size: 14px; margin: 6px 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .bc-row .bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(138,143,152,0.16); }
+    .bc-row .bar i { display: block; height: 100%; transition: width .6s var(--ease-out); } .bc-row .bar .ok { background: var(--fresh); } .bc-row .bar .bad { background: #ff5f6d; }
+    .bc-row .nums { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--hint); font-weight: 600; margin-top: 6px; }
+    .bc-cancel { margin-left: auto; border: 0; background: rgba(255,95,109,.12); color: #e5484d; font: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+    /* five admin sections: one row when there's room, two rows on a phone */
+    .seg.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 2px; }
+    .seg.admin-tabs button { white-space: nowrap; font-size: 12px; padding: 9px 4px; }
     .mem-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(138,143,152,0.12); font-size: 14px; line-height: 1.35; }
     .mem-row .t { flex: 1; min-width: 0; }
     .mem-row .imp { display: inline-flex; gap: 2px; flex: none; }
@@ -1088,7 +1107,7 @@
           <header class="header">
             <div>
               <p class="greeting">Admin</p>
-              <h1>{{ { backup: 'Backup', graph: 'Follow graph', reminders: 'Reminders' }[admin.view] || 'All moods' }}</h1>
+              <h1>{{ { backup: 'Backup', graph: 'Follow graph', reminders: 'Reminders', broadcast: 'Broadcast' }[admin.view] || 'All moods' }}</h1>
             </div>
             <div class="header-right">
               <span class="pill" v-if="admin.view === 'users' && admin.total_users !== null">{{ admin.total_users }} {{ admin.total_users === 1 ? 'user' : 'users' }} · {{ admin.total_moods }} {{ admin.total_moods === 1 ? 'mood' : 'moods' }}</span>
@@ -1096,10 +1115,11 @@
           </header>
 
           <div class="filters">
-            <div class="seg grow">
+            <div class="seg grow admin-tabs">
               <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'">👥 Users</button>
               <button :class="{ on: admin.view === 'graph' }" @click="showGraph()">🕸 Graph</button>
               <button :class="{ on: admin.view === 'reminders' }" @click="showReminderAdmin()">⏰ Reminders</button>
+              <button :class="{ on: admin.view === 'broadcast' }" @click="showBroadcast()">📣 Broadcast</button>
               <button :class="{ on: admin.view === 'backup' }" @click="showBackup()">💾 Backup</button>
             </div>
           </div>
@@ -1197,6 +1217,81 @@
               <div class="kv"><span class="k">In this graph</span><span class="v">{{ graph.stats.users_in_graph }} of {{ graph.stats.total_users }} users · {{ graph.edges.length }} connections</span></div>
               <div class="kv" v-if="graph.stats.truncated"><span class="k">Note</span><span class="v warn">showing the busiest {{ graph.stats.users_in_graph }} people</span></div>
               <div class="row-actions"><button class="btn ghost" :disabled="graphBusy" @click="fetchGraph()">{{ graphBusy ? 'Loading…' : '↻ Refresh' }}</button></div>
+            </template>
+          </template>
+
+          <!-- ---------- Admin · Broadcast ---------- -->
+          <template v-else-if="admin.view === 'broadcast'">
+            <template v-if="!bc && !bcError">
+              <div class="section" v-for="n in 2" :key="'bcsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+            </template>
+            <div v-else-if="!bc" class="state"><div class="art">📡</div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">Try again</button></div>
+            <template v-else>
+              <section class="section" :style="{ '--i': 0 }">
+                <h3>New message <span class="sub">to everyone</span></h3>
+                <textarea class="bc-text" v-model="bcDraft.text" :maxlength="bcLimit" rows="5" :placeholder="bcDraft.media ? 'Caption (optional)' : 'Write your message…'"></textarea>
+                <div class="bc-count">{{ bcDraft.text.length }} / {{ bcLimit }}</div>
+
+                <div v-if="bcDraft.media" class="bc-media">
+                  <span class="kind">{{ { photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[bcDraft.media.kind] }}</span>
+                  <span class="name">{{ bcDraft.media.file_name || 'attachment' }}</span>
+                  <button class="g-btn" title="Remove" :disabled="!!bcBusy" @click="bcDraft.media = null">×</button>
+                </div>
+                <label v-else class="file-drop">
+                  <input type="file" accept="image/*,video/*,audio/*,.pdf,.zip,.doc,.docx,.txt" @change="uploadBroadcastFile($event)">
+                  {{ bcBusy === 'upload' ? 'Uploading…' : 'Attach a photo, video, GIF, audio or file (optional, up to 50 MB)' }}
+                </label>
+
+                <button class="bc-link" v-if="!bcDraft.showButton" @click="bcDraft.showButton = true">＋ Add a link button</button>
+                <div v-else class="field bc-button">
+                  <input v-model="bcDraft.buttonText" maxlength="40" placeholder="Button text">
+                  <input v-model="bcDraft.buttonUrl" placeholder="https://…" autocapitalize="off" spellcheck="false">
+                  <button class="g-btn" title="Remove button" @click="bcDraft.showButton = false; bcDraft.buttonText = ''; bcDraft.buttonUrl = ''">×</button>
+                </div>
+
+                <div class="rem-limit">
+                  <span><b>Who gets it first</b><i>The queue sends in this order</i></span>
+                  <select v-model="bcDraft.order" :disabled="!!bcBusy">
+                    <option value="recent_active">Most recently active</option>
+                    <option value="least_active">Least recently active</option>
+                    <option value="newest">Newest users</option>
+                    <option value="oldest">Oldest users</option>
+                  </select>
+                </div>
+                <div class="kv"><span class="k">Goes to</span><span class="v">{{ bc.audience }} {{ bc.audience === 1 ? 'person' : 'people' }} who can still get messages</span></div>
+                <div class="row-actions">
+                  <button class="btn ghost" :disabled="!!bcBusy || !bcReady" @click="sendBroadcastTest">{{ bcBusy === 'test' ? 'Sending…' : 'Send test to me' }}</button>
+                  <button class="btn" :disabled="!!bcBusy || !bcReady || !bc.audience" @click="sendBroadcast">{{ bcBusy === 'send' ? 'Queuing…' : 'Send to ' + bc.audience + ' ' + (bc.audience === 1 ? 'person' : 'people') }}</button>
+                </div>
+                <div class="note-box">"Send test to me" sends exactly this message only to you. Everyone else gets it through a queue at {{ bc.rate_per_second }} messages a second, so the bot never floods Telegram. People who blocked the bot are skipped.</div>
+              </section>
+
+              <section class="section" :style="{ '--i': 1 }">
+                <h3>Recent <span class="sub">{{ bc.paused_until ? 'paused by Telegram for a moment' : 'live' }}</span></h3>
+                <div v-if="!bc.broadcasts.length" class="muted-box">Nothing sent yet.</div>
+                <div v-for="b in bc.broadcasts" :key="b.id" class="bc-row">
+                  <div class="top">
+                    <span class="kind">{{ { text: 'Text', photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[b.kind] }}</span>
+                    <span class="st" :class="b.status">{{ { sending: 'Sending', done: 'Done', cancelled: 'Cancelled' }[b.status] }}</span>
+                    <span class="when">{{ formatWhen(b.started_at, true) }}</span>
+                  </div>
+                  <div class="txt">{{ b.text || b.file_name || '(no text)' }}</div>
+                  <div class="bar"><i class="ok" :style="{ width: (b.total ? b.sent / b.total * 100 : 0) + '%' }"></i><i class="bad" :style="{ width: (b.total ? b.failed / b.total * 100 : 0) + '%' }"></i></div>
+                  <div class="nums">
+                    <span>{{ b.sent }} sent</span><span v-if="b.failed">{{ b.failed }} failed</span><span v-if="b.skipped">{{ b.skipped }} skipped</span><span v-if="b.waiting">{{ b.waiting }} waiting</span><span>of {{ b.total }}</span>
+                    <button v-if="b.status === 'sending'" class="bc-cancel" :disabled="!!bcBusy" @click="cancelBroadcast(b)">Cancel</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section" :style="{ '--i': 2 }">
+                <div class="rem-limit">
+                  <span><b>Send speed</b><i>Reminders use 10 a second next to this. Telegram allows about 30 in total.</i></span>
+                  <select :value="bc.rate_per_second" :disabled="!!bcBusy" @change="setBroadcastRate(Number($event.target.value))">
+                    <option v-for="n in [5, 10, 15, 20]" :key="n" :value="n">{{ n }} / second</option>
+                  </select>
+                </div>
+              </section>
             </template>
           </template>
 
@@ -2508,6 +2603,10 @@
           resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
           canSaveImage: false,
           privacyBusy: false,
+          bc: null,
+          bcError: '',
+          bcBusy: '',
+          bcDraft: { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active' },
           memoryBusy: false,
           memories: null,
           publicName: '',
@@ -2529,6 +2628,8 @@
           for (const t of this.admin.traits) (groups[t.category] ||= { category: t.category, name: names[t.category] || t.category, traits: [] }).traits.push(t);
           return Object.values(groups);
         },
+        bcLimit() { return this.bcDraft.media ? 1024 : 4096; },
+        bcReady() { return Boolean(this.bcDraft.media || this.bcDraft.text.trim()) && (!this.bcDraft.showButton || (!this.bcDraft.buttonText && !this.bcDraft.buttonUrl) || (this.bcDraft.buttonText.trim() && /^https?:\/\/\S+$/i.test(this.bcDraft.buttonUrl.trim()))); },
         mbtiTest() { return this.personality?.tests?.find(t => t.key === 'mbti') || null; },
         // shared-result visitors land in the bot, which starts the test right away
         mbtiTestLink() { return `https://t.me/${this.publicBot || 'MoodPalBot'}?start=mbti`; },
@@ -3160,6 +3261,85 @@
           const on = this.tab === 'admin' && this.admin.view === 'reminders';
           if (on && !this._remTimer) this._remTimer = setInterval(() => { if (!document.hidden) this.fetchReminderAdmin({ quiet: true }); }, 5000);
           if (!on && this._remTimer) { clearInterval(this._remTimer); this._remTimer = null; }
+          // broadcast progress refreshes while that screen is open
+          const bcOn = this.tab === 'admin' && this.admin.view === 'broadcast';
+          if (bcOn && !this._bcTimer) this._bcTimer = setInterval(() => { if (!document.hidden) this.fetchBroadcast({ quiet: true }); }, 3000);
+          if (!bcOn && this._bcTimer) { clearInterval(this._bcTimer); this._bcTimer = null; }
+        },
+
+        // ----- broadcast (admin) -----
+        showBroadcast() { this.admin.view = 'broadcast'; this.haptic('light'); this.fetchBroadcast(); },
+        async fetchBroadcast({ quiet = false } = {}) {
+          try { this.bc = await this.api('/api/admin/broadcasts', { retries: quiet ? 0 : 2 }); this.bcError = ''; }
+          catch (error) { if (!quiet) this.bcError = error.status === 403 ? 'This account is not an admin.' : "Couldn't reach the server."; }
+        },
+        broadcastPayload() {
+          const d = this.bcDraft;
+          return {
+            text: d.text,
+            kind: d.media ? d.media.kind : 'text',
+            file_id: d.media?.file_id || null,
+            file_name: d.media?.file_name || null,
+            button: d.showButton && d.buttonText.trim() ? { text: d.buttonText.trim(), url: d.buttonUrl.trim() } : null,
+            order: d.order,
+          };
+        },
+        broadcastError(error) {
+          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', telegram_failed: 'Telegram refused it' }[error.message];
+          this.showToast(m || "Couldn't do that");
+        },
+        async uploadBroadcastFile(event) {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (!file) return;
+          if (file.size > 50 * 1024 * 1024) return this.showToast('Telegram bots can send files up to 50 MB');
+          this.bcBusy = 'upload';
+          try {
+            const res = await fetch(`/api/admin/broadcasts/media?name=${encodeURIComponent(file.name)}`, {
+              method: 'POST',
+              headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-Telegram-Init-Data': this.tg?.initData || '' },
+              body: await file.arrayBuffer(),
+            });
+            const data = await res.json().catch(() => null);
+            if (!res.ok) throw Object.assign(new Error(data?.error || 'upload_failed'), { status: res.status });
+            this.bcDraft.media = data;
+            this.showToast('Attached. A preview is in your chat with the bot');
+          } catch (error) { this.broadcastError(error); }
+          finally { this.bcBusy = ''; }
+        },
+        async sendBroadcastTest() {
+          if (this.bcBusy) return;
+          this.haptic('light');
+          this.bcBusy = 'test';
+          try { await this.api('/api/admin/broadcasts/test', { method: 'POST', body: this.broadcastPayload() }); this.showToast('Sent to you. Check your chat with the bot'); }
+          catch (error) { this.broadcastError(error); }
+          finally { this.bcBusy = ''; }
+        },
+        async sendBroadcast() {
+          if (this.bcBusy) return;
+          const n = this.bc.audience;
+          if (!window.confirm(`Send this to ${n} ${n === 1 ? 'person' : 'people'}? It can't be unsent, but you can stop it while it's sending.`)) return;
+          this.haptic('medium');
+          this.bcBusy = 'send';
+          try {
+            this.bc = await this.api('/api/admin/broadcasts', { method: 'POST', body: this.broadcastPayload() });
+            this.bcDraft = { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active' };
+            this.showToast(`Sending to ${n} ${n === 1 ? 'person' : 'people'}`);
+          } catch (error) { this.broadcastError(error); }
+          finally { this.bcBusy = ''; }
+        },
+        async cancelBroadcast(b) {
+          if (this.bcBusy || !window.confirm('Stop sending? People who already got it keep it.')) return;
+          this.bcBusy = 'cancel';
+          try { this.bc = await this.api(`/api/admin/broadcasts/${b.id}/cancel`, { method: 'POST' }); this.showToast('Stopped'); }
+          catch { this.showToast("Couldn't stop it"); }
+          finally { this.bcBusy = ''; }
+        },
+        async setBroadcastRate(n) {
+          this.bcBusy = 'rate';
+          try { this.bc = await this.api('/api/admin/broadcasts/settings', { method: 'POST', body: { rate_per_second: n } }); this.showToast(`Broadcasts go out at ${n} a second`); }
+          catch { this.showToast("Couldn't save the speed"); }
+          finally { this.bcBusy = ''; }
         },
         showBackup() { this.admin.view = 'backup'; this.haptic('light'); if (!this.backup) this.fetchBackup(); },
         async fetchBackup() {

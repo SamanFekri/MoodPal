@@ -285,7 +285,7 @@ describe('mini app API', () => {
       assert.equal(r.body.connected, false);
       assert.equal(r.body.backup.time, '03:30');
       assert.equal(r.body.backup.max_part_bytes, 45 * 1024 * 1024);
-      assert.deepEqual(r.body.backup.excluded_collections, ['app_config', 'reminder_jobs']);
+      assert.deepEqual(r.body.backup.excluded_collections, ['app_config', 'reminder_jobs', 'broadcast_deliveries']);
 
       r = await api('/api/admin/backup/settings', { as: admin, method: 'POST', body: {
         token: 'gyb_live_abcdef123456', backup_enabled: true, backup_time: '2:05', backup_timezone: 'Europe/Berlin',

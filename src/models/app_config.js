@@ -43,6 +43,10 @@ const appConfigSchema = new mongoose.Schema({
   reminder_grace_minutes: { type: Number, default: 120, min: 5, max: 720 },
   // don't remind someone who logged a mood this recently (0 = always remind)
   reminder_skip_if_logged_minutes: { type: Number, default: 120, min: 0, max: 720 },
+
+  // ---- admin broadcasts (see src/broadcast) ----
+  // with reminders at 10/s this keeps the bot under Telegram's ~30 messages/second
+  broadcast_rate_per_second: { type: Number, default: 15, min: 1, max: 25 },
 }, { timestamps: true, collection: 'app_config' });
 
 appConfigSchema.statics.get = async function () {
