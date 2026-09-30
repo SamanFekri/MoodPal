@@ -1596,6 +1596,23 @@
             <section class="section" :style="{ '--i': 2 }" v-if="settings.privacy">
               <div class="share-row">
                 <div>
+                  <div class="s-title">Friends can see my mood history</div>
+                  <div class="s-desc">Friends who follow your mood can open your profile and scroll back through your past moods.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.privacy.mood_log_shared }" :disabled="privacyBusy" @click="setPrivacy({ mood_log_shared: !settings.privacy.mood_log_shared })" role="switch" :aria-checked="settings.privacy.mood_log_shared"></button>
+              </div>
+              <div class="share-row" style="margin-top:14px" v-if="settings.privacy.mood_log_shared">
+                <div>
+                  <div class="s-title">Include my notes</div>
+                  <div class="s-desc">Off: friends see only the moods. On: they also see what you wrote with them.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.privacy.mood_notes_shared }" :disabled="privacyBusy" @click="setPrivacy({ mood_notes_shared: !settings.privacy.mood_notes_shared })" role="switch" :aria-checked="settings.privacy.mood_notes_shared"></button>
+              </div>
+            </section>
+
+            <section class="section" :style="{ '--i': 2 }" v-if="settings.privacy">
+              <div class="share-row">
+                <div>
                   <div class="s-title">Show my Moodling to friends</div>
                   <div class="s-desc">Your MBTI-style character appears on your card and profile for friends who follow your mood, and on your public personality link.</div>
                 </div>
@@ -1697,6 +1714,38 @@
               <div class="sheet-actions">
                 <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)">💬 Open chat</a>
               </div>
+
+              <div class="seg grow sheet-tabs">
+                <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')">📜 Mood log</button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')">🧠 Personality</button>
+              </div>
+
+              <!-- their mood history, if they share it (v-show keeps the stickers alive) -->
+              <div v-show="sheet.tab === 'log'" class="sheet-pane">
+                <div v-if="sheet.logLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+                <div v-else-if="sheet.logShared === false" class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their mood history.</div>
+                <div v-else-if="sheet.logError" class="muted-box">Couldn't load their mood history.</div>
+                <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
+                <template v-else>
+                  <div class="note-box" style="margin:0 0 8px" v-if="!sheet.notesShared">Notes are private, so you only see the moods.</div>
+                  <div class="timeline">
+                    <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
+                      <div class="tl-ico">
+                        <div class="sticker" :class="{ loaded: loaded['tl' + i] }" :data-id="'tl' + i" :data-tgs="m.tgs" ref="timelineStickers">
+                          <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
+                        </div>
+                      </div>
+                      <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                      <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                    </div>
+                  </div>
+                  <div class="load-more" v-if="sheet.has_more">
+                    <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreFriendMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
+                  </div>
+                </template>
+              </div>
+
+              <div v-if="sheet.tab === 'personality'" class="sheet-pane">
               <template v-if="sheet.personality?.mbti || sheet.friend.mbti">
                 <div class="sheet-section-title">Moodling</div>
                 <mbti-card :mbti="sheet.personality?.mbti || { type: sheet.friend.mbti }" compact :kicker="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s Moodling'" :letters-label="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s four letters'"></mbti-card>
@@ -1706,6 +1755,7 @@
               <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact :show-mbti="false"></personality-view>
               <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
               <div v-else class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their personality.</div>
+              </div>
             </template>
 
             <!-- one Moodling, from the cast gallery -->
@@ -2881,16 +2931,41 @@
         async openFriend(friend) {
           this.haptic('light');
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
-          this.sheet = { type: 'friend', friend, loading: true, personality: null };
+          for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
+          this.sheet = { type: 'friend', friend, tab: 'log', loading: true, personality: null, logLoading: true, logShared: null, logError: false, notesShared: false, moods: [], has_more: false, next_before: null, loadingMore: false };
+          const sheet = this.sheet;
           await nextTick();
           this.mountStickers();
+          this.api(`/api/friends/${friend.id}/moods`).then(async (d) => {
+            if (this.sheet !== sheet) return;
+            // stop "loading" first, so the timeline is on the page when its stickers are mounted
+            Object.assign(sheet, { logShared: d.shared, notesShared: Boolean(d.notes_shared), moods: d.moods, has_more: d.has_more, next_before: d.next_before, logLoading: false });
+            await nextTick();
+            this.mountStickers();
+          }).catch(() => { sheet.logError = true; }).finally(() => { sheet.logLoading = false; });
           try {
             this.sheet.personality = await this.api(`/api/friends/${friend.id}/personality`);
           } catch (error) {
-            this.sheet.personality = { shared: false };
+            if (this.sheet) this.sheet.personality = { shared: false };
           } finally {
             if (this.sheet) this.sheet.loading = false;
           }
+        },
+        async loadMoreFriendMoods() {
+          const sheet = this.sheet;
+          if (!sheet || sheet.loadingMore || !sheet.next_before) return;
+          this.haptic('light');
+          sheet.loadingMore = true;
+          try {
+            const d = await this.api(`/api/friends/${sheet.friend.id}/moods?before=${encodeURIComponent(sheet.next_before)}`);
+            if (this.sheet !== sheet) return;
+            sheet.moods = [...sheet.moods, ...d.moods];
+            sheet.has_more = d.has_more;
+            sheet.next_before = d.next_before;
+            await nextTick();
+            this.mountStickers();
+          } catch { this.showToast("Couldn't load older moods"); }
+          finally { sheet.loadingMore = false; }
         },
         closeSheet() {
           this.sheet = null;
@@ -3644,6 +3719,18 @@
             this.showToast(on ? 'MoodPal will remember what matters to you' : 'Memory is off. Talk won\'t use or add notes');
           } catch { this.showToast("Couldn't save that"); }
           finally { this.memoryBusy = false; }
+        },
+        async setPrivacy(patch) {
+          if (this.privacyBusy) return;
+          this.haptic('medium');
+          this.privacyBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/privacy', { method: 'POST', body: patch });
+            const msg = { mood_log_shared: ['Friends can see your mood history', 'Your mood history is hidden from friends'], mood_notes_shared: ['Friends can see your notes too', 'Your notes are private again'] };
+            const [key, on] = Object.entries(patch)[0];
+            if (msg[key]) this.showToast(msg[key][on ? 0 : 1]);
+          } catch { this.showToast("Couldn't save that"); }
+          finally { this.privacyBusy = false; }
         },
         async setMbtiShared(on) {
           if (this.privacyBusy) return;

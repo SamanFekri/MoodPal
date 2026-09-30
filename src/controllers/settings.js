@@ -16,13 +16,16 @@ const view = async (user) => {
       models: llm.MODEL_CHOICES,
     },
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled').lean() || user;
+      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);
       return {
         reminders: reminders.viewFor(fresh, await reminders.getSettings()),
         timezone: await reminders.timezoneView(fresh),
         // who can see your Moodling (MBTI-style character)
-        privacy: { mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null },
+        privacy: {
+          mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null,
+          mood_log_shared: fresh.is_mood_log_shared !== false, mood_notes_shared: fresh.is_mood_notes_shared === true,
+        },
         // what Talk remembers about you
         memory: { enabled: fresh.memory_enabled !== false, count: await UserMemory.countDocuments({ user: user._id }), max: memory.MAX_MEMORIES },
       };
@@ -83,10 +86,18 @@ const setTimezone = async (req, res) => {
   res.json(await view(req.user));
 };
 
-// POST /api/me/settings/privacy { mbti_shared: boolean } — show or hide your Moodling from friends and your public link
+// POST /api/me/settings/privacy { mbti_shared?, mood_log_shared?, mood_notes_shared? } (booleans)
+// what friends who follow you can see: your Moodling, your mood history, the notes in it
+const PRIVACY_FIELDS = { mbti_shared: 'is_mbti_shared', mood_log_shared: 'is_mood_log_shared', mood_notes_shared: 'is_mood_notes_shared' };
 const setPrivacy = async (req, res) => {
-  if (typeof req.body?.mbti_shared !== 'boolean') return res.status(400).json({ error: 'invalid_value' });
-  await User.updateOne({ _id: req.user._id }, { is_mbti_shared: req.body.mbti_shared });
+  const set = {};
+  for (const [key, field] of Object.entries(PRIVACY_FIELDS)) {
+    if (req.body?.[key] === undefined) continue;
+    if (typeof req.body[key] !== 'boolean') return res.status(400).json({ error: 'invalid_value' });
+    set[field] = req.body[key];
+  }
+  if (!Object.keys(set).length) return res.status(400).json({ error: 'invalid_value' });
+  await User.updateOne({ _id: req.user._id }, set);
   res.json(await view(req.user));
 };
 

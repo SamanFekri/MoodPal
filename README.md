@@ -105,6 +105,9 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 *Admin → Reminders* holds the master switch, the default times and timezone, the per-person cap (1–5), the send speed, the grace window and the "just logged" window. It also shows live queue numbers (waiting, sent, skipped with reasons, failed), the last failures, and buttons to send yourself a test reminder or drop everything waiting.
 
+### 📜 Friends' mood history
+Opening a friend from the Friends page shows two tabs: *Mood log* (their past moods, newest first, 30 at a time) and *Personality*. Only people who follow you can see your log (`GET /api/friends/:telegramId/moods`). *Settings → Friends can see my mood history* (`is_mood_log_shared`, on by default) hides it; *Include my notes* (`is_mood_notes_shared`, off by default) decides whether your notes show with it.
+
 ### 🧠 Talk memory
 Talk knows what a friend would: your personality profile, your last mood check-ins (up to 8 from the past 14 days, with their notes, in your timezone), and short notes about what matters to you. Every 6 messages, and when a conversation ends, the model reads your new messages next to the current notes and adds, updates or removes notes (on your own OpenAI key). At most 100 notes are kept (`user_memories`); when full, the least important and stalest go first. *Settings → What MoodPal remembers* shows them, lets you forget one or everything, and turns memory off (`memory_enabled`), which also stops Talk from using the notes. Talk replies are short and human, and the bot never suggests anything that could harm the user or anyone else.
 

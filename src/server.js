@@ -62,6 +62,7 @@ app.post('/auth', controllers.auth.isAuthenticated);
 // ---- mini app API (signed Telegram initData in X-Telegram-Init-Data) ----
 app.get('/api/friends', requireWebAppUser, controllers.user.getFollowings);
 app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.personality.getFriends);
+app.get('/api/friends/:telegramId/moods', requireWebAppUser, controllers.user.getFriendMoods);
 app.post('/api/me/mood/picker', requireWebAppUser, controllers.mood.requestMoodPicker);
 app.get('/api/me/moods', requireWebAppUser, controllers.mood.myMoods);
 app.get('/api/me/settings', requireWebAppUser, controllers.settings.getSettings);

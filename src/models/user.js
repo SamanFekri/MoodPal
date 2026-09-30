@@ -45,6 +45,16 @@ const userSchema = new mongoose.Schema({
   },
   // MBTI-style character (Moodling): shown to friends who follow this user and on the public
   // personality link. On by default; the user can hide it in Settings.
+  // Mood history for friends who follow this user (their profile → Mood log tab). Notes stay
+  // private unless the user also turns on is_mood_notes_shared.
+  is_mood_log_shared: {
+    type: Boolean,
+    default: true
+  },
+  is_mood_notes_shared: {
+    type: Boolean,
+    default: false
+  },
   is_mbti_shared: {
     type: Boolean,
     default: true
