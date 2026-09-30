@@ -2,6 +2,8 @@
 const User = require('../models/user');
 const llm = require('../utils/llm');
 const reminders = require('../reminders/service');
+const memory = require('../memory/service');
+const UserMemory = require('../models/user_memory');
 
 const view = async (user) => {
   const key = await User.getOpenAIKey(user._id);
@@ -14,13 +16,15 @@ const view = async (user) => {
       models: llm.MODEL_CHOICES,
     },
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared').lean() || user;
+      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);
       return {
         reminders: reminders.viewFor(fresh, await reminders.getSettings()),
         timezone: await reminders.timezoneView(fresh),
         // who can see your Moodling (MBTI-style character)
         privacy: { mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null },
+        // what Talk remembers about you
+        memory: { enabled: fresh.memory_enabled !== false, count: await UserMemory.countDocuments({ user: user._id }), max: memory.MAX_MEMORIES },
       };
     })()),
   };
@@ -86,7 +90,35 @@ const setPrivacy = async (req, res) => {
   res.json(await view(req.user));
 };
 
+// ---- what MoodPal remembers (Talk memory) ----
+
+const memoryView = (m) => ({ id: m._id, text: m.text, category: m.category, importance: m.importance, updated_at: m.updatedAt });
+
+// GET /api/me/memories
+const listMemories = async (req, res) => {
+  const notes = await memory.list(req.user._id);
+  res.json({ enabled: req.user.memory_enabled !== false, max: memory.MAX_MEMORIES, memories: notes.map(memoryView) });
+};
+
+// DELETE /api/me/memories/:id — forget one note
+const forgetMemory = async (req, res) => {
+  if (!/^[a-f0-9]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'not_found' });
+  const ok = await memory.forget(req.user._id, req.params.id);
+  if (!ok) return res.status(404).json({ error: 'not_found' });
+  res.json({ ok: true });
+};
+
+// DELETE /api/me/memories — forget everything
+const forgetAllMemories = async (req, res) => res.json({ deleted: await memory.forgetAll(req.user._id) });
+
+// POST /api/me/settings/memory { enabled } — turning it off stops new notes and keeps Talk from using old ones
+const setMemory = async (req, res) => {
+  if (typeof req.body?.enabled !== 'boolean') return res.status(400).json({ error: 'invalid_value' });
+  await User.updateOne({ _id: req.user._id }, { memory_enabled: req.body.enabled });
+  res.json(await view(req.user));
+};
+
 // separate so tests can swap the OpenAI round-trip
 const verify = (key) => llm.verifyApiKey(key);
 
-module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, verify };
+module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, setMemory, listMemories, forgetMemory, forgetAllMemories, verify };

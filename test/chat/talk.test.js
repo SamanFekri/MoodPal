@@ -21,6 +21,9 @@ llmStub.chatReply = async (history, apiKey, opts) => { llmStub.calls.push({ hist
 llmStub.inferPersonalityUpdates = async () => ({ updates: [] });
 llmStub.isAuthError = (e) => e?.status === 401;
 chatService._llm = llmStub;
+// memory updates use the same stub, so no test ever reaches OpenAI
+llmStub.extractMemories = async () => ({ operations: [] });
+require('../../src/memory/service')._llm = llmStub;
 
 function makeCtx(user, text, { callback = null } = {}) {
   const ctx = {

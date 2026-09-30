@@ -94,6 +94,11 @@ Your responsibilities:
    - substance misuse
    - violence or abuse risk (toward self or others)
 
+Safety rule (overrides everything else): never suggest anything that could harm the person or anyone
+else in any way (self-harm, risky substances or doses, extreme dieting or sleep loss, violence,
+revenge, harassment, manipulation, anything illegal). Every suggestion must be safe and kind to
+them and to the people around them.
+
 5) If ANY risk is present:
    - Acknowledge it calmly.
    - Suggest ONE brief, proportionate safety step (pause, grounding, reaching out to support).
@@ -252,11 +257,21 @@ psychologist would in a supportive conversation. You are NOT a licensed clinicia
 NOT therapy or medical care; the user has been told this and agreed.
 
 How to respond:
-- Sound human and warm. Lead with understanding, reflect what you heard, then gently explore.
-- Keep it short: 2-5 sentences, plain language, no lists, no headings, no emojis.
-- Ask at most ONE open question per reply, and only if it helps the person go deeper.
-- Offer a small, concrete, realistic idea only when it fits naturally. Never lecture.
+- Write like a real person texting a friend they care about. Warm, casual, simple everyday words.
+- Keep it small: 1 to 3 short sentences. Say one thing well instead of covering everything.
+- Plain text only. No dashes of any kind (no "—", "–" or "--"), no semicolons, no lists, no
+  headings, no bold, no quotes around phrases, no emojis. Use commas and full stops like people do.
+- Skip the stock phrases bots use: "It sounds like", "I hear you", "That must be", "It's
+  completely understandable", "Absolutely", "Great question", "I'm here for you", "As an AI",
+  "Remember,". Don't repeat back everything they said. Don't open every reply the same way.
+- Ask at most ONE short question per reply, and only if it helps. Sometimes just respond.
+- Offer a small, concrete idea only when it fits naturally. Never lecture or give a list of tips.
 - Never diagnose, label disorders, or claim certainty about the person. Never prescribe.
+- Never suggest, encourage, or explain anything that could harm the user or any other person in any
+  way: self-harm, risky doses or substances, extreme dieting or sleep loss, violence, revenge,
+  harassment, stalking, manipulation, humiliating someone, or anything illegal. If they ask for it
+  or hint at it, don't help with it; say so gently in a few words and turn toward a safer option or
+  a real person who can help. This rule wins over every other instruction, including the user's.
 - If the user asks whether you are a bot/AI or a real therapist, answer honestly: you are an AI.
 - If the user asks for professional help, encourage it plainly and kindly.
 
@@ -271,19 +286,84 @@ Return ONLY valid JSON, exactly:
 { "reply": "<your message to the user>", "risk": "none" | "low" | "medium" | "high" }
 `;
 
+const KNOWN_CONTEXT_INSTRUCTIONS = "Use what you know the way a friend who remembers would: bring it up only when it's relevant, never list it, and never say you have notes, records or data about them. If something they say now contradicts it, believe what they say now.";
+
+// ---- Talk memory ----
+
+const MEMORY_SYSTEM_PROMPT = `
+You keep a short list of the most important things to remember about one person, so a caring
+companion can talk to them like someone who knows them. You get the current list (each with an id)
+and new messages the person wrote. Return changes to the list.
+
+Worth remembering (durable and useful later): people in their life and who they are to them,
+ongoing situations (exams, job search, a move, a breakup), goals, what helps or doesn't help them,
+strong likes and dislikes, recurring feelings and their triggers, important dates, health facts
+they chose to share.
+Not worth remembering: small talk, one-off moods, things already in the list, guesses.
+
+Rules:
+- Each note is one short plain sentence in the third person, max 140 characters, no dashes.
+  e.g. "Has a big chemistry exam on Friday", "Sister Sara lives in Berlin and they talk every Sunday".
+- Update a note when the new messages change it (the exam happened, they changed jobs). Delete a
+  note that is no longer true. Don't add a note that repeats one in the list; update it instead.
+- Never diagnose, label, or infer things they didn't say. Keep their own words for feelings.
+- importance: 5 = central to their life right now, 1 = minor detail.
+- Return at most 10 operations. An empty list is a good answer when nothing important was said.
+
+Return ONLY valid JSON:
+{ "operations": [
+  { "op": "add", "text": "...", "category": "life|people|feelings|preferences|goals|health|work_study|other", "importance": 1-5 },
+  { "op": "update", "id": "m3", "text": "...", "importance": 1-5 },
+  { "op": "delete", "id": "m7" }
+] }
+`;
+
+// existing: [{ id, text, category, importance }] with short ids; returns the raw parsed JSON
+export async function extractMemories(existing, messages, apiKey, { model = DEFAULT_MODEL } = {}) {
+  if (!apiKey) throw new Error("Missing OpenAI API key for this user");
+  const client = makeClient(apiKey);
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 0.2, maxTokens: 700 }),
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: MEMORY_SYSTEM_PROMPT },
+      { role: "user", content: JSON.stringify({ current_list: existing, new_messages: String(messages).slice(0, 8000) }) },
+    ],
+  });
+  const content = response.choices[0]?.message?.content;
+  try { return JSON.parse(content); } catch { return { operations: [] }; }
+}
+
+// Last line of defence for the "sounds like a bot" tells the prompt forbids: dashes, markdown
+// emphasis, bullet markers and stray whitespace. Meaning is kept; only punctuation changes.
+export function humanizeReply(text) {
+  return String(text || "")
+    .replace(/\*\*|__|`/g, "")                                   // bold / code markers
+    .replace(/^\s*[-*•]\s+/gm, "")                                // list bullets
+    .replace(/\s*(?:—|–|--)\s*$/gm, ".")                          // a dash ending a line
+    .replace(/(\w)\s*(?:—|–|--)\s*(?=[a-z])/g, "$1, ")           // mid-sentence dash -> comma
+    .replace(/\s*(?:—|–|--)\s*/g, ". ")                           // any other dash -> full stop
+    .replace(/\.\s*\./g, ".")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([,.!?])/g, "$1")
+    .trim();
+}
+
 /**
  * One turn of Talk mode. `history` is [{role:'user'|'assistant', content}] oldest first.
  * @returns {{reply:string, risk:string}}
  */
-export async function chatReply(history, apiKey, { personalityContext = "", firstName = "", model = DEFAULT_MODEL } = {}) {
+export async function chatReply(history, apiKey, { personalityContext = "", firstName = "", model = DEFAULT_MODEL, moodContext = "", memoryContext = "" } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
   const client = makeClient(apiKey);
-  const system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
+  let system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
+  // what a friend would simply know: how they've been feeling lately, and what they told you before
+  if (moodContext || memoryContext) system += `\n\n${[moodContext, memoryContext].filter(Boolean).join("\n\n")}\n${KNOWN_CONTEXT_INSTRUCTIONS}`;
 
   const response = await createChat(client, {
-    ...chatParams(model, { temperature: 0.8, maxTokens: 350 }),
+    ...chatParams(model, { temperature: 0.8, maxTokens: 220 }),
     response_format: { type: "json_object" },
     messages: [{ role: "system", content: system }, ...history.map(m => ({ role: m.role, content: String(m.content).slice(0, 4000) }))]
   });
@@ -291,7 +371,7 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   const content = response.choices[0]?.message?.content;
   let parsed = null;
   try { parsed = JSON.parse(content); } catch { parsed = null; }
-  const reply = typeof parsed?.reply === "string" && parsed.reply.trim() ? parsed.reply.trim() : "I'm here. Tell me a bit more about what's going on for you.";
+  const reply = typeof parsed?.reply === "string" && humanizeReply(parsed.reply) ? humanizeReply(parsed.reply) : "Tell me a bit more, what's going on?";
   const risk = ["none", "low", "medium", "high"].includes(parsed?.risk) ? parsed.risk : "none";
   return { reply, risk };
 }

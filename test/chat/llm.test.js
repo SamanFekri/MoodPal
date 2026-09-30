@@ -71,6 +71,26 @@ describe('OpenAI requests', () => {
     await assert.rejects(llm.chatReply([{ role: 'user', content: 'hi' }], 'sk-test'), (e) => llm.isAuthError(e));
   });
 
+  test('replies read like a person texting: no dashes, no markdown, no bullets', async () => {
+    const h = llm.humanizeReply;
+    assert.equal(h('That sounds rough — work can really pile up.'), 'That sounds rough, work can really pile up.');
+    assert.equal(h('Rough week -- want to talk about it?'), 'Rough week, want to talk about it?');
+    assert.equal(h('You did your best – Seriously.'), 'You did your best. Seriously.');
+    assert.equal(h('That is **really** hard.'), 'That is really hard.');
+    assert.equal(h('- take a walk\n- call a friend'), 'take a walk\ncall a friend');
+    assert.ok(!/—|–|--/.test(h('A — B -- C – D')));
+
+    llm._setClientFactory(() => ({ chat: { completions: { create: async () => ({ choices: [{ message: { content: JSON.stringify({ reply: 'Ugh, Mondays — they hit hard. What happened?', risk: 'none' }) } }] }) } } }));
+    const out = await llm.chatReply([{ role: 'user', content: 'hi' }], 'sk-test', { model: 'gpt-4.1' });
+    assert.equal(out.reply, 'Ugh, Mondays, they hit hard. What happened?');
+  });
+
+  test('the Talk prompt asks for short, human, dash-free replies', () => {
+    const src = require('fs').readFileSync(require.resolve('../../src/utils/llm.js'), 'utf8');
+    assert.match(src, /1 to 3 short sentences/);
+    assert.match(src, /No dashes of any kind/);
+  });
+
   test('a model the account cannot use is recognised', () => {
     assert.equal(llm.isModelError(Object.assign(new Error('The model `gpt-5.6` does not exist or you do not have access to it.'), { status: 404, code: 'model_not_found' })), true);
     assert.equal(llm.isModelError(Object.assign(new Error('Rate limit'), { status: 429 })), false);

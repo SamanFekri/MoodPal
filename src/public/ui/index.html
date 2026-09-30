@@ -731,6 +731,11 @@
     .mb-visibility b { margin-left: auto; color: var(--link); font-weight: 700; }
     .mb-visibility .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--stale); flex: none; }
     .mb-visibility .dot.on { background: var(--fresh); }
+    .mem-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(138,143,152,0.12); font-size: 14px; line-height: 1.35; }
+    .mem-row .t { flex: 1; min-width: 0; }
+    .mem-row .imp { display: inline-flex; gap: 2px; flex: none; }
+    .mem-row .imp i { width: 5px; height: 12px; border-radius: 2px; background: rgba(138,143,152,0.25); }
+    .mem-row .imp i.on { background: var(--accent); }
     .mb-peek { width: 84px; margin: 0 auto 6px; animation: mb-enter .6s var(--ease-spring) both; }
     .quiz-body.scroll { justify-content: flex-start; overflow-y: auto; margin: 8px -16px 0; padding: 0 16px 8px; }
     /* MBTI test: the question (peeking character + statement + 5 answers) can be taller than a small
@@ -1465,6 +1470,31 @@
               <div class="field">
                 <input v-model="modelInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
                 <button class="btn ghost" :disabled="settingsBusy || !modelInput.trim()" @click="setModel(modelInput.trim())">Use</button>
+              </div>
+            </section>
+
+            <section class="section" :style="{ '--i': 2 }" v-if="settings.memory">
+              <div class="share-row">
+                <div>
+                  <div class="s-title">What MoodPal remembers</div>
+                  <div class="s-desc">When you use Talk, MoodPal keeps short notes about what matters to you, so it can talk like someone who remembers. Up to {{ settings.memory.max }} notes; the least important go first. Only you can see them.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.memory.enabled }" :disabled="memoryBusy" @click="setMemoryEnabled(!settings.memory.enabled)" role="switch" :aria-checked="settings.memory.enabled"></button>
+              </div>
+              <div class="kv"><span class="k">Notes</span><span class="v">{{ settings.memory.count }} of {{ settings.memory.max }}</span></div>
+              <template v-if="memories">
+                <div v-if="!memories.length" class="muted-box">Nothing yet. Notes appear after you talk with MoodPal.</div>
+                <div v-for="m in memories" :key="m.id" class="mem-row">
+                  <span class="imp" :title="'Importance ' + m.importance + ' of 5'"><i v-for="n in 5" :key="n" :class="{ on: n <= m.importance }"></i></span>
+                  <span class="t">{{ m.text }}</span>
+                  <button class="g-btn" title="Forget this" :disabled="memoryBusy" @click="forgetMemory(m)">×</button>
+                </div>
+                <div class="row-actions" v-if="memories.length">
+                  <button class="btn ghost" :disabled="memoryBusy" @click="forgetAllMemories">Forget everything</button>
+                </div>
+              </template>
+              <div class="row-actions" v-else-if="settings.memory.count">
+                <button class="btn ghost" :disabled="memoryBusy" @click="loadMemories">Show notes</button>
               </div>
             </section>
 
@@ -2478,6 +2508,8 @@
           resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
           canSaveImage: false,
           privacyBusy: false,
+          memoryBusy: false,
+          memories: null,
           publicName: '',
           publicBot: null,
         }
@@ -3392,6 +3424,46 @@
           this.haptic('light');
           this.sheet = { type: 'mbti', mbtiType: type };
           nextTick(() => document.querySelector('.sheet')?.scrollTo({ top: 0 }));
+        },
+        // ----- what MoodPal remembers -----
+        async loadMemories() {
+          this.memoryBusy = true;
+          try { this.memories = (await this.api('/api/me/memories')).memories; }
+          catch { this.showToast("Couldn't load your notes"); }
+          finally { this.memoryBusy = false; }
+        },
+        async forgetMemory(m) {
+          if (this.memoryBusy) return;
+          this.haptic('light');
+          this.memoryBusy = true;
+          try {
+            await this.api(`/api/me/memories/${m.id}`, { method: 'DELETE' });
+            this.memories = this.memories.filter(x => x.id !== m.id);
+            this.settings.memory.count = this.memories.length;
+            this.showToast('Forgotten');
+          } catch { this.showToast("Couldn't forget that"); }
+          finally { this.memoryBusy = false; }
+        },
+        async forgetAllMemories() {
+          if (this.memoryBusy || !window.confirm('Forget everything MoodPal remembers about you? This cannot be undone.')) return;
+          this.haptic('medium');
+          this.memoryBusy = true;
+          try {
+            await this.api('/api/me/memories', { method: 'DELETE' });
+            this.memories = []; this.settings.memory.count = 0;
+            this.showToast('Everything forgotten');
+          } catch { this.showToast("Couldn't forget"); }
+          finally { this.memoryBusy = false; }
+        },
+        async setMemoryEnabled(on) {
+          if (this.memoryBusy) return;
+          this.haptic('medium');
+          this.memoryBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/memory', { method: 'POST', body: { enabled: on } });
+            this.showToast(on ? 'MoodPal will remember what matters to you' : 'Memory is off. Talk won\'t use or add notes');
+          } catch { this.showToast("Couldn't save that"); }
+          finally { this.memoryBusy = false; }
         },
         async setMbtiShared(on) {
           if (this.privacyBusy) return;

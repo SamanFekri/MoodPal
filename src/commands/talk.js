@@ -42,12 +42,17 @@ async function endTalkCommand(ctx) {
   }
 }
 
-// what the user said in the conversation refines their personality profile, gradually
+// what the user said in the conversation refines their personality profile, gradually,
+// and anything important they said since the last memory update is remembered
 async function learnFromSession(userId, session) {
+  const apiKey = await User.getOpenAIKey(userId);
+  if (!apiKey) return;
+  const user = await User.findById(userId).select('openai_model').lean();
+  await chatService.learnPending(session, apiKey, { model: user?.openai_model || undefined })
+    .catch(err => console.error('Memory update failed:', err.message));
   const transcript = chatService.userTranscript(session);
   if (transcript.length < 60) return;
-  const apiKey = await User.getOpenAIKey(userId);
-  if (apiKey) await personalityService.inferFromText(userId, transcript, apiKey);
+  await personalityService.inferFromText(userId, transcript, apiKey);
 }
 
 async function respond(ctx, text, apiKey) {

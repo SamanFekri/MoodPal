@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Talk memory: MoodPal keeps short notes about what matters to the user (max 100, see
+  // src/memory/service.js). The user sees and deletes them in Settings, or turns this off.
+  memory_enabled: {
+    type: Boolean,
+    default: true
+  },
   // MBTI-style character (Moodling): shown to friends who follow this user and on the public
   // personality link. On by default; the user can hide it in Settings.
   is_mbti_shared: {

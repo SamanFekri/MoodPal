@@ -2,15 +2,18 @@
 // collection; the LLM client is injectable for tests.
 const ChatSession = require('../models/chat_session');
 const personalityService = require('../personality/service');
+const memoryService = require('../memory/service');
 
 const CHAT_IDLE_MINUTES = 120;      // a quiet session ends and text goes back to being notes
 const CONTEXT_MESSAGES = 16;        // how much history the model sees
 const RISK_ORDER = { none: 0, low: 1, medium: 2, high: 3 };
 
 class ChatService {
-  constructor({ llm = null, personality = personalityService } = {}) {
+  constructor({ llm = null, personality = personalityService, memory = memoryService } = {}) {
     this._llm = llm;
     this.personality = personality;
+    this.memory = memory;
+    this.memoryJob = null;   // the latest background memory update (tests await it)
   }
 
   get llm() {
@@ -60,9 +63,14 @@ class ChatService {
 
     session.messages.push({ role: 'user', content: text });
     const history = session.messages.slice(-CONTEXT_MESSAGES).map(m => ({ role: m.role, content: m.content }));
-    const personalityContext = await this.personality.getPersonalityContext(userId);
+    // what a friend would know: personality, how they've felt lately, what they said before
+    const [personalityContext, moodContext, memoryContext] = await Promise.all([
+      this.personality.getPersonalityContext(userId),
+      this.memory.moodContext(userId),
+      this.memory.memoryContext(userId),
+    ]);
 
-    const result = await this.llm.chatReply(history, apiKey, { personalityContext, firstName, model });
+    const result = await this.llm.chatReply(history, apiKey, { personalityContext, firstName, model, moodContext, memoryContext });
     const risk = RISK_ORDER[result.risk] !== undefined ? result.risk : 'none';
 
     session.messages.push({ role: 'assistant', content: result.reply, risk });
@@ -70,7 +78,24 @@ class ChatService {
     session.last_message_at = new Date();
     await session.save();
 
+    // every few messages, update what MoodPal remembers (in the background; never blocks the reply)
+    const userCount = session.messages.filter(m => m.role === 'user').length;
+    if (userCount - (session.memory_upto || 0) >= memoryService.EXTRACT_EVERY) {
+      this.memoryJob = this.learnPending(session, apiKey, { model }).catch(err => console.error('Memory update failed:', err.message));
+    }
+
     return { reply: result.reply, risk, session };
+  }
+
+  // Read the user's messages that haven't been read for memories yet, then mark them read.
+  async learnPending(session, apiKey, { model = undefined } = {}) {
+    const userMessages = session.messages.filter(m => m.role === 'user');
+    const from = session.memory_upto || 0;
+    const fresh = userMessages.slice(from).map(m => m.content);
+    if (!fresh.length) return null;
+    await ChatSession.updateOne({ _id: session._id }, { memory_upto: userMessages.length });
+    session.memory_upto = userMessages.length;
+    return this.memory.learnFromMessages(session.user, fresh, apiKey, { model, sessionId: session._id });
   }
 
   // What the user said in a session, for personality inference when it ends

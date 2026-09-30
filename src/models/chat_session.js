@@ -14,6 +14,8 @@ const chatSessionSchema = new mongoose.Schema({
   // how the chat was started: menu button, /talk, or a "talk about it" note
   opened_from: { type: String, enum: ['menu', 'command', 'note'], default: 'menu' },
   highest_risk: { type: String, enum: ['none', 'low', 'medium', 'high'], default: 'none' },
+  // how many of the user's messages have already been read for memories
+  memory_upto: { type: Number, default: 0 },
   last_message_at: { type: Date, default: Date.now },
   ended_at: Date,
   ended_reason: { type: String, enum: ['user', 'idle', 'no_key', 'error'] },

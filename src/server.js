@@ -71,6 +71,10 @@ app.post('/api/me/settings/model', requireWebAppUser, controllers.settings.setMo
 app.post('/api/me/settings/reminders', requireWebAppUser, controllers.settings.setReminders);
 app.post('/api/me/settings/timezone', requireWebAppUser, controllers.settings.setTimezone);
 app.post('/api/me/settings/privacy', requireWebAppUser, controllers.settings.setPrivacy);
+app.post('/api/me/settings/memory', requireWebAppUser, controllers.settings.setMemory);
+app.get('/api/me/memories', requireWebAppUser, controllers.settings.listMemories);
+app.delete('/api/me/memories/:id', requireWebAppUser, controllers.settings.forgetMemory);
+app.delete('/api/me/memories', requireWebAppUser, controllers.settings.forgetAllMemories);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/me/personality/session', requireWebAppUser, controllers.personality.getSession);
