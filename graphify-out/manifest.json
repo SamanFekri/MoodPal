@@ -15,9 +15,9 @@
     "semantic_hash": ""
   },
   "src/chat/service.js": {
-    "mtime": 1789660099.2308059,
-    "ast_hash": "7393ea7d2da172be10ac79d823e87891",
-    "semantic_hash": "7393ea7d2da172be10ac79d823e87891"
+    "mtime": 1790768617.2009628,
+    "ast_hash": "bce35e427b1db6f132e42118d61d358a",
+    "semantic_hash": ""
   },
   "src/commands/help.js": {
     "mtime": 1746026275.7753935,
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "src/commands/talk.js": {
-    "mtime": 1790754781.6600955,
-    "ast_hash": "d859d9b1532b54a6c280a8aa2ff17250",
+    "mtime": 1790768617.2206109,
+    "ast_hash": "131308eb30c140da3dc47b5af5e5fefc",
     "semantic_hash": ""
   },
   "src/constants/common.constant.js": {
@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "src/controllers/settings.js": {
-    "mtime": 1790707818.07866,
-    "ast_hash": "fc267e8a3e33da77bbd3b8211cde1af7",
+    "mtime": 1790768660.3116062,
+    "ast_hash": "42e2cc2c7a9715d2183bf2cdfa647d21",
     "semantic_hash": ""
   },
   "src/controllers/user.js": {
@@ -175,9 +175,9 @@
     "semantic_hash": ""
   },
   "src/models/chat_session.js": {
-    "mtime": 1789655962.9542809,
-    "ast_hash": "fd51a5b9c8b999c9b87fb066343bba3c",
-    "semantic_hash": "fd51a5b9c8b999c9b87fb066343bba3c"
+    "mtime": 1790768570.9613304,
+    "ast_hash": "261b78300a6067ddd6ef0334507f5f86",
+    "semantic_hash": ""
   },
   "src/models/mood.js": {
     "mtime": 1789655049.5752857,
@@ -220,8 +220,8 @@
     "semantic_hash": "622a4baa351029b9b8078960ac4395f1"
   },
   "src/models/user.js": {
-    "mtime": 1790707818.0778406,
-    "ast_hash": "28e45d113fae0ee227092e8b4588cae7",
+    "mtime": 1790768570.9609392,
+    "ast_hash": "b290e124e682ae56e70b10f158af23f3",
     "semantic_hash": ""
   },
   "src/personality/catalog.seed.js": {
@@ -260,8 +260,8 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1790707818.0787923,
-    "ast_hash": "45f789144d16beb73ad23fea0252beaf",
+    "mtime": 1790768660.3121805,
+    "ast_hash": "9f1c1e6864a422b96e6fa433d74aab2b",
     "semantic_hash": ""
   },
   "src/utils/cache.js": {
@@ -270,8 +270,8 @@
     "semantic_hash": "9d95b86eb397af0ad7a79f9e43044c9b"
   },
   "src/utils/llm.js": {
-    "mtime": 1790754761.072729,
-    "ast_hash": "1072d60d51cc00a60ce24044816860b4",
+    "mtime": 1790768630.0520039,
+    "ast_hash": "d042f5e126d85b4839d3cbbcaa8348d5",
     "semantic_hash": ""
   },
   "src/utils/not_implemented.js": {
@@ -300,9 +300,9 @@
     "semantic_hash": "9ddd8799327c77d854db9960aab62e68"
   },
   "test/chat/talk.test.js": {
-    "mtime": 1789656097.26529,
-    "ast_hash": "e5c841239219420cd1da4abd191a4bc6",
-    "semantic_hash": "e5c841239219420cd1da4abd191a4bc6"
+    "mtime": 1790768703.2879398,
+    "ast_hash": "ffffd871c0e726d293ce7a6c48eb2275",
+    "semantic_hash": ""
   },
   "test/helpers/db.js": {
     "mtime": 1789645531.156979,
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790708064.1210701,
-    "ast_hash": "5b762aa9e740b2050a18c35f74d1bb2b",
+    "mtime": 1790768782.8382769,
+    "ast_hash": "326e1b10955750fda2e1f1e5e872142c",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -350,8 +350,8 @@
     "semantic_hash": "6da93a48aa0535cc0c22d3cf43915409"
   },
   "src/public/ui/index.html": {
-    "mtime": 1790707979.684718,
-    "ast_hash": "682dcc6f7a8507aaf346dafe106af350",
+    "mtime": 1790768660.314874,
+    "ast_hash": "7b0cf672a9696b79e5f438f048206f07",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -755,8 +755,23 @@
     "semantic_hash": ""
   },
   "test/chat/llm.test.js": {
-    "mtime": 1790754781.6691618,
-    "ast_hash": "476d224bc4b7a73a3269a4754e5c1a82",
+    "mtime": 1790768402.1676507,
+    "ast_hash": "a9c007f5159ad2a5ac4990fd7d9ba06d",
+    "semantic_hash": ""
+  },
+  "src/memory/service.js": {
+    "mtime": 1790768596.480806,
+    "ast_hash": "44ca4dfd9f3456057a4c1836e58c56f2",
+    "semantic_hash": ""
+  },
+  "src/models/user_memory.js": {
+    "mtime": 1790768570.9389896,
+    "ast_hash": "71d2cd5164a30c0d9adc09afcf01c9fd",
+    "semantic_hash": ""
+  },
+  "test/chat/memory.test.js": {
+    "mtime": 1790768730.819565,
+    "ast_hash": "a4c48ea1d5313137c6efea65cf14d93e",
     "semantic_hash": ""
   }
 }
