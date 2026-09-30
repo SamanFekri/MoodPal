@@ -65,6 +65,10 @@ async function respond(ctx, text, apiKey) {
       await chatService.end(ctx.user._id, 'no_key');
       return ctx.reply(msgs.talkKeyRejectedMsg(), { reply_markup: mainKeyboard(ctx) });
     }
+    if (llm.isModelError?.(error)) {
+      await chatService.end(ctx.user._id, 'error');
+      return ctx.reply(msgs.talkModelUnavailableMsg(ctx.user.openai_model || llm.DEFAULT_MODEL), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
+    }
     await ctx.reply(msgs.talkErrorMsg(), { reply_markup: talkKeyboard() });
   }
 }

@@ -15,6 +15,45 @@ export const MODEL_CHOICES = [
 export const isValidModelId = (m) => typeof m === "string" && /^[a-z0-9][a-z0-9.\-_]{1,63}$/i.test(m);
 const MODEL = DEFAULT_MODEL;
 
+// ---- request tuning per model family ----
+// GPT-5.x and o-series are reasoning models: they only accept the default temperature, and their
+// hidden reasoning is billed against max_completion_tokens, so a small cap can leave no room for
+// the visible answer (empty content). They get a low reasoning effort and a bigger budget instead.
+export const isReasoningModel = (model) => /^(gpt-5|o\d)/i.test(String(model || DEFAULT_MODEL));
+
+export function chatParams(model, { temperature, maxTokens }) {
+  const m = model || DEFAULT_MODEL;
+  if (isReasoningModel(m)) {
+    return { model: m, reasoning_effort: "low", max_completion_tokens: Math.max(2000, maxTokens * 4) };
+  }
+  return { model: m, temperature, max_completion_tokens: maxTokens };
+}
+
+// A tuning parameter the model rejects (400 "unsupported parameter/value") is dropped and the
+// request retried once, so a new model with different rules still answers.
+const TUNING_PARAMS = ["temperature", "reasoning_effort"];
+export async function createChat(client, params) {
+  try {
+    return await client.chat.completions.create(params);
+  } catch (error) {
+    const text = `${error?.param || ""} ${error?.message || ""}`;
+    const bad = error?.status === 400 ? TUNING_PARAMS.find(p => p in params && text.includes(p)) : null;
+    if (!bad) throw error;
+    const retry = { ...params };
+    delete retry[bad];
+    return client.chat.completions.create(retry);
+  }
+}
+
+// the chosen model doesn't exist or this key has no access to it
+export function isModelError(error) {
+  return Boolean(error) && (error.code === "model_not_found" || (error.status === 404 && /model/i.test(error.message || "")));
+}
+
+// tests swap the OpenAI client
+let makeClient = (apiKey) => new OpenAI({ apiKey });
+export function _setClientFactory(factory) { makeClient = factory || ((apiKey) => new OpenAI({ apiKey })); }
+
 const SYSTEM_PROMPT = `
 You are a licensed clinical psychologist responding to a client’s recent mood check-ins.
 
@@ -110,12 +149,10 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", 
     throw new Error("Missing OpenAI API key for this user");
   }
 
-  const client = new OpenAI({ apiKey });
+  const client = makeClient(apiKey);
 
-  const response = await client.chat.completions.create({
-    model: model || DEFAULT_MODEL,
-    temperature: 1,
-    max_completion_tokens: 420,
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 1, maxTokens: 420 }),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: withPersonalityContext(SYSTEM_PROMPT, personalityContext) },
@@ -186,13 +223,11 @@ export async function inferPersonalityUpdates(text, apiKey, traits, { model = DE
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
-  const client = new OpenAI({ apiKey });
+  const client = makeClient(apiKey);
   const catalog = traits.map(t => ({ key: t.key, description: t.description }));
 
-  const response = await client.chat.completions.create({
-    model: model || DEFAULT_MODEL,
-    temperature: 0.3,
-    max_completion_tokens: 600,
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 0.3, maxTokens: 600 }),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: PERSONALITY_SYSTEM_PROMPT },
@@ -244,13 +279,11 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
-  const client = new OpenAI({ apiKey });
+  const client = makeClient(apiKey);
   const system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
 
-  const response = await client.chat.completions.create({
-    model: model || DEFAULT_MODEL,
-    temperature: 0.8,
-    max_completion_tokens: 350,
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 0.8, maxTokens: 350 }),
     response_format: { type: "json_object" },
     messages: [{ role: "system", content: system }, ...history.map(m => ({ role: m.role, content: String(m.content).slice(0, 4000) }))]
   });

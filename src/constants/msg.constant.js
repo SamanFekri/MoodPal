@@ -133,6 +133,7 @@ export const talkEndedMsg = () => `🛑 Talk ended. Take care of yourself. 💛
 Your messages are saved as mood notes again from now on.`
 export const talkNotActiveMsg = () => `ℹ️ You're not in a conversation right now. Press 💬 Talk to start one.`
 export const talkErrorMsg = () => `⚠️ I couldn't get a reply right now. Please try again in a moment, or /end_talk to stop.`
+export const talkModelUnavailableMsg = (model) => `⚠️ Your OpenAI account can't use the model <b>${model}</b>. Pick another one in the mini app → Settings → Model, then press 💬 Talk again.`
 export const talkKeyRejectedMsg = () => `❌ OpenAI rejected your key, so I can't reply. Update it with /set_openai_key and press 💬 Talk again.`
 export const talkSafetyFooterMsg = () => `
 🛟 <b>If you might be in danger, please don't wait on a bot.</b> Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.`
