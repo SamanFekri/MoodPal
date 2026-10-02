@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1790928897.6373415,
-    "ast_hash": "457971e528a2a859250677344346df97",
+    "mtime": 1790931098.6080785,
+    "ast_hash": "15333d1096cfc6c1f9aa0416b3e0379e",
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
@@ -805,8 +805,8 @@
     "semantic_hash": ""
   },
   "src/health.js": {
-    "mtime": 1790928897.634922,
-    "ast_hash": "d4c4b8b5bd692661866b14086116e491",
+    "mtime": 1790931098.6078026,
+    "ast_hash": "7c2a3761e42a4a9c9b906a9c810f5da7",
     "semantic_hash": ""
   },
   "src/supervisor.js": {
@@ -825,8 +825,8 @@
     "semantic_hash": ""
   },
   "test/runtime/resilience.test.js": {
-    "mtime": 1790928943.1007338,
-    "ast_hash": "1e6cee1494b6e9675a6e77ef42f596de",
+    "mtime": 1790931098.6082778,
+    "ast_hash": "0f42683faa16f8a9e49833ddfb9ab9f3",
     "semantic_hash": ""
   }
 }
