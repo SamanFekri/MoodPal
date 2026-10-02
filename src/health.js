@@ -1,9 +1,13 @@
 // Is the bot actually working? Used to decide whether to send the health heartbeat (so a broken
 // bot stops pinging and GotYouBro alerts the admin), and by GET /healthz for Docker.
 //
-// Working means: we are receiving updates from Telegram (polling is running), and Telegram answers
-// right now (a quick getMe). Telegram calls made anywhere in the app report success or failure here.
-const PROBE_TIMEOUT_MS = 10000;
+// Working means: polling is running and Telegram answered recently. Long polling gets an answer at
+// least every ~50s while Telegram is reachable, so a success in the last RECENT_OK_MS is proof
+// enough; only without one do we ask Telegram directly (getMe). Other errors in the app (OpenAI,
+// database, a user who blocked the bot) say nothing about this and never count.
+const PROBE_TIMEOUT_MS = 15000;
+const RECENT_OK_MS = 2 * 60 * 1000;
+const STARTUP_GRACE_MS = 2 * 60 * 1000;   // right after a restart, give polling time to start
 
 // Telegram network errors carry the request URL, which contains the bot token: never store or log it
 const redact = (text) => String(text ?? '').replace(/bot\d+:[A-Za-z0-9_-]+/g, 'bot<token>');
@@ -58,23 +62,32 @@ const withTimeout = (p, ms) => Promise.race([p, new Promise((_, reject) => setTi
  * { healthy, reasons[] }. Not monitoring (tests, one-off scripts) counts as healthy.
  * The Telegram probe is cached for a few seconds so /healthz can be polled freely.
  */
+// just after the process starts, wait (up to maxMs) for polling to come up instead of failing
+async function waitForPolling(maxMs) {
+  const until = Date.now() + maxMs;
+  while (!state.polling && Date.now() < until) await new Promise(r => setTimeout(r, 1000));
+}
+
 async function check({ fresh = false } = {}) {
   if (!state.enabled) return { healthy: true, reasons: [], monitored: false };
   if (!fresh && cached && Date.now() - cached.at < CACHE_MS) return cached.result;
+  if (!state.polling && Date.now() - state.started_at.getTime() < STARTUP_GRACE_MS) await waitForPolling(60000);
+
   const reasons = [];
-  // ask Telegram first: if it answers now, earlier failed calls no longer count
-  if (probe) {
-    try {
-      await withTimeout(probe(), PROBE_TIMEOUT_MS);
-      markOk();
-    } catch (err) {
-      markError(err);
-      reasons.push(`Telegram is not answering (${describe(err)})`);
+  if (!state.polling) {
+    reasons.push(`not receiving messages from Telegram (bot not started${state.last_launch_error ? `: ${state.last_launch_error}` : ''})`);
+  } else {
+    const recentlyOk = state.last_ok_at && Date.now() - state.last_ok_at.getTime() < RECENT_OK_MS;
+    if (!recentlyOk && probe) {
+      try {
+        await withTimeout(probe(), PROBE_TIMEOUT_MS);
+        markOk();
+      } catch (err) {
+        markError(err);
+        reasons.push(`Telegram is not answering (${describe(err)})`);
+      }
     }
   }
-  if (!state.polling) reasons.push(`not receiving messages from Telegram (bot not started${state.last_launch_error ? `: ${state.last_launch_error}` : ''})`);
-  if (state.consecutive_failures >= 3 && !reasons.length) reasons.push(`the last ${state.consecutive_failures} Telegram calls failed (${state.last_error})`);
-  if (state.unhandled.length >= 5) reasons.push(`${state.unhandled.length} unexpected errors in the last 10 minutes`);
   const result = { healthy: reasons.length === 0, reasons, monitored: true };
   cached = { at: Date.now(), result };
   return result;

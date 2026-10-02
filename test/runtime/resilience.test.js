@@ -17,7 +17,7 @@ const netErr = (code) => Object.assign(new Error(`request to https://api.telegra
 const tgErr = (code, description) => Object.assign(new Error(description), { code, description, response: { error_code: code, description } });
 
 function resetHealth() {
-  Object.assign(health.state, { enabled: false, polling: false, consecutive_failures: 0, unhandled: [], last_launch_error: null, last_error: null });
+  Object.assign(health.state, { enabled: false, polling: false, consecutive_failures: 0, unhandled: [], last_launch_error: null, last_error: null, last_ok_at: null, started_at: new Date(0) });
   health.enable(null); health.state.enabled = false;
 }
 
@@ -120,6 +120,25 @@ describe('staying up when Telegram is unreachable', () => {
 
     health.setPolling(true);
     assert.equal((await health.check({ fresh: true })).healthy, true);
+  });
+
+  test('no false alarms: a working bot stays healthy even if Telegram is slow once or other errors happen', async () => {
+    let probes = 0;
+    health.enable(async () => { probes++; throw netErr('ETIMEDOUT'); });   // a slow / failing getMe
+    health.setPolling(true);
+    health.markOk();                                                          // polling just heard from Telegram
+    for (let i = 0; i < 30; i++) health.noteUnhandled(new Error('OpenAI said no'));
+    const h = await health.check({ fresh: true });
+    assert.equal(h.healthy, true, h.reasons.join());
+    assert.equal(probes, 0, 'a recent answer is proof enough, no extra probe');
+  });
+
+  test('right after a restart, the heartbeat waits for polling instead of failing', async () => {
+    health.enable(async () => ({ id: 1 }));
+    health.state.started_at = new Date();               // just started, polling not up yet
+    setTimeout(() => health.setPolling(true), 1200);
+    const h = await health.check({ fresh: true });
+    assert.equal(h.healthy, true, h.reasons.join());
   });
 
   test('the heartbeat is only sent when the bot works, so a broken bot triggers the GotYouBro alert', async () => {
