@@ -2,10 +2,11 @@ const Mood = require('../models/mood');
 const { MOOD_INLINE_KEYBOARD, msgs, common } = require('../constants');
 const { MOOD_MAP } = require('../constants/mood.constant');
 const { keyboard } = require('telegraf/markup');
+const { logTelegramError } = require('../utils/tg_errors');
 
 async function setMoodCommand(ctx) {
   try {
-    ctx.reply(msgs.chooseMoodMsg(), {
+    await ctx.reply(msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: MOOD_INLINE_KEYBOARD,
@@ -25,17 +26,15 @@ async function saveMood(ctx) {
       mood: MOOD_MAP[code],
     });
     mood = await mood.save();
-    ctx.answerCbQuery('Mood saved successfully!');
-    ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].name)
-      .then(() => {
-        ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].emoji)
-          .then(async () => {
-            // wait for 2s
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            // send a message to the user to add a note
-            ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg(), {reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}})
-          })
-      });
+    await ctx.answerCbQuery('Mood saved successfully!').catch(logTelegramError('answerCbQuery'));
+    // name, emoji, then (2s later) the note prompt. In the background so the bot keeps handling
+    // other people meanwhile; a failed send is logged, never left unhandled (that stops the bot).
+    (async () => {
+      await ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].name);
+      await ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].emoji);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg(), {reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}});
+    })().catch(logTelegramError('mood saved messages'));
   } catch (error) {
     console.error('Error saving mood:', error);
   }

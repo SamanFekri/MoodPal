@@ -58,7 +58,7 @@ async function sendReport(filePath, user, ctx, days) {
 }
 
 async function showReportCommand(ctx) {
-  ctx.reply(msgs.reportMsg(ctx.user), {
+  return ctx.reply(msgs.reportMsg(ctx.user), {
     parse_mode: 'HTML',
     reply_markup: { inline_keyboard: report.REPORT_DAYS_INLINE_KEYBOARD }
   });
@@ -72,10 +72,10 @@ async function getReportCallback(ctx) {
     const p = await generateReport(data, userId);
     await sendReport(p, ctx.user, ctx, days);
     fs.unlinkSync(p);
-    ctx.answerCbQuery('📊 Report sent successfully!');
+    await ctx.answerCbQuery('📊 Report sent successfully!').catch(() => {});
   } catch (error) {
     console.error('Error in getReportCallback:', error);
-    ctx.answerCbQuery('❌ Failed to generate report. Please try again.');
+    await ctx.answerCbQuery('❌ Failed to generate report. Please try again.').catch(() => {});
   }
 }
 

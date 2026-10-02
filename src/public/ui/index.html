@@ -1454,7 +1454,7 @@
                   </select>
                   <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="heartbeatNow">{{ backupBusy === 'heartbeat' ? '…' : '❤️ Ping now' }}</button>
                 </div>
-                <div class="kv" v-if="backup.health.last_at"><span class="k">Last ping</span><span class="v" :class="{ ok: backup.health.last_status === 'HEALTHY', bad: backup.health.last_status === 'ERROR' }">{{ backup.health.last_status }} · {{ formatWhen(backup.health.last_at) }}</span></div>
+                <div class="kv" v-if="backup.health.last_at"><span class="k">Last ping</span><span class="v" :class="{ ok: backup.health.last_status === 'HEALTHY', bad: backup.health.last_status === 'ERROR' || backup.health.last_status === 'SKIPPED' }">{{ backup.health.last_status }} · {{ formatWhen(backup.health.last_at) }}</span></div>
                 <div class="kv" v-if="backup.health.last_message"><span class="k">Detail</span><span class="v">{{ backup.health.last_message }}</span></div>
               </section>
 
@@ -3473,7 +3473,7 @@
           this.backupBusy = 'heartbeat';
           try {
             const r = await this.api('/api/admin/backup/heartbeat', { method: 'POST' });
-            this.showToast(`Health: ${r.healthStatus || 'sent'}`);
+            this.showToast(r.skipped ? `Not sent: ${r.reasons?.[0] || 'the bot is not working right'}` : `Health: ${r.healthStatus || 'sent'}`);
           } catch (error) {
             this.showToast("The ping did not go through");
           } finally {

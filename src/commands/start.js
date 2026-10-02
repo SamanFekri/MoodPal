@@ -30,7 +30,7 @@ module.exports = async (ctx) => {
               },
             }
           );
-          ctx.reply(msgs.waitingForShareMsg(followed), { parse_mode: 'HTML' });
+          await ctx.reply(msgs.waitingForShareMsg(followed), { parse_mode: 'HTML' });
           break;
         // t.me/<bot>?start=mbti, from a shared MBTI-style result: welcome, then straight into the test
         case 'mbti':
@@ -40,12 +40,12 @@ module.exports = async (ctx) => {
       }
       return;
     }
-    ctx.reply(msgs.welocmeMsg(ctx.user.first_name),
+    await ctx.reply(msgs.welocmeMsg(ctx.user.first_name),
      { 
       parse_mode: 'HTML', 
       reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}
     });
-    ctx.reply(msgs.chooseMoodMsg(), {
+    await ctx.reply(msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: MOOD_INLINE_KEYBOARD,

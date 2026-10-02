@@ -1,6 +1,26 @@
 require('dotenv').config();
 const fs = require('fs');
 const { Telegraf } = require('telegraf');
+const health = require('./health');
+const { harden } = require('./utils/telegram_resilience');
+
+// ---- stay up: one failed call must never take the whole bot down ----
+// A promise that rejects with nobody listening (e.g. a send that timed out) used to stop Node.
+// Now it is logged and counted (src/health.js), and the bot keeps serving everyone else.
+process.on('unhandledRejection', (reason) => {
+  health.noteUnhandled(reason);
+  console.error('Unhandled rejection (bot keeps running):', health.describe(reason) || health.redact(reason));
+});
+// A thrown error nobody caught: log it and keep going, unless it keeps happening, in which case
+// the process is in a bad state; exit so Docker starts a clean one (restart: unless-stopped).
+process.on('uncaughtException', (err) => {
+  health.noteUnhandled(err);
+  console.error('Uncaught exception (bot keeps running):', health.describe(err), health.redact(err?.stack || ''));
+  if (health.state.unhandled.length >= 20) {
+    console.error('Too many unexpected errors in 10 minutes, restarting the process');
+    process.exit(1);
+  }
+});
 const connectDB = require('./db');
 // Import the server 
 const { listenServer } = require('./server');
@@ -55,8 +75,13 @@ listenServer();
 
 // Create bot instance
 const bot = new Telegraf(process.env.BOT_TOKEN);
+// retry short network failures on every Bot API call, and report them to the health check
+harden(bot.telegram);
+health.enable(() => bot.telegram.getMe());
 
 // Middlewares
+// every update proves Telegram is reaching us
+bot.use((ctx, next) => { health.markUpdate(); return next(); });
 // Middleware to save user data
 bot.use(saveUserMiddleware);
 bot.use(blockMiddleware);
@@ -116,7 +141,7 @@ bot.on('message', handleTextMessage);
 
 // Error handling
 bot.catch((err, ctx) => {
-  console.error(`Error for ${ctx.updateType}:`, err);
+  console.error(`Error for ${ctx.updateType}:`, health.describe(err), health.redact(err?.stack || ''));
 });
 
 // Commands shown in Telegram's "Menu" button (yearly video stays hidden on purpose)
@@ -139,13 +164,18 @@ const BOT_COMMANDS = [
   { command: 'help', description: 'List all commands' },
 ];
 
-// Start the bot
-bot.launch().then(() => {
-  console.log('Bot started successfully!');
-  bot.telegram.setMyCommands(BOT_COMMANDS).catch(err => console.error('setMyCommands failed:', err));
-}).catch(err => {
-  console.error('Failed to start bot:', err);
+// ---- start the bot, and keep it started (retries until Telegram is reachable, see supervisor.js) ----
+const supervisor = require('./supervisor').superviseBot(bot, {
+  onStarted: () => bot.telegram.setMyCommands(BOT_COMMANDS).catch(err => console.error('setMyCommands failed:', health.describe(err))),
 });
+
+// stop cleanly on docker stop / Ctrl+C
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.once(signal, () => {
+    supervisor.stop(signal);
+    setTimeout(() => process.exit(0), 1500).unref();
+  });
+}
 
 // create a temp folder if it doesn't exist
 if (!fs.existsSync('temp')) {
@@ -167,7 +197,7 @@ cron.schedule(process.env.CRON_JOB_TIME, () => {
         inline_keyboard: MOOD_INLINE_KEYBOARD,
       },
     }
-  )
+  ).catch(err => console.error('Channel mood post failed:', health.describe(err)));
 });
 
 // run the cron job every week monday 9:00 AM
@@ -175,6 +205,6 @@ cron.schedule(process.env.WEEKLY_CRON_JOB_TIME, () => {
   console.log('======================');
   console.log(`Running cron job at ${new Date().toLocaleString()}`);
   console.log('======================');
-  sendWeeklyReport(bot);
+  Promise.resolve(sendWeeklyReport(bot)).catch(err => console.error('Weekly report failed:', health.describe(err)));
 });
 

@@ -24,7 +24,7 @@ async function handleTextMessage(ctx) {
   // add the note to the last mood
   await lastMood.addNote(note);
   // send a message to the user, with the option to talk it through
-  ctx.reply(`${msgs.noteSavedMsg()}\n${msgs.talkAboutNoteMsg()}`, { reply_markup: { inline_keyboard: TALK_ABOUT_NOTE_KEYBOARD } });
+  return ctx.reply(`${msgs.noteSavedMsg()}\n${msgs.talkAboutNoteMsg()}`, { reply_markup: { inline_keyboard: TALK_ABOUT_NOTE_KEYBOARD } });
 }
 
 module.exports = handleTextMessage;

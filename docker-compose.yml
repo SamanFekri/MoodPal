@@ -17,6 +17,13 @@ services:
     ports:
       - "8080:${SERVER_PORT}"
     restart: unless-stopped
+    # GET /healthz answers 503 when the bot can't reach Telegram or isn't receiving messages
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:'+(process.env.SERVER_PORT||3000)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 60s
+      timeout: 20s
+      start_period: 60s
+      retries: 3
     networks:
       - shared-network
 

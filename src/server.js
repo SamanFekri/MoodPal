@@ -26,6 +26,17 @@ app.get('/user/:userId/mood/tgs', controllers.embed.tgsMood);
 
 app.get('/user/:userId/mood/emoji', controllers.embed.emojiMood);
 
+// GET /healthz: 200 when the bot works, 503 (with the reasons) when it doesn't. For Docker's
+// healthcheck and any uptime monitor; it reveals nothing private.
+app.get('/healthz', async (req, res) => {
+  const health = require('./health');
+  const h = await health.check();
+  res.set('Cache-Control', 'no-store').status(h.healthy ? 200 : 503).json({
+    healthy: h.healthy, reasons: h.reasons,
+    polling: health.state.polling, last_update_at: health.state.last_update_at, uptime_s: Math.round(process.uptime()),
+  });
+});
+
 const miniApp = (req, res) => res.sendFile(path.join(__dirname, 'public', 'ui', 'index.html'));
 app.get('/', miniApp);
 // public personality card (share link); the page reads the token from the URL

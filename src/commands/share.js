@@ -1,9 +1,10 @@
 const { msgs } = require('../constants');
 const User = require('../models/user');
 const Share = require('../models/share');
+const { logTelegramError } = require('../utils/tg_errors');
 
 const createShareLinkCommand = async (ctx) => {
-  ctx.reply(
+  return ctx.reply(
     msgs.createShareLinkMsg(ctx.user),
     {
       parse_mode: 'HTML',
@@ -18,9 +19,9 @@ const allowShareCallback = async (ctx, userId) => {
     const follower = await User.findById(userId);
     const followed = ctx.user;
     await Share.createShare(follower._id, followed._id);
-    ctx.deleteMessage();
-    ctx.reply(msgs.shareAllowedMsg(follower), { parse_mode: 'HTML' });
-    ctx.telegram.sendMessage(follower.id, msgs.sharePermissionGrantedMsg(followed), { parse_mode: 'HTML' });
+    await ctx.deleteMessage().catch(logTelegramError('deleteMessage'));
+    await ctx.reply(msgs.shareAllowedMsg(follower), { parse_mode: 'HTML' }).catch(logTelegramError('reply'));
+    await ctx.telegram.sendMessage(follower.id, msgs.sharePermissionGrantedMsg(followed), { parse_mode: 'HTML' }).catch(logTelegramError('sendMessage'));
   } catch (err) {
     console.log(err);
   }
@@ -33,8 +34,8 @@ const rejectShareCallback = async (ctx, userId) => {
   if (share) {
     await Share.disableShare(follower._id, ctx.user._id);
   }
-  ctx.deleteMessage();
-  ctx.reply(msgs.rejectShareMsg(follower), { parse_mode: 'HTML' });
+  await ctx.deleteMessage().catch(logTelegramError('deleteMessage'));
+  await ctx.reply(msgs.rejectShareMsg(follower), { parse_mode: 'HTML' }).catch(logTelegramError('reply'));
 }
 
 const shareCallback = async (ctx) => {

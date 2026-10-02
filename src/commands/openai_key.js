@@ -63,7 +63,7 @@ async function removeOpenAIKeyCommand(ctx) {
       return ctx.reply(msgs.openAIKeyNotSetMsg());
     }
     await User.setOpenAIKey(ctx.user._id, null);
-    ctx.reply(msgs.openAIKeyRemovedMsg());
+    await ctx.reply(msgs.openAIKeyRemovedMsg());
   } catch (error) {
     console.error('Error in remove_openai_key command:', error);
   }

@@ -232,6 +232,16 @@ async function restoreFromZips(buffers, { mode = 'merge', dryRun = false } = {})
 
 // POST a heartbeat and record the outcome
 async function sendHeartbeat({ client = null } = {}) {
+  // Only say "I'm alive" when the bot really works (receiving messages, Telegram answering).
+  // A broken bot stays silent, so GotYouBro notices the missed heartbeat and alerts the admin.
+  const health = await require('../health').check({ fresh: true });
+  if (!health.healthy) {
+    const message = `bot not working: ${health.reasons.join('; ')}`.slice(0, 500);
+    console.warn(`Heartbeat skipped, ${message}`);
+    await AppConfig.get();   // make sure the settings document exists before recording on it
+    await AppConfig.updateOne({ key: 'main' }, { last_heartbeat_at: new Date(), last_heartbeat_status: 'SKIPPED', last_heartbeat_message: message });
+    return { ok: false, skipped: true, reasons: health.reasons };
+  }
   const config = await AppConfig.get();
   const token = await AppConfig.getToken();
   const api = client || new GotYouBroClient({ token, baseUrl: config.gyb_base_url });
