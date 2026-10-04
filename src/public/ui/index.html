@@ -750,6 +750,11 @@
     /* five admin sections: one row when there's room, two rows on a phone */
     .seg.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 2px; }
     .seg.admin-tabs button { white-space: nowrap; font-size: 12px; padding: 9px 4px; }
+    .export-card { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
+    .export-card div { flex: 1; min-width: 0; }
+    .export-card b { display: block; font-size: 15px; font-weight: 800; }
+    .export-card span { display: block; font-size: 12px; color: var(--hint); line-height: 1.4; margin-top: 2px; }
+    .export-card .btn { flex: none; padding: 10px 14px; font-size: 14px; box-shadow: none; }
     .mem-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(138,143,152,0.12); font-size: 14px; line-height: 1.35; }
     .mem-row .t { flex: 1; min-width: 0; }
     .mem-row .imp { display: inline-flex; gap: 2px; flex: none; }
@@ -1505,6 +1510,10 @@
           </template>
           <div v-else-if="logs.error" class="state"><div class="art">⚠️</div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
           <template v-else-if="logs.moods.length > 0">
+            <div class="export-card">
+              <div><b>Download my moods</b><span>Every mood with its note, day and hour, as a file that opens in Excel or Google Sheets. It arrives in your chat with the bot.</span></div>
+              <button class="btn" :disabled="exportBusy" @click="exportMoods">{{ exportBusy ? 'Sending…' : '📥 Export' }}</button>
+            </div>
             <div v-for="(m, i) in logs.moods" :key="m.timestamp" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
               <div class="avatar anim">
                 <div class="sticker" :class="{ loaded: loaded['log' + i] }" :data-id="'log' + i" :data-tgs="m.tgs" ref="logStickers">
@@ -2653,6 +2662,7 @@
           resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
           canSaveImage: false,
           privacyBusy: false,
+          exportBusy: false,
           bc: null,
           bcError: '',
           bcBusy: '',
@@ -3680,6 +3690,20 @@
           this.sheet = { type: 'mbti', mbtiType: type };
           nextTick(() => document.querySelector('.sheet')?.scrollTo({ top: 0 }));
         },
+        // ----- export my moods (a CSV into the user's chat) -----
+        async exportMoods() {
+          if (this.exportBusy) return;
+          this.haptic('medium');
+          this.exportBusy = true;
+          try {
+            const r = await this.api('/api/me/export', { method: 'POST' });
+            this.showToast(`Sent ${r.count} ${r.count === 1 ? 'mood' : 'moods'} to your chat with the bot`);
+          } catch (error) {
+            const m = { too_soon: 'Your file is on its way, try again in a minute', no_moods: 'Log a mood first' }[error.message];
+            this.showToast(m || "Couldn't send the file. Try again in a minute");
+          } finally { this.exportBusy = false; }
+        },
+
         // ----- what MoodPal remembers -----
         async loadMemories() {
           this.memoryBusy = true;

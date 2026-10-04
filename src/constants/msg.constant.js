@@ -10,6 +10,7 @@ Here are some commands you can use:
 /start - Start the bot and get a welcome message
 /help - Get a list of available commands
 /set_mood - Get a list of moods to choose from
+/export - Get all your moods and notes (with day and hour) as a file
 /reminders - Turn your mood check-in reminders on or off
 /timezone - Set your timezone, e.g. /timezone Berlin or /timezone +3:30
 /set_private - Set your mood to private

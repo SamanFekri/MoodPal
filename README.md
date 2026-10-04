@@ -105,6 +105,9 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 *Admin → Reminders* holds the master switch, the default times and timezone, the per-person cap (1–5), the send speed, the grace window and the "just logged" window. It also shows live queue numbers (waiting, sent, skipped with reasons, failed), the last failures, and buttons to send yourself a test reminder or drop everything waiting.
 
+### 📥 Export my moods
+Anyone can get their whole mood log as a CSV (opens in Excel, Numbers or Google Sheets): one row per mood with Date, Weekday, Time (in their own timezone), Timezone, Mood and Note, oldest first. From the bot: `/export` or the *📥 Export* keyboard button. From the mini app: *Logs → Export*. Either way the file arrives in their chat with the bot (`POST /api/me/export`). One export per minute per person.
+
 ### 📜 Friends' mood history
 Opening a friend from the Friends page shows two tabs: *Mood log* (their past moods, newest first, 30 at a time) and *Personality*. Only people who follow you can see your log (`GET /api/friends/:telegramId/moods`). *Settings → Friends can see my mood history* (`is_mood_log_shared`, on by default) hides it; *Include my notes* (`is_mood_notes_shared`, off by default) decides whether your notes show with it.
 

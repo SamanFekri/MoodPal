@@ -76,6 +76,7 @@ app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.p
 app.get('/api/friends/:telegramId/moods', requireWebAppUser, controllers.user.getFriendMoods);
 app.post('/api/me/mood/picker', requireWebAppUser, controllers.mood.requestMoodPicker);
 app.get('/api/me/moods', requireWebAppUser, controllers.mood.myMoods);
+app.post('/api/me/export', requireWebAppUser, controllers.mood.exportMine);
 app.get('/api/me/settings', requireWebAppUser, controllers.settings.getSettings);
 app.post('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.setKey);
 app.delete('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.removeKey);

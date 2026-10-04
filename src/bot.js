@@ -52,6 +52,7 @@ const talkCommands = require('./commands/talk');
 const { ensurePersonalityCatalog } = require('./personality/migrate');
 const backupScheduler = require('./backup/scheduler');
 const { backupNowCommand } = require('./commands/backup');
+const { exportCommand } = require('./commands/export');
 const { remindersCommand, toggleCallback: remindersToggle, timezoneCommand, timezoneCallback, TZ_PREFIX, TZ_RESET } = require('./commands/reminders');
 const reminderService = require('./reminders/service');
 const broadcastService = require('./broadcast/service');
@@ -106,6 +107,7 @@ bot.command('talk', talkCommands.talkCommand);
 bot.command('end_talk', talkCommands.endTalkCommand);
 bot.command('backup', backupNowCommand);
 bot.command('reminders', remindersCommand);
+bot.command('export', exportCommand);
 bot.command('timezone', timezoneCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
@@ -113,6 +115,7 @@ bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
 
 bot.hears(common.MENU_BUTTONS.SET_MOOD, setMoodCommand)
 bot.hears(common.MENU_BUTTONS.REPORT, showReportCommand)
+bot.hears(common.MENU_BUTTONS.EXPORT, exportCommand)
 bot.hears(common.MENU_BUTTONS.SHARE, createShareLinkCommand)
 bot.hears(common.MENU_BUTTONS.LEGACY_YEAR_REPORT, getYearlyMoodVideo)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPrivate)
@@ -149,6 +152,7 @@ const BOT_COMMANDS = [
   { command: 'start', description: 'Start the bot' },
   { command: 'set_mood', description: 'Set your current mood' },
   { command: 'report', description: 'Mood report for the last days' },
+  { command: 'export', description: 'Get all your moods and notes as a file' },
   { command: 'share', description: 'Share your mood with a friend' },
   { command: 'personality_test', description: 'Take a personality test' },
   { command: 'my_personality', description: 'See your personality profile' },

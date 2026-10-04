@@ -34,4 +34,16 @@ const myMoods = async (req, res) => {
   });
 };
 
-module.exports = { requestMoodPicker, myMoods };
+// POST /api/me/export — send the whole mood log (moods, notes, day and hour) as a CSV to the user's chat
+const moodExport = require('../export/moods');
+const exportMine = async (req, res) => {
+  try {
+    res.json({ ok: true, ...(await moodExport.sendToChat(req.user._id)) });
+  } catch (error) {
+    if (error instanceof moodExport.ExportError) return res.status(error.code === 'too_soon' ? 429 : 400).json({ error: error.code, retry_in_s: error.retry_in_s });
+    console.error('Mood export failed:', error.code || error.message);
+    res.status(502).json({ error: 'telegram_send_failed' });
+  }
+};
+
+module.exports = { requestMoodPicker, myMoods, exportMine };
