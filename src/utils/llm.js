@@ -334,6 +334,68 @@ export async function extractMemories(existing, messages, apiKey, { model = DEFA
   try { return JSON.parse(content); } catch { return { operations: [] }; }
 }
 
+// ---- Admin: characteristics & communication guide ----
+
+const CHARACTERISTICS_SYSTEM_PROMPT = `
+You help the admin of MoodPal, a mood tracking app, understand how to communicate with one of its
+users in a way that person is likely to welcome. You get that person's data: their personality
+profile (traits 0 to 100 with a confidence), their mood check-ins with optional notes (newest first),
+and short notes remembered from their conversations with the app. You do not get their name.
+
+Pick characteristics ONLY from the catalog you are given, by its exact key. Rules:
+- Pick a characteristic only when several data points support it. Most people get 2 to 6; zero is
+  a fine answer. Never pick one just to fill the list.
+- confidence (0 to 1) says how strongly the data supports it. Leave out anything below 0.5.
+- evidence: one or two sentences describing the pattern you saw in the data, e.g. "Notes after a bad
+  day usually list next steps." Describe patterns, quote at most a few words, never invent facts.
+- These are communication and behavioral observations, NOT diagnoses. Never name or hint at a
+  medical or psychological condition (depression, anxiety disorder, ADHD, bipolar, PTSD, OCD,
+  autism, narcissism, any personality disorder, or similar), never use clinical language, and never
+  speculate about their health beyond what they wrote themselves.
+- Advice must be respectful and honest. Never suggest pressuring, manipulating, guilt tripping or
+  deceiving them, or using their low moments or weak spots to get a result. The goal is
+  communication they would be glad to receive.
+- example and example_phrases: short, natural things the admin or the app could actually say to
+  them. No names, no dashes, no emojis.
+- If the data is too thin to say anything reliable, return "insufficient_evidence": true with empty
+  lists and empty strings.
+
+Return ONLY valid JSON, exactly:
+{
+  "insufficient_evidence": false,
+  "characteristics": [
+    { "key": "<catalog key>", "description": "<one sentence about this person>", "confidence": 0.0,
+      "evidence": "<the pattern in their data>", "communication_recommendation": "<one sentence>",
+      "how_to_communicate": ["<2 to 4 short tips>"], "example": "<one thing you could say to them>" }
+  ],
+  "guide": {
+    "overall_communication_style": "<one or two sentences>",
+    "what_works": ["<3 to 6 items>"],
+    "what_to_avoid": ["<3 to 6 items>"],
+    "best_approach": "<two to four sentences>",
+    "example_phrases": ["<2 to 4 phrases>"]
+  }
+}
+`;
+
+// catalog: [{ key, name, description }]; data: the person's data (see src/characteristics/service.js).
+// Returns the raw parsed JSON; the caller validates it.
+export async function analyzeCharacteristics(catalog, data, apiKey, { model = DEFAULT_MODEL } = {}) {
+  if (!apiKey) throw new Error("Missing OpenAI API key");
+  const client = makeClient(apiKey);
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 0.3, maxTokens: 2500 }),
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: CHARACTERISTICS_SYSTEM_PROMPT },
+      { role: "user", content: JSON.stringify({ catalog, person: data }) },
+    ],
+  });
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("Empty response from the model");
+  return JSON.parse(content);
+}
+
 // Last line of defence for the "sounds like a bot" tells the prompt forbids: dashes, markdown
 // emphasis, bullet markers and stray whitespace. Meaning is kept; only punctuation changes.
 export function humanizeReply(text) {

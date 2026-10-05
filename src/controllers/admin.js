@@ -343,4 +343,51 @@ const listTraits = async (req, res) => {
   res.json({ traits: traits.map(t => ({ key: t.key, name: t.name, category: t.category })) });
 };
 
-module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph };
+// ---- characteristics (admin only; OpenAI is called only on POST, when the admin asks) ----
+const characteristicsService = require('../characteristics/service');
+const CHARACTERISTICS_ERRORS = {
+  no_key: [400, 'No OpenAI key: set OPENAI_API_KEY on the server or add your own key in Settings.'],
+  bad_key: [400, 'OpenAI rejected the key.'],
+  model_unavailable: [400, "This OpenAI key can't use the selected model. Pick another one in Settings."],
+  already_running: [409, 'Already calculating for this person.'],
+  openai_failed: [502, "OpenAI didn't answer properly. Try again in a moment."],
+};
+
+// GET /api/admin/users/:telegramId/characteristics — the latest analysis, the history, and whether
+// one can be calculated (a key is available)
+const userCharacteristics = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) });
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  const [latest, history, key] = await Promise.all([
+    characteristicsService.latest(user._id),
+    characteristicsService.history(user._id),
+    characteristicsService.resolveKey(req.user._id),
+  ]);
+  res.json({ latest, history, can_calculate: Boolean(key), key_source: key?.source || null, model: key?.model || null, running: characteristicsService.running.has(String(user._id)) });
+};
+
+// GET /api/admin/users/:telegramId/characteristics/:analysisId — one past analysis
+const userCharacteristicsAnalysis = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) });
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  const analysis = await characteristicsService.get(user._id, req.params.analysisId);
+  if (!analysis) return res.status(404).json({ error: 'not_found' });
+  res.json(analysis);
+};
+
+// POST /api/admin/users/:telegramId/calculate-characteristics — runs a new analysis (calls OpenAI)
+const calculateCharacteristics = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) });
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  try {
+    const analysis = await characteristicsService.calculate(user, req.user._id);
+    res.status(201).json(analysis);
+  } catch (error) {
+    const known = CHARACTERISTICS_ERRORS[error.code];
+    if (!known) throw error;
+    if (error.code === 'openai_failed' || error.code === 'bad_key') console.error('Characteristics analysis failed:', error.message);
+    res.status(known[0]).json({ error: error.code, message: known[1] });
+  }
+};
+
+module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph, userCharacteristics, userCharacteristicsAnalysis, calculateCharacteristics };

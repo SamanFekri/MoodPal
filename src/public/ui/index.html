@@ -914,6 +914,54 @@
     .rem-limit select { flex: none; font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 10px; padding: 8px 10px; }
     .sheet-tabs { position: sticky; top: -10px; z-index: 2; margin: 4px 0 12px; box-shadow: 0 1px 0 rgba(138,143,152,0.14), 0 6px 14px -10px rgba(0,0,0,.25); }
     .sheet-tabs button { font-size: 12px !important; padding: 9px 4px !important; }
+    .sheet-tabs:has(> button:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* ---- Admin: characteristics ---- */
+    .ch-action { background: rgba(138,143,152,0.08); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .ch-action-text b { display: block; font-size: 15px; }
+    .ch-action-text span { display: block; font-size: 12.5px; color: var(--hint); margin-top: 3px; line-height: 1.4; }
+    .ch-action .btn { width: 100%; justify-content: center; }
+    .ch-note { font-size: 11.5px; color: var(--hint); text-align: center; }
+    .ch-note code { font-size: 11px; }
+    .ch-loading { margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
+    .ch-loading p { margin: 10px 0 0; font-size: 12.5px; color: var(--hint); }
+    .ch-error { margin-top: 12px; display: flex; gap: 8px; align-items: flex-start; color: var(--text); }
+    .ch-error svg { color: #ff9500; margin-top: 1px; }
+    .ch-banner { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; font-weight: 600; color: var(--accent); background: rgba(51,144,236,0.10); border-radius: 12px; padding: 8px 8px 8px 12px; }
+    .ch-banner .adm-chip { box-shadow: none; }
+    .ch-k { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--hint); margin-bottom: 6px; }
+    .ch-title { margin: 18px 0 8px; }
+    .ch-best { margin-top: 12px; border-radius: 16px; padding: 14px; background: rgba(51,144,236,0.08); border: 1px solid rgba(51,144,236,0.18); }
+    .ch-best p { margin: 0; font-size: 14.5px; line-height: 1.5; }
+    .ch-best .ch-style { margin-top: 8px; font-size: 13px; color: var(--hint); }
+    .ch-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+    .ch-list { border-radius: 14px; padding: 12px; background: rgba(138,143,152,0.08); }
+    .ch-list.do .ch-k { color: #2fa35f; }
+    .ch-list.avoid .ch-k { color: #e5484d; }
+    .ch-list ul, .ch-how ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; }
+    .ch-list li + li, .ch-how li + li { margin-top: 3px; }
+    .ch-phrases { margin-top: 12px; }
+    .ch-phrases blockquote, .ch-card blockquote { margin: 6px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: rgba(138,143,152,0.08); border-radius: 0 10px 10px 0; font-size: 13.5px; line-height: 1.45; font-style: italic; }
+    .ch-card { background: var(--card); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); margin-bottom: 10px; }
+    .ch-head { display: flex; align-items: flex-start; gap: 10px; }
+    .ch-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; color: var(--accent); background: rgba(51,144,236,0.12); }
+    .ch-name { flex: 1; min-width: 0; }
+    .ch-name b { display: block; font-size: 15px; }
+    .ch-name small { display: block; font-size: 12.5px; color: var(--hint); margin-top: 2px; line-height: 1.35; }
+    .ch-conf { font-size: 13px; font-weight: 800; color: var(--accent); }
+    .ch-bar { height: 5px; border-radius: 999px; background: rgba(138,143,152,0.16); margin: 10px 0 8px; overflow: hidden; }
+    .ch-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+    .ch-why { font-size: 12.5px; color: var(--hint); line-height: 1.45; }
+    .ch-why b { color: var(--text); }
+    .ch-how { margin-top: 8px; font-size: 13px; }
+    .ch-how b { display: block; margin-bottom: 4px; }
+    .ch-how p { margin: 0; line-height: 1.45; }
+    .ch-used { margin-top: 6px; font-size: 11.5px; color: var(--hint); text-align: center; }
+    .ch-history { margin-top: 16px; }
+    .ch-hrow { width: 100%; display: flex; gap: 10px; align-items: baseline; text-align: left; border: 0; background: none; font: inherit; color: var(--text); padding: 9px 10px; border-radius: 10px; cursor: pointer; }
+    .ch-hrow .d { flex: none; font-size: 12px; color: var(--hint); white-space: nowrap; }
+    .ch-hrow .n { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ch-hrow.on { background: rgba(51,144,236,0.10); }
     .sheet-pane { animation: fade-up .35s var(--ease-out) both; }
     .sheet-back { border: 0; background: none; color: var(--link); font: inherit; font-size: 13px; font-weight: 700; padding: 0 0 8px; cursor: pointer; }
     .g-node text { user-select: none; -webkit-user-select: none; }
@@ -2024,6 +2072,83 @@
                 <button :class="{ on: sheet.tab === 'moods' }" @click="setSheetTab('moods')"><ui-icon name="scroll-text" :size="15"></ui-icon> Moods<template v-if="sheet.user.mood_count"> · {{ sheet.user.mood_count }}</template></button>
                 <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
                 <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')"><ui-icon name="waypoints" :size="15"></ui-icon> Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
+                <button :class="{ on: sheet.tab === 'insights' }" @click="setSheetTab('insights')"><ui-icon name="message-circle-heart" :size="15"></ui-icon> Insights</button>
+              </div>
+
+              <!-- admin only: characteristics & how to communicate (OpenAI runs only when the admin clicks) -->
+              <div v-if="sheet.tab === 'insights'" class="sheet-pane">
+                <div v-if="!sheet.ch && !sheet.chError" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+                <template v-else>
+                  <div class="ch-action">
+                    <div class="ch-action-text">
+                      <b>{{ sheet.ch?.latest ? 'Characteristics' : 'Calculate characteristics' }}</b>
+                      <span v-if="sheet.ch?.latest">Last calculated {{ formatWhen(sheet.ch.latest.created_at) }} · {{ sheet.ch.latest.model }}</span>
+                      <span v-else>Reads {{ firstNameOf(sheet.user) }}'s moods, notes and personality with OpenAI and suggests how to talk to them. It only runs when you click.</span>
+                    </div>
+                    <button class="btn" :disabled="sheet.chBusy || !sheet.ch?.can_calculate" @click="calculateCharacteristics">
+                      <ui-icon name="sparkles" :size="16"></ui-icon>{{ sheet.chBusy ? 'Calculating…' : sheet.ch?.latest ? 'Recalculate characteristics' : 'Calculate characteristics' }}
+                    </button>
+                    <div v-if="sheet.ch && !sheet.ch.can_calculate" class="ch-note">No OpenAI key yet. Set <code>OPENAI_API_KEY</code> on the server, or add your own key in Settings.</div>
+                    <div v-else-if="sheet.ch" class="ch-note">Uses {{ sheet.ch.key_source === 'server' ? 'the server\'s OpenAI key' : 'your OpenAI key' }} · {{ sheet.ch.model }}</div>
+                  </div>
+
+                  <div v-if="sheet.chBusy" class="ch-loading">
+                    <div class="shimmer sk-line" style="width:60%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div>
+                    <p>Reading their moods, notes and personality. This can take up to a minute.</p>
+                  </div>
+                  <div v-if="sheet.chError" class="muted-box ch-error"><ui-icon name="triangle-alert" :size="15"></ui-icon> {{ sheet.chError }}</div>
+
+                  <div v-if="sheet.chView && sheet.ch?.latest && sheet.chView.id !== sheet.ch.latest.id" class="ch-banner">
+                    <span>Viewing the analysis from {{ formatWhen(sheet.chView.created_at) }}</span>
+                    <button class="adm-chip" @click="sheet.chView = sheet.ch.latest">Back to latest</button>
+                  </div>
+
+                  <template v-if="sheet.chView && !sheet.chBusy">
+                    <div v-if="sheet.chView.status === 'insufficient_evidence'" class="muted-box"><b>Insufficient evidence.</b> There aren't enough moods, notes or personality answers yet to say anything reliable about how {{ firstNameOf(sheet.user) }} likes to communicate.</div>
+                    <template v-else>
+                      <section class="ch-best">
+                        <div class="ch-k">Best approach</div>
+                        <p>{{ sheet.chView.guide.best_approach }}</p>
+                        <p v-if="sheet.chView.guide.overall_communication_style" class="ch-style">{{ sheet.chView.guide.overall_communication_style }}</p>
+                      </section>
+                      <div class="ch-cols">
+                        <div v-if="sheet.chView.guide.what_works.length" class="ch-list do"><div class="ch-k"><ui-icon name="thumbs-up" :size="14"></ui-icon> Do</div><ul><li v-for="(w, i) in sheet.chView.guide.what_works" :key="'w' + i">{{ w }}</li></ul></div>
+                        <div v-if="sheet.chView.guide.what_to_avoid.length" class="ch-list avoid"><div class="ch-k"><ui-icon name="thumbs-down" :size="14"></ui-icon> Avoid</div><ul><li v-for="(w, i) in sheet.chView.guide.what_to_avoid" :key="'a' + i">{{ w }}</li></ul></div>
+                      </div>
+                      <div v-if="sheet.chView.guide.example_phrases.length" class="ch-phrases">
+                        <div class="ch-k">Things you could say</div>
+                        <blockquote v-for="(ph, i) in sheet.chView.guide.example_phrases" :key="'p' + i">{{ ph }}</blockquote>
+                      </div>
+
+                      <div class="ch-k ch-title">Characteristics</div>
+                      <div v-for="c in sheet.chView.characteristics" :key="c.key" class="ch-card">
+                        <div class="ch-head">
+                          <span class="ch-ico"><ui-icon :name="CH_ICONS[c.key] || 'sparkles'" :size="20"></ui-icon></span>
+                          <div class="ch-name"><b>{{ c.name }}</b><small>{{ c.description }}</small></div>
+                          <span class="ch-conf" :title="'Confidence ' + Math.round(c.confidence * 100) + '%'">{{ Math.round(c.confidence * 100) }}%</span>
+                        </div>
+                        <div class="ch-bar"><i :style="{ width: Math.round(c.confidence * 100) + '%' }"></i></div>
+                        <div class="ch-why"><b>Why:</b> {{ c.evidence }}</div>
+                        <div class="ch-how" v-if="c.how_to_communicate.length || c.communication_recommendation">
+                          <b>How to communicate</b>
+                          <ul v-if="c.how_to_communicate.length"><li v-for="(t, i) in c.how_to_communicate" :key="i">{{ t }}</li></ul>
+                          <p v-else>{{ c.communication_recommendation }}</p>
+                        </div>
+                        <blockquote v-if="c.example">{{ c.example }}</blockquote>
+                      </div>
+                    </template>
+                    <div class="ch-used">Based on {{ plural(sheet.chView.data_used.moods, 'mood') }} ({{ sheet.chView.data_used.notes }} with notes), {{ plural(sheet.chView.data_used.traits, 'personality trait') }} and {{ plural(sheet.chView.data_used.memories, 'conversation note') }}.</div>
+                  </template>
+
+                  <div v-if="sheet.ch?.history?.length > 1" class="ch-history">
+                    <div class="ch-k"><ui-icon name="history" :size="14"></ui-icon> Earlier analyses</div>
+                    <button v-for="h in sheet.ch.history" :key="h.id" class="ch-hrow" :class="{ on: sheet.chView?.id === h.id }" @click="openCharacteristicsAnalysis(h.id)">
+                      <span class="d">{{ formatWhen(h.created_at) }}</span>
+                      <span class="n">{{ h.status === 'insufficient_evidence' ? 'Insufficient evidence' : h.names.join(', ') }}</span>
+                    </button>
+                  </div>
+                  <p class="disclaimer">Communication observations drawn from their own data, not a medical or psychological assessment.</p>
+                </template>
               </div>
 
               <!-- v-show keeps the timeline (and its stickers) alive while another tab is open -->
@@ -2889,6 +3014,12 @@
           quizSession: null,     // unfinished test from the server
           // admin
           admin: { view: 'users', query: '', trait: '', mbti: '', level: 'any', notes: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          CH_ICONS: {
+            straight_shooter: 'target', soft_landing: 'heart-handshake', deep_thinker: 'lightbulb', action_taker: 'zap',
+            challenge_seeker: 'flame', independent: 'compass', people_powered: 'users-round', planner: 'calendar-check',
+            go_with_the_flow: 'waves', stability_seeker: 'anchor', encouragement_driven: 'thumbs-up', talk_it_out: 'messages-square',
+            process_it_alone: 'book-open', future_focused: 'telescope', present_focused: 'sun', peace_keeper: 'handshake',
+          },
           ADMIN_SORTS: [
             { key: 'activity', label: 'Recently active', icon: 'activity' },
             { key: 'mood', label: 'Latest mood', icon: 'smile-plus' },
@@ -3087,7 +3218,7 @@
                 signal: ctrl?.signal,
               });
               const data = await res.json().catch(() => null);
-              if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; throw e; }
+              if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; e.data = data; throw e; }
               return data;
             } catch (error) {
               const transient = !error.status || error.status >= 500;
@@ -3547,7 +3678,8 @@
           try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true };
+          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '' };
+          if (tab === 'insights') this.loadCharacteristics();
           document.querySelector('.sheet')?.scrollTo({ top: 0 });
           // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag
           // and mood count, which a row opened from the graph or another profile doesn't carry.
@@ -3686,6 +3818,50 @@
           if (!this.sheet || this.sheet.tab === tab) return;
           this.haptic('light');
           this.sheet.tab = tab;
+          if (tab === 'insights' && this.sheet.type === 'admin-user' && !this.sheet.ch) this.loadCharacteristics();
+        },
+
+        // ----- admin: characteristics -----
+        async loadCharacteristics() {
+          const sheet = this.sheet;
+          sheet.chError = '';
+          try {
+            const d = await this.api(`/api/admin/users/${sheet.user.id}/characteristics`, { fresh: true });
+            if (this.sheet !== sheet) return;
+            sheet.ch = d;
+            if (!sheet.chView || sheet.chView.id === d.latest?.id) sheet.chView = d.latest;
+          } catch (error) {
+            if (this.sheet === sheet) sheet.chError = "Couldn't load the characteristics.";
+          }
+        },
+        async calculateCharacteristics() {
+          const sheet = this.sheet;
+          if (!sheet?.ch?.can_calculate || sheet.chBusy) return;
+          const who = this.firstNameOf(sheet.user);
+          const key = sheet.ch.key_source === 'server' ? "the server's OpenAI key" : 'your OpenAI key';
+          if (!window.confirm(`Send ${who}'s moods, notes and personality to OpenAI (${sheet.ch.model}, ${key}) to ${sheet.ch.latest ? 'recalculate' : 'calculate'} their characteristics?`)) return;
+          this.haptic('medium');
+          sheet.chBusy = true; sheet.chError = '';
+          try {
+            const analysis = await this.api(`/api/admin/users/${sheet.user.id}/calculate-characteristics`, { method: 'POST' });
+            if (this.sheet !== sheet) return;
+            sheet.chView = analysis;
+            await this.loadCharacteristics();
+            this.showToast(analysis.status === 'ok' ? 'Characteristics updated' : 'Not enough data yet');
+          } catch (error) {
+            if (this.sheet === sheet) sheet.chError = error.data?.message || "Couldn't calculate. Try again in a moment.";
+          } finally {
+            if (this.sheet === sheet) sheet.chBusy = false;
+          }
+        },
+        async openCharacteristicsAnalysis(id) {
+          const sheet = this.sheet;
+          this.haptic('light');
+          if (sheet.ch?.latest?.id === id) { sheet.chView = sheet.ch.latest; return; }
+          try {
+            const d = await this.api(`/api/admin/users/${sheet.user.id}/characteristics/${id}`);
+            if (this.sheet === sheet) sheet.chView = d;
+          } catch { this.showToast("Couldn't open that analysis"); }
         },
         backInTrail() {
           const trail = [...this.sheet.trail];
@@ -4107,6 +4283,7 @@
           nextTick(() => document.querySelector('.sheet')?.scrollTo({ top: 0 }));
         },
         // ----- unfollow / remove a follower (quiet: nobody is notified) -----
+        plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; },
         firstNameOf(f) { return (f.fullname || 'them').split(' ')[0]; },
         async loadFollowers() {
           try { this.followers = (await this.api('/api/me/followers')).followers; } catch {}
