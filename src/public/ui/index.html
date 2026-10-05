@@ -1989,7 +1989,7 @@
       document.getElementById('splash-text').textContent = "Couldn't load the app. Please reload.";
       throw new Error('Vue failed to load');
     }
-    const { createApp, nextTick } = Vue;
+    const { createApp, nextTick, markRaw } = Vue;
 
     // hue per mood so each card gets a matching soft glow
     const MOOD_HUES = {
@@ -2771,7 +2771,10 @@
       async mounted() {
         // keeps "it's 21:04 there" current
         setInterval(() => { this.nowTick = Date.now(); }, 30 * 1000);
-        this.tg = window.Telegram?.WebApp;
+        // keep Telegram's object out of Vue's reactivity: its MainButton etc. are locked (non-writable)
+        // properties, and reading them through a reactive proxy throws, which used to stop the first load
+        const webApp = window.Telegram?.WebApp;
+        this.tg = webApp ? markRaw(webApp) : webApp;
         if (this.tg) {
           this.tg.ready();
           this.tg.expand();
@@ -2800,8 +2803,9 @@
             this.isAdmin = Boolean(data.isAdmin);
             this.myTelegramId = data.telegramId ?? this.tg.initDataUnsafe?.user?.id ?? null;
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
-            this.setupMainButton();
-            this.watchActivation();
+            // nice-to-haves: if Telegram's API misbehaves here, still load everything below
+            try { this.setupMainButton(); } catch (error) { console.error('Main button setup failed:', error); }
+            try { this.watchActivation(); } catch (error) { console.error('Activation watch failed:', error); }
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
             if (this.isAdmin) loads.push(this.fetchAdmin());
