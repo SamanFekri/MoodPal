@@ -17,16 +17,17 @@ const publicUser = (u) => ({
   username: u.username || null,
 });
 
-// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood|newest|name
+// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood|moods|newest|name&dir=asc|desc
 //                      &status=friend|blocked|admin&count=1
-// Every user with their latest mood. `sort`: most recently active (default), most recent mood, newest
-// account, or name A-Z. `notes` keeps only users whose last mood has (or lacks) a note. `trait` keeps
+// Every user with their latest mood. `sort`: most recently active (default), most recent mood, most
+// moods logged, newest account, or name A-Z. `active` counts everyone (not just this filter) active in
+// the last 24 hours and 7 days, from last_active_at (any bot message or mini app visit). `notes` keeps only users whose last mood has (or lacks) a note. `trait` keeps
 // only users whose personality profile has that trait within [min,max] (0..1). `status` keeps people
 // the admin follows, blocked people, or admins. `count=1` answers only { total_users } (for previews).
 const listUsers = async (req, res) => {
   const q = (req.query.q || '').trim();
   const page = Math.max(0, parseInt(req.query.page, 10) || 0);
-  const sortBy = ['mood', 'newest', 'name'].includes(req.query.sort) ? req.query.sort : 'activity';
+  const sortBy = ['mood', 'moods', 'newest', 'name'].includes(req.query.sort) ? req.query.sort : 'activity';
   const status = ['friend', 'blocked', 'admin'].includes(req.query.status) ? req.query.status : null;
   const notes = req.query.notes === 'with' || req.query.notes === 'without' ? req.query.notes : null;
 
@@ -80,19 +81,31 @@ const listUsers = async (req, res) => {
     } },
     { $addFields: {
       last_mood_at: '$last_mood_doc.timestamp',
+      has_mood: { $cond: [{ $ifNull: ['$last_mood_doc', false] }, 1, 0] },
       has_note: { $gt: [{ $strLenCP: { $trim: { input: { $ifNull: ['$last_mood_doc.note', ''] } } } }, 0] },
     } },
   ];
   const notesStages = notes ? [{ $match: { has_note: notes === 'with' } }] : [];
+  // every sort goes both ways: `dir=asc|desc`, defaulting to the natural one (most recent / most
+  // moods / newest first, names A-Z). People with no mood stay last in both directions of "mood".
+  const dir = req.query.dir === 'asc' || req.query.dir === 'desc' ? req.query.dir : (sortBy === 'name' ? 'asc' : 'desc');
+  const d = dir === 'asc' ? 1 : -1;
   const sortStage = {
-    mood: { $sort: { last_mood_at: -1, _id: -1 } },   // users with no mood sort last
-    newest: { $sort: { createdAt: -1, _id: -1 } },
-    name: { $sort: { name_key: 1, _id: 1 } },
-    activity: { $sort: { active_at: -1, _id: -1 } },
+    mood: { $sort: { has_mood: -1, last_mood_at: d, _id: d } },
+    moods: { $sort: { moods_total: d, last_mood_at: d, _id: d } },
+    newest: { $sort: { createdAt: d, _id: d } },
+    name: { $sort: { name_key: d, _id: d } },
+    activity: { $sort: { active_at: d, _id: d } },
   }[sortBy];
   const nameStages = sortBy === 'name'
     ? [{ $addFields: { name_key: { $toLower: { $trim: { input: { $concat: [{ $ifNull: ['$first_name', ''] }, ' ', { $ifNull: ['$last_name', ''] }] } } } } } }]
-    : [];
+    : sortBy === 'moods'
+      // counted before paging, only when sorting by it (uses the { user, timestamp } index)
+      ? [
+        { $lookup: { from: 'moods', let: { uid: '$_id' }, pipeline: [{ $match: { $expr: { $eq: ['$user', '$$uid'] } } }, { $count: 'n' }], as: 'moods_total' } },
+        { $addFields: { moods_total: { $ifNull: [{ $arrayElemAt: ['$moods_total.n', 0] }, 0] } } },
+      ]
+      : [];
 
   const countPipeline = [{ $match: filter }, ...profileStages, ...(notes ? [...shapeStages, ...notesStages] : []), { $count: 'n' }];
   if (req.query.count === '1') {
@@ -100,7 +113,9 @@ const listUsers = async (req, res) => {
     return res.json({ total_users: counted[0]?.n || 0 });
   }
 
-  const [rows, countRows, moodCount] = await Promise.all([
+  const now = Date.now();
+  const activeSince = (ms) => User.countDocuments({ is_bot: { $ne: true }, last_active_at: { $gte: new Date(now - ms) } });
+  const [rows, countRows, moodCount, activeDay, activeWeek] = await Promise.all([
     User.aggregate([
       { $match: filter },
       ...profileStages,
@@ -126,6 +141,8 @@ const listUsers = async (req, res) => {
     ]),
     User.aggregate(countPipeline),
     Mood.estimatedDocumentCount(),
+    activeSince(24 * 3600 * 1000),
+    activeSince(7 * 24 * 3600 * 1000),
   ]);
   const total = countRows[0]?.n || 0;
   // everyone's MBTI-style type on this page, for the chip on their row
@@ -137,7 +154,9 @@ const listUsers = async (req, res) => {
     has_more: (page + 1) * USERS_PAGE_SIZE < total,
     total_users: total,
     total_moods: moodCount,
+    active: { day: activeDay, week: activeWeek },
     sort: sortBy,
+    dir,
     filter: {
       trait: traitKey ? { trait: traitKey, min, max } : null,
       mbti: mbti ? mbti.toLowerCase() === 'any' ? 'any' : mbti : null,

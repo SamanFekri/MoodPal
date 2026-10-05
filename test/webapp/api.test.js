@@ -520,6 +520,54 @@ describe('mini app API', () => {
       assert.ok(full.body.total_users > 0);
     });
 
+    test('admins can sort by number of moods and see how many people were active in 24h and 7 days', async () => {
+      for (let i = 0; i < 3; i++) await Mood.create({ user: carol._id, mood: { code: 'neutral', emoji: '😐', name: 'Neutral' } });
+      const r = await api('/api/admin/users?sort=moods', { as: admin });
+      assert.equal(r.body.sort, 'moods');
+      assert.deepEqual(r.body.users.map(u => [u.id, u.mood_count]).slice(0, 1), [[3, 3]]);
+      assert.deepEqual(r.body.users.map(u => u.mood_count), [...r.body.users.map(u => u.mood_count)].sort((a, b) => b - a));
+
+      const t = Date.now();
+      await User.updateOne({ _id: alice._id }, { last_active_at: new Date(t - 2 * 3600 * 1000) });       // 2 hours ago
+      await User.updateOne({ _id: bob._id }, { last_active_at: new Date(t - 3 * 86400 * 1000) });         // 3 days ago
+      await User.updateOne({ _id: carol._id }, { last_active_at: new Date(t - 30 * 86400 * 1000) });      // a month ago
+      await User.updateOne({ _id: admin._id }, { last_active_at: new Date(t - 40 * 86400 * 1000) });
+      const counts = await api('/api/admin/users?q=nobody', { as: admin });   // counts ignore the list's filters
+      // the admin's own request may mark them active again (async), so allow for that
+      assert.ok([1, 2].includes(counts.body.active.day), `day: ${counts.body.active.day}`);
+      assert.ok([2, 3].includes(counts.body.active.week), `week: ${counts.body.active.week}`);
+      assert.equal(counts.body.active.week - counts.body.active.day, 1, 'bob is active this week but not today');
+    });
+
+    test('every sort goes both ways', async () => {
+      const ids = async (q) => (await api(`/api/admin/users?${q}`, { as: admin })).body.users.map(u => u.id);
+      const names = async (q) => (await api(`/api/admin/users?${q}`, { as: admin })).body.users.map(u => u.fullname);
+      assert.deepEqual(await names('sort=name'), ['Alice', 'Bob', 'Carol', 'Root']);
+      assert.deepEqual(await names('sort=name&dir=desc'), ['Root', 'Carol', 'Bob', 'Alice']);
+      assert.deepEqual(await ids('sort=newest'), [9, 3, 2, 1]);
+      assert.deepEqual(await ids('sort=newest&dir=asc'), [1, 2, 3, 9]);
+
+      for (let i = 0; i < 2; i++) await Mood.create({ user: bob._id, mood: { code: 'happy', emoji: '😊', name: 'Happy' } });
+      const most = await api('/api/admin/users?sort=moods', { as: admin });
+      assert.equal(most.body.dir, 'desc');
+      assert.deepEqual(most.body.users.map(u => u.mood_count), [3, 1, 0, 0]);
+      const fewest = await api('/api/admin/users?sort=moods&dir=asc', { as: admin });
+      assert.equal(fewest.body.dir, 'asc');
+      assert.deepEqual(fewest.body.users.map(u => u.mood_count), [0, 0, 1, 3]);
+
+      // latest mood: oldest mood first when ascending, people with no mood stay last either way
+      const byMood = await api('/api/admin/users?sort=mood', { as: admin });
+      const byMoodAsc = await api('/api/admin/users?sort=mood&dir=asc', { as: admin });
+      const withMood = (r) => r.body.users.filter(u => u.last_mood).map(u => u.id);
+      assert.deepEqual(withMood(byMoodAsc), [...withMood(byMood)].reverse());
+      assert.deepEqual(byMoodAsc.body.users.slice(-2).map(u => u.last_mood), [null, null]);
+
+      const t = Date.now();
+      for (const [u, ago] of [[alice, 1], [bob, 2], [carol, 3], [admin, 4]]) await User.updateOne({ _id: u._id }, { last_active_at: new Date(t - ago * 86400000) });
+      const asc = await ids('sort=activity&dir=asc');
+      assert.deepEqual(asc.filter(id => id !== 9), [3, 2, 1], 'least recently active first (the admin may have just been marked active)');
+    });
+
     test('users created before last_active_at existed still sort by recency', async () => {
       await User.collection.updateOne({ id: 3 }, { $unset: { last_active_at: '' } });      // pre-migration user
       await User.updateOne({ _id: bob._id }, { last_active_at: new Date(Date.now() - 10 * 86400000) });

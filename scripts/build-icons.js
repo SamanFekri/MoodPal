@@ -18,7 +18,7 @@ const NAMES = [
   'upload', 'download', 'globe', 'map-pin', 'bot', 'x', 'message-circle', 'eye-off', 'heart-crack', 'check',
   'undo-2', 'refresh-cw', 'arrow-left-right', 'info', 'party-popper', 'chevron-down', 'notepad-text-dashed',
   // admin characteristics
-  'sparkles', 'message-circle-heart', 'history', 'quote', 'thumbs-down', 'target', 'heart-handshake', 'lightbulb', 'zap', 'flame',
+  'sparkles', 'chart-column', 'arrow-down-wide-narrow', 'arrow-up-narrow-wide', 'message-circle-heart', 'history', 'quote', 'thumbs-down', 'target', 'heart-handshake', 'lightbulb', 'zap', 'flame',
   'compass', 'users-round', 'calendar-check', 'waves', 'anchor', 'thumbs-up', 'messages-square', 'book-open', 'telescope', 'sun', 'handshake',
 ];
 

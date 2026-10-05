@@ -33,6 +33,8 @@ const characteristicAnalysisSchema = new mongoose.Schema({
     moods: { type: Number, default: 0 },
     notes: { type: Number, default: 0 },
     traits: { type: Number, default: 0 },
+    mbti: { type: String, default: null },
+    talk_traits: { type: Number, default: 0 },
     memories: { type: Number, default: 0 },
     from: { type: Date, default: null },
     to: { type: Date, default: null },

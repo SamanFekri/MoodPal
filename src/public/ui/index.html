@@ -459,6 +459,10 @@
     .search .search-clear svg { width: 14px; height: 14px; }
 
     /* ---- Admin: search + filters, sort menu, filter chips ---- */
+    .adm-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .adm-stat { background: var(--card); border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow); display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+    .adm-stat b { font-size: 22px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .adm-stat span { font-size: 12px; color: var(--hint); font-weight: 600; line-height: 1.25; }
     .adm-bar { display: flex; gap: 8px; align-items: stretch; margin-bottom: 10px; }
     .adm-bar .search { flex: 1; min-width: 0; margin-bottom: 0; }
     .adm-filter-btn {
@@ -489,6 +493,11 @@
     .adm-chip .chev { transition: transform .2s var(--ease-out); }
     .adm-chip .chev.open { transform: rotate(180deg); }
     .adm-sort { position: relative; }
+    .adm-chip.dir { padding: 6px 9px; }
+    .adm-chip.dir svg { color: var(--accent); }
+    .menu-order { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 2px 4px 4px; }
+    .adm-menu .menu-order button { justify-content: center; gap: 6px; padding: 9px 6px; font-size: 13px; background: rgba(138,143,152,0.10); }
+    .adm-menu .menu-order button.on { background: var(--accent); color: var(--accent-text); }
     .menu-scrim { position: fixed; inset: 0; z-index: 40; }
     .adm-menu {
       position: absolute; top: calc(100% + 6px); left: 0; z-index: 41; min-width: 220px;
@@ -1303,6 +1312,12 @@
           </div>
 
           <template v-if="admin.view === 'users'">
+          <!-- how many people used MoodPal lately (everyone, not just the filtered list) -->
+          <div class="adm-stats" v-if="admin.active">
+            <div class="adm-stat"><b>{{ admin.active.day }}</b><span>active in<br>the last 24h</span></div>
+            <div class="adm-stat"><b>{{ admin.active.week }}</b><span>active in<br>the last 7 days</span></div>
+          </div>
+
           <!-- search + filters button; below it the sort menu and one removable chip per active filter -->
           <div class="adm-bar">
             <div class="search">
@@ -1327,9 +1342,18 @@
                   <button v-for="o in ADMIN_SORTS" :key="o.key" role="menuitem" :class="{ on: admin.sort === o.key }" @click="setAdminSort(o.key)">
                     <ui-icon :name="o.icon" :size="17"></ui-icon><span>{{ o.label }}</span><ui-icon v-if="admin.sort === o.key" name="check" :size="16" :stroke="2.6" class="tick"></ui-icon>
                   </button>
+                  <div class="menu-title">Order</div>
+                  <div class="menu-order">
+                    <button v-for="d in (adminSortOption.dir === 'asc' ? ['asc', 'desc'] : ['desc', 'asc'])" :key="d" :class="{ on: admin.dir === d }" @click="setAdminDir(d); admin.sortMenu = false">
+                      <ui-icon :name="d === 'asc' ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow'" :size="15"></ui-icon>{{ adminSortOption[d] }}
+                    </button>
+                  </div>
                 </div>
               </template>
             </div>
+            <button class="adm-chip dir" @click="flipAdminDir" :title="'Switch to ' + adminSortOption[admin.dir === 'asc' ? 'desc' : 'asc']" :aria-label="'Order: ' + adminSortOption[admin.dir]">
+              <ui-icon :name="admin.dir === 'asc' ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow'" :size="15"></ui-icon>
+            </button>
             <button v-for="c in adminChips" :key="c.key" class="adm-chip active" @click="removeAdminFilter(c.key)" :title="'Remove ' + c.label">
               <ui-icon :name="c.icon" :size="14"></ui-icon>{{ c.label }}<ui-icon name="x" :size="13" :stroke="2.6" class="x"></ui-icon>
             </button>
@@ -2137,7 +2161,7 @@
                         <blockquote v-if="c.example">{{ c.example }}</blockquote>
                       </div>
                     </template>
-                    <div class="ch-used">Based on {{ plural(sheet.chView.data_used.moods, 'mood') }} ({{ sheet.chView.data_used.notes }} with notes), {{ plural(sheet.chView.data_used.traits, 'personality trait') }} and {{ plural(sheet.chView.data_used.memories, 'conversation note') }}.</div>
+                    <div class="ch-used">Based on {{ plural(sheet.chView.data_used.moods, 'mood') }} ({{ sheet.chView.data_used.notes }} with notes), {{ plural(sheet.chView.data_used.traits, 'personality trait') }}<template v-if="sheet.chView.data_used.mbti">, their {{ sheet.chView.data_used.mbti }} Moodling type</template><template v-if="sheet.chView.data_used.talk_traits">, {{ plural(sheet.chView.data_used.talk_traits, 'trait') }} learned from talks</template> and {{ plural(sheet.chView.data_used.memories, 'conversation note') }}.</div>
                   </template>
 
                   <div v-if="sheet.ch?.history?.length > 1" class="ch-history">
@@ -3013,18 +3037,20 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', query: '', trait: '', mbti: '', level: 'any', notes: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', active: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           CH_ICONS: {
             straight_shooter: 'target', soft_landing: 'heart-handshake', deep_thinker: 'lightbulb', action_taker: 'zap',
             challenge_seeker: 'flame', independent: 'compass', people_powered: 'users-round', planner: 'calendar-check',
             go_with_the_flow: 'waves', stability_seeker: 'anchor', encouragement_driven: 'thumbs-up', talk_it_out: 'messages-square',
             process_it_alone: 'book-open', future_focused: 'telescope', present_focused: 'sun', peace_keeper: 'handshake',
           },
+          // every sort goes both ways; `dir` is its natural direction
           ADMIN_SORTS: [
-            { key: 'activity', label: 'Recently active', icon: 'activity' },
-            { key: 'mood', label: 'Latest mood', icon: 'smile-plus' },
-            { key: 'newest', label: 'Newest members', icon: 'calendar-plus' },
-            { key: 'name', label: 'Name A–Z', icon: 'arrow-down-a-z' },
+            { key: 'activity', label: 'Last active', icon: 'activity', dir: 'desc', desc: 'Most recent first', asc: 'Least recent first' },
+            { key: 'mood', label: 'Latest mood', icon: 'smile-plus', dir: 'desc', desc: 'Newest first', asc: 'Oldest first' },
+            { key: 'moods', label: 'Number of moods', icon: 'chart-column', dir: 'desc', desc: 'Most first', asc: 'Fewest first' },
+            { key: 'newest', label: 'Join date', icon: 'calendar-plus', dir: 'desc', desc: 'Newest first', asc: 'Oldest first' },
+            { key: 'name', label: 'Name', icon: 'arrow-down-a-z', dir: 'asc', desc: 'Z to A', asc: 'A to Z' },
           ],
           ADMIN_STATUSES: [
             { key: '', label: 'Everyone', icon: 'users' },
@@ -3091,7 +3117,8 @@
         // the selected person's two sides, as nodes, with a flag for links that go both ways
         graphFollowing() { return this.graphSide('source', 'target'); },
         graphFollowers() { return this.graphSide('target', 'source'); },
-        adminSortLabel() { return this.ADMIN_SORTS.find(o => o.key === this.admin.sort)?.label || 'Recently active'; },
+        adminSortOption() { return this.ADMIN_SORTS.find(o => o.key === this.admin.sort) || this.ADMIN_SORTS[0]; },
+        adminSortLabel() { const o = this.adminSortOption; return `${o.label} · ${o[this.admin.dir] || o[o.dir]}`; },
         // one removable chip per active filter (the search box is separate)
         adminChips() {
           const a = this.admin, chips = [];
@@ -3569,6 +3596,7 @@
             this.fetchedAt.admin = Date.now();
             this.admin.total_users = data.total_users;
             this.admin.total_moods = data.total_moods;
+            this.admin.active = data.active || null;
             await nextTick();
             this.mountStickers();
           } catch (error) {
@@ -3581,7 +3609,7 @@
         },
         // query string for a set of filters (the live list, or the draft in the filters sheet)
         adminParams(f) {
-          const params = new URLSearchParams({ q: this.admin.query, sort: this.admin.sort });
+          const params = new URLSearchParams({ q: this.admin.query, sort: this.admin.sort, dir: this.admin.dir });
           if (f.status) params.set('status', f.status);
           if (f.notes) params.set('notes', f.notes);
           if (f.mbti) params.set('mbti', f.mbti);
@@ -3594,14 +3622,15 @@
         traitNameOf(key) { return this.admin.traits.find(t => t.key === key)?.name || key.replace(/_/g, ' '); },
         // filters and sort are remembered on this device
         saveAdminPrefs() {
-          const { sort, status, notes, mbti, trait, level } = this.admin;
-          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, status, notes, mbti, trait, level })); } catch {}
+          const { sort, dir, status, notes, mbti, trait, level } = this.admin;
+          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, dir, status, notes, mbti, trait, level })); } catch {}
         },
         loadAdminPrefs() {
           try {
             const saved = JSON.parse(localStorage.getItem('moodpal.adminFilters') || 'null');
             if (!saved) return;
-            if (this.ADMIN_SORTS.some(o => o.key === saved.sort)) this.admin.sort = saved.sort;
+            if (this.ADMIN_SORTS.some(o => o.key === saved.sort)) { this.admin.sort = saved.sort; this.admin.dir = this.adminSortOption.dir; }
+            if (saved.dir === 'asc' || saved.dir === 'desc') this.admin.dir = saved.dir;
             if (this.ADMIN_STATUSES.some(o => o.key === saved.status)) this.admin.status = saved.status;
             if (['', 'with', 'without'].includes(saved.notes)) this.admin.notes = saved.notes;
             if (saved.mbti === 'any' || this.MBTI_TYPES.includes(saved.mbti)) this.admin.mbti = saved.mbti;
@@ -3671,7 +3700,17 @@
         loadMoreAdmin() { this.fetchAdmin({ append: true }); },
         applyAdminFilter() { this.haptic('light'); if (!this.admin.trait) this.admin.level = 'any'; this.fetchAdmin(); },
         setAdminNotes(v) { this.admin.notes = v; this.applyAdminFilter(); },
-        setAdminSort(v) { this.admin.sortMenu = false; this.admin.sort = v; this.saveAdminPrefs(); this.applyAdminFilter(); },
+        setAdminSort(v) {
+          this.admin.sortMenu = false;
+          if (this.admin.sort !== v) { this.admin.sort = v; this.admin.dir = this.adminSortOption.dir; }
+          this.saveAdminPrefs(); this.applyAdminFilter();
+        },
+        setAdminDir(dir) {
+          if (this.admin.dir === dir) return;
+          this.admin.dir = dir;
+          this.saveAdminPrefs(); this.applyAdminFilter();
+        },
+        flipAdminDir() { this.setAdminDir(this.admin.dir === 'asc' ? 'desc' : 'asc'); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
         async openAdminUser(u, { trail = [], tab = 'moods' } = {}) {
           this.haptic('light');

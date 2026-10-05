@@ -58,7 +58,7 @@ class CharacteristicsService {
 
     const [moods, profile, memories] = await Promise.all([
       Mood.find({ user: user._id }).sort({ timestamp: -1 }).limit(MAX_MOODS).select('mood note timestamp').lean(),
-      personalityService.getProfileView(user._id).catch(() => null),
+      personalityService.getProfileView(user._id, { withEvidence: true }).catch(() => null),   // evidence: what they said in Talk
       user.memory_enabled === false ? [] : UserMemory.find({ user: user._id }).sort({ importance: -1, updatedAt: -1 }).limit(MAX_MEMORIES).select('text category importance').lean(),
     ]);
 
@@ -74,9 +74,15 @@ class CharacteristicsService {
       mood_checkins_total: moods.length,
       mood_counts: counts,
       personality: {
-        ...(profile?.mbti ? { mbti_style_type: profile.mbti.type } : {}),
+        // their result in the MBTI-style test, with how strongly each letter came out
+        ...(profile?.mbti ? { mbti_style_type: { type: profile.mbti.type, letters: profile.mbti.dimensions.map(d => ({ letter: d.letter, strength_percent: d.percent })) } } : {}),
         traits,
-        ...(profile?.from_talks?.length ? { changed_by_conversations: profile.from_talks.map(t => ({ trait: t.name, change: Math.round((t.change || 0) * 100) })) } : {}),
+        // what the AI picked up from their conversations in Talk: where the trait is now, how far
+        // talking moved it, in how many conversations, and what they said that moved it last
+        ...(profile?.from_talks?.length ? { learned_from_talks: profile.from_talks.map(t => ({
+          trait: t.name, value: Math.round((t.value || 0) * 100), moved_by: Math.round((t.change || 0) * 100), conversations: t.talks,
+          ...(t.evidence ? { what_they_said: text(t.evidence, 160) } : {}),
+        })) } : {}),
       },
       mood_checkins: checkins,
       conversation_notes: memories.map(m => ({ text: m.text, about: m.category, importance: m.importance })),
@@ -91,6 +97,8 @@ class CharacteristicsService {
         moods: sent.length,
         notes: sent.filter(m => m.note && String(m.note).trim()).length,
         traits: traits.length,
+        mbti: profile?.mbti?.type || null,
+        talk_traits: profile?.from_talks?.length || 0,
         memories: memories.length,
         from: sent.length ? sent[sent.length - 1].timestamp : null,
         to: sent.length ? sent[0].timestamp : null,
@@ -151,7 +159,7 @@ class CharacteristicsService {
       const { data, used } = await this.buildInput(user);
 
       let result;
-      if (!used.moods && !used.traits && !used.memories) {
+      if (!used.moods && !used.traits && !used.memories && !used.mbti && !used.talk_traits) {
         // nothing to read: no need to ask OpenAI
         result = this.sanitize({ insufficient_evidence: true });
       } else {

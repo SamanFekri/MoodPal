@@ -14,6 +14,17 @@ const CharacteristicAnalysis = require('../../src/models/characteristic_analysis
 const { ensurePersonalityCatalog } = require('../../src/personality/migrate');
 const personalityService = require('../../src/personality/service');
 const characteristics = require('../../src/characteristics/service');
+const MBTI = require('../../src/public/ui/mbti');
+
+async function takeMbti(user, type) {
+  const { questions } = await personalityService.getTest('mbti');
+  const { session } = await personalityService.startTest(user._id, 'mbti');
+  for (const q of questions) {
+    const i = MBTI.DIMENSIONS.findIndex(d => d.key === q.trait);
+    const right = type[i] === MBTI.DIMENSIONS[i].right.letter;
+    await personalityService.answerQuestion(user._id, session._id, q.order, right !== q.reverse ? 5 : 1);
+  }
+}
 
 function signInitData(tgUser) {
   const params = { auth_date: String(Math.floor(Date.now() / 1000) - 5), query_id: 'q', user: JSON.stringify(tgUser) };
@@ -165,6 +176,28 @@ describe('admin characteristics analysis', () => {
     assert.equal(two.status, 409);
     release();
     assert.equal((await one).status, 201);
+  });
+
+  test('their MBTI-style type and what Talk learned about them are part of the analysis', async () => {
+    await User.setOpenAIKey(admin._id, 'sk-admin-key-1234567890abcdefghij');
+    await takeMbti(ana, 'INFJ');
+    personalityService._llm = { inferPersonalityUpdates: async () => ({ updates: [{ trait: 'humor_preference', change: 0.15, confidence: 0.9, evidence: 'I laugh at my own bad days' }] }) };
+    await personalityService.inferFromText(ana._id, 'a long enough conversation text '.repeat(4), 'sk-test');
+    personalityService._llm = null;
+
+    const r = await api('/api/admin/users/1/calculate-characteristics', admin, { method: 'POST' });
+    assert.equal(r.status, 201);
+    const p = calls[0].data.personality;
+    assert.equal(p.mbti_style_type.type, 'INFJ');
+    assert.deepEqual(p.mbti_style_type.letters.map(l => l.letter), ['I', 'N', 'F', 'J']);
+    assert.ok(p.mbti_style_type.letters.every(l => l.strength_percent >= 50));
+    const humor = p.learned_from_talks.find(t => t.trait === 'Humor');
+    assert.ok(humor, 'traits learned from talks are sent');
+    assert.equal(humor.conversations, 1);
+    assert.ok(humor.moved_by > 0);
+    assert.equal(humor.what_they_said, 'I laugh at my own bad days');
+    assert.equal(r.body.data_used.mbti, 'INFJ');
+    assert.equal(r.body.data_used.talk_traits, 1);
   });
 
   test('OpenAI errors come back as a clear message and nothing is saved', async () => {
