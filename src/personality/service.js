@@ -246,7 +246,39 @@ class PersonalityService {
    * Structured profile for the mini app: traits grouped by category with labels,
    * only measured ones (confidence > 0). `null` when the user has no profile.
    */
-  async getProfileView(userId) {
+  /**
+   * Traits that conversations with the AI changed: current value, how far talking moved it, how
+   * many talks. `withEvidence` adds the latest evidence, which can quote the user's own words, so
+   * only the user themselves gets it (not friends, the public link or admins).
+   */
+  async getTalkLearnings(userId, traits, profile, { withEvidence = false } = {}) {
+    const rows = await PersonalityObservation.aggregate([
+      { $match: { user: userId, source: 'llm', applied: true } },
+      { $sort: { createdAt: 1 } },
+      { $group: {
+        _id: '$trait',
+        count: { $sum: 1 },
+        change: { $sum: { $subtract: [{ $ifNull: ['$value_after', 0] }, { $ifNull: ['$value_before', '$value_after'] }] } },
+        evidence: { $last: '$evidence' },
+        updated_at: { $last: '$createdAt' },
+      } },
+    ]);
+    return rows
+      .filter(r => traits[r._id] && profile.traits[r._id] !== undefined)
+      .map(r => ({
+        key: r._id,
+        name: traits[r._id].name,
+        value: Math.round(profile.traits[r._id] * 1000) / 1000,
+        change: Math.round(r.change * 1000) / 1000,
+        talks: r.count,
+        updated_at: r.updated_at,
+        ...(withEvidence && r.evidence ? { evidence: String(r.evidence).slice(0, 160) } : {}),
+      }))
+      .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+      .slice(0, 12);
+  }
+
+  async getProfileView(userId, { withEvidence = false } = {}) {
     const [profile, traits] = await Promise.all([this.getProfile(userId), this.getTraits()]);
     if (!profile) return null;
     const { CATEGORY_NAMES } = require('./catalog.seed');
@@ -274,6 +306,7 @@ class PersonalityService {
     if (categories.length === 0 && !mbti) return null;
     return {
       categories,
+      from_talks: await this.getTalkLearnings(userId, traits, profile, { withEvidence }),
       mbti: mbti ? { type: mbti.type, dimensions: mbti.dimensions.map(d => ({ key: d.key, value: d.value, letter: d.letter, percent: d.percent })) } : null,
       measured: categories.reduce((n, c) => n + c.traits.length, 0),
       total: Object.keys(traits).length,

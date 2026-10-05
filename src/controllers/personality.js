@@ -12,7 +12,7 @@ const publicUrl = (user) => user.personality_share_token
 // GET /api/me/personality
 const getMine = async (req, res) => {
   const [profile, tests] = await Promise.all([
-    personalityService.getProfileView(req.user._id),
+    personalityService.getProfileView(req.user._id, { withEvidence: true }),
     personalityService.listTests({ userId: req.user._id }),
   ]);
   res.json({
@@ -100,7 +100,7 @@ const answer = async (req, res) => {
     if (!state.session) return res.status(410).json({ error: 'session_gone' });
     if (!state.done) return res.json({ done: false, session: sessionView(state.session, state.test, state.questions) });
     const [profile, tests] = await Promise.all([
-      personalityService.getProfileView(req.user._id),
+      personalityService.getProfileView(req.user._id, { withEvidence: true }),
       personalityService.listTests({ userId: req.user._id }),
     ]);
     res.json({

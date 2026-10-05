@@ -11,6 +11,7 @@ Here are some commands you can use:
 /help - Get a list of available commands
 /set_mood - Get a list of moods to choose from
 /export - Get all your moods and notes (with day and hour) as a file
+/friends - See who you follow and who follows you, and unfollow anyone
 /reminders - Turn your mood check-in reminders on or off
 /timezone - Set your timezone, e.g. /timezone Berlin or /timezone +3:30
 /set_private - Set your mood to private
@@ -87,6 +88,12 @@ export const waitingForShareMsg = (follower) => `👀 Waiting for ${follower.fir
 export const shareAllowedMsg = (follower) => `👀 Now ${follower.first_name} can see your mood.`
 export const sharePermissionGrantedMsg = (followed) => `✅ ${followed.first_name} has allowed you to see their mood.`
 export const hasAlreadySharedMsg = (followed) => `🤩 ${followed.first_name} has already shared their mood with you.`
+// follow back: after one person allows the other, offer to share the other way too
+export const followBackAskMsg = (follower) => `Want to see ${follower.first_name}'s mood too?`
+export const followBackGiveMsg = (followed) => `Let ${followed.first_name} see your mood too?`
+export const alreadySeesYouMsg = (other) => `🤝 ${other.first_name} can already see your mood.`
+export const sharedBackMsg = (followed) => `🤝 Done. ${followed.first_name} can see your mood now too.`
+export const sharedBackNoticeMsg = (follower) => `🤝 ${follower.first_name} shared their mood with you too. You can see each other's moods now.`
 export const rejectShareMsg = (follower) => `❌ You have rejected ${follower.first_name}'s request to see your mood.`
 
 // ---- OpenAI key (bring your own key) ----

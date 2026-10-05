@@ -88,7 +88,7 @@ Important, and stated to the user before every conversation:
 - it is **not** therapy, medical advice or a diagnosis;
 - it runs on the **user's own OpenAI key** (`/set_openai_key`); messages are sent to OpenAI and stored so the chat has context.
 
-Mood notes keep working exactly as before: outside a conversation, text is saved as a note (with a *💬 Talk about it* button). `🛑 End talk` / `/end_talk` ends the conversation (it also ends after 2 idle hours). What the user said is then used to gradually refine their personality profile.
+Mood notes keep working exactly as before: outside a conversation, text is saved as a note (with a *💬 Talk about it* button). `🛑 End talk` / `/end_talk` ends the conversation (it also ends after 2 idle hours). What the user said is then used to gradually refine their personality profile. This also happens when a conversation ends by going quiet. *Personality → Learned from your talks* lists the traits conversations have moved: each trait's current %, the total change from talks (+/−), how many talks touched it, and (only for you) the line that prompted the latest change.
 
 ### ⚙️ Settings (mini app)
 A *Settings* tab lets each user add their own OpenAI key (verified once, stored encrypted, shown masked) and pick the model Talk and the weekly insights use. The default is `gpt-5.6`; any model id can be typed in.
@@ -107,6 +107,9 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 ### 📥 Export my moods
 Anyone can get their whole mood log as a CSV (opens in Excel, Numbers or Google Sheets): one row per mood with Date, Weekday, Time (in their own timezone), Timezone, Mood and Note, oldest first. From the bot: `/export` or the *📥 Export* keyboard button. From the mini app: *Logs → Export*. Either way the file arrives in their chat with the bot (`POST /api/me/export`). One export per minute per person.
+
+### 🤝 Following, follow back and unfollow
+When someone allows a friend to see their mood, both get a one-tap offer to share the other way (*Let Ada see my mood too* shares right away; *Ask to see Sam's mood* sends the usual Allow / Reject). Unfollowing is quiet (nobody is notified): on a friend's profile in the mini app, *Unfollow* (stop seeing their mood), *Hide my mood from …* (stop them seeing yours) and *Unfollow each other*; *Settings → Who can see my mood* lists everyone who sees yours, each with *Remove*; in the bot, `/friends` shows both lists with the same buttons. API: `DELETE /api/friends/:telegramId`, `GET /api/me/followers`, `DELETE /api/me/followers/:telegramId`.
 
 ### 📜 Friends' mood history
 Opening a friend from the Friends page shows two tabs: *Mood log* (their past moods, newest first, 30 at a time) and *Personality*. Only people who follow you can see your log (`GET /api/friends/:telegramId/moods`). *Settings → Friends can see my mood history* (`is_mood_log_shared`, on by default) hides it; *Include my notes* (`is_mood_notes_shared`, off by default) decides whether your notes show with it.
@@ -141,7 +144,7 @@ The *Admin → Backup* sub-tab talks to [GotYouBro](https://gotyoubro.samanfekri
 A backup contains every user's moods, notes and personality data, so treat the files and the token as sensitive.
 
 ### 🛡️ Admin
-An admin can see every user in the mini app's *Admin* tab, paginated, with their latest mood and note, a search box, a sort toggle (most recently **active** or most recent **last mood**), a notes filter (all / with a note / without one), and a personality filter (any trait × low/mid/high). Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend, or **block** them. A blocked user is ignored by the bot (no handler runs for their messages) and refused by every mini app endpoint; admins cannot be blocked. Admins are chosen by hand in the database:
+An admin can see every user in the mini app's *Admin* tab, paginated, with their latest mood and note, a search box, a sort toggle (most recently **active** or most recent **last mood**), a notes filter (all / with a note / without one), and a personality filter (any trait × low/mid/high), a Moodling filter (one of the 16 types, or anyone who took the test; `?mbti=INFJ|any`) with a type chip on each row. Tapping a user shows their personality radar (regardless of their sharing setting), their paginated mood/notes history, and lets the admin add or remove them as a friend, or **block** them. A blocked user is ignored by the bot (no handler runs for their messages) and refused by every mini app endpoint; admins cannot be blocked. Admins are chosen by hand in the database:
 ```js
 db.users.updateOne({ id: <telegram user id> }, { $set: { is_admin: true } })
 ```

@@ -28,6 +28,11 @@ const getFollowings = async (req, res) => {
     };
   }));
 
+  // does each of them also see my mood? (for the unfollow options on their profile)
+  const backShares = await Share.find({ followed: userId, disabled: false }).select('follower').lean();
+  const followsMe = new Set(backShares.map(s => String(s.follower)));
+  for (const f of followingsWithLastMood) if (f) f.follows_me = followsMe.has(String(f._uid));
+
   // their MBTI-style character (type only), unless they hide it
   const visible = followingsWithLastMood.filter(f => f && f._mbtiShared);
   const types = visible.length ? await personalityService.getMbtiMany(visible.map(f => f._uid)) : new Map();
@@ -74,7 +79,46 @@ const getFriendMoods = async (req, res) => {
   });
 };
 
+// ---- unfollowing (quiet: the other person is not notified) ----
+
+const userByTelegramId = (telegramId) => User.findOne({ id: Number(telegramId) });
+
+// DELETE /api/friends/:telegramId — stop seeing their mood
+const unfollow = async (req, res) => {
+  const other = await userByTelegramId(req.params.telegramId);
+  if (!other) return res.status(404).json({ error: 'not_found' });
+  await Share.disableShare(req.user._id, other._id);
+  res.json({ ok: true });
+};
+
+// GET /api/me/followers — who can see my mood
+const listFollowers = async (req, res) => {
+  const shares = await Share.find({ followed: req.user._id, disabled: false }).populate('follower', 'id first_name last_name username').lean();
+  const mine = await Share.find({ follower: req.user._id, disabled: false }).select('followed').lean();
+  const iFollow = new Set(mine.map(s => String(s.followed)));
+  res.json({
+    followers: shares.filter(s => s.follower).map(s => ({
+      id: s.follower.id,
+      fullname: [s.follower.first_name, s.follower.last_name].filter(Boolean).join(' '),
+      username: s.follower.username || null,
+      i_follow_them: iFollow.has(String(s.follower._id)),
+      since: s.updatedAt || s.createdAt,
+    })).sort((a, b) => new Date(b.since) - new Date(a.since)),
+  });
+};
+
+// DELETE /api/me/followers/:telegramId — stop them seeing my mood
+const removeFollower = async (req, res) => {
+  const other = await userByTelegramId(req.params.telegramId);
+  if (!other) return res.status(404).json({ error: 'not_found' });
+  await Share.disableShare(other._id, req.user._id);
+  res.json({ ok: true });
+};
+
 module.exports = {
   getFollowings,
-  getFriendMoods
+  getFriendMoods,
+  unfollow,
+  listFollowers,
+  removeFollower,
 }

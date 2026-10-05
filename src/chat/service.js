@@ -3,6 +3,7 @@
 const ChatSession = require('../models/chat_session');
 const personalityService = require('../personality/service');
 const memoryService = require('../memory/service');
+const User = require('../models/user');
 
 const CHAT_IDLE_MINUTES = 120;      // a quiet session ends and text goes back to being notes
 const CONTEXT_MESSAGES = 16;        // how much history the model sees
@@ -27,6 +28,8 @@ class ChatService {
     if (!session) return null;
     if (Date.now() - session.last_message_at.getTime() > CHAT_IDLE_MINUTES * 60 * 1000) {
       await this._end(session, 'idle');
+      // a talk that just went quiet still teaches us something, same as /end_talk
+      this.endJob = this.learnFromEnded(session).catch(err => console.error('Learning from an idle talk failed:', err.message));
       return null;
     }
     return session;
@@ -96,6 +99,19 @@ class ChatService {
     await ChatSession.updateOne({ _id: session._id }, { memory_upto: userMessages.length });
     session.memory_upto = userMessages.length;
     return this.memory.learnFromMessages(session.user, fresh, apiKey, { model, sessionId: session._id });
+  }
+
+  // After a talk ends (by /end_talk or by going quiet): remember what matters (memory) and let
+  // what they said refine their personality profile, gradually. Runs on the user's own key.
+  async learnFromEnded(session) {
+    const apiKey = await User.getOpenAIKey(session.user);
+    if (!apiKey) return;
+    const user = await User.findById(session.user).select('openai_model').lean();
+    const model = user?.openai_model || undefined;
+    await this.learnPending(session, apiKey, { model }).catch(err => console.error('Memory update failed:', err.message));
+    const transcript = this.userTranscript(session);
+    if (transcript.length < 60) return;
+    await this.personality.inferFromText(session.user, transcript, apiKey, { model });
   }
 
   // What the user said in a session, for personality inference when it ends

@@ -750,6 +750,10 @@
     /* five admin sections: one row when there's room, two rows on a phone */
     .seg.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 2px; }
     .seg.admin-tabs button { white-space: nowrap; font-size: 12px; padding: 9px 4px; }
+    .friend-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .friend-actions .btn { width: 100%; justify-content: center; box-shadow: none; }
+    .mb-type { flex: none; font-size: 10px; font-weight: 900; letter-spacing: .04em; color: #fff; padding: 2px 7px; border-radius: 999px; background: linear-gradient(135deg, var(--c1), var(--c2)); }
+    .talk-delta { font-weight: 800; } .talk-delta.up { color: var(--fresh); } .talk-delta.down { color: #e5484d; }
     .export-card { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 12px; animation: fade-up .5s var(--ease-out) both; }
     .export-card div { flex: 1; min-width: 0; }
     .export-card b { display: block; font-size: 15px; font-weight: 800; }
@@ -1148,6 +1152,14 @@
           </div>
 
           <div class="filters">
+            <select v-model="admin.mbti" @change="applyAdminFilter">
+              <option value="">🎭 Any Moodling (MBTI)</option>
+              <option value="any">Took the MBTI test</option>
+              <option v-for="t in MBTI_TYPES" :key="t" :value="t">{{ t }} · {{ mbtiTitle(t) }}</option>
+            </select>
+          </div>
+
+          <div class="filters">
             <div class="seg grow">
               <button :class="{ on: admin.notes === '' }" @click="setAdminNotes('')">All</button>
               <button :class="{ on: admin.notes === 'with' }" @click="setAdminNotes('with')">📝 Noted</button>
@@ -1171,7 +1183,7 @@
               </div>
               <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="lock" v-if="u.is_blocked" title="Blocked">🚫</span><span class="chip" v-if="u.is_friend">friend</span></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="lock" v-if="u.is_blocked" title="Blocked">🚫</span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
                 <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
                 <div class="row-sub" v-else>No mood yet</div>
                 <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
@@ -1190,7 +1202,7 @@
             </div>
           </template>
           <div v-else-if="admin.error" class="state"><div class="art">⚠️</div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
-          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
+          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.mbti && admin.mbti !== 'any'">Nobody is {{ admin.mbti }} ({{ mbtiTitle(admin.mbti) }}) yet.</p><p v-else-if="admin.mbti">Nobody has taken the MBTI test yet.</p><p v-else-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
           </template>
 
           <!-- ---------- Admin · Follow graph ---------- -->
@@ -1577,6 +1589,16 @@
               </div>
             </section>
 
+            <section class="section" :style="{ '--i': 2 }">
+              <h3>Who can see my mood <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
+              <div v-if="followers && !followers.length" class="muted-box">Nobody yet. Tap Add a friend on the Friends tab to share your mood.</div>
+              <div v-for="f in followers || []" :key="'fl' + f.id" class="mem-row">
+                <span class="t"><b>{{ f.fullname || 'Unnamed' }}</b><small v-if="f.username" style="color:var(--hint);margin-left:6px">@{{ f.username }}</small><small v-if="f.i_follow_them" style="color:var(--hint);margin-left:6px">· you see theirs too</small></span>
+                <button class="btn ghost" style="padding:7px 12px;font-size:13px;box-shadow:none" :disabled="friendBusy" @click="hideMyMoodFrom(f)">Remove</button>
+              </div>
+              <div class="note-box" v-if="followers && followers.length">Removing someone stops them seeing your mood. They are not notified.</div>
+            </section>
+
             <section class="section" :style="{ '--i': 2 }" v-if="settings.memory">
               <div class="share-row">
                 <div>
@@ -1765,6 +1787,15 @@
               <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
               <div v-else class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their personality.</div>
               </div>
+
+              <div class="sheet-section-title">Friendship</div>
+              <div class="kv"><span class="k">{{ sheet.friend.follows_me ? 'You see each other\'s moods' : 'You see their mood' }}</span><span class="v">{{ sheet.friend.follows_me ? 'both ways' : 'one way' }}</span></div>
+              <div class="friend-actions">
+                <button class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend)">🚫 Unfollow {{ firstNameOf(sheet.friend) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="hideMyMoodFrom(sheet.friend)">🙈 Hide my mood from {{ firstNameOf(sheet.friend) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend, { both: true })">💔 Unfollow each other</button>
+              </div>
+              <div class="note-box">Nobody gets notified. To see each other again, share your link again.</div>
             </template>
 
             <!-- one Moodling, from the cast gallery -->
@@ -2268,6 +2299,17 @@
             </div>
           </section>
 
+          <section v-if="profile.from_talks && profile.from_talks.length" class="section" :style="{ '--i': 1, '--hue': 200 }">
+            <h3>Learned from your talks <span class="sub">with the AI companion</span></h3>
+            <div v-for="(t, i) in profile.from_talks" :key="'ft' + t.key" class="trait">
+              <div class="t-name">{{ t.name }}</div>
+              <div class="t-label">{{ Math.round(t.value * 100) }}% <span class="talk-delta" :class="t.change >= 0 ? 'up' : 'down'">{{ t.change >= 0 ? '+' : '−' }}{{ Math.abs(Math.round(t.change * 100)) }}%</span> · {{ t.talks }} {{ t.talks === 1 ? 'talk' : 'talks' }}</div>
+              <div class="t-bar"><div class="t-fill" :style="{ width: animated ? (t.value * 100) + '%' : '0%', '--i': i }"></div></div>
+              <div class="t-conf" v-if="t.evidence">“{{ t.evidence }}”</div>
+            </div>
+            <div class="t-conf" style="margin-top:8px">Each talk moves a trait a little; tests set the starting point.</div>
+          </section>
+
           <section v-for="(cat, ci) in profile.categories" :key="cat.key" class="section" :style="{ '--i': ci + 1, '--hue': hueFor(cat.key) }">
             <h3>{{ cat.name }} <span class="sub">{{ cat.traits.length }} traits</span></h3>
             <div v-for="(t, i) in cat.traits" :key="t.key" class="trait" :title="t.description">
@@ -2643,7 +2685,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', query: '', trait: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', query: '', trait: '', mbti: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
           fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
@@ -2662,6 +2704,8 @@
           resultType: (location.pathname.match(/^\/result\/([^/?#]+)/)?.[1] || '').toUpperCase(),
           canSaveImage: false,
           privacyBusy: false,
+          friendBusy: false,
+          followers: null,
           exportBusy: false,
           bc: null,
           bcError: '',
@@ -2761,6 +2805,9 @@
             if (this.isAdmin) loads.push(this.fetchAdmin());
             const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: loads[4] }[this.tab] || loads[0];
             current.finally(hideSplash);
+            // always load the friends a second time, 200ms after the first load finished (ok or not),
+            // so the Friends tab is filled even if the first request came back empty or failed
+            loads[0].finally(() => setTimeout(() => this.fetchFriends(), 200));
             await Promise.allSettled(loads);
           } else {
             this.authReason = data.reason || null;
@@ -3098,6 +3145,7 @@
             const params = new URLSearchParams({ q: this.admin.query, page, sort: this.admin.sort });
             if (this.admin.notes) params.set('notes', this.admin.notes);
             if (this.admin.trait) { params.set('trait', this.admin.trait); params.set('min', level.min); params.set('max', level.max); }
+            if (this.admin.mbti) params.set('mbti', this.admin.mbti);
             if (this.admin.traits.length === 0) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
             const data = await this.api(`/api/admin/users?${params}`);
             this.admin.error = '';
@@ -3540,6 +3588,7 @@
             this.settings = await this.api('/api/me/settings');
             this.settingsError = '';
             this.fetchedAt.settings = Date.now();
+            this.loadFollowers();
           } catch (error) {
             this.settingsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
           }
@@ -3690,6 +3739,45 @@
           this.sheet = { type: 'mbti', mbtiType: type };
           nextTick(() => document.querySelector('.sheet')?.scrollTo({ top: 0 }));
         },
+        // ----- unfollow / remove a follower (quiet: nobody is notified) -----
+        firstNameOf(f) { return (f.fullname || 'them').split(' ')[0]; },
+        async loadFollowers() {
+          try { this.followers = (await this.api('/api/me/followers')).followers; } catch {}
+        },
+        async unfollowFriend(f, { both = false } = {}) {
+          if (this.friendBusy) return;
+          const name = this.firstNameOf(f);
+          const question = both ? `Stop seeing each other's moods with ${name}?` : `Unfollow ${name}? You'll stop seeing their mood.`;
+          if (!window.confirm(question)) return;
+          this.haptic('medium');
+          this.friendBusy = true;
+          try {
+            await this.api(`/api/friends/${f.id}`, { method: 'DELETE' });
+            if (both) await this.api(`/api/me/followers/${f.id}`, { method: 'DELETE' });
+            this.friends = this.friends.filter(x => x.id !== f.id);
+            if (this.sheet?.type === 'friend' && this.sheet.friend.id === f.id) this.closeSheet();
+            this.loadFollowers();
+            this.showToast(both ? `You and ${name} no longer see each other's moods` : `You unfollowed ${name}`);
+          } catch { this.showToast("Couldn't do that, try again"); }
+          finally { this.friendBusy = false; }
+        },
+        async hideMyMoodFrom(f) {
+          if (this.friendBusy) return;
+          const name = this.firstNameOf(f);
+          if (!window.confirm(`Hide your mood from ${name}? They'll stop seeing it.`)) return;
+          this.haptic('medium');
+          this.friendBusy = true;
+          try {
+            await this.api(`/api/me/followers/${f.id}`, { method: 'DELETE' });
+            const friend = this.friends.find(x => x.id === f.id);
+            if (friend) friend.follows_me = false;
+            if (this.sheet?.type === 'friend' && this.sheet.friend.id === f.id) this.sheet.friend.follows_me = false;
+            if (this.followers) this.followers = this.followers.filter(x => x.id !== f.id);
+            this.showToast(`${name} no longer sees your mood`);
+          } catch { this.showToast("Couldn't do that, try again"); }
+          finally { this.friendBusy = false; }
+        },
+
         // ----- export my moods (a CSV into the user's chat) -----
         async exportMoods() {
           if (this.exportBusy) return;

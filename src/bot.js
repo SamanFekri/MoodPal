@@ -45,7 +45,7 @@ const { setMoodCommand, saveMood, ge } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
 const { showReportCommand, sendWeeklyReport, getReportCallback, getYearlyMoodVideo } = require('./commands/report');
-const { createShareLinkCommand, shareCallback } = require('./commands/share');
+const { createShareLinkCommand, shareCallback, followBackCallback } = require('./commands/share');
 const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
 const personalityCommands = require('./commands/personality');
 const talkCommands = require('./commands/talk');
@@ -53,6 +53,7 @@ const { ensurePersonalityCatalog } = require('./personality/migrate');
 const backupScheduler = require('./backup/scheduler');
 const { backupNowCommand } = require('./commands/backup');
 const { exportCommand } = require('./commands/export');
+const { friendsCommand, friendsCallback } = require('./commands/friends');
 const { remindersCommand, toggleCallback: remindersToggle, timezoneCommand, timezoneCallback, TZ_PREFIX, TZ_RESET } = require('./commands/reminders');
 const reminderService = require('./reminders/service');
 const broadcastService = require('./broadcast/service');
@@ -108,6 +109,7 @@ bot.command('end_talk', talkCommands.endTalkCommand);
 bot.command('backup', backupNowCommand);
 bot.command('reminders', remindersCommand);
 bot.command('export', exportCommand);
+bot.command('friends', friendsCommand);
 bot.command('timezone', timezoneCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
@@ -132,6 +134,8 @@ bot.hears(common.MENU_BUTTONS.BACKUP_NOW, backupNowCommand)
 bot.action(/mood_/, saveMood);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
+bot.action(/^fb_(ask|give)_/, followBackCallback);
+bot.action(/^fr_(uf|rm|both)_/, friendsCallback);
 bot.action('talk_note', talkCommands.talkAboutNoteCallback);
 bot.action([reminderService.CALLBACK_OFF, reminderService.CALLBACK_ON], remindersToggle);
 bot.action([new RegExp(`^${TZ_PREFIX}`), TZ_RESET], timezoneCallback);
@@ -154,6 +158,7 @@ const BOT_COMMANDS = [
   { command: 'report', description: 'Mood report for the last days' },
   { command: 'export', description: 'Get all your moods and notes as a file' },
   { command: 'share', description: 'Share your mood with a friend' },
+  { command: 'friends', description: 'Who you follow and who follows you, unfollow anyone' },
   { command: 'personality_test', description: 'Take a personality test' },
   { command: 'my_personality', description: 'See your personality profile' },
   { command: 'talk', description: 'Talk things through with the AI companion' },

@@ -38,10 +38,22 @@ const listUsers = async (req, res) => {
   const traitKey = typeof req.query.trait === 'string' && /^[a-z_]+$/.test(req.query.trait) ? req.query.trait : null;
   const min = Math.max(0, Math.min(1, parseFloat(req.query.min ?? 0) || 0));
   const max = Math.max(0, Math.min(1, isNaN(parseFloat(req.query.max)) ? 1 : parseFloat(req.query.max)));
-  const profileStages = traitKey ? [
+  // optional MBTI-style filter: mbti=<TYPE> (e.g. ENFP) or mbti=any (took the test). A letter is the
+  // right-hand one (E, N, F, P) when its trait is >= 0.5, same rule as src/public/ui/mbti.js.
+  const MBTI = require('../public/ui/mbti');
+  const mbtiParam = typeof req.query.mbti === 'string' ? req.query.mbti.toUpperCase() : '';
+  const mbti = mbtiParam === 'ANY' || MBTI.isType(mbtiParam) ? mbtiParam : null;
+  const mbtiMatch = {};
+  if (mbti) {
+    MBTI.DIMENSIONS.forEach((d, i) => {
+      mbtiMatch[`profile.confidence.${d.key}`] = { $gte: 0.05 };
+      if (mbti !== 'ANY') mbtiMatch[`profile.traits.${d.key}`] = mbti[i] === d.right.letter ? { $gte: 0.5 } : { $lt: 0.5 };
+    });
+  }
+  const profileStages = traitKey || mbti ? [
     { $lookup: { from: 'personality_profiles', localField: '_id', foreignField: 'user', as: 'profile' } },
     { $unwind: '$profile' },
-    { $match: { [`profile.traits.${traitKey}`]: { $gte: min, $lte: max } } },
+    { $match: { ...(traitKey ? { [`profile.traits.${traitKey}`]: { $gte: min, $lte: max } } : {}), ...mbtiMatch } },
   ] : [];
 
   // the latest mood has to be joined before paging, because both the notes filter and the
@@ -96,6 +108,8 @@ const listUsers = async (req, res) => {
     Mood.estimatedDocumentCount(),
   ]);
   const total = countRows[0]?.n || 0;
+  // everyone's MBTI-style type on this page, for the chip on their row
+  const types = rows.length ? await personalityService.getMbtiMany(rows.map(u => u._id)) : new Map();
 
   res.json({
     page,
@@ -106,6 +120,7 @@ const listUsers = async (req, res) => {
     sort: sortBy,
     filter: {
       trait: traitKey ? { trait: traitKey, min, max } : null,
+      mbti: mbti ? mbti.toLowerCase() === 'any' ? 'any' : mbti : null,
       notes,
     },
     users: rows.map(u => ({
@@ -119,6 +134,7 @@ const listUsers = async (req, res) => {
       last_active_at: u.last_active_at,
       mood_count: u.mood_count,
       trait_value: traitKey ? u.trait_value : undefined,
+      mbti: types.get(String(u._id))?.type || null,
       last_mood: u.last_mood ? { mood: u.last_mood.mood, note: u.last_mood.note || '', timestamp: u.last_mood.timestamp, tgs: `/public/tgs/${u.last_mood.mood.code}.tgs` } : null,
     })),
   });

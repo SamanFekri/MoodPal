@@ -24,6 +24,7 @@ chatService._llm = llmStub;
 // memory updates use the same stub, so no test ever reaches OpenAI
 llmStub.extractMemories = async () => ({ operations: [] });
 require('../../src/memory/service')._llm = llmStub;
+require('../../src/personality/service')._llm = llmStub;
 
 function makeCtx(user, text, { callback = null } = {}) {
   const ctx = {
