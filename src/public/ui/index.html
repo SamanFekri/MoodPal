@@ -2631,6 +2631,8 @@
       components: { 'personality-view': PersonalityView, 'follow-graph': FollowGraph, 'ego-graph': EgoGraph, 'mbti-card': MbtiCard, 'mbti-character': MbtiCharacter, 'mbti-cast': MbtiCast, 'mbti-icon': MbtiIcon },
       data() {
         this._inflight = {};
+        this._friendsSeq = 0;
+        this._friendsShown = 0;
         return {
           mode: location.pathname.startsWith('/p/') ? 'public' : location.pathname.startsWith('/result/') ? 'result' : 'app',
           tg: null,
@@ -2805,9 +2807,12 @@
             if (this.isAdmin) loads.push(this.fetchAdmin());
             const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: loads[4] }[this.tab] || loads[0];
             current.finally(hideSplash);
-            // always load the friends a second time, 200ms after the first load finished (ok or not),
-            // so the Friends tab is filled even if the first request came back empty or failed
-            loads[0].finally(() => setTimeout(() => this.fetchFriends(), 200));
+            // always load the friends a second time, 200ms after the page loaded, without waiting for the
+            // first request (which can hang on a cold start); then once more if both left the tab empty
+            setTimeout(() => {
+              const again = this.fetchFriends({ force: true });
+              Promise.allSettled([loads[0], again]).then(() => { if (!this.friends.length) this.fetchFriends({ force: true }); });
+            }, 200);
             await Promise.allSettled(loads);
           } else {
             this.authReason = data.reason || null;
@@ -2822,16 +2827,21 @@
 
       methods: {
         // ----- api -----
-        // fetch with no caching, and up to 3 attempts for reads that fail on the network or with a 5xx
-        async api(path, { method = 'GET', body, retries = method === 'GET' ? 2 : 0 } = {}) {
-          if (method === 'GET' && this._inflight[path]) return this._inflight[path];
+        // fetch with no caching, and up to 3 attempts for reads that fail on the network or with a 5xx.
+        // A read that hangs (Telegram's webview sometimes stalls the very first request) is cut off after
+        // `timeout` ms and retried. `fresh` starts a new request instead of sharing one already in flight.
+        async api(path, { method = 'GET', body, retries = method === 'GET' ? 2 : 0, timeout = method === 'GET' ? 8000 : 0, fresh = false } = {}) {
+          if (method === 'GET' && !fresh && this._inflight[path]) return this._inflight[path];
           const attempt = async (n) => {
+            const ctrl = timeout && window.AbortController ? new AbortController() : null;
+            const timer = ctrl ? setTimeout(() => ctrl.abort(), timeout) : null;
             try {
               const res = await fetch(path, {
                 method,
                 cache: 'no-store',
                 headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': this.tg?.initData || '' },
                 body: body ? JSON.stringify(body) : undefined,
+                signal: ctrl?.signal,
               });
               const data = await res.json().catch(() => null);
               if (!res.ok) { const e = new Error(data?.error || `HTTP ${res.status}`); e.status = res.status; throw e; }
@@ -2840,10 +2850,12 @@
               const transient = !error.status || error.status >= 500;
               if (n < retries && transient) { await new Promise(r => setTimeout(r, 400 * (n + 1))); return attempt(n + 1); }
               throw error;
+            } finally {
+              if (timer) clearTimeout(timer);
             }
           };
           const p = attempt(0);
-          if (method === 'GET') { this._inflight[path] = p; p.finally(() => { delete this._inflight[path]; }); }
+          if (method === 'GET' && !fresh) { this._inflight[path] = p; p.finally(() => { if (this._inflight[path] === p) delete this._inflight[path]; }); }
           return p;
         },
 
@@ -2880,20 +2892,26 @@
         },
 
         // ----- friends -----
-        async fetchFriends() {
-          if (this.loadingFriends) return;
+        // `force` starts a new request even while one is still pending (it may be stuck); whichever
+        // answers, the newest request's answer is the one kept, and a failure never hides friends we have
+        async fetchFriends({ force = false } = {}) {
+          if (this.loadingFriends && !force) return;
+          const seq = ++this._friendsSeq;
           this.loadingFriends = true;
           try {
-            this.friends = await this.api('/api/friends');
+            const friends = await this.api('/api/friends', { fresh: force });
+            if (seq < this._friendsShown) return;
+            this._friendsShown = seq;
+            this.friends = friends;
             this.friendsError = '';
             this.fetchedAt.friends = Date.now();
             await nextTick();
             this.mountStickers();
           } catch (error) {
             console.error('Get friends failed:', error);
-            this.friendsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+            if (!this.fetchedAt.friends && seq === this._friendsSeq) this.friendsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
           } finally {
-            this.loadingFriends = false;
+            if (seq === this._friendsSeq) this.loadingFriends = false;
           }
         },
 
