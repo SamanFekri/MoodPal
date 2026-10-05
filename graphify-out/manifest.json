@@ -10,13 +10,13 @@
     "semantic_hash": ""
   },
   "src/bot.js": {
-    "mtime": 1791117912.966175,
-    "ast_hash": "48cf2c0fc41fd5d13fbb28d2e8ec1482",
+    "mtime": 1791181884.9134417,
+    "ast_hash": "9a7e6aecccbe35e73c682d488413892f",
     "semantic_hash": ""
   },
   "src/chat/service.js": {
-    "mtime": 1790768617.2009628,
-    "ast_hash": "bce35e427b1db6f132e42118d61d358a",
+    "mtime": 1791182101.2831533,
+    "ast_hash": "e2baac5b52c639b1dc4d26f4a7de2aca",
     "semantic_hash": ""
   },
   "src/commands/help.js": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   "src/commands/share.js": {
-    "mtime": 1790928800.0390012,
-    "ast_hash": "7981364328c7ca29a3dec42fb9075125",
+    "mtime": 1791181759.6379225,
+    "ast_hash": "9a3a1613fe7997cd55f3bb6eee488f7d",
     "semantic_hash": ""
   },
   "src/commands/start.js": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "src/commands/talk.js": {
-    "mtime": 1790768617.2206109,
-    "ast_hash": "131308eb30c140da3dc47b5af5e5fefc",
+    "mtime": 1791182130.0287004,
+    "ast_hash": "3f9172ff26ca323c8dc89cc778926321",
     "semantic_hash": ""
   },
   "src/constants/common.constant.js": {
@@ -80,8 +80,8 @@
     "semantic_hash": "5664171072dc6fbb5afa3ba8c50eb36f"
   },
   "src/constants/msg.constant.js": {
-    "mtime": 1791117912.9667659,
-    "ast_hash": "765348882030c05d49e5506d9a589735",
+    "mtime": 1791181884.9136362,
+    "ast_hash": "b94d2449ffc8be1ffcdc8e75b2c24744",
     "semantic_hash": ""
   },
   "src/constants/personality.constant.js": {
@@ -100,13 +100,13 @@
     "semantic_hash": "e046a9fbf84e7bc223ea1cfeeb503621"
   },
   "src/constants/share.constant.js": {
-    "mtime": 1747299428.0172832,
-    "ast_hash": "0d9d67493caa44f04c5af762532f1622",
-    "semantic_hash": "0d9d67493caa44f04c5af762532f1622"
+    "mtime": 1791181750.6799574,
+    "ast_hash": "1950fedc14765c150c1c463a30fe71c2",
+    "semantic_hash": ""
   },
   "src/controllers/admin.js": {
-    "mtime": 1790704890.360164,
-    "ast_hash": "04a18f9ecbfa0e33eeff1f7ae87528e3",
+    "mtime": 1791182044.028956,
+    "ast_hash": "2c88c3eb28ac2012267a96d1c9f53015",
     "semantic_hash": ""
   },
   "src/controllers/auth.js": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "src/controllers/personality.js": {
-    "mtime": 1790707818.0785122,
-    "ast_hash": "0af2e00f4707350c243c10194ba710fc",
+    "mtime": 1791182084.889797,
+    "ast_hash": "194e3342959b18bec27b64925bf13c6d",
     "semantic_hash": ""
   },
   "src/controllers/settings.js": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "src/controllers/user.js": {
-    "mtime": 1790790681.0738647,
-    "ast_hash": "5ea831ebdd3c7a2da95ab9bbdaf25345",
+    "mtime": 1791181861.3572142,
+    "ast_hash": "aa404e2d0eaf865d1b69caa840d4e57f",
     "semantic_hash": ""
   },
   "src/db.js": {
@@ -250,8 +250,8 @@
     "semantic_hash": "ab18e537113fffe4a2bb371d49a824b8"
   },
   "src/personality/service.js": {
-    "mtime": 1790707818.0780554,
-    "ast_hash": "eee0e661c4a0e49036ff7aa1c9c8176b",
+    "mtime": 1791182084.8894596,
+    "ast_hash": "9ad499b9da8d16b20dcbcc8e34708b02",
     "semantic_hash": ""
   },
   "src/public/lib/tgs-player.js": {
@@ -260,8 +260,8 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1791117912.9677274,
-    "ast_hash": "08876f980482610aba7fa975e09ddde1",
+    "mtime": 1791181861.357403,
+    "ast_hash": "2744eed010174dc4164dc915491ca874",
     "semantic_hash": ""
   },
   "src/utils/cache.js": {
@@ -300,8 +300,8 @@
     "semantic_hash": "9ddd8799327c77d854db9960aab62e68"
   },
   "test/chat/talk.test.js": {
-    "mtime": 1790768703.2879398,
-    "ast_hash": "ffffd871c0e726d293ce7a6c48eb2275",
+    "mtime": 1791182101.2837913,
+    "ast_hash": "b5ec3cda570c4a1895ee4c2336fa243e",
     "semantic_hash": ""
   },
   "test/helpers/db.js": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1791118009.9705915,
-    "ast_hash": "ab379f4d395dc95cbf758259d773a59f",
+    "mtime": 1791182284.3527217,
+    "ast_hash": "12e40473c269dca4cd9c46c85e770c0f",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
-    "mtime": 1791117925.4817028,
-    "ast_hash": "d965d2c19b630047ad6159cdd963913d",
+    "mtime": 1791182084.8915954,
+    "ast_hash": "93c2c86da5be74b311ab49ede4f3d689",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -842,6 +842,26 @@
   "test/export/export.test.js": {
     "mtime": 1791117948.2458584,
     "ast_hash": "d7828a341a4951bf5506924b1f402cdb",
+    "semantic_hash": ""
+  },
+  "src/commands/friends.js": {
+    "mtime": 1791181884.9130316,
+    "ast_hash": "699deefa3876ec5203625977ec9098b3",
+    "semantic_hash": ""
+  },
+  "test/personality/talk-learnings.test.js": {
+    "mtime": 1791182130.0315669,
+    "ast_hash": "77810db4200d6ed696876721aeed1171",
+    "semantic_hash": ""
+  },
+  "test/share/followback.test.js": {
+    "mtime": 1791181807.798094,
+    "ast_hash": "176a4008f3a402687517b458a622e5b4",
+    "semantic_hash": ""
+  },
+  "test/share/unfollow.test.js": {
+    "mtime": 1791181933.7751763,
+    "ast_hash": "2e293060f8a0da0afc1912eaf4fc6601",
     "semantic_hash": ""
   }
 }
