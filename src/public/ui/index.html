@@ -312,6 +312,11 @@
       animation: fade-up .5s var(--ease-out) .3s both;
     }
     .fab-wrap .btn { pointer-events: auto; }
+    .add-friend-end {
+      display: flex; justify-content: center;
+      margin: 18px 0 8px;
+      animation: fade-up .5s var(--ease-out) .3s both;
+    }
 
     .toast {
       position: fixed; left: 16px; right: 16px; bottom: calc(var(--nav-h) + 80px + env(safe-area-inset-bottom));
@@ -1016,7 +1021,8 @@
             <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
           </div>
 
-          <div v-if="friends.length > 0 && !usingMainButton" class="fab-wrap">
+          <!-- sits right after the last friend card, scrolling with the list -->
+          <div v-if="friends.length > 0" class="add-friend-end">
             <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
           </div>
         </div>
@@ -2804,7 +2810,6 @@
             this.myTelegramId = data.telegramId ?? this.tg.initDataUnsafe?.user?.id ?? null;
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             // nice-to-haves: if Telegram's API misbehaves here, still load everything below
-            try { this.setupMainButton(); } catch (error) { console.error('Main button setup failed:', error); }
             try { this.watchActivation(); } catch (error) { console.error('Activation watch failed:', error); }
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
