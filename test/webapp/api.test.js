@@ -500,6 +500,26 @@ describe('mini app API', () => {
       assert.deepEqual((await api('/api/admin/users?q=nobody', { as: admin })).body.users, []);
     });
 
+    test('admins can sort by newest or name, filter by status, and ask for just the count', async () => {
+      const byName = await api('/api/admin/users?sort=name', { as: admin });
+      assert.deepEqual(byName.body.users.map(u => u.fullname), ['Alice', 'Bob', 'Carol', 'Root']);
+      assert.equal(byName.body.sort, 'name');
+      const newest = await api('/api/admin/users?sort=newest', { as: admin });
+      assert.deepEqual(newest.body.users.map(u => u.id), [9, 3, 2, 1]);
+
+      await Share.createShare(admin._id, carol._id);
+      await User.updateOne({ _id: bob._id }, { is_blocked: true });
+      assert.deepEqual((await api('/api/admin/users?status=friend', { as: admin })).body.users.map(u => u.id), [3]);
+      assert.deepEqual((await api('/api/admin/users?status=blocked', { as: admin })).body.users.map(u => u.id), [2]);
+      assert.deepEqual((await api('/api/admin/users?status=admin', { as: admin })).body.users.map(u => u.id), [9]);
+      assert.equal((await api('/api/admin/users?status=friend', { as: admin })).body.filter.status, 'friend');
+
+      const count = await api('/api/admin/users?notes=with&count=1', { as: admin });
+      const full = await api('/api/admin/users?notes=with', { as: admin });
+      assert.deepEqual(count.body, { total_users: full.body.total_users });
+      assert.ok(full.body.total_users > 0);
+    });
+
     test('users created before last_active_at existed still sort by recency', async () => {
       await User.collection.updateOne({ id: 3 }, { $unset: { last_active_at: '' } });      // pre-migration user
       await User.updateOne({ _id: bob._id }, { last_active_at: new Date(Date.now() - 10 * 86400000) });

@@ -17,14 +17,17 @@ const publicUser = (u) => ({
   username: u.username || null,
 });
 
-// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood
-// Every user with their latest mood. `sort` picks recency of activity (default) or of the
-// last mood they registered. `notes` keeps only users whose last mood has (or lacks) a note.
-// `trait` keeps only users whose personality profile has that trait within [min,max] (0..1).
+// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood|newest|name
+//                      &status=friend|blocked|admin&count=1
+// Every user with their latest mood. `sort`: most recently active (default), most recent mood, newest
+// account, or name A-Z. `notes` keeps only users whose last mood has (or lacks) a note. `trait` keeps
+// only users whose personality profile has that trait within [min,max] (0..1). `status` keeps people
+// the admin follows, blocked people, or admins. `count=1` answers only { total_users } (for previews).
 const listUsers = async (req, res) => {
   const q = (req.query.q || '').trim();
   const page = Math.max(0, parseInt(req.query.page, 10) || 0);
-  const sortBy = req.query.sort === 'mood' ? 'mood' : 'activity';
+  const sortBy = ['mood', 'newest', 'name'].includes(req.query.sort) ? req.query.sort : 'activity';
+  const status = ['friend', 'blocked', 'admin'].includes(req.query.status) ? req.query.status : null;
   const notes = req.query.notes === 'with' || req.query.notes === 'without' ? req.query.notes : null;
 
   const filter = { is_bot: { $ne: true } };
@@ -32,6 +35,12 @@ const listUsers = async (req, res) => {
     const rx = new RegExp(escapeRegex(q), 'i');
     filter.$or = [{ first_name: rx }, { last_name: rx }, { username: rx }];
     if (/^\d+$/.test(q)) filter.$or.push({ id: Number(q) });
+  }
+  if (status === 'blocked') filter.is_blocked = true;
+  if (status === 'admin') filter.is_admin = true;
+  if (status === 'friend') {
+    const followed = await Share.find({ follower: req.user._id, disabled: false }).distinct('followed');
+    filter._id = { $in: followed };
   }
 
   // optional personality filter: join the profile and keep users in the requested range
@@ -75,11 +84,21 @@ const listUsers = async (req, res) => {
     } },
   ];
   const notesStages = notes ? [{ $match: { has_note: notes === 'with' } }] : [];
-  const sortStage = sortBy === 'mood'
-    ? { $sort: { last_mood_at: -1, _id: -1 } }   // users with no mood sort last
-    : { $sort: { active_at: -1, _id: -1 } };
+  const sortStage = {
+    mood: { $sort: { last_mood_at: -1, _id: -1 } },   // users with no mood sort last
+    newest: { $sort: { createdAt: -1, _id: -1 } },
+    name: { $sort: { name_key: 1, _id: 1 } },
+    activity: { $sort: { active_at: -1, _id: -1 } },
+  }[sortBy];
+  const nameStages = sortBy === 'name'
+    ? [{ $addFields: { name_key: { $toLower: { $trim: { input: { $concat: [{ $ifNull: ['$first_name', ''] }, ' ', { $ifNull: ['$last_name', ''] }] } } } } } }]
+    : [];
 
   const countPipeline = [{ $match: filter }, ...profileStages, ...(notes ? [...shapeStages, ...notesStages] : []), { $count: 'n' }];
+  if (req.query.count === '1') {
+    const counted = await User.aggregate(countPipeline);
+    return res.json({ total_users: counted[0]?.n || 0 });
+  }
 
   const [rows, countRows, moodCount] = await Promise.all([
     User.aggregate([
@@ -87,6 +106,7 @@ const listUsers = async (req, res) => {
       ...profileStages,
       ...shapeStages,
       ...notesStages,
+      ...nameStages,
       sortStage,
       { $skip: page * USERS_PAGE_SIZE },
       { $limit: USERS_PAGE_SIZE },
@@ -122,6 +142,7 @@ const listUsers = async (req, res) => {
       trait: traitKey ? { trait: traitKey, min, max } : null,
       mbti: mbti ? mbti.toLowerCase() === 'any' ? 'any' : mbti : null,
       notes,
+      status,
     },
     users: rows.map(u => ({
       ...publicUser(u),

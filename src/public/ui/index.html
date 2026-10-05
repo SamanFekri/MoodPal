@@ -12,6 +12,8 @@
   <!-- libraries are served by this app itself, never from a public CDN -->
   <script src="/public/lib/vendor/vue.global.prod.js"></script>
   <script src="/public/lib/tgs-player.js"></script>
+  <!-- Lucide line icons (only the ones used here; scripts/build-icons.js) -->
+  <script src="/public/lib/vendor/icons.js"></script>
   <!-- the 16 Moodlings of the MBTI-style test (also used by the server) -->
   <script src="/public/ui/mbti.js"></script>
 
@@ -147,7 +149,7 @@
     .me-card .me-empty {
       width: 84px; height: 84px; flex: none;
       display: grid; place-items: center;
-      font-size: 40px;
+      color: var(--hint);
       border-radius: 24px;
       background: rgba(138,143,152,0.12);  /* fallback for WebViews without color-mix */
       background: color-mix(in srgb, var(--hint) 12%, transparent);
@@ -279,10 +281,15 @@
     /* ---- Empty / auth states ---- */
     .state { text-align: center; padding: 48px 16px 24px; animation: fade-up .5s var(--ease-out) both; }
     .state .art {
-      font-size: 72px; line-height: 1; margin-bottom: 18px; display: inline-block;
+      width: 84px; height: 84px; border-radius: 28px; margin-bottom: 18px;
+      display: inline-grid; place-items: center;
+      color: var(--accent);
+      background: rgba(51,144,236,0.12);  /* fallback for WebViews without color-mix */
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
       animation: float 3.5s ease-in-out infinite;
-      filter: drop-shadow(0 12px 18px rgba(0, 0, 0, .12));
     }
+    .state .art .ui-icon { width: 40px; height: 40px; }
+    .ui-icon { display: inline-block; flex: none; vertical-align: -0.18em; }
     .state h2 { font-size: 20px; font-weight: 800; margin: 0 0 6px; letter-spacing: -.02em; }
     .state p { color: var(--hint); font-size: 14px; margin: 0 0 20px; line-height: 1.45; }
 
@@ -373,7 +380,7 @@
       transition: color .25s;
     }
     .tab.active { color: var(--text); }
-    .tab .ico { font-size: 15px; line-height: 1; transition: transform .35s var(--ease-spring); }
+    .tab .ico { display: grid; place-items: center; line-height: 1; transition: transform .35s var(--ease-spring); }
     .tab.active .ico { transform: scale(1.15); }
 
     .tab-enter-active, .tab-leave-active { transition: opacity .22s ease, transform .22s var(--ease-out); }
@@ -448,6 +455,112 @@
     .search input { flex: 1; border: 0; background: none; font: inherit; font-size: 16px; color: var(--text); outline: none; min-width: 0; }
     .search input::placeholder { color: var(--hint); }
     .search svg { width: 18px; height: 18px; color: var(--hint); flex: none; }
+    .search .search-clear { border: 0; background: rgba(138,143,152,0.16); color: var(--hint); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; flex: none; padding: 0; }
+    .search .search-clear svg { width: 14px; height: 14px; }
+
+    /* ---- Admin: search + filters, sort menu, filter chips ---- */
+    .adm-bar { display: flex; gap: 8px; align-items: stretch; margin-bottom: 10px; }
+    .adm-bar .search { flex: 1; min-width: 0; margin-bottom: 0; }
+    .adm-filter-btn {
+      position: relative; display: inline-flex; align-items: center; gap: 6px;
+      border: 0; border-radius: 14px; padding: 0 14px; cursor: pointer;
+      background: var(--card); color: var(--text); box-shadow: var(--shadow);
+      font: inherit; font-size: 14px; font-weight: 700;
+      transition: transform .15s var(--ease-out), background .2s, color .2s;
+    }
+    .adm-filter-btn:active { transform: scale(.96); }
+    .adm-filter-btn.on { background: var(--accent); color: var(--accent-text); }
+    .adm-filter-btn b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: grid; place-items: center; font-size: 11px; background: var(--accent-text); color: var(--accent); }
+    .adm-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+    .adm-chip {
+      display: inline-flex; align-items: center; gap: 5px; max-width: 100%;
+      border: 0; border-radius: 999px; padding: 6px 11px; cursor: pointer;
+      font: inherit; font-size: 12.5px; font-weight: 700; white-space: nowrap;
+      background: var(--card); color: var(--text); box-shadow: var(--shadow);
+      transition: transform .15s var(--ease-out);
+    }
+    .adm-chip:active { transform: scale(.95); }
+    .adm-chip svg { color: var(--hint); }
+    .adm-chip.active { background: rgba(51,144,236,0.12); color: var(--accent); box-shadow: none; }  /* fallback for WebViews without color-mix */
+    .adm-chip.active { background: color-mix(in srgb, var(--accent) 13%, transparent); }
+    .adm-chip.active svg { color: currentColor; }
+    .adm-chip.active .x { opacity: .7; }
+    .adm-chip.clear { background: none; box-shadow: none; color: var(--hint); padding: 6px 4px; }
+    .adm-chip .chev { transition: transform .2s var(--ease-out); }
+    .adm-chip .chev.open { transform: rotate(180deg); }
+    .adm-sort { position: relative; }
+    .menu-scrim { position: fixed; inset: 0; z-index: 40; }
+    .adm-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; z-index: 41; min-width: 220px;
+      background: var(--card); border-radius: 16px; padding: 6px;
+      box-shadow: 0 12px 36px rgba(0,0,0,.18), 0 0 0 1px rgba(138,143,152,0.12);
+      animation: menu-in .18s var(--ease-out) both; transform-origin: top left;
+    }
+    @keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+    .adm-menu .menu-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--hint); padding: 8px 10px 4px; }
+    .adm-menu button {
+      width: 100%; display: flex; align-items: center; gap: 10px; text-align: left;
+      border: 0; background: none; border-radius: 11px; padding: 10px; cursor: pointer;
+      font: inherit; font-size: 14px; font-weight: 600; color: var(--text);
+    }
+    .adm-menu button svg { color: var(--hint); }
+    .adm-menu button span { flex: 1; }
+    .adm-menu button.on { background: rgba(51,144,236,0.10); color: var(--accent); }  /* fallback for WebViews without color-mix */
+    .adm-menu button.on { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+    .adm-menu button.on svg { color: currentColor; }
+
+    /* ---- Admin: filters sheet ---- */
+    .af-title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+    .af-sec { padding: 14px 0; border-bottom: 1px solid rgba(138,143,152,0.14); }
+    .af-sec:last-child { border-bottom: 0; }
+    .af-label { font-size: 13px; font-weight: 800; margin-bottom: 10px; }
+    .af-label span { font-weight: 600; color: var(--hint); margin-left: 4px; }
+    .af-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+    .af-opt {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 0; border-radius: 12px; padding: 9px 12px; cursor: pointer;
+      font: inherit; font-size: 13.5px; font-weight: 700;
+      background: rgba(138,143,152,0.12); color: var(--text);
+      transition: background .2s, color .2s, transform .15s var(--ease-out);
+    }
+    .af-opt:active { transform: scale(.96); }
+    .af-opt svg { color: var(--hint); }
+    .af-opt.small { padding: 7px 10px; font-size: 12.5px; border-radius: 10px; }
+    .af-opt.on { background: var(--accent); color: var(--accent-text); }
+    .af-opt.on svg { color: currentColor; }
+    .af-types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .af-type {
+      min-width: 0; border: 0; cursor: pointer; padding: 6px 4px 7px; border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: linear-gradient(160deg, var(--c1), var(--c2)); color: #fff;
+      font: inherit; opacity: .55; filter: saturate(.7);
+      transition: opacity .2s, filter .2s, transform .15s var(--ease-out), box-shadow .2s;
+    }
+    .af-type .mb-char { width: 44px; }
+    .af-type b { font-size: 12px; font-weight: 800; letter-spacing: .04em; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+    .af-types:not(:has(.on)) .af-type { opacity: 1; filter: none; }
+    .af-type.on { opacity: 1; filter: none; transform: scale(1.04); box-shadow: 0 0 0 2.5px var(--card), 0 0 0 4.5px var(--accent); }
+    .af-type:active { transform: scale(.95); }
+    .af-hint { font-size: 12.5px; color: var(--hint); margin-top: 8px; }
+    .af-search { box-shadow: none; background: rgba(138,143,152,0.12); padding: 9px 12px; margin-bottom: 4px; }
+    .af-group { margin-top: 10px; }
+    .af-group-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--hint); margin-bottom: 6px; }
+    .af-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .af-levels .af-opt { flex-direction: column; gap: 1px; padding: 8px 4px; justify-content: center; }
+    .af-levels small { font-size: 11px; font-weight: 600; opacity: .7; }
+    .af-picked { display: flex; flex-direction: column; gap: 10px; }
+    .af-picked .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .af-picked .name { font-size: 15px; font-weight: 800; }
+    .af-picked .adm-chip { box-shadow: none; background: rgba(138,143,152,0.12); }
+    .af-foot {
+      position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); z-index: 2;
+      display: grid; grid-template-columns: auto 1fr; gap: 8px;
+      margin: 4px -18px calc(-24px - env(safe-area-inset-bottom));
+      padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
+      background: var(--card); border-top: 1px solid rgba(138,143,152,0.14);
+    }
+    .lock { display: inline-flex; align-items: center; color: var(--hint); }
+    .lock.blocked { color: #ff3b30; }
 
     .row-card {
       display: flex; align-items: center; gap: 12px;
@@ -804,6 +917,7 @@
     .sheet-pane { animation: fade-up .35s var(--ease-out) both; }
     .sheet-back { border: 0; background: none; color: var(--link); font: inherit; font-size: 13px; font-weight: 700; padding: 0 0 8px; cursor: pointer; }
     .g-node text { user-select: none; -webkit-user-select: none; }
+    .g-person { color: var(--hint); pointer-events: none; }
     .g-node text.emoji { font-size: 13px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
     .g-node text.name { font-size: 7px; font-weight: 700; text-anchor: middle; fill: var(--text); pointer-events: none; }
     .g-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--hint); font-weight: 600; padding: 8px 4px 2px; }
@@ -859,7 +973,8 @@
     .q-enter-from { opacity: 0; transform: translateX(28px); }
     .q-leave-to { opacity: 0; transform: translateX(-28px); }
     .quiz-body .q-wrap { position: relative; }
-    .done-art { font-size: 72px; text-align: center; animation: pop-in .6s var(--ease-spring) both; }
+    .done-art { text-align: center; color: var(--accent); animation: pop-in .6s var(--ease-spring) both; }
+    .done-art .ui-icon { width: 64px; height: 64px; }
     .done h2 { text-align: center; font-size: 24px; font-weight: 800; margin: 12px 0 6px; }
     .done p { text-align: center; color: var(--hint); font-size: 14px; margin: 0 0 18px; line-height: 1.45; }
     .done .btn { display: flex; margin: 0 auto; }
@@ -901,7 +1016,7 @@
       <div v-if="publicLoading" class="section"><div class="shimmer sk-line" style="width:60%"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
       <template v-else-if="publicProfile">
         <div class="public-hero">
-          <div class="avatar" :style="{ '--hue': 265 }">🧠</div>
+          <div class="avatar" :style="{ '--hue': 265 }"><ui-icon name="brain" :size="30"></ui-icon></div>
           <h1>{{ publicName }}'s personality</h1>
           <p>An approximate profile from MoodPal tests and conversations</p>
         </div>
@@ -912,7 +1027,7 @@
         </div>
       </template>
       <div v-else class="state">
-        <div class="art">🔗</div>
+        <div class="art"><ui-icon name="link"></ui-icon></div>
         <h2>Link not available</h2>
         <p>This personality profile is private or the link has expired.</p>
         <a class="btn" :href="botLink">Open MoodPal</a>
@@ -949,7 +1064,7 @@
         <div v-if="tab === 'friends'" key="friends">
           <header class="header">
             <div>
-              <p class="greeting" v-if="firstName">Hi, {{ firstName }} 👋</p>
+              <p class="greeting" v-if="firstName">Hi, {{ firstName }}</p>
               <h1>Friends' moods</h1>
             </div>
             <div class="header-right">
@@ -978,12 +1093,12 @@
               </div>
             </template>
             <template v-else>
-              <div class="me-empty">🤔</div>
+              <div class="me-empty"><ui-icon name="smile-plus" :size="38" :stroke="1.7"></ui-icon></div>
               <div class="me-body">
                 <div class="me-label">Your mood</div>
                 <div class="me-mood">Not set yet</div>
                 <div class="me-hint">Tell the bot how you feel and it will show up here.</div>
-                <button class="btn small" @click="updateMood">🤩 Set my mood</button>
+                <button class="btn small" @click="updateMood"><ui-icon name="smile-plus"></ui-icon>Set my mood</button>
               </div>
             </template>
           </section>
@@ -996,7 +1111,7 @@
 
           <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
             <div v-for="(friend, i) in friends" :key="friend.id" class="card" :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }" @click="openFriend(friend)">
-              <span v-if="friend.personality_shared" class="badge" title="Shares their personality">🧠</span>
+              <span v-if="friend.personality_shared" class="badge" title="Shares their personality"><ui-icon name="brain" :size="15"></ui-icon></span>
               <span v-if="friend.mbti" class="mb-chip" :style="mbtiStyleFor(friend.mbti)" :title="friend.mbti + ' · ' + mbtiTitle(friend.mbti)">{{ friend.mbti }}</span>
               <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
                 <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
@@ -1008,14 +1123,14 @@
           </transition-group>
 
           <div v-else-if="friendsError" class="state">
-            <div class="art">📡</div>
+            <div class="art"><ui-icon name="wifi-off"></ui-icon></div>
             <h2>Couldn't load your friends</h2>
             <p>{{ friendsError }}</p>
             <button class="btn" @click="refresh">Try again</button>
           </div>
 
           <div v-else class="state">
-            <div class="art">🫂</div>
+            <div class="art"><ui-icon name="user-plus"></ui-icon></div>
             <h2>No friends yet</h2>
             <p>Share your link so a friend can follow your mood. Once they allow you back, they'll show up here.</p>
             <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
@@ -1045,7 +1160,7 @@
           <template v-if="(loadingPersonality || !fetchedAt.personality) && !personality && !personalityError">
             <div class="section" v-for="n in 3" :key="'psk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
-          <div v-else-if="!personality && personalityError" class="state"><div class="art">📡</div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
+          <div v-else-if="!personality && personalityError" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
 
           <template v-else-if="personality">
             <mbti-card v-if="personality.profile?.mbti" :mbti="personality.profile.mbti" actions :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
@@ -1062,10 +1177,10 @@
             </div>
             <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey" :show-mbti="false"></personality-view>
             <div v-else class="state" style="padding-top: 24px">
-              <div class="art">🧠</div>
+              <div class="art"><ui-icon name="brain"></ui-icon></div>
               <h2>No profile yet</h2>
               <p>Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.</p>
-              <button class="btn" @click="startTest(personality.tests[0])">📝 Take the Big Five test</button>
+              <button class="btn" @click="startTest(personality.tests[0])"><ui-icon name="clipboard-list"></ui-icon>Take the Big Five test</button>
             </div>
 
             <!-- all 16 Moodlings -->
@@ -1084,7 +1199,7 @@
             <section class="section" :style="{ '--i': 4 }">
               <h3>Tests <span class="sub">{{ personality.tests.filter(t => t.completed).length }}/{{ personality.tests.length }} done</span></h3>
               <div v-for="t in personality.tests" :key="t.key" class="test-row" @click="startTest(t)">
-                <div class="t-ico" :class="{ done: t.completed }">{{ t.completed ? '✅' : '📝' }}</div>
+                <div class="t-ico" :class="{ done: t.completed }"><ui-icon :name="t.completed ? 'circle-check' : 'clipboard-list'" :size="20"></ui-icon></div>
                 <div class="t-body">
                   <div class="t-title">{{ t.name }}</div>
                   <div class="t-desc">{{ t.description }}</div>
@@ -1113,7 +1228,7 @@
               <div v-else-if="!personality.profile" class="s-desc" style="margin-top:10px">Take a test first to have something to share.</div>
             </section>
 
-            <p class="disclaimer">⚠️ This is an approximate personality profile based on short self-report questionnaires and conversation patterns. It is not a clinical or medical diagnosis.</p>
+            <p class="disclaimer"><ui-icon name="info" :size="14"></ui-icon> This is an approximate personality profile based on short self-report questionnaires and conversation patterns. It is not a clinical or medical diagnosis.</p>
           </template>
         </div>
 
@@ -1131,50 +1246,46 @@
 
           <div class="filters">
             <div class="seg grow admin-tabs">
-              <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'">👥 Users</button>
-              <button :class="{ on: admin.view === 'graph' }" @click="showGraph()">🕸 Graph</button>
-              <button :class="{ on: admin.view === 'reminders' }" @click="showReminderAdmin()">⏰ Reminders</button>
-              <button :class="{ on: admin.view === 'broadcast' }" @click="showBroadcast()">📣 Broadcast</button>
-              <button :class="{ on: admin.view === 'backup' }" @click="showBackup()">💾 Backup</button>
+              <button :class="{ on: admin.view === 'users' }" @click="admin.view = 'users'"><ui-icon name="users" :size="15"></ui-icon> Users</button>
+              <button :class="{ on: admin.view === 'graph' }" @click="showGraph()"><ui-icon name="waypoints" :size="15"></ui-icon> Graph</button>
+              <button :class="{ on: admin.view === 'reminders' }" @click="showReminderAdmin()"><ui-icon name="alarm-clock" :size="15"></ui-icon> Reminders</button>
+              <button :class="{ on: admin.view === 'broadcast' }" @click="showBroadcast()"><ui-icon name="megaphone" :size="15"></ui-icon> Broadcast</button>
+              <button :class="{ on: admin.view === 'backup' }" @click="showBackup()"><ui-icon name="hard-drive-download" :size="15"></ui-icon> Backup</button>
             </div>
           </div>
 
           <template v-if="admin.view === 'users'">
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input v-model="admin.query" @input="searchAdmin" placeholder="Search name, @username or id" autocomplete="off">
+          <!-- search + filters button; below it the sort menu and one removable chip per active filter -->
+          <div class="adm-bar">
+            <div class="search">
+              <ui-icon name="search" :size="18"></ui-icon>
+              <input v-model="admin.query" @input="searchAdmin" placeholder="Search name, @username or id" autocomplete="off">
+              <button v-if="admin.query" class="search-clear" aria-label="Clear search" @click="admin.query = ''; fetchAdmin()"><ui-icon name="x" :size="15" :stroke="2.4"></ui-icon></button>
+            </div>
+            <button class="adm-filter-btn" :class="{ on: adminChips.length }" @click="openAdminFilters">
+              <ui-icon name="sliders-horizontal" :size="17"></ui-icon><span>Filters</span><b v-if="adminChips.length">{{ adminChips.length }}</b>
+            </button>
           </div>
 
-          <div class="filters">
-            <select v-model="admin.trait" @change="applyAdminFilter">
-              <option value="">🧠 Any personality</option>
-              <optgroup v-for="g in adminTraitGroups" :key="g.category" :label="g.name">
-                <option v-for="t in g.traits" :key="t.key" :value="t.key">{{ t.name }}</option>
-              </optgroup>
-            </select>
-            <div class="seg" v-if="admin.trait">
-              <button v-for="l in TRAIT_LEVELS" :key="l.key" :class="{ on: admin.level === l.key }" @click="setAdminLevel(l.key)">{{ l.label }}</button>
+          <div class="adm-chips">
+            <div class="adm-sort">
+              <button class="adm-chip sort" @click="admin.sortMenu = !admin.sortMenu" :aria-expanded="admin.sortMenu">
+                <ui-icon name="arrow-up-down" :size="14"></ui-icon>{{ adminSortLabel }}<ui-icon name="chevron-down" :size="14" class="chev" :class="{ open: admin.sortMenu }"></ui-icon>
+              </button>
+              <template v-if="admin.sortMenu">
+                <div class="menu-scrim" @click="admin.sortMenu = false"></div>
+                <div class="adm-menu" role="menu">
+                  <div class="menu-title">Sort by</div>
+                  <button v-for="o in ADMIN_SORTS" :key="o.key" role="menuitem" :class="{ on: admin.sort === o.key }" @click="setAdminSort(o.key)">
+                    <ui-icon :name="o.icon" :size="17"></ui-icon><span>{{ o.label }}</span><ui-icon v-if="admin.sort === o.key" name="check" :size="16" :stroke="2.6" class="tick"></ui-icon>
+                  </button>
+                </div>
+              </template>
             </div>
-          </div>
-
-          <div class="filters">
-            <select v-model="admin.mbti" @change="applyAdminFilter">
-              <option value="">🎭 Any Moodling (MBTI)</option>
-              <option value="any">Took the MBTI test</option>
-              <option v-for="t in MBTI_TYPES" :key="t" :value="t">{{ t }} · {{ mbtiTitle(t) }}</option>
-            </select>
-          </div>
-
-          <div class="filters">
-            <div class="seg grow">
-              <button :class="{ on: admin.notes === '' }" @click="setAdminNotes('')">All</button>
-              <button :class="{ on: admin.notes === 'with' }" @click="setAdminNotes('with')">📝 Noted</button>
-              <button :class="{ on: admin.notes === 'without' }" @click="setAdminNotes('without')">No note</button>
-            </div>
-            <div class="seg grow">
-              <button :class="{ on: admin.sort === 'activity' }" @click="setAdminSort('activity')">Active</button>
-              <button :class="{ on: admin.sort === 'mood' }" @click="setAdminSort('mood')">Last mood</button>
-            </div>
+            <button v-for="c in adminChips" :key="c.key" class="adm-chip active" @click="removeAdminFilter(c.key)" :title="'Remove ' + c.label">
+              <ui-icon :name="c.icon" :size="14"></ui-icon>{{ c.label }}<ui-icon name="x" :size="13" :stroke="2.6" class="x"></ui-icon>
+            </button>
+            <button v-if="adminChips.length > 1" class="adm-chip clear" @click="clearAdminFilters">Clear</button>
           </div>
 
           <template v-if="(admin.loading || !fetchedAt.admin) && admin.users.length === 0 && !admin.error">
@@ -1189,7 +1300,7 @@
               </div>
               <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private">🔒</span><span class="lock" v-if="u.is_blocked" title="Blocked">🚫</span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private"><ui-icon name="lock" :size="12"></ui-icon></span><span class="lock blocked" v-if="u.is_blocked" title="Blocked"><ui-icon name="ban" :size="12"></ui-icon></span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
                 <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
                 <div class="row-sub" v-else>No mood yet</div>
                 <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
@@ -1207,8 +1318,8 @@
               <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more users' }}</button>
             </div>
           </template>
-          <div v-else-if="admin.error" class="state"><div class="art">⚠️</div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
-          <div v-else class="state"><div class="art">🕵️</div><h2>No one found</h2><p v-if="admin.mbti && admin.mbti !== 'any'">Nobody is {{ admin.mbti }} ({{ mbtiTitle(admin.mbti) }}) yet.</p><p v-else-if="admin.mbti">Nobody has taken the MBTI test yet.</p><p v-else-if="admin.trait">No one with {{ adminTraitName }} in that range yet.</p><p v-else-if="admin.query">Nobody matches “{{ admin.query }}”.</p><p v-else>No users yet.</p></div>
+          <div v-else-if="admin.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
+          <div v-else class="state"><div class="art"><ui-icon name="search-x"></ui-icon></div><h2>No one found</h2><p v-if="admin.query">Nobody matches “{{ admin.query }}”<template v-if="adminChips.length"> with these filters</template>.</p><p v-else-if="adminChips.length">Nobody matches these filters yet.</p><p v-else>No users yet.</p><button v-if="adminChips.length" class="btn ghost" @click="clearAdminFilters">Clear filters</button></div>
           </template>
 
           <!-- ---------- Admin · Follow graph ---------- -->
@@ -1216,20 +1327,20 @@
             <template v-if="!graph && !graphError">
               <div class="section" :style="{ '--i': 1 }"><div class="shimmer sk-line" style="width:40%;margin-top:0"></div><div class="shimmer" style="height:280px;border-radius:16px;margin-top:10px"></div></div>
             </template>
-            <div v-else-if="!graph" class="state"><div class="art">📡</div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">Try again</button></div>
-            <div v-else-if="graph.nodes.length === 0" class="state"><div class="art">🕸</div><h2>Nobody follows anyone yet</h2><p>When people share their mood with each other, the connections show up here.</p></div>
+            <div v-else-if="!graph" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">Try again</button></div>
+            <div v-else-if="graph.nodes.length === 0" class="state"><div class="art"><ui-icon name="waypoints"></ui-icon></div><h2>Nobody follows anyone yet</h2><p>When people share their mood with each other, the connections show up here.</p></div>
             <template v-else>
               <follow-graph ref="followGraph" :nodes="graph.nodes" :edges="graph.edges" :selected-id="graphSelectedId"
                             @select="graphSelectedId = $event" @open="openAdminUserById" @details="$refs.graphCard?.scrollIntoView({ behavior: 'smooth', block: 'center' })"></follow-graph>
 
               <div class="g-sel" v-if="graphSelected" ref="graphCard">
-                <div class="t">{{ graphSelected.mood ? graphSelected.mood.emoji : '👤' }} {{ graphSelected.fullname || 'Unnamed' }}<span class="u" v-if="graphSelected.username" style="font-size:12px;color:var(--hint);font-weight:500">@{{ graphSelected.username }}</span></div>
+                <div class="t"><template v-if="graphSelected.mood">{{ graphSelected.mood.emoji }}</template><ui-icon v-else name="user" :size="15"></ui-icon> {{ graphSelected.fullname || 'Unnamed' }}<span class="u" v-if="graphSelected.username" style="font-size:12px;color:var(--hint);font-weight:500">@{{ graphSelected.username }}</span></div>
                 <div class="s">{{ graphSelected.mood ? graphSelected.mood.name + ' · ' + formatWhen(graphSelected.mood.timestamp) : 'No mood yet' }}</div>
                 <div class="lists">
                   <div><b>Sees the mood of ({{ graphFollowing.length }})</b></div>
-                  <div class="people"><button v-for="p in graphFollowing" :key="'o' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)">{{ p.mood ? p.mood.emoji : '👤' }} {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowing.length">—</span></div>
+                  <div class="people"><button v-for="p in graphFollowing" :key="'o' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowing.length">—</span></div>
                   <div><b>Watched by ({{ graphFollowers.length }})</b></div>
-                  <div class="people"><button v-for="p in graphFollowers" :key="'i' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)">{{ p.mood ? p.mood.emoji : '👤' }} {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowers.length">—</span></div>
+                  <div class="people"><button v-for="p in graphFollowers" :key="'i' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowers.length">—</span></div>
                 </div>
                 <div class="row-actions">
                   <button class="btn ghost" @click="openAdminUserById(graphSelected.id)">Open profile</button>
@@ -1239,7 +1350,7 @@
 
               <div class="kv"><span class="k">In this graph</span><span class="v">{{ graph.stats.users_in_graph }} of {{ graph.stats.total_users }} users · {{ graph.edges.length }} connections</span></div>
               <div class="kv" v-if="graph.stats.truncated"><span class="k">Note</span><span class="v warn">showing the busiest {{ graph.stats.users_in_graph }} people</span></div>
-              <div class="row-actions"><button class="btn ghost" :disabled="graphBusy" @click="fetchGraph()">{{ graphBusy ? 'Loading…' : '↻ Refresh' }}</button></div>
+              <div class="row-actions"><button class="btn ghost" :disabled="graphBusy" @click="fetchGraph()"><ui-icon name="refresh-cw" :size="16"></ui-icon>{{ graphBusy ? 'Loading…' : 'Refresh' }}</button></div>
             </template>
           </template>
 
@@ -1248,7 +1359,7 @@
             <template v-if="!bc && !bcError">
               <div class="section" v-for="n in 2" :key="'bcsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!bc" class="state"><div class="art">📡</div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">Try again</button></div>
+            <div v-else-if="!bc" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">Try again</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <h3>New message <span class="sub">to everyone</span></h3>
@@ -1323,7 +1434,7 @@
             <template v-if="!remAdmin && !remAdminError">
               <div class="section" v-for="n in 3" :key="'rsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!remAdmin" class="state"><div class="art">📡</div><h2>Couldn't load reminders</h2><p>{{ remAdminError }}</p><button class="btn" @click="fetchReminderAdmin()">Try again</button></div>
+            <div v-else-if="!remAdmin" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load reminders</h2><p>{{ remAdminError }}</p><button class="btn" @click="fetchReminderAdmin()">Try again</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <div class="share-row">
@@ -1355,8 +1466,8 @@
                 <div class="kv" v-if="remAdmin.worker.last_tick_at"><span class="k">Last scheduler run</span><span class="v">{{ new Date(remAdmin.worker.last_tick_at).toLocaleTimeString() }}</span></div>
                 <div class="kv" v-if="remAdmin.worker.last_error"><span class="k">Last error</span><span class="v bad">{{ remAdmin.worker.last_error }}</span></div>
                 <div class="row-actions">
-                  <button class="btn ghost" :disabled="!!remAdminBusy" @click="testReminder">{{ remAdminBusy === 'test' ? '…' : '📨 Send me a test' }}</button>
-                  <button class="btn ghost" :disabled="!!remAdminBusy || !remAdmin.queue.queued" @click="clearReminderQueue">🧹 Clear waiting</button>
+                  <button class="btn ghost" :disabled="!!remAdminBusy" @click="testReminder"><ui-icon name="send" :size="16"></ui-icon>{{ remAdminBusy === 'test' ? '…' : 'Send me a test' }}</button>
+                  <button class="btn ghost" :disabled="!!remAdminBusy || !remAdmin.queue.queued" @click="clearReminderQueue"><ui-icon name="eraser" :size="16"></ui-icon>Clear waiting</button>
                 </div>
               </section>
 
@@ -1422,7 +1533,7 @@
             <template v-if="!backup && !backupError">
               <div class="section" v-for="n in 3" :key="'bsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!backup" class="state"><div class="art">📡</div><h2>Couldn't load backup settings</h2><p>{{ backupError }}</p><button class="btn" @click="fetchBackup()">Try again</button></div>
+            <div v-else-if="!backup" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load backup settings</h2><p>{{ backupError }}</p><button class="btn" @click="fetchBackup()">Try again</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <h3>GotYouBro <span class="sub">{{ backup.connected ? 'connected' : 'not set' }}</span></h3>
@@ -1436,7 +1547,7 @@
                   <button class="btn" :disabled="backupBusy || !gybToken.trim()" @click="saveBackup({ token: gybToken.trim() })">Save</button>
                 </div>
                 <div class="row-actions">
-                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="testBackup">{{ backupBusy === 'test' ? 'Checking…' : '🔌 Test connection' }}</button>
+                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="testBackup"><ui-icon name="plug" :size="16"></ui-icon>{{ backupBusy === 'test' ? 'Checking…' : 'Test connection' }}</button>
                 </div>
               </section>
 
@@ -1455,7 +1566,7 @@
                   </select>
                 </div>
                 <div class="row-actions">
-                  <button class="btn" :disabled="backupBusy || !backup.connected" @click="runBackupNow">{{ backupBusy === 'run' ? 'Backing up…' : '💾 Back up now' }}</button>
+                  <button class="btn" :disabled="backupBusy || !backup.connected" @click="runBackupNow"><ui-icon name="save" :size="16"></ui-icon>{{ backupBusy === 'run' ? 'Backing up…' : 'Back up now' }}</button>
                 </div>
                 <div class="kv" v-if="backup.backup.last_at"><span class="k">Last backup</span><span class="v" :class="{ ok: backup.backup.last_status === 'success', bad: backup.backup.last_status === 'failed', warn: backup.backup.last_status === 'partial' }">{{ backup.backup.last_status }} · {{ formatWhen(backup.backup.last_at) }}</span></div>
                 <div class="kv" v-if="backup.backup.last_message"><span class="k">Detail</span><span class="v">{{ backup.backup.last_message }}</span></div>
@@ -1475,7 +1586,7 @@
                   <select :value="backup.health.interval_minutes" @change="saveBackup({ health_interval_minutes: Number($event.target.value) })">
                     <option v-for="m in [1, 5, 10, 15, 30, 60, 180, 720, 1440]" :key="m" :value="m">every {{ m < 60 ? m + ' min' : (m / 60) + ' h' }}</option>
                   </select>
-                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="heartbeatNow">{{ backupBusy === 'heartbeat' ? '…' : '❤️ Ping now' }}</button>
+                  <button class="btn ghost" :disabled="backupBusy || !backup.connected" @click="heartbeatNow"><ui-icon name="heart-pulse" :size="16"></ui-icon>{{ backupBusy === 'heartbeat' ? '…' : 'Ping now' }}</button>
                 </div>
                 <div class="kv" v-if="backup.health.last_at"><span class="k">Last ping</span><span class="v" :class="{ ok: backup.health.last_status === 'HEALTHY', bad: backup.health.last_status === 'ERROR' || backup.health.last_status === 'SKIPPED' }">{{ backup.health.last_status }} · {{ formatWhen(backup.health.last_at) }}</span></div>
                 <div class="kv" v-if="backup.health.last_message"><span class="k">Detail</span><span class="v">{{ backup.health.last_message }}</span></div>
@@ -1486,7 +1597,7 @@
                 <div class="note-box">Pick the zip files from a backup. Several parts can be selected at once; they are applied one after another.</div>
                 <label class="file-drop">
                   <input type="file" accept=".zip,application/zip" multiple @change="pickRestoreFiles($event)">
-                  {{ restoreFiles.length ? '📦 ' + restoreFiles.length + ' file' + (restoreFiles.length === 1 ? '' : 's') + ' selected' : '📂 Choose backup files' }}
+                  <ui-icon :name="restoreFiles.length ? 'package' : 'folder-open'" :size="16"></ui-icon>{{ restoreFiles.length ? restoreFiles.length + ' file' + (restoreFiles.length === 1 ? '' : 's') + ' selected' : 'Choose backup files' }}
                 </label>
                 <div class="file-list" v-if="restoreFiles.length">{{ restoreFiles.map(f => f.name).join(', ') }}</div>
                 <div class="time-row">
@@ -1496,8 +1607,8 @@
                   </select>
                 </div>
                 <div class="row-actions">
-                  <button class="btn ghost" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(true)">{{ backupBusy === 'dry' ? 'Checking…' : '🔎 Preview' }}</button>
-                  <button class="btn" :class="{ danger: restoreMode === 'replace' }" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(false)">{{ backupBusy === 'restore' ? 'Restoring…' : '⬆️ Restore' }}</button>
+                  <button class="btn ghost" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(true)"><ui-icon name="search" :size="16"></ui-icon>{{ backupBusy === 'dry' ? 'Checking…' : 'Preview' }}</button>
+                  <button class="btn" :class="{ danger: restoreMode === 'replace' }" :disabled="backupBusy || !restoreFiles.length" @click="doRestore(false)"><ui-icon name="upload" :size="16"></ui-icon>{{ backupBusy === 'restore' ? 'Restoring…' : 'Restore' }}</button>
                 </div>
                 <div class="danger-note" v-if="restoreMode === 'replace'">Replace deletes everything in each collection the backup contains before inserting. This cannot be undone.</div>
                 <template v-if="restoreResult">
@@ -1526,11 +1637,11 @@
           <template v-if="(logs.loading || !fetchedAt.logs) && logs.moods.length === 0 && !logs.error">
             <div v-for="n in 6" :key="'lsk' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
-          <div v-else-if="logs.error" class="state"><div class="art">⚠️</div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
+          <div v-else-if="logs.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
           <template v-else-if="logs.moods.length > 0">
             <div class="export-card">
               <div><b>Download my moods</b><span>Every mood with its note, day and hour, as a file that opens in Excel or Google Sheets. It arrives in your chat with the bot.</span></div>
-              <button class="btn" :disabled="exportBusy" @click="exportMoods">{{ exportBusy ? 'Sending…' : '📥 Export' }}</button>
+              <button class="btn" :disabled="exportBusy" @click="exportMoods"><ui-icon name="download" :size="16"></ui-icon>{{ exportBusy ? 'Sending…' : 'Export' }}</button>
             </div>
             <div v-for="(m, i) in logs.moods" :key="m.timestamp" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
               <div class="avatar anim">
@@ -1550,7 +1661,7 @@
               <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ logs.loadingMore ? 'Loading…' : 'Load older' }}</button>
             </div>
           </template>
-          <div v-else class="state"><div class="art">📜</div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
+          <div v-else class="state"><div class="art"><ui-icon name="scroll-text"></ui-icon></div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
         </div>
         <!-- ---------- Settings ---------- -->
         <div v-else-if="tab === 'settings'" key="settings">
@@ -1564,7 +1675,7 @@
           <template v-if="!settings && !settingsError">
             <div class="section" v-for="n in 2" :key="'ssk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
-          <div v-else-if="!settings" class="state"><div class="art">📡</div><h2>Couldn't load settings</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">Try again</button></div>
+          <div v-else-if="!settings" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load settings</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">Try again</button></div>
           <template v-else>
             <section class="section" :style="{ '--i': 0 }">
               <h3>OpenAI key <span class="sub">{{ settings.openai.has_key ? 'connected' : 'not set' }}</span></h3>
@@ -1661,14 +1772,14 @@
             </section>
 
             <section class="section" :style="{ '--i': 2 }" v-if="settings.timezone">
-              <h3>🌍 Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
+              <h3><ui-icon name="globe" :size="17"></ui-icon> Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
               <div class="tz-now">
                 <b>{{ settings.timezone.timezone }}</b>
                 <span>it's {{ localTimeIn(settings.timezone.timezone) }} there</span>
               </div>
               <div class="note-box" v-if="!settings.timezone.is_set">This is the default. Set yours so reminders arrive at your local time.</div>
               <div class="row-actions" v-if="browserTimezone && browserTimezone !== settings.timezone.timezone">
-                <button class="btn" :disabled="timezoneBusy" @click="setTimezone(browserTimezone)">📍 Use this device · {{ browserTimezone }} ({{ tzOffset(browserTimezone) }})</button>
+                <button class="btn" :disabled="timezoneBusy" @click="setTimezone(browserTimezone)"><ui-icon name="map-pin" :size="16"></ui-icon>Use this device · {{ browserTimezone }} ({{ tzOffset(browserTimezone) }})</button>
               </div>
               <label class="search tz-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
@@ -1690,7 +1801,7 @@
             <section class="section" :style="{ '--i': 3 }" v-if="settings.reminders">
               <div class="share-row">
                 <div>
-                  <div class="s-title">⏰ Mood reminders</div>
+                  <div class="s-title"><ui-icon name="alarm-clock" :size="16"></ui-icon> Mood reminders</div>
                   <div class="s-desc">The bot sends you a quick mood picker {{ settings.reminders.times.length === 1 ? 'once' : settings.reminders.times.length === 2 ? 'twice' : settings.reminders.times.length + ' times' }} a day. If you've just logged a mood, it skips that one.</div>
                 </div>
                 <button class="switch" :class="{ on: settings.reminders.enabled }" :disabled="remindersBusy" @click="saveReminders({ enabled: !settings.reminders.enabled })" role="switch" :aria-checked="settings.reminders.enabled"></button>
@@ -1715,7 +1826,7 @@
               </template>
             </section>
 
-            <p class="disclaimer">🤖 Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
+            <p class="disclaimer"><ui-icon name="bot" :size="14"></ui-icon> Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
           </template>
         </div>
       </transition>
@@ -1724,7 +1835,7 @@
       <nav class="tabbar">
         <div class="tabbar-inner" :style="{ '--tabs': tabs.length, '--active': Math.max(0, tabs.findIndex(t => t.key === tab)) }">
           <div class="tab-indicator"></div>
-          <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: tab === t.key }" @click="setTab(t.key)"><span class="ico">{{ t.icon }}</span>{{ t.label }}</button>
+          <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: tab === t.key }" @click="setTab(t.key)"><span class="ico"><ui-icon :name="t.icon" :size="21" :stroke="tab === t.key ? 2.3 : 1.9"></ui-icon></span>{{ t.label }}</button>
         </div>
       </nav>
 
@@ -1734,10 +1845,78 @@
           <div class="sheet-backdrop" @click="closeSheet"></div>
           <div class="sheet">
             <div class="grip"></div>
-            <button class="close" @click="closeSheet" aria-label="Close">✕</button>
+            <button class="close" @click="closeSheet" aria-label="Close"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
+
+            <!-- admin: filter people -->
+            <template v-if="sheet.type === 'admin-filters'">
+              <h2 class="af-title">Filter people</h2>
+              <div class="af-body">
+                <div class="af-sec">
+                  <div class="af-label">Status</div>
+                  <div class="af-opts">
+                    <button v-for="o in ADMIN_STATUSES" :key="o.key" class="af-opt" :class="{ on: sheet.draft.status === o.key }" @click="setDraft('status', o.key)"><ui-icon :name="o.icon" :size="15"></ui-icon>{{ o.label }}</button>
+                  </div>
+                </div>
+
+                <div class="af-sec">
+                  <div class="af-label">Latest mood</div>
+                  <div class="af-opts">
+                    <button v-for="o in ADMIN_NOTES" :key="o.key" class="af-opt" :class="{ on: sheet.draft.notes === o.key }" @click="setDraft('notes', o.key)"><ui-icon :name="o.icon" :size="15"></ui-icon>{{ o.label }}</button>
+                  </div>
+                </div>
+
+                <div class="af-sec">
+                  <div class="af-label">Moodling <span>MBTI-style type</span></div>
+                  <div class="af-opts">
+                    <button class="af-opt" :class="{ on: !sheet.draft.mbti }" @click="setDraft('mbti', '')">Anyone</button>
+                    <button class="af-opt" :class="{ on: sheet.draft.mbti === 'any' }" @click="setDraft('mbti', 'any')"><ui-icon name="circle-check" :size="15"></ui-icon>Took the test</button>
+                  </div>
+                  <div class="af-types">
+                    <button v-for="t in MBTI_TYPES" :key="t" class="af-type" :class="{ on: sheet.draft.mbti === t }" :style="mbtiStyleFor(t)" @click="setDraft('mbti', sheet.draft.mbti === t ? '' : t)" :title="mbtiTitle(t)">
+                      <mbti-character :type="t"></mbti-character>
+                      <b>{{ t }}</b>
+                    </button>
+                  </div>
+                  <div class="af-hint" v-if="sheet.draft.mbti && sheet.draft.mbti !== 'any'">{{ sheet.draft.mbti }} · {{ mbtiTitle(sheet.draft.mbti) }}</div>
+                </div>
+
+                <div class="af-sec">
+                  <div class="af-label">Personality trait</div>
+                  <div class="af-picked" v-if="sheet.draft.trait">
+                    <div class="row">
+                      <span class="name">{{ traitNameOf(sheet.draft.trait) }}</span>
+                      <button class="adm-chip" @click="setDraft('trait', '')"><ui-icon name="x" :size="13" :stroke="2.6"></ui-icon>Remove</button>
+                    </div>
+                    <div class="af-levels">
+                      <button v-for="l in TRAIT_LEVELS" :key="l.key" class="af-opt" :class="{ on: sheet.draft.level === l.key }" @click="setDraft('level', l.key)">
+                        {{ l.key === 'any' ? 'Any' : l.label }}<small>{{ Math.round(l.min * 100) }}–{{ Math.round(l.max * 100) }}%</small>
+                      </button>
+                    </div>
+                  </div>
+                  <template v-else>
+                    <div class="search af-search">
+                      <ui-icon name="search" :size="16"></ui-icon>
+                      <input v-model="sheet.traitQuery" placeholder="Find a trait (humor, openness…)" autocomplete="off">
+                    </div>
+                    <div v-if="!admin.traits.length" class="af-hint">Loading traits…</div>
+                    <div v-for="g in adminTraitMatches" :key="g.category" class="af-group">
+                      <div class="af-group-name">{{ g.name }}</div>
+                      <div class="af-opts">
+                        <button v-for="t in g.traits" :key="t.key" class="af-opt small" @click="setDraft('trait', t.key)">{{ t.name }}</button>
+                      </div>
+                    </div>
+                    <div v-if="admin.traits.length && !adminTraitMatches.length" class="af-hint">No trait matches “{{ sheet.traitQuery }}”.</div>
+                  </template>
+                </div>
+              </div>
+              <div class="af-foot">
+                <button class="btn ghost" :disabled="!draftCount" @click="resetDraft"><ui-icon name="rotate-ccw" :size="16"></ui-icon>Reset</button>
+                <button class="btn" @click="applyAdminFilters">{{ sheet.counting && sheet.count === null ? 'Show people' : sheet.count === null ? 'Show people' : 'Show ' + sheet.count + (sheet.count === 1 ? ' person' : ' people') }}</button>
+              </div>
+            </template>
 
             <!-- friend -->
-            <template v-if="sheet.type === 'friend'">
+            <template v-else-if="sheet.type === 'friend'">
               <div class="sheet-head">
                 <div class="sticker" :class="{ loaded: loaded.sheet }" data-id="sheet" :data-tgs="sheet.friend.tgs" ref="sheetSticker">
                   <span v-if="failed.sheet" class="sticker-fallback">{{ sheet.friend.mood.emoji }}</span>
@@ -1749,18 +1928,18 @@
                 </div>
               </div>
               <div class="sheet-actions">
-                <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)">💬 Open chat</a>
+                <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)"><ui-icon name="message-circle" :size="16"></ui-icon>Open chat</a>
               </div>
 
               <div class="seg grow sheet-tabs">
-                <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')">📜 Mood log</button>
-                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')">🧠 Personality</button>
+                <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')"><ui-icon name="scroll-text" :size="15"></ui-icon> Mood log</button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
               </div>
 
               <!-- their mood history, if they share it (v-show keeps the stickers alive) -->
               <div v-show="sheet.tab === 'log'" class="sheet-pane">
                 <div v-if="sheet.logLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
-                <div v-else-if="sheet.logShared === false" class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their mood history.</div>
+                <div v-else-if="sheet.logShared === false" class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ sheet.friend.fullname }} hasn't shared their mood history.</div>
                 <div v-else-if="sheet.logError" class="muted-box">Couldn't load their mood history.</div>
                 <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
                 <template v-else>
@@ -1791,15 +1970,15 @@
               <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
               <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact :show-mbti="false"></personality-view>
               <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
-              <div v-else class="muted-box">🔒 {{ sheet.friend.fullname }} hasn't shared their personality.</div>
+              <div v-else class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ sheet.friend.fullname }} hasn't shared their personality.</div>
               </div>
 
               <div class="sheet-section-title">Friendship</div>
               <div class="kv"><span class="k">{{ sheet.friend.follows_me ? 'You see each other\'s moods' : 'You see their mood' }}</span><span class="v">{{ sheet.friend.follows_me ? 'both ways' : 'one way' }}</span></div>
               <div class="friend-actions">
-                <button class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend)">🚫 Unfollow {{ firstNameOf(sheet.friend) }}</button>
-                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="hideMyMoodFrom(sheet.friend)">🙈 Hide my mood from {{ firstNameOf(sheet.friend) }}</button>
-                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend, { both: true })">💔 Unfollow each other</button>
+                <button class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend)"><ui-icon name="user-x" :size="16"></ui-icon>Unfollow {{ firstNameOf(sheet.friend) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="hideMyMoodFrom(sheet.friend)"><ui-icon name="eye-off" :size="16"></ui-icon>Hide my mood from {{ firstNameOf(sheet.friend) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend, { both: true })"><ui-icon name="heart-crack" :size="16"></ui-icon>Unfollow each other</button>
               </div>
               <div class="note-box">Nobody gets notified. To see each other again, share your link again.</div>
             </template>
@@ -1828,23 +2007,23 @@
                   <h2>{{ sheet.user.fullname || 'Unnamed' }}</h2>
                   <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }}<template v-if="sheet.user.mood_count !== null && sheet.user.mood_count !== undefined"> · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</template></div>
                   <div class="mood">Active {{ formatWhen(sheet.user.last_active_at).toLowerCase() }}</div>
-                  <div class="mood" v-if="sheet.user.timezone">🌍 {{ sheet.user.timezone }} · {{ localTimeIn(sheet.user.timezone) }} there</div>
+                  <div class="mood" v-if="sheet.user.timezone"><ui-icon name="globe" :size="14"></ui-icon> {{ sheet.user.timezone }} · {{ localTimeIn(sheet.user.timezone) }} there</div>
                 </div>
               </div>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
-                  {{ sheet.savingFriend ? '…' : sheet.user.is_friend ? '✓ Friend · remove' : '➕ Add as friend' }}
+                  <ui-icon :name="sheet.user.is_friend ? 'user-check' : 'user-plus'" :size="16"></ui-icon>{{ sheet.savingFriend ? '…' : sheet.user.is_friend ? 'Friend · remove' : 'Add as friend' }}
                 </button>
                 <button class="btn" :class="sheet.user.is_blocked ? 'ghost' : 'danger'" :disabled="sheet.savingBlock || sheet.user.is_admin" @click="toggleAdminBlock(sheet.user)">
-                  {{ sheet.savingBlock ? '…' : sheet.user.is_blocked ? '↩︎ Unblock' : '🚫 Block' }}
+                  <ui-icon :name="sheet.user.is_blocked ? 'undo-2' : 'ban'" :size="16"></ui-icon>{{ sheet.savingBlock ? '…' : sheet.user.is_blocked ? 'Unblock' : 'Block' }}
                 </button>
               </div>
-              <div class="blocked-note" v-if="sheet.user.is_blocked">🚫 Blocked: the bot ignores their messages and the mini app refuses them.</div>
+              <div class="blocked-note" v-if="sheet.user.is_blocked"><ui-icon name="ban" :size="14"></ui-icon> Blocked: the bot ignores their messages and the mini app refuses them.</div>
 
               <div class="seg grow sheet-tabs">
-                <button :class="{ on: sheet.tab === 'moods' }" @click="setSheetTab('moods')">📜 Moods<template v-if="sheet.user.mood_count"> · {{ sheet.user.mood_count }}</template></button>
-                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')">🧠 Personality</button>
-                <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')">🕸 Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
+                <button :class="{ on: sheet.tab === 'moods' }" @click="setSheetTab('moods')"><ui-icon name="scroll-text" :size="15"></ui-icon> Moods<template v-if="sheet.user.mood_count"> · {{ sheet.user.mood_count }}</template></button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
+                <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')"><ui-icon name="waypoints" :size="15"></ui-icon> Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
               </div>
 
               <!-- v-show keeps the timeline (and its stickers) alive while another tab is open -->
@@ -1890,19 +2069,19 @@
                       <h4><i class="sw" style="background:var(--fresh)"></i>Can see {{ sheet.user.fullname || 'their' }}'s mood ({{ sheet.connections.seen_by.length }})</h4>
                       <div v-if="!sheet.connections.seen_by.length" class="muted-box">Nobody.</div>
                       <div v-for="p in sheet.connections.seen_by" :key="'sb' + p.id" class="ego-row" @click="openConnection(p)">
-                        <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                        <span class="e"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="14"></ui-icon></span>
                         <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
                         <span class="d">since {{ formatWhen(p.since, true) }}</span>
                       </div>
                       <h4><i class="sw" style="background:var(--accent)"></i>{{ sheet.user.fullname || 'They' }} can see ({{ sheet.connections.sees.length }})</h4>
                       <div v-if="!sheet.connections.sees.length" class="muted-box">Nobody.</div>
                       <div v-for="p in sheet.connections.sees" :key="'s' + p.id" class="ego-row" @click="openConnection(p)">
-                        <span class="e">{{ p.mood ? p.mood.emoji : '👤' }}</span>
+                        <span class="e"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="14"></ui-icon></span>
                         <span class="n">{{ p.fullname || 'Unnamed' }}<small v-if="p.username">@{{ p.username }}</small><span class="tag" v-if="sheet.connections.mutual.includes(p.id)">mutual</span></span>
                         <span class="d">since {{ formatWhen(p.since, true) }}</span>
                       </div>
                     </div>
-                    <div class="row-actions"><button class="btn ghost" @click="showInGraph(sheet.user.id)">🕸 Show in the full graph</button></div>
+                    <div class="row-actions"><button class="btn ghost" @click="showInGraph(sheet.user.id)"><ui-icon name="waypoints" :size="16"></ui-icon>Show in the full graph</button></div>
                   </template>
                 </template>
               </div>
@@ -1918,7 +2097,7 @@
         <div v-for="n in 4" :key="'auth' + n" class="skeleton" :style="{ '--i': n - 1 }"><div class="shimmer sk-sticker"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
       </div>
       <div v-else class="state">
-        <div class="art">🔐</div>
+        <div class="art"><ui-icon name="lock-keyhole"></ui-icon></div>
         <h2>Open in Telegram</h2>
         <p v-if="authReason === 'unknown_user'">We don't know you yet. Send /start to the MoodPal bot first, then open this mini app again.</p>
         <p v-else>Please open this page from the MoodPal bot to see your friends' moods.</p>
@@ -1930,7 +2109,7 @@
       <div class="quiz" v-if="quiz" key="quiz">
         <div class="quiz-top">
           <div><div class="name">{{ quiz.session.test.name }}</div><div class="count" v-if="!quiz.done">Question {{ quiz.session.current_index + 1 }} of {{ quiz.session.total }}</div></div>
-          <button class="close" @click="closeQuiz" aria-label="Close">✕</button>
+          <button class="close" @click="closeQuiz" aria-label="Close"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
         </div>
         <div class="progress" v-if="!quiz.done"><div :style="{ width: (quiz.session.current_index / quiz.session.total * 100) + '%' }"></div></div>
 
@@ -1951,7 +2130,7 @@
             </template>
           </div>
           <div v-else-if="quiz.done" class="done">
-            <div class="done-art">🎉</div>
+            <div class="done-art"><ui-icon name="party-popper"></ui-icon></div>
             <h2>{{ quiz.session.test.name }} done</h2>
             <p>Your profile has been updated. Take another test to fill in more of it, or share it with friends.</p>
             <button class="btn" @click="closeQuiz">See my profile</button>
@@ -2150,6 +2329,19 @@
       props: { kind: { type: String, required: true }, color: { type: String, default: '' } },
       computed: { svg() { return MBTI.icon(this.kind, this.color || undefined); } },
       template: `<span class="mb-icon" v-html="svg"></span>`,
+    };
+    // a Lucide line icon from /public/lib/vendor/icons.js: <ui-icon name="users" :size="20">. Inside an
+    // <svg>, :x and :y place its centre (for the graphs).
+    const UiIcon = {
+      props: { name: { type: String, required: true }, size: { type: [Number, String], default: 18 }, stroke: { type: [Number, String], default: 2 }, x: { type: Number, default: null }, y: { type: Number, default: null } },
+      render() {
+        const size = Number(this.size);
+        const at = this.x === null ? {} : { x: this.x - size / 2, y: this.y - size / 2 };
+        return Vue.h('svg', {
+          class: 'ui-icon', xmlns: 'http://www.w3.org/2000/svg', width: size, height: size, viewBox: '0 0 24 24',
+          fill: 'none', stroke: 'currentColor', 'stroke-width': this.stroke, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', ...at,
+        }, (window.MP_ICONS?.[this.name] || []).map(([tag, attrs]) => Vue.h(tag, attrs)));
+      },
     };
     // plain line icons for the buttons
     const LINE_ICONS = {
@@ -2506,13 +2698,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
               <input v-model="query" type="search" placeholder="Find a person" autocomplete="off" @keydown.enter="matches[0] && pick(matches[0])">
             </label>
-            <button class="g-btn" :class="{ on: mutualOnly }" title="Only two-way links" @click="mutualOnly = !mutualOnly">⇄</button>
+            <button class="g-btn" :class="{ on: mutualOnly }" title="Only two-way links" @click="mutualOnly = !mutualOnly"><ui-icon name="arrow-left-right" :size="16"></ui-icon></button>
             <button class="g-btn" title="Zoom in" @click="zoomBy(1.4)">+</button>
             <button class="g-btn" title="Zoom out" @click="zoomBy(1 / 1.4)">−</button>
             <button class="g-btn" title="Reset view" :disabled="!hasMoved" @click="reset">⟲</button>
           </div>
           <div class="g-matches" v-if="query.trim()">
-            <button v-for="n in matches" :key="'m' + n.id" class="g-pill" @click="pick(n)">{{ n.mood ? n.mood.emoji : '👤' }} {{ n.fullname || 'id ' + n.id }}</button>
+            <button v-for="n in matches" :key="'m' + n.id" class="g-pill" @click="pick(n)"><template v-if="n.mood">{{ n.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ n.fullname || 'id ' + n.id }}</button>
             <span v-if="!matches.length" style="font-size:12px;color:var(--hint)">Nobody by that name in the graph.</span>
           </div>
           <div class="g-stage">
@@ -2530,14 +2722,14 @@
                   <title>{{ n.fullname || 'id ' + n.id }} · sees {{ n.following }} · seen by {{ n.followers }}</title>
                   <circle class="halo" :cx="n.x" :cy="n.y" :r="n.r"></circle>
                   <circle class="body" :cx="n.x" :cy="n.y" :r="n.r" :style="{ fill: n.fill, '--i': Math.min(n.i, 40) }"></circle>
-                  <text class="emoji" :x="n.x" :y="n.y">{{ n.mood ? n.mood.emoji : '👤' }}</text>
+                  <text v-if="n.mood" class="emoji" :x="n.x" :y="n.y">{{ n.mood.emoji }}</text><ui-icon v-else name="user" class="g-person" :size="13" :x="n.x" :y="n.y"></ui-icon>
                   <text class="name" :x="n.x" :y="n.y + n.r + 7">{{ n.label }}</text>
                 </g>
               </g>
             </svg>
             <transition name="g-float">
               <button v-if="selectedNode" :key="selectedNode.id" class="g-float" @click="$emit('details', selectedNode.id)">
-                {{ selectedNode.mood ? selectedNode.mood.emoji : '👤' }} <b>{{ selectedNode.fullname || 'id ' + selectedNode.id }}</b>
+                <template v-if="selectedNode.mood">{{ selectedNode.mood.emoji }}</template><ui-icon v-else name="user" :size="14"></ui-icon> <b>{{ selectedNode.fullname || 'id ' + selectedNode.id }}</b>
                 <span>sees {{ selectedNode.following }} · seen by {{ selectedNode.followers }}</span> ↓
               </button>
             </transition>
@@ -2612,13 +2804,13 @@
             <g v-for="p in layout.nodes" :key="p.id" class="g-node" :class="{ blocked: p.is_blocked }" @click="$emit('open', p)">
               <title>{{ p.fullname || 'id ' + p.id }} · {{ { mutual: 'both ways', sees: 'their mood is visible to ' + (data.user.fullname || 'them'), seen_by: 'can see ' + (data.user.fullname || 'their') + '\\'s mood' }[p.kind] }}</title>
               <circle class="body" :cx="p.x" :cy="p.y" :r="p.r" :style="{ fill: p.fill, '--i': p.i, stroke: p.kind === 'mutual' ? '#af52de' : p.kind === 'sees' ? 'var(--accent)' : 'var(--fresh)' }"></circle>
-              <text class="emoji" :x="p.x" :y="p.y" :style="{ fontSize: p.r > 12 ? '15px' : '12px' }">{{ p.mood ? p.mood.emoji : '👤' }}</text>
+              <text v-if="p.mood" class="emoji" :x="p.x" :y="p.y" :style="{ fontSize: p.r > 12 ? '15px' : '12px' }">{{ p.mood.emoji }}</text><ui-icon v-else name="user" class="g-person" :size="p.r > 12 ? 15 : 12" :x="p.x" :y="p.y"></ui-icon>
               <text class="name" :x="p.x" :y="p.y + p.r + 8">{{ p.label }}</text>
             </g>
             <g class="g-node sel">
               <circle class="halo" :cx="layout.centre.x" :cy="layout.centre.y" :r="layout.centre.r"></circle>
               <circle class="body" :cx="layout.centre.x" :cy="layout.centre.y" :r="layout.centre.r" :style="{ fill: layout.centre.fill }"></circle>
-              <text class="emoji" :x="layout.centre.x" :y="layout.centre.y" style="font-size:24px">{{ data.user.mood ? data.user.mood.emoji : '👤' }}</text>
+              <text v-if="data.user.mood" class="emoji" :x="layout.centre.x" :y="layout.centre.y" style="font-size:24px">{{ data.user.mood.emoji }}</text><ui-icon v-else name="user" class="g-person" :size="24" :x="layout.centre.x" :y="layout.centre.y"></ui-icon>
               <text class="name" :x="layout.centre.x" :y="layout.centre.y + layout.centre.r + 10" style="font-size:9px">{{ layout.centre.label }}</text>
             </g>
             <text v-if="layout.hidden" :x="layout.width - 8" :y="layout.top + layout.viewHeight - 8" text-anchor="end" style="font-size:9px;font-weight:700;fill:var(--hint)">+{{ layout.hidden }} more in the lists below</text>
@@ -2693,7 +2885,24 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', query: '', trait: '', mbti: '', level: 'any', notes: '', sort: 'activity', traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', query: '', trait: '', mbti: '', level: 'any', notes: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          ADMIN_SORTS: [
+            { key: 'activity', label: 'Recently active', icon: 'activity' },
+            { key: 'mood', label: 'Latest mood', icon: 'smile-plus' },
+            { key: 'newest', label: 'Newest members', icon: 'calendar-plus' },
+            { key: 'name', label: 'Name A–Z', icon: 'arrow-down-a-z' },
+          ],
+          ADMIN_STATUSES: [
+            { key: '', label: 'Everyone', icon: 'users' },
+            { key: 'friend', label: 'My friends', icon: 'user-check' },
+            { key: 'blocked', label: 'Blocked', icon: 'ban' },
+            { key: 'admin', label: 'Admins', icon: 'shield-check' },
+          ],
+          ADMIN_NOTES: [
+            { key: '', label: 'Any', icon: 'scroll-text' },
+            { key: 'with', label: 'With a note', icon: 'notebook-pen' },
+            { key: 'without', label: 'No note', icon: 'notepad-text-dashed' },
+          ],
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
           fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
@@ -2728,10 +2937,10 @@
 
       computed: {
         tabs() {
-          const t = [{ key: 'friends', label: 'Friends', icon: '🫂' }, { key: 'personality', label: 'Personality', icon: '🧠' }];
-          t.push({ key: 'logs', label: 'Logs', icon: '📜' });
-          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: '🛡️' });
-          t.push({ key: 'settings', label: 'Settings', icon: '⚙️' });
+          const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }];
+          t.push({ key: 'logs', label: 'Logs', icon: 'scroll-text' });
+          if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: 'shield' });
+          t.push({ key: 'settings', label: 'Settings', icon: 'settings' });
           return t;
         },
         adminTraitGroups() {
@@ -2750,6 +2959,30 @@
         // the selected person's two sides, as nodes, with a flag for links that go both ways
         graphFollowing() { return this.graphSide('source', 'target'); },
         graphFollowers() { return this.graphSide('target', 'source'); },
+        adminSortLabel() { return this.ADMIN_SORTS.find(o => o.key === this.admin.sort)?.label || 'Recently active'; },
+        // one removable chip per active filter (the search box is separate)
+        adminChips() {
+          const a = this.admin, chips = [];
+          const status = this.ADMIN_STATUSES.find(o => o.key === a.status);
+          if (a.status && status) chips.push({ key: 'status', label: status.label, icon: status.icon });
+          if (a.notes) chips.push({ key: 'notes', label: a.notes === 'with' ? 'With a note' : 'No note', icon: 'notebook-pen' });
+          if (a.mbti) chips.push({ key: 'mbti', label: a.mbti === 'any' ? 'Took the MBTI test' : `${a.mbti} · ${this.mbtiTitle(a.mbti)}`, icon: 'drama' });
+          if (a.trait) {
+            const level = this.TRAIT_LEVELS.find(l => l.key === a.level);
+            chips.push({ key: 'trait', label: this.traitNameOf(a.trait) + (level && level.key !== 'any' ? ` · ${level.label}` : ''), icon: 'brain' });
+          }
+          return chips;
+        },
+        adminTraitMatches() {
+          const q = (this.sheet?.traitQuery || '').trim().toLowerCase();
+          return this.adminTraitGroups
+            .map(g => ({ ...g, traits: q ? g.traits.filter(t => t.name.toLowerCase().includes(q) || t.key.includes(q)) : g.traits }))
+            .filter(g => g.traits.length);
+        },
+        draftCount() {
+          const d = this.sheet?.draft;
+          return d ? [d.status, d.notes, d.mbti, d.trait].filter(Boolean).length : 0;
+        },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         // every zone the browser knows (falls back to the short list on old WebViews)
         allTimezones() {
@@ -2813,7 +3046,7 @@
             try { this.watchActivation(); } catch (error) { console.error('Activation watch failed:', error); }
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
-            if (this.isAdmin) loads.push(this.fetchAdmin());
+            if (this.isAdmin) { this.loadAdminPrefs(); loads.push(this.fetchAdmin()); }
             const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: loads[4] }[this.tab] || loads[0];
             current.finally(hideSplash);
             // always load the friends a second time, 200ms after the page loaded, without waiting for the
@@ -3168,11 +3401,8 @@
           this.admin.loading = true;
           try {
             const page = append ? this.admin.page + 1 : 0;
-            const level = this.TRAIT_LEVELS.find(l => l.key === this.admin.level) || this.TRAIT_LEVELS[0];
-            const params = new URLSearchParams({ q: this.admin.query, page, sort: this.admin.sort });
-            if (this.admin.notes) params.set('notes', this.admin.notes);
-            if (this.admin.trait) { params.set('trait', this.admin.trait); params.set('min', level.min); params.set('max', level.max); }
-            if (this.admin.mbti) params.set('mbti', this.admin.mbti);
+            const params = this.adminParams(this.admin);
+            params.set('page', page);
             if (this.admin.traits.length === 0) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
             const data = await this.api(`/api/admin/users?${params}`);
             this.admin.error = '';
@@ -3193,6 +3423,91 @@
             this.admin.loading = false;
           }
         },
+        // query string for a set of filters (the live list, or the draft in the filters sheet)
+        adminParams(f) {
+          const params = new URLSearchParams({ q: this.admin.query, sort: this.admin.sort });
+          if (f.status) params.set('status', f.status);
+          if (f.notes) params.set('notes', f.notes);
+          if (f.mbti) params.set('mbti', f.mbti);
+          if (f.trait) {
+            const level = this.TRAIT_LEVELS.find(l => l.key === f.level) || this.TRAIT_LEVELS[0];
+            params.set('trait', f.trait); params.set('min', level.min); params.set('max', level.max);
+          }
+          return params;
+        },
+        traitNameOf(key) { return this.admin.traits.find(t => t.key === key)?.name || key.replace(/_/g, ' '); },
+        // filters and sort are remembered on this device
+        saveAdminPrefs() {
+          const { sort, status, notes, mbti, trait, level } = this.admin;
+          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, status, notes, mbti, trait, level })); } catch {}
+        },
+        loadAdminPrefs() {
+          try {
+            const saved = JSON.parse(localStorage.getItem('moodpal.adminFilters') || 'null');
+            if (!saved) return;
+            if (this.ADMIN_SORTS.some(o => o.key === saved.sort)) this.admin.sort = saved.sort;
+            if (this.ADMIN_STATUSES.some(o => o.key === saved.status)) this.admin.status = saved.status;
+            if (['', 'with', 'without'].includes(saved.notes)) this.admin.notes = saved.notes;
+            if (saved.mbti === 'any' || this.MBTI_TYPES.includes(saved.mbti)) this.admin.mbti = saved.mbti;
+            if (typeof saved.trait === 'string' && /^[a-z_]*$/.test(saved.trait)) this.admin.trait = saved.trait;
+            if (this.TRAIT_LEVELS.some(l => l.key === saved.level)) this.admin.level = saved.level;
+          } catch {}
+        },
+        openAdminFilters() {
+          this.haptic('light');
+          this.admin.sortMenu = false;
+          if (!this.admin.traits.length) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
+          const { status, notes, mbti, trait, level } = this.admin;
+          this.sheet = { type: 'admin-filters', draft: { status, notes, mbti, trait, level }, count: this.admin.total_users, counting: false, traitQuery: '' };
+        },
+        setDraft(key, value) {
+          if (this.sheet?.type !== 'admin-filters') return;
+          this.haptic('light');
+          const d = this.sheet.draft;
+          d[key] = value;
+          if (key === 'trait') { d.level = value ? 'high' : 'any'; this.sheet.traitQuery = ''; }
+          this.countAdminDraft();
+        },
+        resetDraft() {
+          this.haptic('light');
+          this.sheet.draft = { status: '', notes: '', mbti: '', trait: '', level: 'any' };
+          this.countAdminDraft();
+        },
+        // live "Show N people" while the filters are being picked
+        countAdminDraft() {
+          const sheet = this.sheet;
+          clearTimeout(this._countTimer);
+          sheet.counting = true;
+          this._countTimer = setTimeout(async () => {
+            try {
+              const params = this.adminParams(sheet.draft);
+              params.set('count', '1');
+              const d = await this.api(`/api/admin/users?${params}`, { fresh: true });
+              if (this.sheet === sheet) sheet.count = d.total_users;
+            } catch { if (this.sheet === sheet) sheet.count = null; }
+            finally { if (this.sheet === sheet) sheet.counting = false; }
+          }, 250);
+        },
+        applyAdminFilters() {
+          this.haptic('medium');
+          Object.assign(this.admin, this.sheet.draft);
+          this.closeSheet();
+          this.saveAdminPrefs();
+          this.fetchAdmin();
+        },
+        removeAdminFilter(key) {
+          this.haptic('light');
+          this.admin[key] = '';
+          if (key === 'trait') this.admin.level = 'any';
+          this.saveAdminPrefs();
+          this.fetchAdmin();
+        },
+        clearAdminFilters() {
+          this.haptic('light');
+          Object.assign(this.admin, { status: '', notes: '', mbti: '', trait: '', level: 'any' });
+          this.saveAdminPrefs();
+          this.fetchAdmin();
+        },
         searchAdmin() {
           clearTimeout(this._searchTimer);
           this._searchTimer = setTimeout(() => this.fetchAdmin(), 300);
@@ -3200,7 +3515,7 @@
         loadMoreAdmin() { this.fetchAdmin({ append: true }); },
         applyAdminFilter() { this.haptic('light'); if (!this.admin.trait) this.admin.level = 'any'; this.fetchAdmin(); },
         setAdminNotes(v) { this.admin.notes = v; this.applyAdminFilter(); },
-        setAdminSort(v) { this.admin.sort = v; this.applyAdminFilter(); },
+        setAdminSort(v) { this.admin.sortMenu = false; this.admin.sort = v; this.saveAdminPrefs(); this.applyAdminFilter(); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
         async openAdminUser(u, { trail = [], tab = 'moods' } = {}) {
           this.haptic('light');
@@ -4061,7 +4376,7 @@
       },
 
       beforeUnmount() { this.destroyStickers(); }
-    }).mount('#app');
+    }).component('ui-icon', UiIcon).mount('#app');
   </script>
 </body>
 

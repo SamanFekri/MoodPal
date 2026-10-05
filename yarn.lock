@@ -913,6 +913,11 @@ locate-path@^5.0.0:
   dependencies:
     p-locate "^4.1.0"
 
+lucide@1.52.0:
+  version "1.52.0"
+  resolved "https://registry.yarnpkg.com/lucide/-/lucide-1.52.0.tgz#9a55d2d24b89bed07196fefac31e14bfc87c6657"
+  integrity sha512-XlP0U+m3seobjTPfT0Ybg9YqJeTwSxx1I6R2Ty7vwpA/4HtibMbV28p9tW7AnIwb77YkTboK9x/OPBEqGAzCFg==
+
 make-dir@^3.0.2:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
