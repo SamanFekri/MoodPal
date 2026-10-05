@@ -2829,6 +2829,9 @@
       components: { 'personality-view': PersonalityView, 'follow-graph': FollowGraph, 'ego-graph': EgoGraph, 'mbti-card': MbtiCard, 'mbti-character': MbtiCharacter, 'mbti-cast': MbtiCast, 'mbti-icon': MbtiIcon },
       data() {
         this._inflight = {};
+        // sticker players live outside Vue's reactivity (wrapping animation objects in proxies costs every frame)
+        this.players = {};
+        this.observer = null;
         this._friendsSeq = 0;
         this._friendsShown = 0;
         return {
@@ -2911,8 +2914,6 @@
           // sheet / misc
           sheet: null,
           toast: '',
-          players: {},
-          observer: null,
           // public mode
           publicLoading: true,
           publicProfile: null,
@@ -3109,7 +3110,10 @@
           try { localStorage.setItem('moodpal.tab', key); } catch {}
           const mb = this.tg?.MainButton;
           if (mb && this.usingMainButton) key === 'friends' ? mb.show() : mb.hide();
-          if (key === 'friends') { this.players = {}; if (this.isStale('friends')) { this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); } }   // stickers re-mount on the tab transition's after-enter
+          // freeze the old tab's stickers while it fades out; the new tab's mountStickers (on the
+          // transition's after-enter) destroys them once they're gone and starts the visible new ones
+          for (const p of Object.values(this.players)) p.animation?.pause();
+          if (key === 'friends') { if (this.isStale('friends')) { this.loaded = {}; this.failed = {}; this.fetchMe(); this.fetchFriends(); } }   // stickers re-mount on the tab transition's after-enter
           if (key === 'personality' && this.isStale('personality')) this.fetchPersonality();
           if (key === 'admin' && this.isStale('admin')) this.fetchAdmin();
           if (key === 'logs' && this.isStale('logs')) this.fetchLogs();
@@ -3183,7 +3187,10 @@
           window.open(this.botLink, '_blank');
         },
 
-        // ----- stickers (lazy) -----
+        // ----- stickers -----
+        // Each mood sticker is a looping animation, so only the ones on screen may run: a sticker starts
+        // when it scrolls into view, pauses when it scrolls out, and is destroyed once its element is gone
+        // (another tab, a closed sheet, a refreshed list). Otherwise they keep animating off screen.
         async mountStickers() {
           let TgsPlayer;
           try { TgsPlayer = await waitForTgsPlayer(); } catch {
@@ -3191,33 +3198,51 @@
             if (this.myMood) { this.failed.me = true; this.loaded.me = true; }
             return;
           }
+          this.sweepStickers();
           const load = async (el) => {
             const id = el.dataset.id;
             if (this.players[id]?.container === el) return;
             if (this.players[id]) { try { this.players[id].destroy(); } catch {} }
+            const player = new TgsPlayer(el, el.dataset.tgs);
+            this.players[id] = player;
             try {
-              const player = new TgsPlayer(el, el.dataset.tgs);
-              this.players[id] = player;
               await player.load();
+              if (this.players[id] !== player) { player.destroy(); return; }   // replaced or swept while loading
+              if (!el.isConnected) { this.dropSticker(id); return; }
+              if (!el.__visible) player.animation?.pause();
               this.loaded[id] = true;
             } catch (error) {
               console.error('Sticker failed:', error);
+              if (this.players[id] === player) delete this.players[id];
               this.failed[id] = true; this.loaded[id] = true;
             }
           };
           const list = (ref) => (Array.isArray(ref) ? ref : [ref]).filter(Boolean);
           const els = [...list(this.$refs.meSticker), ...list(this.$refs.sheetSticker), ...list(this.$refs.stickers), ...list(this.$refs.adminStickers), ...list(this.$refs.timelineStickers), ...list(this.$refs.logStickers)];
-          if (!('IntersectionObserver' in window)) { els.forEach(load); return; }
+          if (!('IntersectionObserver' in window)) { els.forEach(el => { el.__visible = true; load(el); }); return; }
           this.observer?.disconnect();
           this.observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting) { load(entry.target); this.observer.unobserve(entry.target); } });
-          }, { rootMargin: '200px' });
+            entries.forEach(({ target: el, isIntersecting }) => {
+              el.__visible = isIntersecting;
+              const player = this.players[el.dataset.id];
+              if (player?.container !== el) { if (isIntersecting) load(el); return; }
+              if (!player.animation) return;          // still loading; it checks __visible when ready
+              if (isIntersecting) player.animation.play(); else player.animation.pause();
+            });
+          }, { rootMargin: '100px' });
           els.forEach(el => this.observer.observe(el));
+        },
+        dropSticker(id) {
+          try { this.players[id]?.destroy(); } catch {}
+          delete this.players[id];
+        },
+        // destroy the players whose element has left the page
+        sweepStickers() {
+          for (const [id, player] of Object.entries(this.players)) if (!player.container?.isConnected) this.dropSticker(id);
         },
         destroyStickers() {
           this.observer?.disconnect();
-          Object.values(this.players).forEach(p => { try { p.destroy(); } catch {} });
-          this.players = {};
+          for (const id of Object.keys(this.players)) this.dropSticker(id);
         },
 
         // ----- add a friend -----
@@ -3286,8 +3311,8 @@
         },
         closeSheet() {
           this.sheet = null;
-          try { this.players.sheet?.destroy(); } catch {}
-          delete this.players.sheet;
+          this.dropSticker('sheet');
+          setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
         profileHref(friend) { return friend.username ? `https://t.me/${friend.username}` : friend.link; },
         openProfile(event, friend) {
