@@ -34,6 +34,18 @@ const create = async (req, res) => {
   } catch (error) { fail(res, error); }
 };
 
+// POST /api/admin/broadcasts/:id/resend { audience: 'everyone'|'missed', order } — send an earlier
+// broadcast again (same text, media and button)
+const resend = async (req, res) => {
+  if (!/^[a-f0-9]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'not_found' });
+  try {
+    const audience = req.body?.audience === 'missed' ? 'missed' : 'everyone';
+    const b = await broadcast.resend(req.user._id, req.params.id, { audience, order: req.body?.order });
+    if (!b) return res.status(404).json({ error: 'not_found' });
+    res.json({ id: b._id, total: b.total, ...(await broadcast.view()) });
+  } catch (error) { fail(res, error); }
+};
+
 // POST /api/admin/broadcasts/:id/cancel — stop sending; whoever already got it keeps it
 const cancel = async (req, res) => {
   if (!/^[a-f0-9]{24}$/i.test(req.params.id)) return res.status(404).json({ error: 'not_found' });
@@ -51,4 +63,4 @@ const settings = async (req, res) => {
   res.json(await broadcast.view());
 };
 
-module.exports = { list, upload, test, create, cancel, settings };
+module.exports = { list, upload, test, create, resend, cancel, settings };

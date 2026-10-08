@@ -493,6 +493,8 @@
     .adm-chip .chev { transition: transform .2s var(--ease-out); }
     .adm-chip .chev.open { transform: rotate(180deg); }
     .adm-sort { position: relative; }
+    .adm-open-chat { display: flex; justify-content: center; margin: 12px 0 0; }
+    .adm-open-chat .u { font-weight: 600; opacity: .7; margin-left: 2px; }
     .adm-chip.dir { padding: 6px 9px; }
     .adm-chip.dir svg { color: var(--accent); }
     .menu-order { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 2px 4px 4px; }
@@ -873,6 +875,12 @@
     .bc-row .bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(138,143,152,0.16); }
     .bc-row .bar i { display: block; height: 100%; transition: width .6s var(--ease-out); } .bc-row .bar .ok { background: var(--fresh); } .bc-row .bar .bad { background: #ff5f6d; }
     .bc-row .nums { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; color: var(--hint); font-weight: 600; margin-top: 6px; }
+    .bc-tag { font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(51,144,236,0.10); border-radius: 999px; padding: 2px 8px; }
+    .bc-again { display: flex; gap: 6px; margin-top: 10px; }
+    .bc-again .adm-chip { box-shadow: none; background: rgba(138,143,152,0.12); }
+    .bc-again .adm-chip.active { background: rgba(51,144,236,0.13); color: var(--accent); }
+    .bc-resend { margin-top: 10px; padding: 12px; border-radius: 14px; background: rgba(138,143,152,0.08); }
+    .bc-resend-hint { margin: 8px 0 0; font-size: 12px; color: var(--hint); line-height: 1.4; }
     .bc-cancel { margin-left: auto; border: 0; background: rgba(255,95,109,.12); color: #e5484d; font: inherit; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
     /* five admin sections: one row when there's room, two rows on a phone */
     .seg.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 2px; }
@@ -1479,6 +1487,7 @@
                   <div class="top">
                     <span class="kind">{{ { text: 'Text', photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[b.kind] }}</span>
                     <span class="st" :class="b.status">{{ { sending: 'Sending', done: 'Done', cancelled: 'Cancelled' }[b.status] }}</span>
+                    <span v-if="b.resent_from" class="bc-tag">{{ b.only_missed ? 'Resent to who missed it' : 'Resent' }}</span>
                     <span class="when">{{ formatWhen(b.started_at, true) }}</span>
                   </div>
                   <div class="txt">{{ b.text || b.file_name || '(no text)' }}</div>
@@ -1486,6 +1495,32 @@
                   <div class="nums">
                     <span>{{ b.sent }} sent</span><span v-if="b.failed">{{ b.failed }} failed</span><span v-if="b.skipped">{{ b.skipped }} skipped</span><span v-if="b.waiting">{{ b.waiting }} waiting</span><span>of {{ b.total }}</span>
                     <button v-if="b.status === 'sending'" class="bc-cancel" :disabled="!!bcBusy" @click="cancelBroadcast(b)">Cancel</button>
+                  </div>
+                  <!-- send it again as it was, or load it into the composer to change it first -->
+                  <div v-if="b.status !== 'sending'" class="bc-again">
+                    <button class="adm-chip" :class="{ active: bcResend?.id === b.id }" :disabled="!!bcBusy" @click="toggleResend(b)"><ui-icon name="send" :size="14"></ui-icon>Send again</button>
+                    <button class="adm-chip" :disabled="!!bcBusy" @click="editBroadcastAgain(b)"><ui-icon name="notebook-pen" :size="14"></ui-icon>Edit &amp; resend</button>
+                  </div>
+                  <div v-if="bcResend?.id === b.id" class="bc-resend">
+                    <div class="af-label">Send to</div>
+                    <div class="af-opts">
+                      <button class="af-opt small" :class="{ on: bcResend.audience === 'everyone' }" @click="bcResend.audience = 'everyone'"><ui-icon name="users" :size="14"></ui-icon>Everyone ({{ bc.audience }})</button>
+                      <button class="af-opt small" :class="{ on: bcResend.audience === 'missed' }" @click="bcResend.audience = 'missed'"><ui-icon name="user-plus" :size="14"></ui-icon>Only who didn't get it</button>
+                    </div>
+                    <p class="bc-resend-hint" v-if="bcResend.audience === 'missed'">People who joined since, and anyone it failed for or skipped. The {{ b.sent }} who got it won't get it twice.</p>
+                    <div class="rem-limit" style="margin-top:10px">
+                      <span><b>Who gets it first</b></span>
+                      <select v-model="bcResend.order">
+                        <option value="recent_active">Most recently active</option>
+                        <option value="least_active">Least recently active</option>
+                        <option value="newest">Newest users</option>
+                        <option value="oldest">Oldest users</option>
+                      </select>
+                    </div>
+                    <div class="row-actions">
+                      <button class="btn ghost" @click="bcResend = null">Cancel</button>
+                      <button class="btn" :disabled="!!bcBusy" @click="resendBroadcast(b)"><ui-icon name="send" :size="16"></ui-icon>{{ bcBusy === 'resend' ? 'Sending…' : 'Send again' }}</button>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -2082,6 +2117,10 @@
                   <div class="mood" v-if="sheet.user.timezone"><ui-icon name="globe" :size="14"></ui-icon> {{ sheet.user.timezone }} · {{ localTimeIn(sheet.user.timezone) }} there</div>
                 </div>
               </div>
+              <!-- open this person's Telegram chat (by @username, else by id) -->
+              <a v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :href="adminChatHref(sheet.user)" @click="openAdminChat($event, sheet.user)">
+                <ui-icon name="message-circle" :size="16"></ui-icon>Open chat with {{ firstNameOf(sheet.user) }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
+              </a>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
                   <ui-icon :name="sheet.user.is_friend ? 'user-check' : 'user-plus'" :size="16"></ui-icon>{{ sheet.savingFriend ? '…' : sheet.user.is_friend ? 'Friend · remove' : 'Add as friend' }}
@@ -3085,6 +3124,7 @@
           bc: null,
           bcError: '',
           bcBusy: '',
+          bcResend: null,   // { id, audience, order } while picking how to send an earlier broadcast again
           bcDraft: { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active' },
           memoryBusy: false,
           memories: null,
@@ -3471,6 +3511,14 @@
           this.sheet = null;
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
+        },
+        adminChatHref(u) { return u.username ? `https://t.me/${u.username}` : `tg://user?id=${u.id}`; },
+        openAdminChat(event, u) {
+          this.haptic('light');
+          // inside Telegram a t.me link opens the chat in place; without a username the tg:// link
+          // only works if this Telegram account already knows them, so the id is copied as a backup
+          if (u.username && this.tg?.openTelegramLink) { event.preventDefault(); this.tg.openTelegramLink(`https://t.me/${u.username}`); return; }
+          if (!u.username) navigator.clipboard?.writeText(String(u.id)).then(() => this.showToast(`No @username: their id ${u.id} is copied`)).catch(() => {});
         },
         profileHref(friend) { return friend.username ? `https://t.me/${friend.username}` : friend.link; },
         openProfile(event, friend) {
@@ -3999,8 +4047,40 @@
             order: d.order,
           };
         },
+        toggleResend(b) {
+          this.haptic('light');
+          this.bcResend = this.bcResend?.id === b.id ? null : { id: b.id, audience: 'everyone', order: b.order || 'recent_active' };
+        },
+        async resendBroadcast(b) {
+          const r = this.bcResend;
+          if (!r || this.bcBusy) return;
+          const who = r.audience === 'missed' ? "everyone who didn't get it" : `${this.bc.audience} ${this.bc.audience === 1 ? 'person' : 'people'}`;
+          if (!window.confirm(`Send this again to ${who}? It can't be unsent, but you can stop it while it's sending.`)) return;
+          this.haptic('medium');
+          this.bcBusy = 'resend';
+          try {
+            const res = await this.api(`/api/admin/broadcasts/${b.id}/resend`, { method: 'POST', body: { audience: r.audience, order: r.order } });
+            this.bc = res;
+            this.bcResend = null;
+            this.showToast(res.total ? `Sending again to ${res.total} ${res.total === 1 ? 'person' : 'people'}` : 'Everyone already got it');
+          } catch (error) { this.broadcastError(error); }
+          finally { this.bcBusy = ''; }
+        },
+        // put an earlier broadcast back in the composer (same media, no re-upload) to change or test it
+        editBroadcastAgain(b) {
+          this.haptic('light');
+          this.bcResend = null;
+          this.bcDraft = {
+            text: b.text || '',
+            media: b.kind !== 'text' && b.file_id ? { kind: b.kind, file_id: b.file_id, file_name: b.file_name } : null,
+            showButton: Boolean(b.button), buttonText: b.button?.text || '', buttonUrl: b.button?.url || '',
+            order: b.order || 'recent_active',
+          };
+          nextTick(() => document.querySelector('.bc-text')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+          this.showToast('Loaded into the message above');
+        },
         broadcastError(error) {
-          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', telegram_failed: 'Telegram refused it' }[error.message];
+          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', still_sending: 'Wait until it has finished sending', telegram_failed: 'Telegram refused it' }[error.message];
           this.showToast(m || "Couldn't do that");
         },
         async uploadBroadcastFile(event) {

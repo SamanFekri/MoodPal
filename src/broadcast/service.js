@@ -108,12 +108,13 @@ const audienceCount = () => User.countDocuments(audienceFilter());
 
 // ---------- create / cancel ----------
 
-async function create(adminId, input) {
+async function create(adminId, input, { resentFrom = null, exclude = null } = {}) {
   const msg = normalize(input);
   const order = ORDERS[input?.order] ? input.order : 'recent_active';
-  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, order });
+  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, order, resent_from: resentFrom, only_missed: Boolean(exclude) });
   let total = 0;
-  const cursor = User.find(audienceFilter()).sort(ORDERS[order]).select('_id id').lean().cursor();
+  const filter = exclude ? { ...audienceFilter(), _id: { $nin: exclude } } : audienceFilter();
+  const cursor = User.find(filter).sort(ORDERS[order]).select('_id id').lean().cursor();
   let batch = [];
   const flush = async () => {
     if (!batch.length) return;
@@ -130,6 +131,20 @@ async function create(adminId, input) {
   if (!total) { broadcast.status = 'done'; broadcast.finished_at = new Date(); }
   await broadcast.save();
   return broadcast;
+}
+
+// Send an earlier broadcast again: same text, media (by its Telegram file_id, no re-upload) and
+// button. `audience`: 'everyone' (whoever the bot can reach now) or 'missed' (only people who didn't
+// get it: joined since, failed, or skipped). Not while the original is still sending.
+async function resend(adminId, id, { audience = 'everyone', order } = {}) {
+  const original = await Broadcast.findById(id).lean().catch(() => null);
+  if (!original) return null;
+  if (original.status === 'sending') throw new BroadcastInputError('still_sending');
+  const exclude = audience === 'missed'
+    ? await BroadcastDelivery.find({ broadcast: original._id, status: 'sent' }).distinct('user')
+    : null;
+  const input = { text: original.text, kind: original.kind, file_id: original.file_id, file_name: original.file_name, button: original.button?.text ? original.button : null, order: ORDERS[order] ? order : original.order };
+  return create(adminId, input, { resentFrom: original._id, exclude });
 }
 
 async function sendTest(chatId, input) {
@@ -234,7 +249,8 @@ async function view({ limit = 8 } = {}) {
     broadcasts: list.map(b => {
       const c = by[String(b._id)] || {};
       return {
-        id: b._id, kind: b.kind, text: b.text, file_name: b.file_name, button: b.button?.text ? b.button : null, order: b.order,
+        id: b._id, kind: b.kind, text: b.text, file_id: b.file_id, file_name: b.file_name, button: b.button?.text ? b.button : null, order: b.order,
+        resent_from: b.resent_from || null, only_missed: Boolean(b.only_missed),
         status: b.status, total: b.total, started_at: b.started_at, finished_at: b.finished_at,
         sent: c.sent || 0, failed: c.failed || 0, skipped: c.skipped || 0, waiting: (c.queued || 0) + (c.sending || 0),
       };
@@ -263,5 +279,5 @@ function stop() {
 
 module.exports = {
   KINDS, ORDERS, TEXT_LIMIT, CAPTION_LIMIT, BroadcastInputError,
-  normalize, kindFor, uploadMedia, sendTest, create, cancel, drain, view, audienceCount, start, stop, state,
+  normalize, kindFor, uploadMedia, sendTest, create, resend, cancel, drain, view, audienceCount, start, stop, state,
 };

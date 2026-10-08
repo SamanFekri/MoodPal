@@ -153,3 +153,5 @@ graphify-out/.graphify_*
 graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
 
 brag-output-*/
+
+media/

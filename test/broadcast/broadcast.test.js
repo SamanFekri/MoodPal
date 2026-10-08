@@ -142,6 +142,47 @@ describe('admin broadcasts', () => {
     assert.ok(tg.calls.every(c => c.method === 'sendPhoto' && c.payload === 'PHOTO_ID' && c.extra.caption === 'New look!'));
   });
 
+  test('an earlier broadcast can be sent again, to everyone or only to people who missed it', async () => {
+    await people();
+    // Ben can't be reached the first time; the photo goes out by its file id
+    let tg = fakeTelegram((chatId) => (chatId === 2 ? tgError(500, 'Internal Server Error') : null)); setTelegram(tg);
+    const first = await broadcast.create(admin._id, { kind: 'photo', file_id: 'PHOTO_ID', file_name: 'guide.png', text: 'Add your friends', button: { text: 'Open', url: 'https://t.me/MoodPalBot?startapp' } });
+    for (let i = 0; i < 10; i++) await broadcast.drain(new Date(Date.now() + i * 3600000), { limit: 10 });
+    const sentFirst = await BroadcastDelivery.find({ broadcast: first._id, status: 'sent' }).distinct('chat_id');
+    assert.ok(!sentFirst.includes(2), 'Ben did not get it');
+
+    assert.equal((await api(`/api/admin/broadcasts/${first._id}/resend`, { as: { id: 1, first_name: 'Ana' }, method: 'POST', body: {} })).status, 403);
+    assert.equal((await api('/api/admin/broadcasts/0123456789abcdef01234567/resend', { as: admin, method: 'POST', body: {} })).status, 404);
+
+    // a new person joins; "only who missed it" reaches Ben and the newcomer, nobody else
+    await User.create({ id: 7, first_name: 'Dee', last_active_at: new Date('2026-09-25') });
+    tg = fakeTelegram(); setTelegram(tg);
+    const missed = await api(`/api/admin/broadcasts/${first._id}/resend`, { as: admin, method: 'POST', body: { audience: 'missed' } });
+    assert.equal(missed.status, 200);
+    assert.equal(missed.body.total, 2);
+    await broadcast.drain(new Date(), { limit: 10 });
+    assert.deepEqual(tg.calls.map(c => c.chatId).sort(), [2, 7]);
+    assert.equal(tg.calls[0].method, 'sendPhoto');
+    assert.equal(tg.calls[0].payload, 'PHOTO_ID', 'same media, no re-upload');
+    assert.equal(tg.calls[0].extra.caption, 'Add your friends');
+    const copy = await Broadcast.findById(missed.body.id).lean();
+    assert.equal(String(copy.resent_from), String(first._id));
+    assert.equal(copy.only_missed, true);
+    assert.equal(copy.button.url, 'https://t.me/MoodPalBot?startapp');
+
+    // while that one is still sending, it can't be resent; once done, "everyone" goes to all reachable people
+    const sending = await broadcast.create(admin._id, { text: 'Busy' });
+    const refused = await api(`/api/admin/broadcasts/${sending._id}/resend`, { as: admin, method: 'POST', body: {} });
+    assert.equal(refused.status, 400);
+    assert.equal(refused.body.error, 'still_sending');
+    const everyone = await api(`/api/admin/broadcasts/${first._id}/resend`, { as: admin, method: 'POST', body: { audience: 'everyone', order: 'newest' } });
+    assert.equal(everyone.body.total, 5, 'Ana, Ben, Cy, Dee and the admin');
+    const v = everyone.body.broadcasts.find(b => String(b.id) === String(everyone.body.id));
+    assert.equal(v.order, 'newest');
+    assert.equal(v.file_id, 'PHOTO_ID');
+    assert.equal(String(v.resent_from), String(first._id));
+  });
+
   test('blocked bot marks the person unreachable; Telegram 429 pauses every queue; cancel stops the rest', async () => {
     await people();
     setTelegram(fakeTelegram((chatId) => (chatId === 1 ? tgError(403, 'Forbidden: bot was blocked by the user') : chatId === 3 ? tgError(429, 'Too Many Requests: retry after 9', { retry_after: 9 }) : null)));

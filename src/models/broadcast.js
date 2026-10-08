@@ -12,6 +12,9 @@ const broadcastSchema = new mongoose.Schema({
   // who gets it first (see ORDERS in src/broadcast/service.js)
   order: { type: String, enum: ['recent_active', 'least_active', 'newest', 'oldest'], default: 'recent_active' },
   status: { type: String, enum: ['sending', 'done', 'cancelled'], default: 'sending', index: true },
+  // a re-send of an earlier broadcast, and whether it went only to people who hadn't got that one
+  resent_from: { type: mongoose.Schema.Types.ObjectId, ref: 'Broadcast', default: null },
+  only_missed: { type: Boolean, default: false },
   total: { type: Number, default: 0 },
   started_at: { type: Date, default: Date.now },
   finished_at: { type: Date, default: null },

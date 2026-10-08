@@ -112,6 +112,7 @@ app.get('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.br
 app.post('/api/admin/broadcasts/media', express.raw({ type: () => true, limit: '50mb' }), requireWebAppUser, requireAdmin, controllers.broadcast.upload);
 app.post('/api/admin/broadcasts/test', requireWebAppUser, requireAdmin, controllers.broadcast.test);
 app.post('/api/admin/broadcasts/settings', requireWebAppUser, requireAdmin, controllers.broadcast.settings);
+app.post('/api/admin/broadcasts/:id/resend', requireWebAppUser, requireAdmin, controllers.broadcast.resend);
 app.post('/api/admin/broadcasts/:id/cancel', requireWebAppUser, requireAdmin, controllers.broadcast.cancel);
 app.post('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.broadcast.create);
 // mood reminders
