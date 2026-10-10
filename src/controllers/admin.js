@@ -30,6 +30,8 @@ const listUsers = async (req, res) => {
   const sortBy = ['mood', 'moods', 'newest', 'name'].includes(req.query.sort) ? req.query.sort : 'activity';
   const status = ['friend', 'blocked', 'admin'].includes(req.query.status) ? req.query.status : null;
   const notes = req.query.notes === 'with' || req.query.notes === 'without' ? req.query.notes : null;
+  // who has saved their own OpenAI key (only whether they have one; the key never leaves the server)
+  const key = req.query.key === 'with' || req.query.key === 'without' ? req.query.key : null;
 
   const filter = { is_bot: { $ne: true } };
   if (q) {
@@ -38,6 +40,8 @@ const listUsers = async (req, res) => {
     if (/^\d+$/.test(q)) filter.$or.push({ id: Number(q) });
   }
   if (status === 'blocked') filter.is_blocked = true;
+  if (key === 'with') filter.openai_api_key = { $nin: [null, ''] };
+  if (key === 'without') filter.openai_api_key = { $in: [null, ''] };
   if (status === 'admin') filter.is_admin = true;
   if (status === 'friend') {
     const followed = await Share.find({ follower: req.user._id, disabled: false }).distinct('followed');
@@ -137,7 +141,7 @@ const listUsers = async (req, res) => {
         as: 'friend',
       } },
       // $arrayElemAt instead of $first: works on MongoDB 4.2+
-      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, timezone: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
+      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, timezone: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, has_openai_key: { $gt: [{ $strLenCP: { $ifNull: ['$openai_api_key', ''] } }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
     ]),
     User.aggregate(countPipeline),
     Mood.estimatedDocumentCount(),
@@ -161,6 +165,7 @@ const listUsers = async (req, res) => {
       trait: traitKey ? { trait: traitKey, min, max } : null,
       mbti: mbti ? mbti.toLowerCase() === 'any' ? 'any' : mbti : null,
       notes,
+      key,
       status,
     },
     users: rows.map(u => ({
@@ -169,6 +174,7 @@ const listUsers = async (req, res) => {
       is_blocked: Boolean(u.is_blocked),
       is_admin: Boolean(u.is_admin),
       is_friend: Boolean(u.is_friend),
+      has_openai_key: Boolean(u.has_openai_key),
       has_note: Boolean(u.has_note),
       timezone: u.timezone || null,
       last_active_at: u.last_active_at,

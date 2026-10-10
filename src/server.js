@@ -91,6 +91,11 @@ app.post('/api/me/settings/memory', requireWebAppUser, controllers.settings.setM
 app.get('/api/me/memories', requireWebAppUser, controllers.settings.listMemories);
 app.delete('/api/me/memories/:id', requireWebAppUser, controllers.settings.forgetMemory);
 app.delete('/api/me/memories', requireWebAppUser, controllers.settings.forgetAllMemories);
+// Talk: the same conversation as 💬 Talk in the bot, on the user's own OpenAI key
+app.get('/api/me/talk', requireWebAppUser, controllers.talk.getTalk);
+app.post('/api/me/talk/start', requireWebAppUser, controllers.talk.startTalk);
+app.post('/api/me/talk/message', requireWebAppUser, controllers.talk.sendMessage);
+app.post('/api/me/talk/end', requireWebAppUser, controllers.talk.endTalk);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/me/personality/session', requireWebAppUser, controllers.personality.getSession);

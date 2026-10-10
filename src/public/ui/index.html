@@ -448,6 +448,30 @@
     .switch.on::after { transform: translateX(20px); }
     .switch:disabled { opacity: .6; }
 
+    /* ---- Talk: the AI companion, same conversation as 💬 Talk in the bot ---- */
+    .talk-intro { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: var(--hint); background: var(--card); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
+    .talk-intro .ui-icon { flex: none; margin-top: 1px; color: var(--accent); }
+    .talk-intro b { color: var(--text); }
+    .talk-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+    .bubble { max-width: 82%; padding: 10px 14px; border-radius: 20px; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; animation: fade-up .3s var(--ease-out) both; }
+    .bubble.user { align-self: flex-end; background: var(--accent); color: var(--accent-text); border-bottom-right-radius: 6px; }
+    .bubble.assistant { align-self: flex-start; background: var(--card); color: var(--text); border-bottom-left-radius: 6px; box-shadow: var(--shadow); }
+    .bubble.typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+    .bubble.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--hint); animation: talk-dot 1.2s infinite ease-in-out; }
+    .bubble.typing i:nth-child(2) { animation-delay: .15s; } .bubble.typing i:nth-child(3) { animation-delay: .3s; }
+    @keyframes talk-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+    .talk-safety { align-self: flex-start; max-width: 88%; font-size: 13px; line-height: 1.45; padding: 10px 12px; border-radius: 14px; background: rgba(255,95,109,0.14); color: #ff5f6d; }
+    .talk-safety b { display: block; margin-bottom: 2px; }
+    .talk-reminder { align-self: center; font-size: 12px; font-style: italic; color: var(--hint); padding: 2px 8px; }
+    .talk-empty { text-align: center; color: var(--hint); font-size: 14px; line-height: 1.5; padding: 28px 12px; }
+    .talk-empty b { display: block; color: var(--text); font-size: 17px; margin-bottom: 4px; }
+    .composer { position: sticky; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom)); display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; padding: 8px; border-radius: 24px; background: var(--card); box-shadow: var(--shadow); z-index: 5; }
+    .composer textarea { flex: 1; min-width: 0; font: inherit; font-size: 16px; line-height: 1.4; color: var(--text); background: transparent; border: 0; outline: none; resize: none; padding: 8px 8px; max-height: 120px; }
+    .composer textarea::placeholder { color: var(--hint); }
+    .composer .send { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-text); display: flex; align-items: center; justify-content: center; }
+    .composer .send:disabled { opacity: .45; }
+    .composer .send:active { transform: scale(.92); }
+    .talk-foot { font-size: 11px; color: var(--hint); text-align: center; margin-top: 8px; line-height: 1.4; }
     .disclaimer { font-size: 11px; color: var(--hint); line-height: 1.4; text-align: center; padding: 4px 8px 0; }
 
     /* ---- Admin ---- */
@@ -572,6 +596,7 @@
     }
     .lock { display: inline-flex; align-items: center; color: var(--hint); }
     .lock.blocked { color: #ff3b30; }
+    .lock.has-key { color: #ff9f0a; }
 
     .row-card {
       display: flex; align-items: center; gap: 12px;
@@ -1380,7 +1405,7 @@
               </div>
               <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private"><ui-icon name="lock" :size="12"></ui-icon></span><span class="lock blocked" v-if="u.is_blocked" title="Blocked"><ui-icon name="ban" :size="12"></ui-icon></span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private"><ui-icon name="lock" :size="12"></ui-icon></span><span class="lock blocked" v-if="u.is_blocked" title="Blocked"><ui-icon name="ban" :size="12"></ui-icon></span><span class="lock has-key" v-if="u.has_openai_key" title="Has an OpenAI key"><ui-icon name="key-round" :size="12"></ui-icon></span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
                 <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
                 <div class="row-sub" v-else>No mood yet</div>
                 <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
@@ -1770,6 +1795,52 @@
           </template>
           <div v-else class="state"><div class="art"><ui-icon name="scroll-text"></ui-icon></div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
         </div>
+        <!-- ---------- Talk ---------- -->
+        <div v-else-if="tab === 'talk'" key="talk">
+          <header class="header">
+            <div>
+              <p class="greeting">AI companion</p>
+              <h1>Talk</h1>
+            </div>
+            <div class="header-right" v-if="talk.data && talk.data.active">
+              <button class="btn ghost small" style="margin-top:0" :disabled="talk.sending || talk.ending" @click="endTalk"><ui-icon name="x" :size="15"></ui-icon>End talk</button>
+            </div>
+          </header>
+
+          <template v-if="!talk.data && !talk.error">
+            <div class="section" v-for="n in 2" :key="'tsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
+          </template>
+          <div v-else-if="!talk.data" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load Talk</h2><p>{{ talk.error }}</p><button class="btn" @click="fetchTalk()">Try again</button></div>
+          <div v-else-if="!talk.data.has_key" class="state">
+            <div class="art"><ui-icon name="key-round"></ui-icon></div>
+            <h2>Talk needs your OpenAI key</h2>
+            <p>Talk runs on your own OpenAI key, so nobody else pays for your conversations. Add one in Settings, then come back here.</p>
+            <button class="btn" @click="setTab('settings')"><ui-icon name="settings" :size="16"></ui-icon>Add my key</button>
+          </div>
+          <template v-else>
+            <div class="talk-intro">
+              <ui-icon name="bot" :size="18"></ui-icon>
+              <div>You're talking to an <b>AI</b>, not a human and not a therapist. It can be wrong, and this isn't therapy or medical advice. If you're in danger, contact your local emergency number or a crisis line right away. Messages go to OpenAI on <b>your own key</b> ({{ talk.data.model }}).</div>
+            </div>
+
+            <div class="talk-list">
+              <div v-if="!talk.data.messages.length && !talk.pending" class="talk-empty"><b>What's on your mind?</b>Say anything, big or small. MoodPal knows how you've been feeling lately and what you've told it before.</div>
+              <template v-for="(m, i) in talk.data.messages" :key="'tm' + i">
+                <div class="bubble" :class="m.role">{{ m.content }}</div>
+                <div v-if="m.role === 'assistant' && (m.risk === 'medium' || m.risk === 'high')" class="talk-safety"><b>If you might be in danger, please don't wait on a bot.</b>Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.</div>
+                <div v-if="m.role === 'assistant' && talkAssistantIndex(i) % 8 === 0" class="talk-reminder">Reminder: I'm an AI, not a therapist, and I can be wrong.</div>
+              </template>
+              <div v-if="talk.pending" class="bubble user">{{ talk.pending }}</div>
+              <div v-if="talk.sending" class="bubble assistant typing" aria-label="MoodPal is typing"><i></i><i></i><i></i></div>
+            </div>
+
+            <div class="composer">
+              <textarea ref="talkInput" v-model="talk.input" rows="1" :maxlength="TALK_MAX" placeholder="Message MoodPal…" :disabled="talk.sending" @input="growTalkInput" @keydown.enter.exact="onTalkEnter"></textarea>
+              <button class="send" :disabled="talk.sending || !talk.input.trim()" @click="sendTalk" aria-label="Send"><ui-icon name="send" :size="18"></ui-icon></button>
+            </div>
+            <p class="talk-foot">Same conversation as 💬 Talk in the bot. It ends when you tap End talk, or after 2 quiet hours.</p>
+          </template>
+        </div>
         <!-- ---------- Settings ---------- -->
         <div v-else-if="tab === 'settings'" key="settings">
           <header class="header">
@@ -1969,6 +2040,13 @@
                   <div class="af-label">Latest mood</div>
                   <div class="af-opts">
                     <button v-for="o in ADMIN_NOTES" :key="o.key" class="af-opt" :class="{ on: sheet.draft.notes === o.key }" @click="setDraft('notes', o.key)"><ui-icon :name="o.icon" :size="15"></ui-icon>{{ o.label }}</button>
+                  </div>
+                </div>
+
+                <div class="af-sec">
+                  <div class="af-label">OpenAI key <span>Talk and AI insights</span></div>
+                  <div class="af-opts">
+                    <button v-for="o in ADMIN_KEYS" :key="o.key" class="af-opt" :class="{ on: sheet.draft.key === o.key }" @click="setDraft('key', o.key)"><ui-icon :name="o.icon" :size="15"></ui-icon>{{ o.label }}</button>
                   </div>
                 </div>
 
@@ -3076,7 +3154,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', active: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', active: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', key: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           CH_ICONS: {
             straight_shooter: 'target', soft_landing: 'heart-handshake', deep_thinker: 'lightbulb', action_taker: 'zap',
             challenge_seeker: 'flame', independent: 'compass', people_powered: 'users-round', planner: 'calendar-check',
@@ -3102,9 +3180,16 @@
             { key: 'with', label: 'With a note', icon: 'notebook-pen' },
             { key: 'without', label: 'No note', icon: 'notepad-text-dashed' },
           ],
+          ADMIN_KEYS: [
+            { key: '', label: 'Any', icon: 'users' },
+            { key: 'with', label: 'Has a key', icon: 'key-round' },
+            { key: 'without', label: 'No key', icon: 'circle-off' },
+          ],
           TRAIT_LEVELS: [{ key: 'any', label: 'Any', min: 0, max: 1 }, { key: 'low', label: 'Low', min: 0, max: 0.4 }, { key: 'mid', label: 'Mid', min: 0.4, max: 0.6 }, { key: 'high', label: 'High', min: 0.6, max: 1 }],
           myTelegramId: null,
-          fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0 },
+          fetchedAt: { friends: 0, personality: 0, admin: 0, logs: 0, settings: 0, talk: 0 },
+          talk: { data: null, error: '', input: '', pending: '', sending: false, ending: false },
+          TALK_MAX: 2000,
           logs: { moods: [], has_more: false, next_before: null, loading: false, loadingMore: false, error: '' },
           STALE_MS: 30 * 1000,
           // sheet / misc
@@ -3135,7 +3220,7 @@
 
       computed: {
         tabs() {
-          const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }];
+          const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }, { key: 'talk', label: 'Talk', icon: 'message-circle' }];
           t.push({ key: 'logs', label: 'Logs', icon: 'scroll-text' });
           if (this.isAdmin) t.push({ key: 'admin', label: 'Admin', icon: 'shield' });
           t.push({ key: 'settings', label: 'Settings', icon: 'settings' });
@@ -3165,6 +3250,7 @@
           const status = this.ADMIN_STATUSES.find(o => o.key === a.status);
           if (a.status && status) chips.push({ key: 'status', label: status.label, icon: status.icon });
           if (a.notes) chips.push({ key: 'notes', label: a.notes === 'with' ? 'With a note' : 'No note', icon: 'notebook-pen' });
+          if (a.key) chips.push({ key: 'key', label: a.key === 'with' ? 'Has an OpenAI key' : 'No OpenAI key', icon: 'key-round' });
           if (a.mbti) chips.push({ key: 'mbti', label: a.mbti === 'any' ? 'Took the MBTI test' : `${a.mbti} · ${this.mbtiTitle(a.mbti)}`, icon: 'drama' });
           if (a.trait) {
             const level = this.TRAIT_LEVELS.find(l => l.key === a.level);
@@ -3246,7 +3332,10 @@
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
             if (this.isAdmin) { this.loadAdminPrefs(); loads.push(this.fetchAdmin()); }
-            const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: loads[4] }[this.tab] || loads[0];
+            // Talk loads only when it is the tab being opened (otherwise on first visit)
+            const talkLoad = this.tab === 'talk' ? this.fetchTalk() : null;
+            if (talkLoad) loads.push(talkLoad);
+            const current = { friends: loads[0], personality: loads[1], logs: loads[2], settings: loads[3], admin: this.isAdmin ? loads[4] : null, talk: talkLoad }[this.tab] || loads[0];
             current.finally(hideSplash);
             // always load the friends a second time, 200ms after the page loaded, without waiting for the
             // first request (which can hang on a cold start); then once more if both left the tab empty
@@ -3316,6 +3405,7 @@
           if (key === 'admin' && this.isStale('admin')) this.fetchAdmin();
           if (key === 'logs' && this.isStale('logs')) this.fetchLogs();
           if (key === 'settings' && this.isStale('settings')) this.fetchSettings();
+          if (key === 'talk') this.fetchTalk();
         },
 
         isStale(key) { return Date.now() - (this.fetchedAt[key] || 0) > this.STALE_MS; },
@@ -3329,6 +3419,7 @@
             if (this.tab === 'personality' && this.isStale('personality')) this.fetchPersonality();
             if (this.tab === 'admin' && this.isStale('admin')) this.fetchAdmin();
             if (this.tab === 'logs' && this.isStale('logs')) this.fetchLogs();
+            if (this.tab === 'talk' && !this.talk.sending) this.fetchTalk();
           };
           document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
           window.addEventListener('focus', refresh);
@@ -3660,6 +3751,7 @@
           const params = new URLSearchParams({ q: this.admin.query, sort: this.admin.sort, dir: this.admin.dir });
           if (f.status) params.set('status', f.status);
           if (f.notes) params.set('notes', f.notes);
+          if (f.key) params.set('key', f.key);
           if (f.mbti) params.set('mbti', f.mbti);
           if (f.trait) {
             const level = this.TRAIT_LEVELS.find(l => l.key === f.level) || this.TRAIT_LEVELS[0];
@@ -3670,8 +3762,8 @@
         traitNameOf(key) { return this.admin.traits.find(t => t.key === key)?.name || key.replace(/_/g, ' '); },
         // filters and sort are remembered on this device
         saveAdminPrefs() {
-          const { sort, dir, status, notes, mbti, trait, level } = this.admin;
-          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, dir, status, notes, mbti, trait, level })); } catch {}
+          const { sort, dir, status, notes, key, mbti, trait, level } = this.admin;
+          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, dir, status, notes, key, mbti, trait, level })); } catch {}
         },
         loadAdminPrefs() {
           try {
@@ -3681,6 +3773,7 @@
             if (saved.dir === 'asc' || saved.dir === 'desc') this.admin.dir = saved.dir;
             if (this.ADMIN_STATUSES.some(o => o.key === saved.status)) this.admin.status = saved.status;
             if (['', 'with', 'without'].includes(saved.notes)) this.admin.notes = saved.notes;
+            if (['', 'with', 'without'].includes(saved.key)) this.admin.key = saved.key;
             if (saved.mbti === 'any' || this.MBTI_TYPES.includes(saved.mbti)) this.admin.mbti = saved.mbti;
             if (typeof saved.trait === 'string' && /^[a-z_]*$/.test(saved.trait)) this.admin.trait = saved.trait;
             if (this.TRAIT_LEVELS.some(l => l.key === saved.level)) this.admin.level = saved.level;
@@ -3690,8 +3783,8 @@
           this.haptic('light');
           this.admin.sortMenu = false;
           if (!this.admin.traits.length) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
-          const { status, notes, mbti, trait, level } = this.admin;
-          this.sheet = { type: 'admin-filters', draft: { status, notes, mbti, trait, level }, count: this.admin.total_users, counting: false, traitQuery: '' };
+          const { status, notes, key, mbti, trait, level } = this.admin;
+          this.sheet = { type: 'admin-filters', draft: { status, notes, key, mbti, trait, level }, count: this.admin.total_users, counting: false, traitQuery: '' };
         },
         setDraft(key, value) {
           if (this.sheet?.type !== 'admin-filters') return;
@@ -3703,7 +3796,7 @@
         },
         resetDraft() {
           this.haptic('light');
-          this.sheet.draft = { status: '', notes: '', mbti: '', trait: '', level: 'any' };
+          this.sheet.draft = { status: '', notes: '', key: '', mbti: '', trait: '', level: 'any' };
           this.countAdminDraft();
         },
         // live "Show N people" while the filters are being picked
@@ -3737,7 +3830,7 @@
         },
         clearAdminFilters() {
           this.haptic('light');
-          Object.assign(this.admin, { status: '', notes: '', mbti: '', trait: '', level: 'any' });
+          Object.assign(this.admin, { status: '', notes: '', key: '', mbti: '', trait: '', level: 'any' });
           this.saveAdminPrefs();
           this.fetchAdmin();
         },
@@ -4390,6 +4483,59 @@
           } finally {
             this.logs.loading = false; this.logs.loadingMore = false;
           }
+        },
+
+        // ----- Talk: the AI companion (same session as 💬 Talk in the bot) -----
+        async fetchTalk() {
+          try {
+            this.talk.data = await this.api('/api/me/talk', { fresh: true });
+            this.talk.error = '';
+            this.fetchedAt.talk = Date.now();
+            this.scrollTalkToEnd();
+          } catch (error) {
+            this.talk.error = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+          }
+        },
+        // which assistant reply this is (1-based), for the "I'm an AI" reminder every 8 replies
+        talkAssistantIndex(i) { return this.talk.data.messages.slice(0, i + 1).filter(m => m.role === 'assistant').length; },
+        scrollTalkToEnd() { nextTick(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })); },
+        growTalkInput(e) { const el = e.target; el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; },
+        // Enter sends on a keyboard; on a phone the soft keyboard's Enter keeps adding lines
+        onTalkEnter(e) { if (window.matchMedia?.('(pointer: fine)').matches) { e.preventDefault(); this.sendTalk(); } },
+        async sendTalk() {
+          const text = this.talk.input.trim();
+          if (!text || this.talk.sending) return;
+          this.haptic('light');
+          this.talk.pending = text;
+          this.talk.input = '';
+          if (this.$refs.talkInput) this.$refs.talkInput.style.height = 'auto';
+          this.talk.sending = true;
+          this.scrollTalkToEnd();
+          try {
+            this.talk.data = await this.api('/api/me/talk/message', { method: 'POST', body: { text } });
+            this.haptic('soft');
+          } catch (error) {
+            // nothing was saved: put the message back so it can be sent again
+            this.talk.input = text;
+            const code = error.data?.error;
+            if (code === 'no_key') { this.talk.data = { ...this.talk.data, has_key: false }; }
+            else if (code === 'key_rejected') { this.showToast('OpenAI rejected your key. Update it in Settings'); this.fetchTalk(); }
+            else if (code === 'model_unavailable') { this.showToast(`Your OpenAI account can't use ${error.data.model}. Pick another model in Settings`); this.fetchTalk(); }
+            else if (code === 'too_long') this.showToast(`That's a long one. Keep it under ${this.TALK_MAX} characters`);
+            else this.showToast("Couldn't get a reply right now. Try again");
+          } finally {
+            this.talk.pending = '';
+            this.talk.sending = false;
+            this.scrollTalkToEnd();
+          }
+        },
+        async endTalk() {
+          if (this.talk.ending) return;
+          this.haptic('medium');
+          this.talk.ending = true;
+          try { this.talk.data = await this.api('/api/me/talk/end', { method: 'POST' }); this.showToast('Talk ended. Take care of yourself'); }
+          catch { this.showToast("Couldn't end the talk"); }
+          finally { this.talk.ending = false; }
         },
 
         // ----- MBTI-style test: reveal, share, shared-result page -----
