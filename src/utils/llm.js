@@ -444,3 +444,31 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   const risk = ["none", "low", "medium", "high"].includes(parsed?.risk) ? parsed.risk : "none";
   return { reply, risk };
 }
+
+// ---- Translation (admin reading a mood note) ----
+
+const TRANSLATE_SYSTEM_PROMPT = `
+You translate short personal mood notes into English for a reader who doesn't speak the language.
+Detect the language, then translate faithfully: keep the tone, slang and emotion; do not soften,
+explain, summarize or add anything. Keep emoji as they are.
+
+Return ONLY valid JSON: {"language": "<ISO 639-1 code of the original, e.g. fa, de, es>", "english": "<the translation>"}
+If the note is already English, return {"language": "en", "english": "<the note unchanged>"}.
+`;
+
+export async function translateToEnglish(text, apiKey, { model = DEFAULT_MODEL } = {}) {
+  if (!apiKey) throw new Error("Missing OpenAI API key");
+  const client = makeClient(apiKey);
+  const response = await createChat(client, {
+    ...chatParams(model, { temperature: 0, maxTokens: 600 }),
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: TRANSLATE_SYSTEM_PROMPT },
+      { role: "user", content: String(text).slice(0, 4000) },
+    ],
+  });
+  const result = JSON.parse(response.choices[0]?.message?.content || "{}");
+  if (typeof result.english !== "string" || !result.english.trim()) throw new Error("Empty translation");
+  const language = typeof result.language === "string" && /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(result.language) ? result.language : null;
+  return { english: result.english.trim(), language };
+}

@@ -667,6 +667,11 @@
     .tl-head { display: flex; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; }
     .tl-head time { font-size: 11px; font-weight: 600; color: var(--hint); }
     .tl-note { font-size: 13px; color: var(--hint); font-style: italic; margin-top: 2px; line-height: 1.35; }
+    .tl-tr { font-size: 13px; line-height: 1.4; margin-top: 6px; padding: 8px 10px; border-radius: 12px; background: rgba(51,144,236,0.1); }
+    .tl-tr span:last-child { display: block; }
+    .tl-tr .tl-tr-k { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+    .tl-tr-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 10px; border: 0; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 700; color: var(--accent); background: rgba(51,144,236,0.12); }
+    .tl-tr-btn:disabled { opacity: .6; }
 
     /* ---- Bottom sheet ---- */
     .sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 60; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
@@ -2305,6 +2310,14 @@
                     </div>
                     <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
                     <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                    <!-- admin: the note in English (only when tapped; Google Translate or OpenAI, see src/translate/service.js) -->
+                    <template v-if="m.note && m.id && sheet.translate?.available">
+                      <div v-if="sheet.tr[m.id]?.text" class="tl-tr">
+                        <span class="tl-tr-k"><ui-icon name="languages" :size="12"></ui-icon>{{ sheet.tr[m.id].same ? 'Already in English' : 'English' + (sheet.tr[m.id].language ? ' · from ' + languageName(sheet.tr[m.id].language) : '') }}</span>
+                        <span v-if="!sheet.tr[m.id].same">{{ sheet.tr[m.id].text }}</span>
+                      </div>
+                      <button v-else class="tl-tr-btn" :disabled="sheet.tr[m.id]?.busy" @click="translateNote(m)"><ui-icon name="languages" :size="13"></ui-icon>{{ sheet.tr[m.id]?.busy ? 'Translating…' : 'Translate' }}</button>
+                    </template>
                   </div>
                 </div>
                 <div class="load-more" v-if="!sheet.loading && sheet.has_more">
@@ -3858,7 +3871,7 @@
           try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '' };
+          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '', translate: null, tr: {} };
           if (tab === 'insights') this.loadCharacteristics();
           document.querySelector('.sheet')?.scrollTo({ top: 0 });
           // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag
@@ -3876,7 +3889,7 @@
           try {
             const data = await this.api(`/api/admin/users/${u.id}/moods`);
             if (this.sheet?.type === 'admin-user') {
-              Object.assign(this.sheet, { moods: data.moods, has_more: data.has_more, next_before: data.next_before, loading: false });
+              Object.assign(this.sheet, { moods: data.moods, has_more: data.has_more, next_before: data.next_before, translate: data.translate || null, tr: {}, loading: false });
               await nextTick();                // render the timeline before mounting its stickers
               this.mountStickers();
             }
@@ -3885,6 +3898,23 @@
           } finally {
             if (this.sheet) this.sheet.loading = false;
           }
+        },
+        // admin: one note in English, on tap
+        async translateNote(m) {
+          const sheet = this.sheet;
+          if (!sheet?.tr || sheet.tr[m.id]?.busy) return;
+          this.haptic('light');
+          sheet.tr[m.id] = { busy: true };
+          try {
+            const d = await this.api(`/api/admin/moods/${m.id}/translate`, { method: 'POST' });
+            sheet.tr[m.id] = { text: d.text, language: d.language, same: d.same };
+          } catch (error) {
+            delete sheet.tr[m.id];
+            this.showToast(error.data?.message || "Couldn't translate right now");
+          }
+        },
+        languageName(code) {
+          try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code; } catch { return code; }
         },
         async loadMoreMoods() {
           const sheet = this.sheet;

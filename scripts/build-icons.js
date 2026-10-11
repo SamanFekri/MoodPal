@@ -21,6 +21,8 @@ const NAMES = [
   'sparkles', 'chart-column', 'arrow-down-wide-narrow', 'arrow-up-narrow-wide', 'message-circle-heart', 'history', 'quote', 'thumbs-down', 'target', 'heart-handshake', 'lightbulb', 'zap', 'flame',
   // OpenAI key filter
   'key-round', 'circle-off',
+  // admin note translation
+  'languages',
   'compass', 'users-round', 'calendar-check', 'waves', 'anchor', 'thumbs-up', 'messages-square', 'book-open', 'telescope', 'sun', 'handshake',
 ];
 

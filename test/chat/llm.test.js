@@ -95,4 +95,17 @@ describe('OpenAI requests', () => {
     assert.equal(llm.isModelError(Object.assign(new Error('The model `gpt-5.6` does not exist or you do not have access to it.'), { status: 404, code: 'model_not_found' })), true);
     assert.equal(llm.isModelError(Object.assign(new Error('Rate limit'), { status: 429 })), false);
   });
+
+  test('translateToEnglish returns the translation and the detected language, and rejects empty answers', async () => {
+    const sent = [];
+    const answer = (content) => ({ chat: { completions: { create: async (p) => { sent.push(p); return { choices: [{ message: { content } }] }; } } } });
+    llm._setClientFactory(() => answer(JSON.stringify({ language: 'fa', english: ' I am tired ' })));
+    assert.deepEqual(await llm.translateToEnglish('خسته‌ام', 'sk-x', { model: 'gpt-4.1' }), { english: 'I am tired', language: 'fa' });
+    assert.equal(sent[0].model, 'gpt-4.1');
+    assert.equal(sent[0].messages[1].content, 'خسته‌ام');
+    llm._setClientFactory(() => answer(JSON.stringify({ language: 'nonsense!!', english: 'ok' })));
+    assert.equal((await llm.translateToEnglish('x', 'sk-x')).language, null);
+    llm._setClientFactory(() => answer(JSON.stringify({ language: 'fa', english: '' })));
+    await assert.rejects(llm.translateToEnglish('x', 'sk-x'));
+  });
 });

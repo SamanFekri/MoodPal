@@ -105,6 +105,7 @@ app.post('/api/me/personality/session/cancel', requireWebAppUser, controllers.pe
 app.get('/api/public/personality/:token', controllers.personality.getPublic);
 app.get('/api/admin/users', requireWebAppUser, requireAdmin, controllers.admin.listUsers);
 app.get('/api/admin/users/:telegramId/moods', requireWebAppUser, requireAdmin, controllers.admin.userMoods);
+app.post('/api/admin/moods/:moodId/translate', requireWebAppUser, requireAdmin, controllers.admin.translateNote);
 app.get('/api/admin/users/:telegramId/personality', requireWebAppUser, requireAdmin, controllers.admin.userPersonality);
 app.get('/api/admin/users/:telegramId/connections', requireWebAppUser, requireAdmin, controllers.admin.userConnections);
 app.get('/api/admin/users/:telegramId/characteristics', requireWebAppUser, requireAdmin, controllers.admin.userCharacteristics);

@@ -5,6 +5,7 @@ const Mood = require('../models/mood');
 const Share = require('../models/share');
 const PersonalityTrait = require('../models/personality_trait');
 const personalityService = require('../personality/service');
+const translateService = require('../translate/service');
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -198,13 +199,37 @@ const userMoods = async (req, res) => {
   const moods = await Mood.find(filter).sort({ timestamp: -1 }).limit(limit + 1).select('mood note timestamp').lean();
   const hasMore = moods.length > limit;
   const pageMoods = moods.slice(0, limit);
+  const translator = await translateService.provider(req.user._id);
 
   res.json({
     user: publicUser(user),
-    moods: pageMoods.map(m => ({ mood: m.mood, note: m.note || '', timestamp: m.timestamp, tgs: `/public/tgs/${m.mood.code}.tgs` })),
+    moods: pageMoods.map(m => ({ id: m._id, mood: m.mood, note: m.note || '', timestamp: m.timestamp, tgs: `/public/tgs/${m.mood.code}.tgs` })),
+    // whether the admin's Translate button works, and with what (never the key)
+    translate: { available: Boolean(translator), provider: translator?.name || null },
     has_more: hasMore,
     next_before: hasMore ? pageMoods[pageMoods.length - 1].timestamp : null,
   });
+};
+
+// POST /api/admin/moods/:moodId/translate — the mood's note in English (only when the admin taps Translate)
+const TRANSLATE_ERRORS = {
+  empty: [400, 'This mood has no note.'],
+  no_provider: [400, 'No translator: set GOOGLE_TRANSLATE_API_KEY or OPENAI_API_KEY on the server, or add your own OpenAI key in Settings.'],
+  bad_key: [400, 'The translation key was rejected.'],
+  model_unavailable: [400, "This OpenAI key can't use the selected model. Pick another one in Settings."],
+  failed: [502, "Couldn't translate right now. Try again in a moment."],
+};
+const translateNote = async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.moodId)) return res.status(404).json({ error: 'not_found' });
+  const mood = await Mood.findById(req.params.moodId).select('note').lean();
+  if (!mood) return res.status(404).json({ error: 'not_found' });
+  try {
+    res.json(await translateService.translate(req.user._id, mood._id, mood.note));
+  } catch (error) {
+    const known = error instanceof translateService.TranslateError && TRANSLATE_ERRORS[error.code];
+    if (!known) throw error;
+    res.status(known[0]).json({ error: error.code, message: known[1] });
+  }
 };
 
 // POST /api/admin/users/:telegramId/friend   — admin follows the user (they appear in the admin's Friends tab)
@@ -415,4 +440,4 @@ const calculateCharacteristics = async (req, res) => {
   }
 };
 
-module.exports = { listUsers, userMoods, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph, userCharacteristics, userCharacteristicsAnalysis, calculateCharacteristics };
+module.exports = { listUsers, userMoods, translateNote, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph, userCharacteristics, userCharacteristicsAnalysis, calculateCharacteristics };
