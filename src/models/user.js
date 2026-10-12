@@ -64,6 +64,13 @@ const userSchema = new mongoose.Schema({
     default: null,
     index: true
   },
+  // secret for the home-screen widget image links (/w/<token>/…); null = widget links are off
+  widget_token: {
+    type: String,
+    default: null,
+    index: true,
+    select: false
+  },
   // which menu layout this user's Telegram client currently has (see MENU_SIGNATURE)
   menu_signature: {
     type: String,

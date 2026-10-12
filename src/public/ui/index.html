@@ -1033,6 +1033,16 @@
     .kv .v.bad { color: #ff5f6d; }
     .kv .v.warn { color: #ff9f0a; }
     .row-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .w-head.sep { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(138,143,152,0.18); }
+    .w-head .s-title { font-size: 14px; font-weight: 700; }
+    .w-head .s-desc { font-size: 12px; color: var(--hint); line-height: 1.35; margin-top: 2px; }
+    .w-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .w-select { font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 999px; padding: 8px 12px; max-width: 100%; }
+    .w-select.on { background: var(--accent); color: var(--accent-text); }
+    .w-preview { display: block; width: 50%; aspect-ratio: 1; margin: 14px auto 0; border-radius: 22px; background: #14171d; object-fit: cover; box-shadow: var(--shadow); }
+    .w-preview.wide { width: 100%; aspect-ratio: 1200 / 564; }
+    .w-steps { font-size: 12px; color: var(--hint); line-height: 1.5; margin-top: 12px; }
+    .w-steps b { display: block; color: var(--text); margin-top: 6px; }
     .row-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
     .time-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
     .time-row input[type=time] { font: inherit; font-size: 16px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 12px; padding: 10px 12px; }
@@ -1887,6 +1897,48 @@
                 <input v-model="modelInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
                 <button class="btn ghost" :disabled="settingsBusy || !modelInput.trim()" @click="setModel(modelInput.trim())">Use</button>
               </div>
+            </section>
+
+            <!-- home screen: Telegram's shortcut, and widget image links for a widget app (src/controllers/widget.js) -->
+            <section class="section" :style="{ '--i': 2 }">
+              <h3><ui-icon name="smartphone" :size="17"></ui-icon> Home screen <span class="sub">{{ widget?.enabled ? "widget on" : "widget off" }}</span></h3>
+              <div class="share-row" v-if="homeScreen.supported">
+                <div>
+                  <div class="s-title">MoodPal icon</div>
+                  <div class="s-desc">Opens MoodPal in one tap, right from your home screen.</div>
+                </div>
+                <button class="btn small" style="margin-top:0" :disabled="homeScreen.status === 'added'" @click="addToHomeScreen">{{ homeScreen.status === 'added' ? 'Added' : 'Add' }}</button>
+              </div>
+              <div class="w-head" :class="{ sep: homeScreen.supported }">
+                <div class="s-title">Mood widget</div>
+                <div class="s-desc">Telegram can't put widgets on your home screen, but a free widget app can show these pictures and keep them up to date.</div>
+              </div>
+              <div v-if="!widget" class="shimmer sk-line" style="width:60%"></div>
+              <div v-else-if="!widget.enabled" class="row-actions"><button class="btn" :disabled="widgetBusy" @click="enableWidget()"><ui-icon name="link" :size="16"></ui-icon>Create my widget links</button></div>
+              <template v-else>
+                <div class="w-picks">
+                  <button class="af-opt" :class="{ on: widgetPick === 'me' }" @click="widgetPick = 'me'">My mood</button>
+                  <button class="af-opt" :class="{ on: widgetPick === 'friends' }" @click="widgetPick = 'friends'">Friends</button>
+                  <select v-if="widget.friends.length" class="w-select" :class="{ on: typeof widgetPick === 'number' }" :value="typeof widgetPick === 'number' ? widgetPick : ''" @change="widgetPick = $event.target.value ? Number($event.target.value) : 'me'">
+                    <option value="">One friend…</option>
+                    <option v-for="f in widget.friends" :key="'wf' + f.id" :value="f.id">{{ f.fullname }}</option>
+                  </select>
+                </div>
+                <img class="w-preview" :class="{ wide: widgetPick === 'friends' }" :src="widgetLink + '?v=' + widgetVersion" alt="Widget preview">
+                <div class="row-actions">
+                  <button class="btn" @click="copyText(widgetLink, 'Widget link copied')"><ui-icon name="link" :size="16"></ui-icon>Copy link</button>
+                  <button class="btn ghost" @click="copyText(widgetScript, 'Script copied. Paste it into Scriptable')"><ui-icon name="clipboard-list" :size="16"></ui-icon>Copy iPhone script</button>
+                </div>
+                <div class="w-steps">
+                  <b>iPhone</b> Install the free <i>Scriptable</i> app, add a new script and paste the copied script. Then add a Scriptable widget to your home screen (Small for one mood, Medium for friends), long-press it, tap Edit Widget and pick the script.
+                  <b>Android</b> Install a widget app that shows an image from a link (for example KWGT), add its widget and paste the copied link.
+                </div>
+                <div class="note-box">Anyone with a link can see that picture, so keep it to yourself. Friends only appear while they share their mood with you, and notes are never shown.</div>
+                <div class="row-actions">
+                  <button class="btn ghost" :disabled="widgetBusy" @click="enableWidget(true)"><ui-icon name="refresh-cw" :size="15"></ui-icon>New links</button>
+                  <button class="btn danger" :disabled="widgetBusy" @click="disableWidget"><ui-icon name="x" :size="15"></ui-icon>Turn off</button>
+                </div>
+              </template>
             </section>
 
             <section class="section" :style="{ '--i': 2 }">
@@ -3228,6 +3280,8 @@
           memories: null,
           publicName: '',
           publicBot: null,
+          widget: null, widgetPick: 'me', widgetBusy: false, widgetVersion: 0,
+          homeScreen: { supported: false, status: null },
         }
       },
 
@@ -3302,6 +3356,28 @@
             .map(z => { const l = z.toLowerCase(), c = l.split('/').pop(); return [c === needle ? 0 : c.startsWith(needle) ? 1 : l.startsWith(needle) ? 2 : l.includes(needle) ? 3 : -1, z]; })
             .filter(([score]) => score >= 0).sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).slice(0, 8).map(([, z]) => z);
         },
+        widgetLink() {
+          const w = this.widget;
+          if (!w?.enabled) return '';
+          if (this.widgetPick === 'friends') return w.links.friends;
+          return w.friends.find(f => f.id === this.widgetPick)?.link || w.links.me;
+        },
+        // a Scriptable (iOS) widget that shows the picked image and opens the bot when tapped
+        widgetScript() {
+          const medium = this.widgetPick === 'friends';
+          return `// MoodPal widget for Scriptable (iOS). Use a ${medium ? 'Medium' : 'Small'} widget.
+const url = ${JSON.stringify(this.widgetLink)};
+const w = new ListWidget();
+w.backgroundColor = new Color("#14171d");
+try { w.backgroundImage = await new Request(url).loadImage(); }
+catch (e) { w.addText("MoodPal: couldn't load your widget"); }
+w.url = ${JSON.stringify(this.botLink)};
+w.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
+Script.setWidget(w);
+if (!config.runsInWidget) await w.${medium ? 'presentMedium' : 'presentSmall'}();
+Script.complete();
+`;
+        },
         botLink() { return this.shareLink ? this.shareLink.split('?')[0] : `https://t.me/${this.publicBot || 'MoodPalBot'}`; },
       },
 
@@ -3342,6 +3418,7 @@
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
             // nice-to-haves: if Telegram's API misbehaves here, still load everything below
             try { this.watchActivation(); } catch (error) { console.error('Activation watch failed:', error); }
+            this.checkHomeScreen();
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
             if (this.isAdmin) { this.loadAdminPrefs(); loads.push(this.fetchAdmin()); }
@@ -4374,9 +4451,50 @@
             this.settingsError = '';
             this.fetchedAt.settings = Date.now();
             this.loadFollowers();
+            this.fetchWidget();
           } catch (error) {
             this.settingsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
           }
+        },
+        // ----- home screen: Telegram's shortcut (Bot API 8.0+) and the widget image links -----
+        checkHomeScreen() {
+          const tg = this.tg;
+          if (!tg?.isVersionAtLeast?.('8.0') || typeof tg.checkHomeScreenStatus !== 'function') return;
+          try {
+            tg.checkHomeScreenStatus((status) => { this.homeScreen = { supported: status !== 'unsupported', status }; });
+            tg.onEvent?.('homeScreenAdded', () => { this.homeScreen.status = 'added'; this.showToast('MoodPal is on your home screen'); });
+          } catch {}
+        },
+        addToHomeScreen() {
+          this.haptic('light');
+          try { this.tg.addToHomeScreen(); } catch { this.showToast("Your Telegram app can't do this yet"); }
+        },
+        async fetchWidget() {
+          try {
+            this.widget = await this.api('/api/me/widget');
+            this.widgetVersion = Date.now();
+            if (typeof this.widgetPick === 'number' && !this.widget.friends.some(f => f.id === this.widgetPick)) this.widgetPick = 'me';
+          } catch { this.widget = this.widget || { enabled: false, links: null, friends: [] }; }
+        },
+        async enableWidget(reset = false) {
+          if (this.widgetBusy) return;
+          if (reset && !window.confirm('Make new links? Widgets using the old links will stop working until you paste the new ones.')) return;
+          this.haptic('medium');
+          this.widgetBusy = true;
+          try {
+            this.widget = await this.api('/api/me/widget', { method: 'POST', body: reset ? { reset: true } : {} });
+            this.widgetVersion = Date.now();
+            if (reset) this.showToast('New links ready. Copy them into your widgets again');
+          } catch { this.showToast("Couldn't create the links"); }
+          finally { this.widgetBusy = false; }
+        },
+        async disableWidget() {
+          if (this.widgetBusy || !window.confirm('Turn off widget links? Every widget using them stops updating.')) return;
+          this.haptic('medium');
+          this.widgetBusy = true;
+          try { this.widget = await this.api('/api/me/widget', { method: 'DELETE' }); this.showToast('Widget links are off'); }
+          catch { this.showToast("Couldn't turn them off"); }
+          finally { this.widgetBusy = false; }
         },
         async saveKey() {
           const key = this.keyInput.trim();

@@ -23,6 +23,8 @@ const NAMES = [
   'key-round', 'circle-off',
   // admin note translation
   'languages',
+  // home screen widget
+  'smartphone',
   'compass', 'users-round', 'calendar-check', 'waves', 'anchor', 'thumbs-up', 'messages-square', 'book-open', 'telescope', 'sun', 'handshake',
 ];
 

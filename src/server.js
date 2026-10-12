@@ -26,6 +26,11 @@ app.get('/user/:userId/mood/tgs', controllers.embed.tgsMood);
 
 app.get('/user/:userId/mood/emoji', controllers.embed.emojiMood);
 
+// home-screen widget images; the secret token in the link is the key (see src/controllers/widget.js)
+app.get('/w/:token/me.png', controllers.widget.meImage);
+app.get('/w/:token/friends.png', controllers.widget.friendsImage);
+app.get('/w/:token/friend/:telegramId.png', controllers.widget.friendImage);
+
 // GET /healthz: 200 when the bot works, 503 (with the reasons) when it doesn't. For Docker's
 // healthcheck and any uptime monitor; it reveals nothing private.
 app.get('/healthz', async (req, res) => {
@@ -96,6 +101,9 @@ app.get('/api/me/talk', requireWebAppUser, controllers.talk.getTalk);
 app.post('/api/me/talk/start', requireWebAppUser, controllers.talk.startTalk);
 app.post('/api/me/talk/message', requireWebAppUser, controllers.talk.sendMessage);
 app.post('/api/me/talk/end', requireWebAppUser, controllers.talk.endTalk);
+app.get('/api/me/widget', requireWebAppUser, controllers.widget.getWidget);
+app.post('/api/me/widget', requireWebAppUser, controllers.widget.enableWidget);
+app.delete('/api/me/widget', requireWebAppUser, controllers.widget.disableWidget);
 app.get('/api/me/personality', requireWebAppUser, controllers.personality.getMine);
 app.post('/api/me/personality/sharing', requireWebAppUser, controllers.personality.setSharing);
 app.get('/api/me/personality/session', requireWebAppUser, controllers.personality.getSession);
