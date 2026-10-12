@@ -25,7 +25,8 @@ const api = (path, { as, method = 'GET', body } = {}) => fetch(base + path, {
 }).then(async r => ({ status: r.status, body: await r.json().catch(() => null) }));
 // a link from the API, fetched the way a widget app would (no Telegram auth)
 const image = async (link) => {
-  const r = await fetch(base + new URL(link).pathname);
+  const u = new URL(link);
+  const r = await fetch(base + u.pathname + u.search);
   const buf = Buffer.from(await r.arrayBuffer());
   return { status: r.status, type: r.headers.get('content-type'), buf, meta: r.ok ? await sharp(buf).metadata() : null };
 };
@@ -49,7 +50,7 @@ describe('home-screen widget links', () => {
   });
 
   test('off by default; turning it on gives my links and one per friend who shares with me', async () => {
-    assert.deepEqual((await api('/api/me/widget', { as: alice })).body, { enabled: false, links: null, friends: [] });
+    assert.deepEqual((await api('/api/me/widget', { as: alice })).body, { enabled: false, base: null, links: null, friends: [] });
     const r = await api('/api/me/widget', { as: alice, method: 'POST' });
     assert.equal(r.body.enabled, true);
     assert.match(r.body.links.me, /\/w\/[A-Za-z0-9_-]{20,}\/me\.png$/);
@@ -85,6 +86,24 @@ describe('home-screen widget links', () => {
     const after = await image(bobLink);
     assert.notDeepEqual(after.buf, before);
     assert.deepEqual((await api('/api/me/widget', { as: alice })).body.friends, []);
+  });
+
+  test('the builder link: any size, me plus chosen friends, in that order', async () => {
+    const { body } = await api('/api/me/widget', { as: alice, method: 'POST' });
+    assert.match(body.base, /\/w\/[A-Za-z0-9_-]{20,}\/widget\.png$/);
+    assert.deepEqual(body.sizes.medium, { width: 1200, height: 564, max: 6 });
+    const get = (q) => image(`${body.base}?${q}`);
+    for (const [size, w, h] of [['small', 600, 600], ['medium', 1200, 564], ['large', 1200, 1256]]) {
+      const r = await get(`size=${size}&people=me,6002`);
+      assert.equal(r.status, 200);
+      assert.deepEqual([r.meta.width, r.meta.height], [w, h]);
+    }
+    // order matters, unknown size falls back to small, junk ids are ignored
+    assert.notDeepEqual((await get('size=large&people=me,6002')).buf, (await get('size=large&people=6002,me')).buf);
+    assert.deepEqual((await get('size=huge&people=me')).meta.width, 600);
+    assert.deepEqual((await get('size=small&people=me,<script>')).buf, (await get('size=small&people=me')).buf);
+    // someone who doesn't share with me shows as "Not shared", never their mood
+    assert.notDeepEqual((await get('size=small&people=6003')).buf, (await get('size=small&people=6002')).buf);
   });
 
   test('reset gives new links and the old ones stop working; off stops all of them', async () => {

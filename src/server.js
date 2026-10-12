@@ -27,6 +27,7 @@ app.get('/user/:userId/mood/tgs', controllers.embed.tgsMood);
 app.get('/user/:userId/mood/emoji', controllers.embed.emojiMood);
 
 // home-screen widget images; the secret token in the link is the key (see src/controllers/widget.js)
+app.get('/w/:token/widget.png', controllers.widget.widgetImage);
 app.get('/w/:token/me.png', controllers.widget.meImage);
 app.get('/w/:token/friends.png', controllers.widget.friendsImage);
 app.get('/w/:token/friend/:telegramId.png', controllers.widget.friendImage);

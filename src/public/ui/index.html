@@ -1033,14 +1033,30 @@
     .kv .v.bad { color: #ff5f6d; }
     .kv .v.warn { color: #ff9f0a; }
     .row-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .widget-cta { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 16px; padding: 12px 14px; border: 0; border-radius: var(--radius); background: var(--card); color: var(--text); font: inherit; text-align: left; box-shadow: var(--shadow); }
+    .widget-cta .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(51,144,236,0.14); color: var(--accent); }
+    .widget-cta .t { flex: 1; min-width: 0; }
+    .widget-cta b { display: block; font-size: 15px; }
+    .widget-cta small { display: block; font-size: 12px; color: var(--hint); margin-top: 2px; }
+    .widget-cta > .ui-icon:last-child { color: var(--hint); }
+    .widget-cta:active { transform: scale(.98); }
+    .wb-off p { font-size: 14px; line-height: 1.5; color: var(--hint); margin: 0 0 12px; }
+    .wb-note { font-size: 12px; color: var(--hint); line-height: 1.45; margin-top: 8px; }
+    .wb-sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .wb-size { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px; border: 0; border-radius: 16px; background: rgba(138,143,152,0.12); color: var(--text); font: inherit; }
+    .wb-size b { font-size: 14px; } .wb-size small { font-size: 11px; color: var(--hint); }
+    .wb-size.on { background: var(--accent); color: var(--accent-text); } .wb-size.on small { color: inherit; opacity: .8; }
+    .wb-size .shape { display: block; height: 26px; border-radius: 6px; border: 2px solid currentColor; opacity: .8; }
+    .wb-size .shape.small { width: 26px; } .wb-size .shape.medium { width: 54px; } .wb-size .shape.large { width: 34px; height: 36px; margin-top: -10px; }
+    .wb-n { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.25); font-size: 11px; font-weight: 800; }
+    .wb-preview { display: block; margin: 16px auto 0; border-radius: 22px; background: #14171d; box-shadow: var(--shadow); object-fit: cover; }
+    .wb-preview.small { width: 55%; aspect-ratio: 1; }
+    .wb-preview.medium { width: 100%; aspect-ratio: 1200 / 564; }
+    .wb-preview.large { width: 80%; aspect-ratio: 1200 / 1256; }
+    .w-steps b.inl { display: inline; margin: 0; }
     .w-head.sep { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(138,143,152,0.18); }
     .w-head .s-title { font-size: 14px; font-weight: 700; }
     .w-head .s-desc { font-size: 12px; color: var(--hint); line-height: 1.35; margin-top: 2px; }
-    .w-picks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .w-select { font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.12); border: 0; border-radius: 999px; padding: 8px 12px; max-width: 100%; }
-    .w-select.on { background: var(--accent); color: var(--accent-text); }
-    .w-preview { display: block; width: 50%; aspect-ratio: 1; margin: 14px auto 0; border-radius: 22px; background: #14171d; object-fit: cover; box-shadow: var(--shadow); }
-    .w-preview.wide { width: 100%; aspect-ratio: 1200 / 564; }
     .w-steps { font-size: 12px; color: var(--hint); line-height: 1.5; margin-top: 12px; }
     .w-steps b { display: block; color: var(--text); margin-top: 6px; }
     .row-actions .btn { padding: 10px 14px; font-size: 13px; box-shadow: none; }
@@ -1207,6 +1223,12 @@
               </div>
             </template>
           </section>
+
+          <button class="widget-cta" @click="openWidgetBuilder">
+            <span class="ic"><ui-icon name="smartphone" :size="20"></ui-icon></span>
+            <span class="t"><b>Home screen widget</b><small>Your mood and your friends', right on your home screen</small></span>
+            <ui-icon name="chevron-right" :size="18"></ui-icon>
+          </button>
 
           <div v-if="(loadingFriends || !fetchedAt.friends) && friends.length === 0 && !friendsError" class="grid">
             <div v-for="n in 4" :key="'sk' + n" class="skeleton" :style="{ '--i': n - 1 }">
@@ -1899,47 +1921,29 @@
               </div>
             </section>
 
-            <!-- home screen: Telegram's shortcut, and widget image links for a widget app (src/controllers/widget.js) -->
+            <!-- home screen: Telegram's app icon, and the mood widget (builder sheet, src/controllers/widget.js) -->
             <section class="section" :style="{ '--i': 2 }">
               <h3><ui-icon name="smartphone" :size="17"></ui-icon> Home screen <span class="sub">{{ widget?.enabled ? "widget on" : "widget off" }}</span></h3>
-              <div class="share-row" v-if="homeScreen.supported">
+              <div class="share-row">
                 <div>
-                  <div class="s-title">MoodPal icon</div>
-                  <div class="s-desc">Opens MoodPal in one tap, right from your home screen.</div>
+                  <div class="s-title">Mood widget</div>
+                  <div class="s-desc">Your mood and your friends' moods on your home screen, small, medium or large.</div>
                 </div>
-                <button class="btn small" style="margin-top:0" :disabled="homeScreen.status === 'added'" @click="addToHomeScreen">{{ homeScreen.status === 'added' ? 'Added' : 'Add' }}</button>
+                <button class="btn small" style="margin-top:0" @click="openWidgetBuilder">Make one</button>
               </div>
-              <div class="w-head" :class="{ sep: homeScreen.supported }">
-                <div class="s-title">Mood widget</div>
-                <div class="s-desc">Telegram can't put widgets on your home screen, but a free widget app can show these pictures and keep them up to date.</div>
+              <div class="row-actions" v-if="widget?.enabled">
+                <button class="btn ghost" :disabled="widgetBusy" @click="enableWidget(true)"><ui-icon name="refresh-cw" :size="15"></ui-icon>New links</button>
+                <button class="btn danger" :disabled="widgetBusy" @click="disableWidget"><ui-icon name="x" :size="15"></ui-icon>Turn off widget links</button>
               </div>
-              <div v-if="!widget" class="shimmer sk-line" style="width:60%"></div>
-              <div v-else-if="!widget.enabled" class="row-actions"><button class="btn" :disabled="widgetBusy" @click="enableWidget()"><ui-icon name="link" :size="16"></ui-icon>Create my widget links</button></div>
-              <template v-else>
-                <div class="w-picks">
-                  <button class="af-opt" :class="{ on: widgetPick === 'me' }" @click="widgetPick = 'me'">My mood</button>
-                  <button class="af-opt" :class="{ on: widgetPick === 'friends' }" @click="widgetPick = 'friends'">Friends</button>
-                  <select v-if="widget.friends.length" class="w-select" :class="{ on: typeof widgetPick === 'number' }" :value="typeof widgetPick === 'number' ? widgetPick : ''" @change="widgetPick = $event.target.value ? Number($event.target.value) : 'me'">
-                    <option value="">One friend…</option>
-                    <option v-for="f in widget.friends" :key="'wf' + f.id" :value="f.id">{{ f.fullname }}</option>
-                  </select>
+              <div class="share-row w-head sep" v-if="homeScreen.supported">
+                <div>
+                  <div class="s-title">App icon</div>
+                  <div class="s-desc">Only an icon that opens MoodPal. It doesn't show moods; for that, make a widget above.</div>
                 </div>
-                <img class="w-preview" :class="{ wide: widgetPick === 'friends' }" :src="widgetLink + '?v=' + widgetVersion" alt="Widget preview">
-                <div class="row-actions">
-                  <button class="btn" @click="copyText(widgetLink, 'Widget link copied')"><ui-icon name="link" :size="16"></ui-icon>Copy link</button>
-                  <button class="btn ghost" @click="copyText(widgetScript, 'Script copied. Paste it into Scriptable')"><ui-icon name="clipboard-list" :size="16"></ui-icon>Copy iPhone script</button>
-                </div>
-                <div class="w-steps">
-                  <b>iPhone</b> Install the free <i>Scriptable</i> app, add a new script and paste the copied script. Then add a Scriptable widget to your home screen (Small for one mood, Medium for friends), long-press it, tap Edit Widget and pick the script.
-                  <b>Android</b> Install a widget app that shows an image from a link (for example KWGT), add its widget and paste the copied link.
-                </div>
-                <div class="note-box">Anyone with a link can see that picture, so keep it to yourself. Friends only appear while they share their mood with you, and notes are never shown.</div>
-                <div class="row-actions">
-                  <button class="btn ghost" :disabled="widgetBusy" @click="enableWidget(true)"><ui-icon name="refresh-cw" :size="15"></ui-icon>New links</button>
-                  <button class="btn danger" :disabled="widgetBusy" @click="disableWidget"><ui-icon name="x" :size="15"></ui-icon>Turn off</button>
-                </div>
-              </template>
+                <button class="btn small ghost" style="margin-top:0" :disabled="homeScreen.status === 'added'" @click="addToHomeScreen">{{ homeScreen.status === 'added' ? 'Added' : 'Add icon' }}</button>
+              </div>
             </section>
+
 
             <section class="section" :style="{ '--i': 2 }">
               <h3>Who can see my mood <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
@@ -2226,6 +2230,46 @@
             </template>
 
             <!-- one Moodling, from the cast gallery -->
+            <!-- home screen widget builder (Friends tab / Settings) -->
+            <template v-else-if="sheet.type === 'widget'">
+              <h2 class="af-title">Home screen widget</h2>
+              <div v-if="!widget" class="shimmer sk-line" style="width:60%"></div>
+              <div v-else-if="!widget.enabled" class="wb-off">
+                <p>Pick yourself and any friends, choose a size, and a widget app on your phone keeps their moods on your home screen.</p>
+                <p class="wb-note">This makes private picture links. Anyone with a link can see that picture, so keep it to yourself. Friends only appear while they share their mood with you, and notes are never shown.</p>
+                <button class="btn" :disabled="widgetBusy" @click="enableWidget()"><ui-icon name="link" :size="16"></ui-icon>Turn on widget links</button>
+              </div>
+              <template v-else>
+                <div class="af-sec">
+                  <div class="af-label">Size</div>
+                  <div class="wb-sizes">
+                    <button v-for="z in WIDGET_SIZES" :key="z.key" class="wb-size" :class="{ on: wb.size === z.key }" @click="setWidgetSize(z.key)">
+                      <span class="shape" :class="z.key"></span><b>{{ z.label }}</b><small>up to {{ widget.sizes?.[z.key]?.max || z.max }}</small>
+                    </button>
+                  </div>
+                </div>
+                <div class="af-sec">
+                  <div class="af-label">Who <span>{{ wb.auto ? 'newest friend moods' : wb.people.length + ' of ' + widgetMax }}</span></div>
+                  <div class="af-opts">
+                    <button class="af-opt" :class="{ on: !wb.auto && wb.people.includes('me') }" @click="toggleWidgetPerson('me')"><span v-if="!wb.auto && wb.people.includes('me')" class="wb-n">{{ wb.people.indexOf('me') + 1 }}</span>You</button>
+                    <button v-for="f in widget.friends" :key="'wb' + f.id" class="af-opt" :class="{ on: !wb.auto && wb.people.includes(String(f.id)) }" @click="toggleWidgetPerson(String(f.id))"><span v-if="!wb.auto && wb.people.includes(String(f.id))" class="wb-n">{{ wb.people.indexOf(String(f.id)) + 1 }}</span>{{ f.fullname }}</button>
+                    <button v-if="widget.friends.length" class="af-opt" :class="{ on: wb.auto }" @click="setWidgetAuto"><ui-icon name="users" :size="15"></ui-icon>Newest friends</button>
+                  </div>
+                  <div v-if="!widget.friends.length" class="wb-note">No friends share their mood with you yet. Once they do, you can add them here.</div>
+                </div>
+                <img class="wb-preview" :class="wb.size" :src="widgetLink + '&v=' + widgetVersion" alt="Widget preview">
+                <div class="row-actions">
+                  <button class="btn" @click="copyText(widgetLink, 'Widget link copied')"><ui-icon name="link" :size="16"></ui-icon>Copy link</button>
+                  <button class="btn ghost" @click="copyText(widgetScript, 'Script copied. Paste it into Scriptable')"><ui-icon name="clipboard-list" :size="16"></ui-icon>Copy iPhone script</button>
+                </div>
+                <div class="w-steps">
+                  <b>iPhone</b> 1. Install the free <i>Scriptable</i> app. 2. Tap + and paste the copied script. 3. On your home screen, add a Scriptable widget in the <b class="inl">{{ widgetSizeLabel }}</b> size, long-press it, tap Edit Widget and choose the script.
+                  <b>Android</b> Install a widget app that shows a picture from a link (for example KWGT), add its {{ widgetSizeLabel.toLowerCase() }} widget and paste the copied link.
+                  <b>Why not in Telegram?</b> Telegram's "Add to home screen" can only add an app icon. A widget needs a widget app; MoodPal draws the picture and keeps it up to date.
+                </div>
+              </template>
+            </template>
+
             <template v-else-if="sheet.type === 'mbti'">
               <mbti-card :key="sheet.mbtiType" :mbti="{ type: sheet.mbtiType }" :kicker="sheet.mbtiType === personality?.profile?.mbti?.type ? 'Your Moodling' : 'Meet'" letters-label="The four letters"></mbti-card>
               <div class="row-actions" style="margin-top:0">
@@ -3280,7 +3324,10 @@
           memories: null,
           publicName: '',
           publicBot: null,
-          widget: null, widgetPick: 'me', widgetBusy: false, widgetVersion: 0,
+          widget: null, widgetBusy: false, widgetVersion: 0,
+          // widget builder: size and who, remembered on this device
+          wb: { size: 'small', people: ['me'], auto: false },
+          WIDGET_SIZES: [{ key: 'small', label: 'Small', max: 4 }, { key: 'medium', label: 'Medium', max: 6 }, { key: 'large', label: 'Large', max: 9 }],
           homeScreen: { supported: false, status: null },
         }
       },
@@ -3356,16 +3403,18 @@
             .map(z => { const l = z.toLowerCase(), c = l.split('/').pop(); return [c === needle ? 0 : c.startsWith(needle) ? 1 : l.startsWith(needle) ? 2 : l.includes(needle) ? 3 : -1, z]; })
             .filter(([score]) => score >= 0).sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).slice(0, 8).map(([, z]) => z);
         },
+        widgetMax() { return this.widget?.sizes?.[this.wb.size]?.max || this.WIDGET_SIZES.find(z => z.key === this.wb.size).max; },
+        widgetSizeLabel() { return this.WIDGET_SIZES.find(z => z.key === this.wb.size).label; },
         widgetLink() {
           const w = this.widget;
-          if (!w?.enabled) return '';
-          if (this.widgetPick === 'friends') return w.links.friends;
-          return w.friends.find(f => f.id === this.widgetPick)?.link || w.links.me;
+          if (!w?.enabled || !w.base) return '';
+          const people = this.wb.auto ? 'friends' : (this.wb.people.length ? this.wb.people : ['me']).join(',');
+          return `${w.base}?size=${this.wb.size}&people=${people}`;
         },
-        // a Scriptable (iOS) widget that shows the picked image and opens the bot when tapped
+        // a Scriptable (iOS) widget that shows the picture and opens the bot when tapped
         widgetScript() {
-          const medium = this.widgetPick === 'friends';
-          return `// MoodPal widget for Scriptable (iOS). Use a ${medium ? 'Medium' : 'Small'} widget.
+          const size = this.widgetSizeLabel;
+          return `// MoodPal widget for Scriptable (iOS). Use a ${size} widget.
 const url = ${JSON.stringify(this.widgetLink)};
 const w = new ListWidget();
 w.backgroundColor = new Color("#14171d");
@@ -3374,7 +3423,7 @@ catch (e) { w.addText("MoodPal: couldn't load your widget"); }
 w.url = ${JSON.stringify(this.botLink)};
 w.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
 Script.setWidget(w);
-if (!config.runsInWidget) await w.${medium ? 'presentMedium' : 'presentSmall'}();
+if (!config.runsInWidget) await w.present${size}();
 Script.complete();
 `;
         },
@@ -4473,9 +4522,39 @@ Script.complete();
           try {
             this.widget = await this.api('/api/me/widget');
             this.widgetVersion = Date.now();
-            if (typeof this.widgetPick === 'number' && !this.widget.friends.some(f => f.id === this.widgetPick)) this.widgetPick = 'me';
-          } catch { this.widget = this.widget || { enabled: false, links: null, friends: [] }; }
+            // friends who stopped sharing drop out of the builder
+            const ids = new Set(this.widget.friends.map(f => String(f.id)));
+            this.wb.people = this.wb.people.filter(p => p === 'me' || ids.has(p));
+            if (this.wb.auto && !ids.size) this.wb.auto = false;
+          } catch { this.widget = this.widget || { enabled: false, base: null, links: null, friends: [] }; }
         },
+        openWidgetBuilder() {
+          this.haptic('light');
+          try {
+            const saved = JSON.parse(localStorage.getItem('moodpal.widget') || 'null');
+            if (saved && this.WIDGET_SIZES.some(z => z.key === saved.size)) this.wb = { size: saved.size, people: Array.isArray(saved.people) ? saved.people.map(String).filter(p => p === 'me' || /^\d+$/.test(p)) : ['me'], auto: Boolean(saved.auto) };
+          } catch {}
+          this.sheet = { type: 'widget' };
+          this.fetchWidget();
+        },
+        saveWidgetPrefs() { try { localStorage.setItem('moodpal.widget', JSON.stringify(this.wb)); } catch {} },
+        setWidgetSize(size) {
+          this.haptic('light');
+          this.wb.size = size;
+          if (this.wb.people.length > this.widgetMax) { this.wb.people = this.wb.people.slice(0, this.widgetMax); this.showToast(`A ${this.widgetSizeLabel.toLowerCase()} widget fits ${this.widgetMax}`); }
+          this.saveWidgetPrefs();
+        },
+        toggleWidgetPerson(id) {
+          this.haptic('light');
+          const w = this.wb;
+          if (w.auto) { w.auto = false; w.people = []; }
+          const i = w.people.indexOf(id);
+          if (i >= 0) w.people.splice(i, 1);
+          else if (w.people.length >= this.widgetMax) return this.showToast(`A ${this.widgetSizeLabel.toLowerCase()} widget fits ${this.widgetMax}. Pick a bigger size for more`);
+          else w.people.push(id);
+          this.saveWidgetPrefs();
+        },
+        setWidgetAuto() { this.haptic('light'); this.wb.auto = !this.wb.auto; if (!this.wb.auto && !this.wb.people.length) this.wb.people = ['me']; this.saveWidgetPrefs(); },
         async enableWidget(reset = false) {
           if (this.widgetBusy) return;
           if (reset && !window.confirm('Make new links? Widgets using the old links will stop working until you paste the new ones.')) return;
