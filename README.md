@@ -120,6 +120,9 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 *Admin → Reminders* holds the master switch, the default times and timezone, the per-person cap (1–5), the send speed, the grace window and the "just logged" window. It also shows live queue numbers (waiting, sent, skipped with reasons, failed), the last failures, and buttons to send yourself a test reminder or drop everything waiting.
 
+### 😊 Set your mood in the mini app
+*Update mood* (or *Set my mood*) on the Friends tab opens a picker with the same 18 moods as the bot, plus an optional note. The mood is saved right away (`POST /api/me/mood { code, note? }`), the "Your mood" card updates, and the bot posts it in the chat the same way it does for a mood picked there: the mood's name and emoji, then "note saved" with *💬 Talk about it* if a note was written, or the usual prompt to add one. If the bot can't reach the chat, the mood is still saved. *Or pick it in the bot chat* keeps the old way, where the bot posts its picker and the mini app closes. The list comes from `GET /api/moods`.
+
 ### 📥 Export my moods
 Anyone can get their whole mood log as a CSV (opens in Excel, Numbers or Google Sheets): one row per mood with Date, Weekday, Time (in their own timezone), Timezone, Mood and Note, oldest first. From the bot: `/export` or the *📥 Export* keyboard button. From the mini app: *Logs → Export*. Either way the file arrives in their chat with the bot (`POST /api/me/export`). One export per minute per person.
 

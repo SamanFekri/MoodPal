@@ -83,6 +83,8 @@ app.get('/api/friends/:telegramId/moods', requireWebAppUser, controllers.user.ge
 app.delete('/api/friends/:telegramId', requireWebAppUser, controllers.user.unfollow);
 app.get('/api/me/followers', requireWebAppUser, controllers.user.listFollowers);
 app.delete('/api/me/followers/:telegramId', requireWebAppUser, controllers.user.removeFollower);
+app.get('/api/moods', controllers.mood.listMoods);
+app.post('/api/me/mood', requireWebAppUser, controllers.mood.setMine);
 app.post('/api/me/mood/picker', requireWebAppUser, controllers.mood.requestMoodPicker);
 app.get('/api/me/moods', requireWebAppUser, controllers.mood.myMoods);
 app.post('/api/me/export', requireWebAppUser, controllers.mood.exportMine);
