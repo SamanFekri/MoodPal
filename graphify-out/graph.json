@@ -72,345 +72,136 @@
   },
   "nodes": [
     {
-      "label": "build-icons.js",
+      "label": "controllers/mood.js",
       "file_type": "code",
-      "source_file": "scripts/build-icons.js",
+      "source_file": "src/controllers/mood.js",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "scripts_build_icons",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "build-icons.js"
+      "id": "src_controllers_mood",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "controllers/mood.js"
     },
     {
-      "label": "fs",
+      "label": "{ MOOD_INLINE_KEYBOARD, msgs, common }",
       "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L4",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L2",
       "_origin": "ast",
-      "id": "scripts_build_icons_fs",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "fs"
+      "id": "src_controllers_mood_mood_inline_keyboard_msgs_common",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "{ mood_inline_keyboard, msgs, common }"
     },
     {
-      "label": "path",
+      "label": "{ getTelegram }",
       "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L5",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L3",
       "_origin": "ast",
-      "id": "scripts_build_icons_path",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "path"
-    },
-    {
-      "label": "lucide",
-      "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "scripts_build_icons_lucide",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "lucide"
-    },
-    {
-      "label": "NAMES",
-      "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L8",
-      "_origin": "ast",
-      "id": "scripts_build_icons_names",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "names"
-    },
-    {
-      "label": "pascal()",
-      "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L31",
-      "_origin": "ast",
-      "id": "scripts_build_icons_pascal",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "pascal()"
-    },
-    {
-      "label": "icons",
-      "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L32",
-      "_origin": "ast",
-      "id": "scripts_build_icons_icons",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "icons"
-    },
-    {
-      "label": "file",
-      "file_type": "code",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L44",
-      "_origin": "ast",
-      "id": "scripts_build_icons_file",
-      "community": 60,
-      "community_name": "build-icons.js",
-      "norm_label": "file"
-    },
-    {
-      "label": "widget.js",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "src_controllers_widget",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "widget.js"
-    },
-    {
-      "label": "crypto",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L5",
-      "_origin": "ast",
-      "id": "src_controllers_widget_crypto",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "crypto"
-    },
-    {
-      "label": "User",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "src_controllers_widget_user",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "user"
+      "id": "src_controllers_mood_gettelegram",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "{ gettelegram }"
     },
     {
       "label": "Mood",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L7",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L4",
       "_origin": "ast",
-      "id": "src_controllers_widget_mood",
-      "community": 71,
-      "community_name": "widget.js",
+      "id": "src_controllers_mood_mood",
+      "community": 73,
+      "community_name": "controllers/mood.js",
       "norm_label": "mood"
     },
     {
-      "label": "Share",
+      "label": "requestMoodPicker()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
+      "source_file": "src/controllers/mood.js",
       "source_location": "L8",
       "_origin": "ast",
-      "id": "src_controllers_widget_share",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "share"
+      "id": "src_controllers_mood_requestmoodpicker",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "requestmoodpicker()"
     },
     {
-      "label": "render",
+      "label": "{ MOODS, MOOD_MAP }",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L9",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L22",
       "_origin": "ast",
-      "id": "src_controllers_widget_render",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "render"
+      "id": "src_controllers_mood_moods_mood_map",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "{ moods, mood_map }"
     },
     {
-      "label": "baseUrl()",
+      "label": "listMoods()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L11",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L23",
       "_origin": "ast",
-      "id": "src_controllers_widget_baseurl",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "baseurl()"
+      "id": "src_controllers_mood_listmoods",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "listmoods()"
     },
     {
-      "label": "fullname()",
+      "label": "setMine()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L12",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L29",
       "_origin": "ast",
-      "id": "src_controllers_widget_fullname",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "fullname()"
+      "id": "src_controllers_mood_setmine",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "setmine()"
     },
     {
-      "label": "view()",
+      "label": "postToChat()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L14",
-      "_origin": "ast",
-      "id": "src_controllers_widget_view",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "view()"
-    },
-    {
-      "label": "getWidget()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L30",
-      "_origin": "ast",
-      "id": "src_controllers_widget_getwidget",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "getwidget()"
-    },
-    {
-      "label": "enableWidget()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L33",
-      "_origin": "ast",
-      "id": "src_controllers_widget_enablewidget",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "enablewidget()"
-    },
-    {
-      "label": "disableWidget()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
+      "source_file": "src/controllers/mood.js",
       "source_location": "L43",
       "_origin": "ast",
-      "id": "src_controllers_widget_disablewidget",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "disablewidget()"
+      "id": "src_controllers_mood_posttochat",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "posttochat()"
     },
     {
-      "label": "ownerOf()",
+      "label": "myMoods()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L50",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L57",
       "_origin": "ast",
-      "id": "src_controllers_widget_ownerof",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "ownerof()"
+      "id": "src_controllers_mood_mymoods",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "mymoods()"
     },
     {
-      "label": "sendPng()",
+      "label": "moodExport",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L56",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L73",
       "_origin": "ast",
-      "id": "src_controllers_widget_sendpng",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "sendpng()"
+      "id": "src_controllers_mood_moodexport",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "moodexport"
     },
     {
-      "label": "lastMoodView()",
+      "label": "exportMine()",
       "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L62",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L74",
       "_origin": "ast",
-      "id": "src_controllers_widget_lastmoodview",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "lastmoodview()"
-    },
-    {
-      "label": "personCell()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L68",
-      "_origin": "ast",
-      "id": "src_controllers_widget_personcell",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "personcell()"
-    },
-    {
-      "label": "friendCells()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L76",
-      "_origin": "ast",
-      "id": "src_controllers_widget_friendcells",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "friendcells()"
-    },
-    {
-      "label": "widgetImage()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L86",
-      "_origin": "ast",
-      "id": "src_controllers_widget_widgetimage",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "widgetimage()"
-    },
-    {
-      "label": "serveWidget()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L88",
-      "_origin": "ast",
-      "id": "src_controllers_widget_servewidget",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "servewidget()"
-    },
-    {
-      "label": "meImage()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L103",
-      "_origin": "ast",
-      "id": "src_controllers_widget_meimage",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "meimage()"
-    },
-    {
-      "label": "friendImage()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L104",
-      "_origin": "ast",
-      "id": "src_controllers_widget_friendimage",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "friendimage()"
-    },
-    {
-      "label": "friendsImage()",
-      "file_type": "code",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L105",
-      "_origin": "ast",
-      "id": "src_controllers_widget_friendsimage",
-      "community": 71,
-      "community_name": "widget.js",
-      "norm_label": "friendsimage()"
-    },
-    {
-      "label": "icons.js",
-      "file_type": "code",
-      "source_file": "src/public/lib/vendor/icons.js",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "src_public_lib_vendor_icons",
-      "community": 89,
-      "community_name": "icons.js",
-      "norm_label": "icons.js"
+      "id": "src_controllers_mood_exportmine",
+      "community": 73,
+      "community_name": "controllers/mood.js",
+      "norm_label": "exportmine()"
     },
     {
       "label": "server.js",
@@ -537,7 +328,7 @@
       "label": "listenServer()",
       "file_type": "code",
       "source_file": "src/server.js",
-      "source_location": "L155",
+      "source_location": "L157",
       "_origin": "ast",
       "id": "src_server_listenserver",
       "community": 35,
@@ -545,15 +336,488 @@
       "norm_label": "listenserver()"
     },
     {
+      "label": "set-mood.test.js",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "set-mood.test.js"
+    },
+    {
+      "label": "{ test, describe, before, after, beforeEach }",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_test_describe_before_after_beforeeach",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "{ test, describe, before, after, beforeeach }"
+    },
+    {
+      "label": "assert",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_assert",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "assert"
+    },
+    {
+      "label": "cryptoJs",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_cryptojs",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "cryptojs"
+    },
+    {
+      "label": "db",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_db",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "db"
+    },
+    {
+      "label": "{ app }",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_app",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "{ app }"
+    },
+    {
+      "label": "User",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_user",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "user"
+    },
+    {
+      "label": "Mood",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_mood",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "mood"
+    },
+    {
+      "label": "moodController",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_moodcontroller",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "moodcontroller"
+    },
+    {
+      "label": "{ setTelegram }",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_settelegram",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "{ settelegram }"
+    },
+    {
+      "label": "signInitData()",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_signinitdata",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "signinitdata()"
+    },
+    {
+      "label": "api()",
+      "file_type": "code",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "test_webapp_set_mood_test_api",
+      "community": 97,
+      "community_name": "set-mood.test.js",
+      "norm_label": "api()"
+    },
+    {
+      "label": "build-icons.js",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "build-icons.js",
+      "id": "scripts_build_icons"
+    },
+    {
+      "label": "fs",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L4",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "fs",
+      "id": "scripts_build_icons_fs"
+    },
+    {
+      "label": "path",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L5",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "path",
+      "id": "scripts_build_icons_path"
+    },
+    {
+      "label": "lucide",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "lucide",
+      "id": "scripts_build_icons_lucide"
+    },
+    {
+      "label": "NAMES",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L8",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "names",
+      "id": "scripts_build_icons_names"
+    },
+    {
+      "label": "pascal()",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L31",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "pascal()",
+      "id": "scripts_build_icons_pascal"
+    },
+    {
+      "label": "icons",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L32",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "icons",
+      "id": "scripts_build_icons_icons"
+    },
+    {
+      "label": "file",
+      "file_type": "code",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L44",
+      "_origin": "ast",
+      "community": 60,
+      "community_name": "build-icons.js",
+      "norm_label": "file",
+      "id": "scripts_build_icons_file"
+    },
+    {
+      "label": "widget.js",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "widget.js",
+      "id": "src_controllers_widget"
+    },
+    {
+      "label": "crypto",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L5",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "crypto",
+      "id": "src_controllers_widget_crypto"
+    },
+    {
+      "label": "User",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L6",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "user",
+      "id": "src_controllers_widget_user"
+    },
+    {
+      "label": "Mood",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "mood",
+      "id": "src_controllers_widget_mood"
+    },
+    {
+      "label": "Share",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L8",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "share",
+      "id": "src_controllers_widget_share"
+    },
+    {
+      "label": "render",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "render",
+      "id": "src_controllers_widget_render"
+    },
+    {
+      "label": "baseUrl()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L11",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "baseurl()",
+      "id": "src_controllers_widget_baseurl"
+    },
+    {
+      "label": "fullname()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L12",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "fullname()",
+      "id": "src_controllers_widget_fullname"
+    },
+    {
+      "label": "view()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L14",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "view()",
+      "id": "src_controllers_widget_view"
+    },
+    {
+      "label": "getWidget()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L30",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "getwidget()",
+      "id": "src_controllers_widget_getwidget"
+    },
+    {
+      "label": "enableWidget()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L33",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "enablewidget()",
+      "id": "src_controllers_widget_enablewidget"
+    },
+    {
+      "label": "disableWidget()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L43",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "disablewidget()",
+      "id": "src_controllers_widget_disablewidget"
+    },
+    {
+      "label": "ownerOf()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L50",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "ownerof()",
+      "id": "src_controllers_widget_ownerof"
+    },
+    {
+      "label": "sendPng()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L56",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "sendpng()",
+      "id": "src_controllers_widget_sendpng"
+    },
+    {
+      "label": "lastMoodView()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L62",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "lastmoodview()",
+      "id": "src_controllers_widget_lastmoodview"
+    },
+    {
+      "label": "personCell()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L68",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "personcell()",
+      "id": "src_controllers_widget_personcell"
+    },
+    {
+      "label": "friendCells()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L76",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "friendcells()",
+      "id": "src_controllers_widget_friendcells"
+    },
+    {
+      "label": "widgetImage()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L86",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "widgetimage()",
+      "id": "src_controllers_widget_widgetimage"
+    },
+    {
+      "label": "serveWidget()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L88",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "servewidget()",
+      "id": "src_controllers_widget_servewidget"
+    },
+    {
+      "label": "meImage()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L103",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "meimage()",
+      "id": "src_controllers_widget_meimage"
+    },
+    {
+      "label": "friendImage()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L104",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "friendimage()",
+      "id": "src_controllers_widget_friendimage"
+    },
+    {
+      "label": "friendsImage()",
+      "file_type": "code",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L105",
+      "_origin": "ast",
+      "community": 71,
+      "community_name": "widget.js",
+      "norm_label": "friendsimage()",
+      "id": "src_controllers_widget_friendsimage"
+    },
+    {
+      "label": "icons.js",
+      "file_type": "code",
+      "source_file": "src/public/lib/vendor/icons.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 89,
+      "community_name": "icons.js",
+      "norm_label": "icons.js",
+      "id": "src_public_lib_vendor_icons"
+    },
+    {
       "label": "render.js",
       "file_type": "code",
       "source_file": "src/widget/render.js",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "src_widget_render",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "render.js"
+      "norm_label": "render.js",
+      "id": "src_widget_render"
     },
     {
       "label": "path",
@@ -561,10 +825,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L4",
       "_origin": "ast",
-      "id": "src_widget_render_path",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "path"
+      "norm_label": "path",
+      "id": "src_widget_render_path"
     },
     {
       "label": "sharp",
@@ -572,10 +836,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L5",
       "_origin": "ast",
-      "id": "src_widget_render_sharp",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "sharp"
+      "norm_label": "sharp",
+      "id": "src_widget_render_sharp"
     },
     {
       "label": "MOODS_DIR",
@@ -583,10 +847,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "src_widget_render_moods_dir",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "moods_dir"
+      "norm_label": "moods_dir",
+      "id": "src_widget_render_moods_dir"
     },
     {
       "label": "MOOD_HUES",
@@ -594,10 +858,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L9",
       "_origin": "ast",
-      "id": "src_widget_render_mood_hues",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "mood_hues"
+      "norm_label": "mood_hues",
+      "id": "src_widget_render_mood_hues"
     },
     {
       "label": "SIZES",
@@ -605,10 +869,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L15",
       "_origin": "ast",
-      "id": "src_widget_render_sizes",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "sizes"
+      "norm_label": "sizes",
+      "id": "src_widget_render_sizes"
     },
     {
       "label": "GRIDS",
@@ -616,10 +880,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L21",
       "_origin": "ast",
-      "id": "src_widget_render_grids",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "grids"
+      "norm_label": "grids",
+      "id": "src_widget_render_grids"
     },
     {
       "label": "esc()",
@@ -627,10 +891,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L29",
       "_origin": "ast",
-      "id": "src_widget_render_esc",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "esc()"
+      "norm_label": "esc()",
+      "id": "src_widget_render_esc"
     },
     {
       "label": "clip()",
@@ -638,10 +902,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L30",
       "_origin": "ast",
-      "id": "src_widget_render_clip",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "clip()"
+      "norm_label": "clip()",
+      "id": "src_widget_render_clip"
     },
     {
       "label": "charW()",
@@ -649,10 +913,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L32",
       "_origin": "ast",
-      "id": "src_widget_render_charw",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "charw()"
+      "norm_label": "charw()",
+      "id": "src_widget_render_charw"
     },
     {
       "label": "fitFont()",
@@ -660,10 +924,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L33",
       "_origin": "ast",
-      "id": "src_widget_render_fitfont",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "fitfont()"
+      "norm_label": "fitfont()",
+      "id": "src_widget_render_fitfont"
     },
     {
       "label": "fit()",
@@ -671,10 +935,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L34",
       "_origin": "ast",
-      "id": "src_widget_render_fit",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "fit()"
+      "norm_label": "fit()",
+      "id": "src_widget_render_fit"
     },
     {
       "label": "ago()",
@@ -682,10 +946,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L36",
       "_origin": "ast",
-      "id": "src_widget_render_ago",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "ago()"
+      "norm_label": "ago()",
+      "id": "src_widget_render_ago"
     },
     {
       "label": "stickerCache",
@@ -693,10 +957,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L47",
       "_origin": "ast",
-      "id": "src_widget_render_stickercache",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "stickercache"
+      "norm_label": "stickercache",
+      "id": "src_widget_render_stickercache"
     },
     {
       "label": "sticker()",
@@ -704,10 +968,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L48",
       "_origin": "ast",
-      "id": "src_widget_render_sticker",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "sticker()"
+      "norm_label": "sticker()",
+      "id": "src_widget_render_sticker"
     },
     {
       "label": "text()",
@@ -715,10 +979,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L57",
       "_origin": "ast",
-      "id": "src_widget_render_text",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "text()"
+      "norm_label": "text()",
+      "id": "src_widget_render_text"
     },
     {
       "label": "drawCell()",
@@ -726,10 +990,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L64",
       "_origin": "ast",
-      "id": "src_widget_render_drawcell",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "drawcell()"
+      "norm_label": "drawcell()",
+      "id": "src_widget_render_drawcell"
     },
     {
       "label": "renderWidget()",
@@ -737,10 +1001,10 @@
       "source_file": "src/widget/render.js",
       "source_location": "L105",
       "_origin": "ast",
-      "id": "src_widget_render_renderwidget",
       "community": 68,
       "community_name": "render.js",
-      "norm_label": "renderwidget()"
+      "norm_label": "renderwidget()",
+      "id": "src_widget_render_renderwidget"
     },
     {
       "label": "widget.test.js",
@@ -748,10 +1012,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "test_webapp_widget_test",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "widget.test.js"
+      "norm_label": "widget.test.js",
+      "id": "test_webapp_widget_test"
     },
     {
       "label": "{ test, describe, before, after, beforeEach }",
@@ -759,10 +1023,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_test_describe_before_after_beforeeach",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "{ test, describe, before, after, beforeeach }"
+      "norm_label": "{ test, describe, before, after, beforeeach }",
+      "id": "test_webapp_widget_test_test_describe_before_after_beforeeach"
     },
     {
       "label": "assert",
@@ -770,10 +1034,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L2",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_assert",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "assert"
+      "norm_label": "assert",
+      "id": "test_webapp_widget_test_assert"
     },
     {
       "label": "cryptoJs",
@@ -781,10 +1045,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L3",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_cryptojs",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "cryptojs"
+      "norm_label": "cryptojs",
+      "id": "test_webapp_widget_test_cryptojs"
     },
     {
       "label": "sharp",
@@ -792,10 +1056,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L4",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_sharp",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "sharp"
+      "norm_label": "sharp",
+      "id": "test_webapp_widget_test_sharp"
     },
     {
       "label": "db",
@@ -803,10 +1067,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L8",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_db",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "db"
+      "norm_label": "db",
+      "id": "test_webapp_widget_test_db"
     },
     {
       "label": "{ app }",
@@ -814,10 +1078,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L9",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_app",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "{ app }"
+      "norm_label": "{ app }",
+      "id": "test_webapp_widget_test_app"
     },
     {
       "label": "User",
@@ -825,10 +1089,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L10",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_user",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "user"
+      "norm_label": "user",
+      "id": "test_webapp_widget_test_user"
     },
     {
       "label": "Mood",
@@ -836,10 +1100,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L11",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_mood",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "mood"
+      "norm_label": "mood",
+      "id": "test_webapp_widget_test_mood"
     },
     {
       "label": "Share",
@@ -847,10 +1111,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L12",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_share",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "share"
+      "norm_label": "share",
+      "id": "test_webapp_widget_test_share"
     },
     {
       "label": "signInitData()",
@@ -858,10 +1122,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L14",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_signinitdata",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "signinitdata()"
+      "norm_label": "signinitdata()",
+      "id": "test_webapp_widget_test_signinitdata"
     },
     {
       "label": "api()",
@@ -869,10 +1133,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L22",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_api",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "api()"
+      "norm_label": "api()",
+      "id": "test_webapp_widget_test_api"
     },
     {
       "label": "image()",
@@ -880,10 +1144,10 @@
       "source_file": "test/webapp/widget.test.js",
       "source_location": "L27",
       "_origin": "ast",
-      "id": "test_webapp_widget_test_image",
       "community": 94,
       "community_name": "widget.test.js",
-      "norm_label": "image()"
+      "norm_label": "image()",
+      "id": "test_webapp_widget_test_image"
     },
     {
       "label": "controllers/index.js",
@@ -1034,7 +1298,7 @@
       "source_file": "src/models/user.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 99,
+      "community": 79,
       "community_name": "models/user.js",
       "norm_label": "models/user.js",
       "id": "src_models_user"
@@ -1045,7 +1309,7 @@
       "source_file": "src/models/user.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 99,
+      "community": 79,
       "community_name": "models/user.js",
       "norm_label": "mongoose",
       "id": "src_models_user_mongoose"
@@ -1056,7 +1320,7 @@
       "source_file": "src/models/user.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 99,
+      "community": 79,
       "community_name": "models/user.js",
       "norm_label": "{ encrypt, decrypt }",
       "id": "src_models_user_encrypt_decrypt"
@@ -1067,7 +1331,7 @@
       "source_file": "src/models/user.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 99,
+      "community": 79,
       "community_name": "models/user.js",
       "norm_label": "userschema",
       "id": "src_models_user_userschema"
@@ -1078,7 +1342,7 @@
       "source_file": "src/models/user.js",
       "source_location": "L149",
       "_origin": "ast",
-      "community": 99,
+      "community": 79,
       "community_name": "models/user.js",
       "norm_label": "user",
       "id": "src_models_user_user"
@@ -1936,8 +2200,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "controllers/talk.js",
       "id": "src_controllers_talk"
     },
@@ -1947,8 +2211,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "user",
       "id": "src_controllers_talk_user"
     },
@@ -1958,8 +2222,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "chatservice",
       "id": "src_controllers_talk_chatservice"
     },
@@ -1969,8 +2233,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "llm",
       "id": "src_controllers_talk_llm"
     },
@@ -1980,8 +2244,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "messageview()",
       "id": "src_controllers_talk_messageview"
     },
@@ -1991,8 +2255,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "view()",
       "id": "src_controllers_talk_view"
     },
@@ -2002,8 +2266,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L21",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "gettalk()",
       "id": "src_controllers_talk_gettalk"
     },
@@ -2013,8 +2277,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "starttalk()",
       "id": "src_controllers_talk_starttalk"
     },
@@ -2024,8 +2288,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "sendmessage()",
       "id": "src_controllers_talk_sendmessage"
     },
@@ -2035,8 +2299,8 @@
       "source_file": "src/controllers/talk.js",
       "source_location": "L66",
       "_origin": "ast",
-      "community": 101,
-      "community_name": "controllers/talk.js",
+      "community": 6,
+      "community_name": "llm.js",
       "norm_label": "endtalk()",
       "id": "src_controllers_talk_endtalk"
     },
@@ -2629,8 +2893,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "controllers/broadcast.js",
       "id": "src_controllers_broadcast"
     },
@@ -2640,8 +2904,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "appconfig",
       "id": "src_controllers_broadcast_appconfig"
     },
@@ -2651,8 +2915,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "broadcast",
       "id": "src_controllers_broadcast_broadcast"
     },
@@ -2662,8 +2926,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "fail()",
       "id": "src_controllers_broadcast_fail"
     },
@@ -2673,8 +2937,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "list()",
       "id": "src_controllers_broadcast_list"
     },
@@ -2684,8 +2948,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "upload()",
       "id": "src_controllers_broadcast_upload"
     },
@@ -2695,8 +2959,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L25",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "test()",
       "id": "src_controllers_broadcast_test"
     },
@@ -2706,8 +2970,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "create()",
       "id": "src_controllers_broadcast_create"
     },
@@ -2717,8 +2981,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L39",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "resend()",
       "id": "src_controllers_broadcast_resend"
     },
@@ -2728,8 +2992,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L50",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "cancel()",
       "id": "src_controllers_broadcast_cancel"
     },
@@ -2739,8 +3003,8 @@
       "source_file": "src/controllers/broadcast.js",
       "source_location": "L58",
       "_origin": "ast",
-      "community": 73,
-      "community_name": "controllers/broadcast.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "settings()",
       "id": "src_controllers_broadcast_settings"
     },
@@ -4774,8 +5038,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "friends.js",
       "id": "src_commands_friends"
     },
@@ -4785,8 +5049,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "user",
       "id": "src_commands_friends_user"
     },
@@ -4796,8 +5060,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "share",
       "id": "src_commands_friends_share"
     },
@@ -4807,8 +5071,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "nameof()",
       "id": "src_commands_friends_nameof"
     },
@@ -4818,8 +5082,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "view()",
       "id": "src_commands_friends_view"
     },
@@ -4829,8 +5093,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "friendscommand()",
       "id": "src_commands_friends_friendscommand"
     },
@@ -4840,8 +5104,8 @@
       "source_file": "src/commands/friends.js",
       "source_location": "L42",
       "_origin": "ast",
-      "community": 104,
-      "community_name": "friends.js",
+      "community": 62,
+      "community_name": "unfollow.test.js",
       "norm_label": "friendscallback()",
       "id": "src_commands_friends_friendscallback"
     },
@@ -5687,8 +5951,8 @@
       "source_file": "src/constants/share.constant.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 109,
+      "community_name": "share.constant.js",
       "norm_label": "share.constant.js",
       "id": "src_constants_share_constant"
     },
@@ -5698,8 +5962,8 @@
       "source_file": "src/constants/share.constant.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 109,
+      "community_name": "share.constant.js",
       "norm_label": "follow_back_ask_keyboard()",
       "id": "src_constants_share_constant_follow_back_ask_keyboard"
     },
@@ -5709,8 +5973,8 @@
       "source_file": "src/constants/share.constant.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 109,
+      "community_name": "share.constant.js",
       "norm_label": "follow_back_give_keyboard()",
       "id": "src_constants_share_constant_follow_back_give_keyboard"
     },
@@ -5720,8 +5984,8 @@
       "source_file": "src/constants/share.constant.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 109,
+      "community_name": "share.constant.js",
       "norm_label": "allow_share_mood_inline_keyboard()",
       "id": "src_constants_share_constant_allow_share_mood_inline_keyboard"
     },
@@ -5896,8 +6160,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "controllers/user.js",
       "id": "src_controllers_user"
     },
@@ -5907,8 +6171,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "share",
       "id": "src_controllers_user_share"
     },
@@ -5918,8 +6182,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "mood",
       "id": "src_controllers_user_mood"
     },
@@ -5929,8 +6193,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "personalityservice",
       "id": "src_controllers_user_personalityservice"
     },
@@ -5940,8 +6204,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "getfollowings()",
       "id": "src_controllers_user_getfollowings"
     },
@@ -5951,8 +6215,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L56",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "user",
       "id": "src_controllers_user_user"
     },
@@ -5962,8 +6226,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L58",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "getfriendmoods()",
       "id": "src_controllers_user_getfriendmoods"
     },
@@ -5973,8 +6237,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L84",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "userbytelegramid()",
       "id": "src_controllers_user_userbytelegramid"
     },
@@ -5984,8 +6248,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L87",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "unfollow()",
       "id": "src_controllers_user_unfollow"
     },
@@ -5995,8 +6259,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L95",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "listfollowers()",
       "id": "src_controllers_user_listfollowers"
     },
@@ -6006,8 +6270,8 @@
       "source_file": "src/controllers/user.js",
       "source_location": "L111",
       "_origin": "ast",
-      "community": 95,
-      "community_name": "controllers/user.js",
+      "community": 61,
+      "community_name": "controllers/index.js",
       "norm_label": "removefollower()",
       "id": "src_controllers_user_removefollower"
     },
@@ -7062,8 +7326,8 @@
       "source_file": "src/constants/common.constant.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 107,
+      "community_name": "common.constant.js",
       "norm_label": "common.constant.js",
       "id": "src_constants_common_constant"
     },
@@ -7073,8 +7337,8 @@
       "source_file": "src/constants/common.constant.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 107,
+      "community_name": "common.constant.js",
       "norm_label": "menu_buttons",
       "id": "src_constants_common_constant_menu_buttons"
     },
@@ -7084,8 +7348,8 @@
       "source_file": "src/constants/common.constant.js",
       "source_location": "L18",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 107,
+      "community_name": "common.constant.js",
       "norm_label": "menu_signature",
       "id": "src_constants_common_constant_menu_signature"
     },
@@ -7095,8 +7359,8 @@
       "source_file": "src/constants/common.constant.js",
       "source_location": "L20",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 107,
+      "community_name": "common.constant.js",
       "norm_label": "makekeyboardmenu()",
       "id": "src_constants_common_constant_makekeyboardmenu"
     },
@@ -7106,98 +7370,10 @@
       "source_file": "src/constants/common.constant.js",
       "source_location": "L45",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 107,
+      "community_name": "common.constant.js",
       "norm_label": "maketalkkeyboard()",
       "id": "src_constants_common_constant_maketalkkeyboard"
-    },
-    {
-      "label": "controllers/mood.js",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "controllers/mood.js",
-      "id": "src_controllers_mood"
-    },
-    {
-      "label": "{ MOOD_INLINE_KEYBOARD, msgs, common }",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L2",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "{ mood_inline_keyboard, msgs, common }",
-      "id": "src_controllers_mood_mood_inline_keyboard_msgs_common"
-    },
-    {
-      "label": "{ getTelegram }",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L3",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "{ gettelegram }",
-      "id": "src_controllers_mood_gettelegram"
-    },
-    {
-      "label": "requestMoodPicker()",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L7",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "requestmoodpicker()",
-      "id": "src_controllers_mood_requestmoodpicker"
-    },
-    {
-      "label": "Mood",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L21",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "mood",
-      "id": "src_controllers_mood_mood"
-    },
-    {
-      "label": "myMoods()",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L22",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "mymoods()",
-      "id": "src_controllers_mood_mymoods"
-    },
-    {
-      "label": "moodExport",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L38",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "moodexport",
-      "id": "src_controllers_mood_moodexport"
-    },
-    {
-      "label": "exportMine()",
-      "file_type": "code",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L39",
-      "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
-      "norm_label": "exportmine()",
-      "id": "src_controllers_mood_exportmine"
     },
     {
       "label": "moods.js",
@@ -7205,8 +7381,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "moods.js",
       "id": "src_export_moods"
     },
@@ -7216,8 +7392,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "mood",
       "id": "src_export_moods_mood"
     },
@@ -7227,8 +7403,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "user",
       "id": "src_export_moods_user"
     },
@@ -7238,8 +7414,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "{ gettelegram }",
       "id": "src_export_moods_gettelegram"
     },
@@ -7249,8 +7425,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "lastexport",
       "id": "src_export_moods_lastexport"
     },
@@ -7260,8 +7436,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L11",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "cell()",
       "id": "src_export_moods_cell"
     },
@@ -7271,8 +7447,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "timezoneof()",
       "id": "src_export_moods_timezoneof"
     },
@@ -7282,8 +7458,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "buildcsv()",
       "id": "src_export_moods_buildcsv"
     },
@@ -7293,8 +7469,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L46",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "exporterror",
       "id": "src_export_moods_exporterror"
     },
@@ -7304,8 +7480,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L46",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": ".constructor()",
       "id": "src_export_moods_exporterror_constructor"
     },
@@ -7315,8 +7491,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L49",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "sendtochat()",
       "id": "src_export_moods_sendtochat"
     },
@@ -7326,8 +7502,8 @@
       "source_file": "src/export/moods.js",
       "source_location": "L63",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 95,
+      "community_name": "moods.js",
       "norm_label": "_resetcooldown()",
       "id": "src_export_moods_resetcooldown"
     },
@@ -7865,8 +8041,8 @@
       "source_file": "test/runtime/resilience.test.js",
       "source_location": "L93",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "error()",
       "id": "test_runtime_resilience_test_error"
     },
@@ -7876,8 +8052,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "on_text.js",
       "id": "src_actions_on_text"
     },
@@ -7887,8 +8063,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "{ msgs }",
       "id": "src_actions_on_text_msgs"
     },
@@ -7898,8 +8074,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "mood",
       "id": "src_actions_on_text_mood"
     },
@@ -7909,8 +8085,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "{ lookslikeopenaikey, saveopenaikey }",
       "id": "src_actions_on_text_lookslikeopenaikey_saveopenaikey"
     },
@@ -7920,8 +8096,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "{ handletalkmessage, talk_about_note_keyboard }",
       "id": "src_actions_on_text_handletalkmessage_talk_about_note_keyboard"
     },
@@ -7931,8 +8107,8 @@
       "source_file": "src/actions/on_text.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "handletextmessage()",
       "id": "src_actions_on_text_handletextmessage"
     },
@@ -8195,8 +8371,8 @@
       "source_file": "src/commands/mood.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "setmoodcommand()",
       "id": "src_commands_mood_setmoodcommand"
     },
@@ -8217,8 +8393,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "openai_key.js",
       "id": "src_commands_openai_key"
     },
@@ -8228,8 +8404,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "{ msgs }",
       "id": "src_commands_openai_key_msgs"
     },
@@ -8239,8 +8415,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "user",
       "id": "src_commands_openai_key_user"
     },
@@ -8250,8 +8426,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "llm",
       "id": "src_commands_openai_key_llm"
     },
@@ -8261,8 +8437,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "deleteusermessage()",
       "id": "src_commands_openai_key_deleteusermessage"
     },
@@ -8272,8 +8448,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L15",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "saveopenaikey()",
       "id": "src_commands_openai_key_saveopenaikey"
     },
@@ -8283,8 +8459,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "setopenaikeycommand()",
       "id": "src_commands_openai_key_setopenaikeycommand"
     },
@@ -8294,8 +8470,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L59",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 103,
+      "community_name": "openai_key.js",
       "norm_label": "removeopenaikeycommand()",
       "id": "src_commands_openai_key_removeopenaikeycommand"
     },
@@ -8305,8 +8481,8 @@
       "source_file": "src/commands/openai_key.js",
       "source_location": "L73",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 104,
+      "community_name": "on_text.js",
       "norm_label": "lookslikeopenaikey()",
       "id": "src_commands_openai_key_lookslikeopenaikey"
     },
@@ -8646,8 +8822,8 @@
       "source_file": "src/commands/set_visibility.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 108,
+      "community_name": "set_visibility.js",
       "norm_label": "set_visibility.js",
       "id": "src_commands_set_visibility"
     },
@@ -8657,8 +8833,8 @@
       "source_file": "src/commands/set_visibility.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 108,
+      "community_name": "set_visibility.js",
       "norm_label": "{ msgs, common }",
       "id": "src_commands_set_visibility_msgs_common"
     },
@@ -8668,8 +8844,8 @@
       "source_file": "src/commands/set_visibility.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 108,
+      "community_name": "set_visibility.js",
       "norm_label": "setmoodprivate()",
       "id": "src_commands_set_visibility_setmoodprivate"
     },
@@ -8679,8 +8855,8 @@
       "source_file": "src/commands/set_visibility.js",
       "source_location": "L19",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 108,
+      "community_name": "set_visibility.js",
       "norm_label": "setmoodpublic()",
       "id": "src_commands_set_visibility_setmoodpublic"
     },
@@ -8690,8 +8866,8 @@
       "source_file": "src/commands/start.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 97,
-      "community_name": "models/share.js",
+      "community": 79,
+      "community_name": "models/user.js",
       "norm_label": "start.js",
       "id": "src_commands_start"
     },
@@ -8701,8 +8877,8 @@
       "source_file": "src/commands/start.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 97,
-      "community_name": "models/share.js",
+      "community": 79,
+      "community_name": "models/user.js",
       "norm_label": "{ mood_inline_keyboard, msgs, share, common }",
       "id": "src_commands_start_mood_inline_keyboard_msgs_share_common"
     },
@@ -8712,8 +8888,8 @@
       "source_file": "src/commands/start.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 97,
-      "community_name": "models/share.js",
+      "community": 79,
+      "community_name": "models/user.js",
       "norm_label": "user",
       "id": "src_commands_start_user"
     },
@@ -8723,8 +8899,8 @@
       "source_file": "src/commands/start.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 97,
-      "community_name": "models/share.js",
+      "community": 79,
+      "community_name": "models/user.js",
       "norm_label": "share",
       "id": "src_commands_start_share"
     },
@@ -8800,8 +8976,8 @@
       "source_file": "src/utils/telegram.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "telegram.js",
       "id": "src_utils_telegram"
     },
@@ -8811,8 +8987,8 @@
       "source_file": "src/utils/telegram.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "{ telegram }",
       "id": "src_utils_telegram_telegram"
     },
@@ -8822,8 +8998,8 @@
       "source_file": "src/utils/telegram.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "{ harden }",
       "id": "src_utils_telegram_harden"
     },
@@ -8833,8 +9009,8 @@
       "source_file": "src/utils/telegram.js",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "gettelegram()",
       "id": "src_utils_telegram_gettelegram"
     },
@@ -8844,8 +9020,8 @@
       "source_file": "src/utils/telegram.js",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "settelegram()",
       "id": "src_utils_telegram_settelegram"
     },
@@ -8855,8 +9031,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "telegram_resilience.js",
       "id": "src_utils_telegram_resilience"
     },
@@ -8866,8 +9042,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "health",
       "id": "src_utils_telegram_resilience_health"
     },
@@ -8877,8 +9053,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "retryable",
       "id": "src_utils_telegram_resilience_retryable"
     },
@@ -8888,8 +9064,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "delays_ms",
       "id": "src_utils_telegram_resilience_delays_ms"
     },
@@ -8899,8 +9075,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L11",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "sleep()",
       "id": "src_utils_telegram_resilience_sleep"
     },
@@ -8910,8 +9086,8 @@
       "source_file": "src/utils/telegram_resilience.js",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 64,
-      "community_name": "export.test.js",
+      "community": 101,
+      "community_name": "telegram.js",
       "norm_label": "harden()",
       "id": "src_utils_telegram_resilience_harden"
     },
@@ -9295,7 +9471,7 @@
       "source_file": "src/models/app_config.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 105,
+      "community": 90,
       "community_name": "app_config.js",
       "norm_label": "app_config.js",
       "id": "src_models_app_config"
@@ -9306,7 +9482,7 @@
       "source_file": "src/models/app_config.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 105,
+      "community": 90,
       "community_name": "app_config.js",
       "norm_label": "mongoose",
       "id": "src_models_app_config_mongoose"
@@ -9317,7 +9493,7 @@
       "source_file": "src/models/app_config.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 105,
+      "community": 90,
       "community_name": "app_config.js",
       "norm_label": "{ encrypt, decrypt }",
       "id": "src_models_app_config_encrypt_decrypt"
@@ -9328,7 +9504,7 @@
       "source_file": "src/models/app_config.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 105,
+      "community": 90,
       "community_name": "app_config.js",
       "norm_label": "appconfigschema",
       "id": "src_models_app_config_appconfigschema"
@@ -9372,8 +9548,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "memory/service.js",
       "id": "src_memory_service"
     },
@@ -9383,8 +9559,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "usermemory",
       "id": "src_memory_service_usermemory"
     },
@@ -9394,8 +9570,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "user",
       "id": "src_memory_service_user"
     },
@@ -9405,8 +9581,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "mood",
       "id": "src_memory_service_mood"
     },
@@ -9416,8 +9592,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L14",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "categories",
       "id": "src_memory_service_categories"
     },
@@ -9427,8 +9603,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L18",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "clean()",
       "id": "src_memory_service_clean"
     },
@@ -9438,8 +9614,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L23",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "same()",
       "id": "src_memory_service_same"
     },
@@ -9449,8 +9625,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "clampimportance()",
       "id": "src_memory_service_clampimportance"
     },
@@ -9460,8 +9636,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L26",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": "memoryservice",
       "id": "src_memory_service_memoryservice"
     },
@@ -9471,8 +9647,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L27",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".constructor()",
       "id": "src_memory_service_memoryservice_constructor"
     },
@@ -9482,8 +9658,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".llm()",
       "id": "src_memory_service_memoryservice_llm"
     },
@@ -9493,8 +9669,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L34",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".isenabled()",
       "id": "src_memory_service_memoryservice_isenabled"
     },
@@ -9504,8 +9680,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L40",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".list()",
       "id": "src_memory_service_memoryservice_list"
     },
@@ -9515,8 +9691,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L48",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".applyoperations()",
       "id": "src_memory_service_memoryservice_applyoperations"
     },
@@ -9526,8 +9702,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L96",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".enforcelimit()",
       "id": "src_memory_service_memoryservice_enforcelimit"
     },
@@ -9537,8 +9713,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L105",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".learnfrommessages()",
       "id": "src_memory_service_memoryservice_learnfrommessages"
     },
@@ -9548,8 +9724,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L118",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".memorycontext()",
       "id": "src_memory_service_memoryservice_memorycontext"
     },
@@ -9559,8 +9735,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L126",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".moodcontext()",
       "id": "src_memory_service_memoryservice_moodcontext"
     },
@@ -9570,8 +9746,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L138",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".forget()",
       "id": "src_memory_service_memoryservice_forget"
     },
@@ -9581,8 +9757,8 @@
       "source_file": "src/memory/service.js",
       "source_location": "L143",
       "_origin": "ast",
-      "community": 26,
-      "community_name": "memory/service.js",
+      "community": 9,
+      "community_name": "settings.js",
       "norm_label": ".forgetall()",
       "id": "src_memory_service_memoryservice_forgetall"
     },
@@ -9922,8 +10098,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "commands/personality.js",
       "id": "src_commands_personality"
     },
@@ -9933,8 +10109,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "{ personality: msgs }",
       "id": "src_commands_personality_personality_msgs"
     },
@@ -9944,8 +10120,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "personalityservice",
       "id": "src_commands_personality_personalityservice"
     },
@@ -9955,8 +10131,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "show()",
       "id": "src_commands_personality_show"
     },
@@ -9966,8 +10142,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L21",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "renderquestion()",
       "id": "src_commands_personality_renderquestion"
     },
@@ -9977,8 +10153,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L27",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "personalitytestcommand()",
       "id": "src_commands_personality_personalitytestcommand"
     },
@@ -9988,8 +10164,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L45",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "mypersonalitycommand()",
       "id": "src_commands_personality_mypersonalitycommand"
     },
@@ -9999,8 +10175,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "starttest()",
       "id": "src_commands_personality_starttest"
     },
@@ -10010,8 +10186,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "continuetest()",
       "id": "src_commands_personality_continuetest"
     },
@@ -10021,8 +10197,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "testcallback()",
       "id": "src_commands_personality_testcallback"
     },
@@ -10032,8 +10208,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L95",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "answercallback()",
       "id": "src_commands_personality_answercallback"
     },
@@ -10043,8 +10219,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L126",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "profilecallback()",
       "id": "src_commands_personality_profilecallback"
     },
@@ -10054,8 +10230,8 @@
       "source_file": "src/commands/personality.js",
       "source_location": "L151",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "constants/index.js",
+      "community": 26,
+      "community_name": "commands/personality.js",
       "norm_label": "starttestbykey()",
       "id": "src_commands_personality_starttestbykey"
     },
@@ -11100,7 +11276,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 99,
-      "community_name": "models/user.js",
+      "community_name": "user.middleware.js",
       "norm_label": "user.middleware.js",
       "id": "src_middlewares_user_middleware"
     },
@@ -11111,7 +11287,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 99,
-      "community_name": "models/user.js",
+      "community_name": "user.middleware.js",
       "norm_label": "user",
       "id": "src_middlewares_user_middleware_user"
     },
@@ -11122,7 +11298,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "community": 99,
-      "community_name": "models/user.js",
+      "community_name": "user.middleware.js",
       "norm_label": "saveusermiddleware()",
       "id": "src_middlewares_user_middleware_saveusermiddleware"
     },
@@ -12596,7 +12772,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "community": 79,
-      "community_name": "auth.js",
+      "community_name": "models/user.js",
       "norm_label": "webapp.middleware.js",
       "id": "src_middlewares_webapp_middleware"
     },
@@ -12607,7 +12783,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "community": 79,
-      "community_name": "auth.js",
+      "community_name": "models/user.js",
       "norm_label": "{ isdataauthenticated }",
       "id": "src_middlewares_webapp_middleware_isdataauthenticated"
     },
@@ -12618,7 +12794,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "community": 79,
-      "community_name": "auth.js",
+      "community_name": "models/user.js",
       "norm_label": "user",
       "id": "src_middlewares_webapp_middleware_user"
     },
@@ -12629,7 +12805,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "community": 79,
-      "community_name": "auth.js",
+      "community_name": "models/user.js",
       "norm_label": "requirewebappuser()",
       "id": "src_middlewares_webapp_middleware_requirewebappuser"
     },
@@ -12640,7 +12816,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "community": 79,
-      "community_name": "auth.js",
+      "community_name": "models/user.js",
       "norm_label": "requireadmin()",
       "id": "src_middlewares_webapp_middleware_requireadmin"
     },
@@ -12859,9 +13035,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "auth.js",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth"
     },
     {
@@ -12870,9 +13046,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "crypto",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth_crypto"
     },
     {
@@ -12881,9 +13057,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "user",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth_user"
     },
     {
@@ -12892,9 +13068,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "mood",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth_mood"
     },
     {
@@ -12903,9 +13079,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L15",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "isdataauthenticated()",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth_isdataauthenticated"
     },
     {
@@ -12914,9 +13090,9 @@
       "source_file": "src/controllers/auth.js",
       "source_location": "L60",
       "_origin": "ast",
-      "community": 79,
+      "community": 61,
       "norm_label": "isauthenticated()",
-      "community_name": "auth.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_auth_isauthenticated"
     },
     {
@@ -12925,9 +13101,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "embed.js",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed"
     },
     {
@@ -12936,9 +13112,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "path",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_path"
     },
     {
@@ -12947,9 +13123,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "mood",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_mood"
     },
     {
@@ -12958,9 +13134,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "user",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_user"
     },
     {
@@ -12969,9 +13145,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "getmoodofuser()",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_getmoodofuser"
     },
     {
@@ -12980,9 +13156,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "animatedmood()",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_animatedmood"
     },
     {
@@ -12991,9 +13167,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "tgsmood()",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_tgsmood"
     },
     {
@@ -13002,9 +13178,9 @@
       "source_file": "src/controllers/embed.js",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 103,
+      "community": 61,
       "norm_label": "emojimood()",
-      "community_name": "embed.js",
+      "community_name": "controllers/index.js",
       "id": "src_controllers_embed_emojimood"
     },
     {
@@ -13048,7 +13224,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "join.middleware.js",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_join_middleware"
     },
     {
@@ -13059,7 +13235,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "cache",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_join_middleware_cache"
     },
     {
@@ -13070,7 +13246,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "joinbutton",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_join_middleware_joinbutton"
     },
     {
@@ -13081,7 +13257,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "joinmiddleware()",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_join_middleware_joinmiddleware"
     },
     {
@@ -13147,7 +13323,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "olaf.middleware.js",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_olaf_middleware"
     },
     {
@@ -13158,7 +13334,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "cache",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_olaf_middleware_cache"
     },
     {
@@ -13169,7 +13345,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "olafcaption()",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_olaf_middleware_olafcaption"
     },
     {
@@ -13180,7 +13356,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "olafmiddleware()",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_middlewares_olaf_middleware_olafmiddleware"
     },
     {
@@ -13420,9 +13596,9 @@
       "source_file": "src/models/share.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 97,
+      "community": 62,
       "norm_label": "models/share.js",
-      "community_name": "models/share.js",
+      "community_name": "unfollow.test.js",
       "id": "src_models_share"
     },
     {
@@ -13431,9 +13607,9 @@
       "source_file": "src/models/share.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 97,
+      "community": 62,
       "norm_label": "mongoose",
-      "community_name": "models/share.js",
+      "community_name": "unfollow.test.js",
       "id": "src_models_share_mongoose"
     },
     {
@@ -13442,9 +13618,9 @@
       "source_file": "src/models/share.js",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 97,
+      "community": 62,
       "norm_label": "shareschema",
-      "community_name": "models/share.js",
+      "community_name": "unfollow.test.js",
       "id": "src_models_share_shareschema"
     },
     {
@@ -13895,7 +14071,7 @@
       "_origin": "ast",
       "community": 96,
       "norm_label": "cache.js",
-      "community_name": "Cache",
+      "community_name": "join.middleware.js",
       "id": "src_utils_cache"
     },
     {
@@ -13904,7 +14080,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": "cache",
       "community_name": "Cache",
       "id": "src_utils_cache_cache"
@@ -13915,7 +14091,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".constructor()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_constructor"
@@ -13926,7 +14102,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".set()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_set"
@@ -13937,7 +14113,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".get()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_get"
@@ -13948,7 +14124,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L28",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".delete()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_delete"
@@ -13959,7 +14135,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L32",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".clear()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_clear"
@@ -13970,7 +14146,7 @@
       "source_file": "src/utils/cache.js",
       "source_location": "L37",
       "_origin": "ast",
-      "community": 96,
+      "community": 105,
       "norm_label": ".startcleanup()",
       "community_name": "Cache",
       "id": "src_utils_cache_cache_startcleanup"
@@ -14082,7 +14258,7 @@
       "_origin": "ast",
       "community": 90,
       "norm_label": "secret.js",
-      "community_name": "secret.js",
+      "community_name": "app_config.js",
       "id": "src_utils_secret"
     },
     {
@@ -14093,7 +14269,7 @@
       "_origin": "ast",
       "community": 90,
       "norm_label": "crypto",
-      "community_name": "secret.js",
+      "community_name": "app_config.js",
       "id": "src_utils_secret_crypto"
     },
     {
@@ -14104,7 +14280,7 @@
       "_origin": "ast",
       "community": 90,
       "norm_label": "getkey()",
-      "community_name": "secret.js",
+      "community_name": "app_config.js",
       "id": "src_utils_secret_getkey"
     },
     {
@@ -14115,7 +14291,7 @@
       "_origin": "ast",
       "community": 90,
       "norm_label": "encrypt()",
-      "community_name": "secret.js",
+      "community_name": "app_config.js",
       "id": "src_utils_secret_encrypt"
     },
     {
@@ -14126,7 +14302,7 @@
       "_origin": "ast",
       "community": 90,
       "norm_label": "decrypt()",
-      "community_name": "secret.js",
+      "community_name": "app_config.js",
       "id": "src_utils_secret_decrypt"
     },
     {
@@ -15792,341 +15968,188 @@
   ],
   "links": [
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L44",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_file",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_fs",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L32",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_icons",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L6",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_lucide",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_names",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L31",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_pascal",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scripts/build-icons.js",
-      "source_location": "L5",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "scripts_build_icons",
-      "target": "scripts_build_icons_path",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/controllers/index.js",
-      "source_location": "L12",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast",
       "confidence_score": 1.0,
       "source": "src_controllers_index",
-      "target": "src_controllers_widget"
+      "target": "src_controllers_mood"
     },
     {
-      "relation": "contains",
+      "relation": "imports_from",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L11",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_baseurl",
+      "source": "src_controllers_mood",
+      "target": "src_constants_index",
       "confidence_score": 1.0
     },
     {
-      "relation": "contains",
+      "relation": "imports_from",
+      "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L5",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_crypto",
+      "source": "src_controllers_mood",
+      "target": "src_constants_mood_constant",
       "confidence_score": 1.0
     },
     {
       "relation": "indirect_call",
       "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_disablewidget",
-      "confidence_score": 0.5
-    },
-    {
-      "relation": "indirect_call",
-      "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
-      "weight": 1.0,
-      "_origin": "ast",
-      "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_enablewidget",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_exportmine",
       "confidence_score": 0.5
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L76",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_friendcells",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_gettelegram",
       "confidence_score": 1.0
     },
     {
       "relation": "indirect_call",
       "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_friendimage",
-      "confidence_score": 0.5
-    },
-    {
-      "relation": "indirect_call",
-      "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
-      "weight": 1.0,
-      "_origin": "ast",
-      "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_friendsimage",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_listmoods",
       "confidence_score": 0.5
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L12",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_fullname",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_mood",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_mood_inline_keyboard_msgs_common",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_moodexport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_moods_mood_map",
       "confidence_score": 1.0
     },
     {
       "relation": "indirect_call",
       "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_getwidget",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_mymoods",
       "confidence_score": 0.5
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L62",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_lastmoodview",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_posttochat",
       "confidence_score": 1.0
     },
     {
       "relation": "indirect_call",
       "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_meimage",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_requestmoodpicker",
       "confidence_score": 0.5
     },
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L7",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_mood",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L50",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_ownerof",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L68",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_personcell",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_render",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L56",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_sendpng",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L88",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_servewidget",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_share",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L6",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_user",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L14",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_view",
-      "confidence_score": 1.0
-    },
-    {
       "relation": "indirect_call",
       "confidence": "INFERRED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L107",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
-      "source": "src_controllers_widget",
-      "target": "src_controllers_widget_widgetimage",
+      "source": "src_controllers_mood",
+      "target": "src_controllers_mood_setmine",
       "confidence_score": 0.5
     },
     {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L7",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
+      "source": "src_controllers_mood",
+      "target": "src_export_moods",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_controllers_mood",
       "target": "src_models_mood",
       "confidence_score": 1.0
     },
@@ -16134,240 +16157,36 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L8",
+      "source_file": "src/controllers/mood.js",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_models_share",
+      "source": "src_controllers_mood",
+      "target": "src_utils_telegram",
       "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L6",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_models_user",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget",
-      "target": "src_widget_render",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_controllers_mood",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L17",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_view",
-      "target": "src_controllers_widget_baseurl",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L80",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_friendcells",
-      "target": "src_controllers_widget_fullname",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L73",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_personcell",
-      "target": "src_controllers_widget_fullname",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L25",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_view",
-      "target": "src_controllers_widget_fullname",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L45",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_disablewidget",
-      "target": "src_controllers_widget_view",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
+      "source_file": "src/controllers/mood.js",
       "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "src_controllers_widget_enablewidget",
-      "target": "src_controllers_widget_view",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L30",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_getwidget",
-      "target": "src_controllers_widget_view",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L89",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_servewidget",
-      "target": "src_controllers_widget_ownerof",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L99",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_servewidget",
-      "target": "src_controllers_widget_sendpng",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L79",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_friendcells",
-      "target": "src_controllers_widget_lastmoodview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L69",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_personcell",
-      "target": "src_controllers_widget_lastmoodview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L97",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_servewidget",
-      "target": "src_controllers_widget_personcell",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L94",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_servewidget",
-      "target": "src_controllers_widget_friendcells",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L86",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_widgetimage",
-      "target": "src_controllers_widget_servewidget",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L104",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_friendimage",
-      "target": "src_controllers_widget_servewidget",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L105",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_friendsimage",
-      "target": "src_controllers_widget_servewidget",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/widget.js",
-      "source_location": "L103",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "src_controllers_widget_meimage",
-      "target": "src_controllers_widget_servewidget",
+      "source": "src_controllers_mood_setmine",
+      "target": "src_controllers_mood_posttochat",
       "confidence_score": 1.0
     },
     {
@@ -16502,7 +16321,7 @@
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/server.js",
-      "source_location": "L169",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
@@ -16713,6 +16532,18 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "test/webapp/talk.test.js",
       "source_location": "L9",
       "weight": 1.0,
@@ -16741,9 +16572,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "src_server",
-      "confidence_score": 1.0
+      "target": "src_server"
     },
     {
       "relation": "imports",
@@ -16845,6 +16676,18 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_server_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "test/webapp/talk.test.js",
       "source_location": "L9",
       "weight": 1.0,
@@ -16873,9 +16716,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "src_server_app",
-      "confidence_score": 1.0
+      "target": "src_server_app"
     },
     {
       "relation": "references",
@@ -16902,6 +16745,766 @@
       "target": "src_server_listenserver"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_models_mood",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_models_user",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "src_utils_telegram",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_helpers_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_assert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_cryptojs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_mood",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_moodcontroller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_settelegram",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_signinitdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_test_describe_before_after_beforeeach",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test",
+      "target": "test_webapp_set_mood_test_user",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "test/webapp/set-mood.test.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "test_webapp_set_mood_test_api",
+      "target": "test_webapp_set_mood_test_signinitdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_file"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_fs"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_icons"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_lucide"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_names"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_pascal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/build-icons.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "scripts_build_icons",
+      "target": "scripts_build_icons_path"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/index.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_index",
+      "target": "src_controllers_widget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_baseurl"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_crypto"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_disablewidget"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_enablewidget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_friendcells"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_friendimage"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_friendsimage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_fullname"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_getwidget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_lastmoodview"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_meimage"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_mood"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_ownerof"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_personcell"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_render"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_sendpng"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_servewidget"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_share"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_user"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_view"
+    },
+    {
+      "relation": "indirect_call",
+      "confidence": "INFERRED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "context": "collection",
+      "confidence_score": 0.5,
+      "source": "src_controllers_widget",
+      "target": "src_controllers_widget_widgetimage"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_models_mood"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_models_share"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_models_user"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget",
+      "target": "src_widget_render"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_view",
+      "target": "src_controllers_widget_baseurl"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L80",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_friendcells",
+      "target": "src_controllers_widget_fullname"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_personcell",
+      "target": "src_controllers_widget_fullname"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L25",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_view",
+      "target": "src_controllers_widget_fullname"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_disablewidget",
+      "target": "src_controllers_widget_view"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_enablewidget",
+      "target": "src_controllers_widget_view"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_getwidget",
+      "target": "src_controllers_widget_view"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_servewidget",
+      "target": "src_controllers_widget_ownerof"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L99",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_servewidget",
+      "target": "src_controllers_widget_sendpng"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_friendcells",
+      "target": "src_controllers_widget_lastmoodview"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_personcell",
+      "target": "src_controllers_widget_lastmoodview"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_servewidget",
+      "target": "src_controllers_widget_personcell"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_servewidget",
+      "target": "src_controllers_widget_friendcells"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L86",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_widgetimage",
+      "target": "src_controllers_widget_servewidget"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_friendimage",
+      "target": "src_controllers_widget_servewidget"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_friendsimage",
+      "target": "src_controllers_widget_servewidget"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/controllers/widget.js",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_origin": "ast",
+      "confidence_score": 1.0,
+      "source": "src_controllers_widget_meimage",
+      "target": "src_controllers_widget_servewidget"
+    },
+    {
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/widget/render.js",
@@ -16909,9 +17512,9 @@
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
+      "confidence_score": 0.5,
       "source": "src_widget_render",
-      "target": "src_widget_render_ago",
-      "confidence_score": 0.5
+      "target": "src_widget_render_ago"
     },
     {
       "relation": "contains",
@@ -16920,9 +17523,9 @@
       "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_charw",
-      "confidence_score": 1.0
+      "target": "src_widget_render_charw"
     },
     {
       "relation": "contains",
@@ -16931,9 +17534,9 @@
       "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_clip",
-      "confidence_score": 1.0
+      "target": "src_widget_render_clip"
     },
     {
       "relation": "contains",
@@ -16942,9 +17545,9 @@
       "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_drawcell",
-      "confidence_score": 1.0
+      "target": "src_widget_render_drawcell"
     },
     {
       "relation": "contains",
@@ -16953,9 +17556,9 @@
       "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_esc",
-      "confidence_score": 1.0
+      "target": "src_widget_render_esc"
     },
     {
       "relation": "contains",
@@ -16964,9 +17567,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_fit",
-      "confidence_score": 1.0
+      "target": "src_widget_render_fit"
     },
     {
       "relation": "contains",
@@ -16975,9 +17578,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_fitfont",
-      "confidence_score": 1.0
+      "target": "src_widget_render_fitfont"
     },
     {
       "relation": "contains",
@@ -16986,9 +17589,9 @@
       "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_grids",
-      "confidence_score": 1.0
+      "target": "src_widget_render_grids"
     },
     {
       "relation": "contains",
@@ -16997,9 +17600,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_mood_hues",
-      "confidence_score": 1.0
+      "target": "src_widget_render_mood_hues"
     },
     {
       "relation": "contains",
@@ -17008,9 +17611,9 @@
       "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_moods_dir",
-      "confidence_score": 1.0
+      "target": "src_widget_render_moods_dir"
     },
     {
       "relation": "contains",
@@ -17019,9 +17622,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_path",
-      "confidence_score": 1.0
+      "target": "src_widget_render_path"
     },
     {
       "relation": "indirect_call",
@@ -17031,9 +17634,9 @@
       "weight": 1.0,
       "_origin": "ast",
       "context": "collection",
+      "confidence_score": 0.5,
       "source": "src_widget_render",
-      "target": "src_widget_render_renderwidget",
-      "confidence_score": 0.5
+      "target": "src_widget_render_renderwidget"
     },
     {
       "relation": "contains",
@@ -17042,9 +17645,9 @@
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_sharp",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sharp"
     },
     {
       "relation": "contains",
@@ -17053,9 +17656,9 @@
       "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_sizes",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sizes"
     },
     {
       "relation": "contains",
@@ -17064,9 +17667,9 @@
       "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_sticker",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sticker"
     },
     {
       "relation": "contains",
@@ -17075,9 +17678,9 @@
       "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_stickercache",
-      "confidence_score": 1.0
+      "target": "src_widget_render_stickercache"
     },
     {
       "relation": "contains",
@@ -17086,9 +17689,9 @@
       "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render",
-      "target": "src_widget_render_text",
-      "confidence_score": 1.0
+      "target": "src_widget_render_text"
     },
     {
       "relation": "calls",
@@ -17098,9 +17701,9 @@
       "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_renderwidget",
-      "target": "src_widget_render_sharp",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sharp"
     },
     {
       "relation": "calls",
@@ -17110,9 +17713,9 @@
       "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_sticker",
-      "target": "src_widget_render_sharp",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sharp"
     },
     {
       "relation": "calls",
@@ -17122,9 +17725,9 @@
       "source_location": "L58",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_text",
-      "target": "src_widget_render_esc",
-      "confidence_score": 1.0
+      "target": "src_widget_render_esc"
     },
     {
       "relation": "calls",
@@ -17134,9 +17737,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_fit",
-      "target": "src_widget_render_clip",
-      "confidence_score": 1.0
+      "target": "src_widget_render_clip"
     },
     {
       "relation": "calls",
@@ -17146,9 +17749,9 @@
       "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_fit",
-      "target": "src_widget_render_charw",
-      "confidence_score": 1.0
+      "target": "src_widget_render_charw"
     },
     {
       "relation": "calls",
@@ -17158,9 +17761,9 @@
       "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_fitfont",
-      "target": "src_widget_render_charw",
-      "confidence_score": 1.0
+      "target": "src_widget_render_charw"
     },
     {
       "relation": "calls",
@@ -17170,9 +17773,9 @@
       "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_drawcell",
-      "target": "src_widget_render_fitfont",
-      "confidence_score": 1.0
+      "target": "src_widget_render_fitfont"
     },
     {
       "relation": "calls",
@@ -17182,9 +17785,9 @@
       "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_drawcell",
-      "target": "src_widget_render_fit",
-      "confidence_score": 1.0
+      "target": "src_widget_render_fit"
     },
     {
       "relation": "calls",
@@ -17194,9 +17797,9 @@
       "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_drawcell",
-      "target": "src_widget_render_ago",
-      "confidence_score": 1.0
+      "target": "src_widget_render_ago"
     },
     {
       "relation": "calls",
@@ -17206,9 +17809,9 @@
       "source_location": "L96",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_drawcell",
-      "target": "src_widget_render_sticker",
-      "confidence_score": 1.0
+      "target": "src_widget_render_sticker"
     },
     {
       "relation": "calls",
@@ -17218,9 +17821,9 @@
       "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_drawcell",
-      "target": "src_widget_render_text",
-      "confidence_score": 1.0
+      "target": "src_widget_render_text"
     },
     {
       "relation": "calls",
@@ -17230,9 +17833,9 @@
       "source_location": "L118",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "src_widget_render_renderwidget",
-      "target": "src_widget_render_drawcell",
-      "confidence_score": 1.0
+      "target": "src_widget_render_drawcell"
     },
     {
       "relation": "imports_from",
@@ -17242,9 +17845,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "src_models_mood",
-      "confidence_score": 1.0
+      "target": "src_models_mood"
     },
     {
       "relation": "imports_from",
@@ -17254,9 +17857,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "src_models_share",
-      "confidence_score": 1.0
+      "target": "src_models_share"
     },
     {
       "relation": "imports_from",
@@ -17266,9 +17869,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "src_models_user",
-      "confidence_score": 1.0
+      "target": "src_models_user"
     },
     {
       "relation": "imports_from",
@@ -17278,9 +17881,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_helpers_db",
-      "confidence_score": 1.0
+      "target": "test_helpers_db"
     },
     {
       "relation": "contains",
@@ -17289,9 +17892,9 @@
       "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_api",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_api"
     },
     {
       "relation": "contains",
@@ -17300,9 +17903,9 @@
       "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_app",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_app"
     },
     {
       "relation": "contains",
@@ -17311,9 +17914,9 @@
       "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_assert",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_assert"
     },
     {
       "relation": "contains",
@@ -17322,9 +17925,9 @@
       "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_cryptojs",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_cryptojs"
     },
     {
       "relation": "contains",
@@ -17333,9 +17936,9 @@
       "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_db",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_db"
     },
     {
       "relation": "contains",
@@ -17344,9 +17947,9 @@
       "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_image",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_image"
     },
     {
       "relation": "contains",
@@ -17355,9 +17958,9 @@
       "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_mood",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_mood"
     },
     {
       "relation": "contains",
@@ -17366,9 +17969,9 @@
       "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_share",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_share"
     },
     {
       "relation": "contains",
@@ -17377,9 +17980,9 @@
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_sharp",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_sharp"
     },
     {
       "relation": "contains",
@@ -17388,9 +17991,9 @@
       "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_signinitdata",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_signinitdata"
     },
     {
       "relation": "contains",
@@ -17399,9 +18002,9 @@
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_test_describe_before_after_beforeeach",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_test_describe_before_after_beforeeach"
     },
     {
       "relation": "contains",
@@ -17410,9 +18013,9 @@
       "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test",
-      "target": "test_webapp_widget_test_user",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_user"
     },
     {
       "relation": "calls",
@@ -17422,9 +18025,9 @@
       "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test_image",
-      "target": "test_webapp_widget_test_sharp",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_sharp"
     },
     {
       "relation": "calls",
@@ -17434,9 +18037,9 @@
       "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast",
+      "confidence_score": 1.0,
       "source": "test_webapp_widget_test_api",
-      "target": "test_webapp_widget_test_signinitdata",
-      "confidence_score": 1.0
+      "target": "test_webapp_widget_test_signinitdata"
     },
     {
       "relation": "imports_from",
@@ -17629,18 +18232,6 @@
       "confidence_score": 1.0,
       "source": "src_controllers_index",
       "target": "src_controllers_index_widget"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/index.js",
-      "source_location": "L6",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_index",
-      "target": "src_controllers_mood"
     },
     {
       "relation": "imports_from",
@@ -27894,134 +28485,6 @@
       "confidence_score": 1.0,
       "source": "src_constants_index",
       "target": "src_constants_common_constant"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_constants_index"
-    },
-    {
-      "relation": "indirect_call",
-      "confidence": "INFERRED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L49",
-      "weight": 1.0,
-      "_origin": "ast",
-      "context": "collection",
-      "confidence_score": 0.5,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_exportmine"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_gettelegram"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L21",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_mood"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_mood_inline_keyboard_msgs_common"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L38",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_moodexport"
-    },
-    {
-      "relation": "indirect_call",
-      "confidence": "INFERRED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L49",
-      "weight": 1.0,
-      "_origin": "ast",
-      "context": "collection",
-      "confidence_score": 0.5,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_mymoods"
-    },
-    {
-      "relation": "indirect_call",
-      "confidence": "INFERRED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L49",
-      "weight": 1.0,
-      "_origin": "ast",
-      "context": "collection",
-      "confidence_score": 0.5,
-      "source": "src_controllers_mood",
-      "target": "src_controllers_mood_requestmoodpicker"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L38",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_export_moods"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L21",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_models_mood"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/controllers/mood.js",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast",
-      "confidence_score": 1.0,
-      "source": "src_controllers_mood",
-      "target": "src_utils_telegram"
     },
     {
       "relation": "indirect_call",
@@ -40445,5 +40908,5 @@
       "source_file": "src/public/logo.jpeg"
     }
   ],
-  "built_at_commit": "a50fc2d4803001443b53239f913bfbc771f925f6"
+  "built_at_commit": "b3466f7f8ba8e12ce410c4740f7e2d4c3d199480"
 }
