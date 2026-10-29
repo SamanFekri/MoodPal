@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
-    "mtime": 1791997935.5490732,
-    "ast_hash": "d3ceda52aaeb0739dbd86265f50bc9d1",
+    "mtime": 1793281243.4702022,
+    "ast_hash": "52511781b127e972beefa48c247a1ecd",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -865,13 +865,13 @@
     "semantic_hash": ""
   },
   "scripts/build-icons.js": {
-    "mtime": 1791788846.5793722,
-    "ast_hash": "5ac2a429db871c22d68fc67fa9db0d77",
+    "mtime": 1793281243.4710183,
+    "ast_hash": "ada20d8a615f6b10461b2a79e977f136",
     "semantic_hash": ""
   },
   "src/public/lib/vendor/icons.js": {
-    "mtime": 1791788846.7887783,
-    "ast_hash": "e4e739f4d57c53347da70eb55f66ef03",
+    "mtime": 1793281243.5203018,
+    "ast_hash": "2043b924a841431e60d1ad22ad37c14b",
     "semantic_hash": ""
   },
   "src/characteristics/catalog.js": {

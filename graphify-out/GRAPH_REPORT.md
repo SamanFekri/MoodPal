@@ -1,7 +1,7 @@
-# Graph Report - MoodPal  (2026-10-14)
+# Graph Report - MoodPal  (2026-10-29)
 
 ## Corpus Check
-- 136 files · ~717,403 words
+- 136 files · ~718,353 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b3466f7f`
+- Built from commit: `841ea855`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -481,7 +481,7 @@ Nodes (3): { msgs, common }, setMoodPrivate(), setMoodPublic()
   src/public/ui/index.html · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **598 isolated node(s):** `{ MOOD_INLINE_KEYBOARD, msgs, common }`, `{ getTelegram }`, `Mood`, `{ MOODS, MOOD_MAP }`, `moodExport` (+593 more)
+- **598 isolated node(s):** `fs`, `path`, `lucide`, `NAMES`, `icons` (+593 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -498,7 +498,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Why does `GotYouBroClient` connect `GotYouBroClient` to `backup.test.js`, `controllers/backup.js`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **What connects `{ MOOD_INLINE_KEYBOARD, msgs, common }`, `{ getTelegram }`, `Mood` to the rest of the system?**
+- **What connects `fs`, `path`, `lucide` to the rest of the system?**
   _598 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `talk.test.js` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
