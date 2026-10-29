@@ -694,17 +694,22 @@
     .ovr b { display: block; font-size: 2rem; font-weight: 900; letter-spacing: -.04em; background: linear-gradient(135deg, hsl(45 95% 55%), hsl(30 95% 50%)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .ovr span { display: block; font-size: 0.6471rem; font-weight: 800; letter-spacing: .12em; color: var(--hint); margin-top: 2px; }
 
-    .timeline { position: relative; padding-left: 58px; }
-    .timeline::before { content: ""; position: absolute; left: 25px; top: 24px; bottom: 24px; width: 2px; background: rgba(138,143,152,0.20); border-radius: 2px; }  /* fallback for WebViews without color-mix */
-    .timeline::before { content: ""; position: absolute; left: 25px; top: 24px; bottom: 24px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
+    .timeline { position: relative; padding-left: 52px; }
+    .timeline::before { content: ""; position: absolute; left: 22px; top: 22px; bottom: 22px; width: 2px; background: rgba(138,143,152,0.20); border-radius: 2px; }  /* fallback for WebViews without color-mix */
+    .timeline::before { content: ""; position: absolute; left: 22px; top: 22px; bottom: 22px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
     /* each row is at least as tall as its sticker (plus a gap), so stickers never touch, with or without a note */
-    .tl-item { position: relative; min-height: 56px; padding: 12px 0 12px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
-    .tl-item .tl-ico { position: absolute; left: -52px; top: 6px; width: 40px; height: 40px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
-    .tl-item .tl-ico .sticker { width: 40px; height: 40px; margin: 0; }
+    .tl-item { position: relative; min-height: 46px; padding: 8px 0 8px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+    .tl-item .tl-ico { position: absolute; left: -46px; top: 5px; width: 36px; height: 36px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
+    .tl-item .tl-ico .sticker { width: 36px; height: 36px; margin: 0; }
     .tl-item .tl-ico .sticker-fallback { font-size: 1.1765rem; }
     .tl-head { display: flex; align-items: baseline; gap: 8px; font-size: 0.8235rem; font-weight: 700; }
     .tl-head time { font-size: 0.6471rem; font-weight: 600; color: var(--hint); }
     .tl-note { font-size: 0.7647rem; color: var(--hint); font-style: italic; margin-top: 2px; line-height: 1.35; }
+    .tl-note-row { display: flex; align-items: flex-start; gap: 6px; }
+    .tl-note-row .tl-note { flex: 1; min-width: 0; }
+    .tl-say { position: relative; flex: none; width: 28px; height: 28px; margin-top: -2px; border: 0; border-radius: 50%; display: grid; place-items: center; color: var(--accent-ink); background: rgba(51,144,236,0.12); }
+    .tl-say::after { content: ""; position: absolute; inset: -8px; }   /* 44x44 tap area */
+    .tl-say.on { background: var(--accent); color: var(--accent-text); }
     .tl-tr { font-size: 0.7647rem; line-height: 1.4; margin-top: 6px; padding: 8px 10px; border-radius: 12px; background: rgba(51,144,236,0.1); }
     .tl-tr span:last-child { display: block; }
     .tl-tr .tl-tr-k { display: flex; align-items: center; gap: 5px; font-size: 0.6471rem; font-weight: 700; color: var(--accent-ink); margin-bottom: 2px; }
@@ -2242,7 +2247,10 @@
                         </div>
                       </div>
                       <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
-                      <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                      <div v-if="m.note" class="tl-note-row">
+                        <div class="tl-note" :dir="noteLang(m.note) === 'fa' || noteLang(m.note) === 'ar' || noteLang(m.note) === 'he' ? 'rtl' : 'auto'">“{{ m.note }}”</div>
+                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note'" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
+                      </div>
                     </div>
                   </div>
                   <div class="load-more" v-if="sheet.has_more">
@@ -2467,7 +2475,10 @@
                       </div>
                     </div>
                     <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
-                    <div v-if="m.note" class="tl-note">“{{ m.note }}”</div>
+                    <div v-if="m.note" class="tl-note-row">
+                        <div class="tl-note" :dir="noteLang(m.note) === 'fa' || noteLang(m.note) === 'ar' || noteLang(m.note) === 'he' ? 'rtl' : 'auto'">“{{ m.note }}”</div>
+                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note'" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
+                      </div>
                     <!-- admin: the note in English (only when tapped; Google Translate or OpenAI, see src/translate/service.js) -->
                     <template v-if="m.note && m.id && sheet.translate?.available">
                       <div v-if="sheet.tr[m.id]?.text" class="tl-tr">
@@ -3288,6 +3299,7 @@
           userId: null,
           firstName: '',
           myMood: null,
+          ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
           shareLink: null,
           usingMainButton: false,
@@ -3494,6 +3506,12 @@ Script.complete();
       },
 
       async mounted() {
+        // the phone's text-to-speech voices (they arrive a moment after load on some devices)
+        if ('speechSynthesis' in window) {
+          const loadVoices = () => { try { this.ttsVoices = speechSynthesis.getVoices().map(v => v.lang.toLowerCase()); } catch {} };
+          loadVoices();
+          try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch {}
+        }
         // keeps "it's 21:04 there" current
         setInterval(() => { this.nowTick = Date.now(); }, 30 * 1000);
         // keep Telegram's object out of Vue's reactivity: its MainButton etc. are locked (non-writable)
@@ -3854,7 +3872,52 @@ Script.complete();
           if (d.dy > Math.max(110, d.el.offsetHeight * 0.25)) { d.el.style.transform = 'translateY(100%)'; this.haptic('light'); this.closeSheet(); }
           else d.el.style.transform = '';
         },
+        // ----- reading notes aloud -----
+        // The language comes from the writing system; text in Latin letters is read in the device's language.
+        noteLang(text) {
+          const t = String(text || '');
+          if (/[\u0600-\u06FF]/.test(t)) return /[پچژگکی]/.test(t) ? 'fa' : 'ar';
+          if (/[\u0590-\u05FF]/.test(t)) return 'he';
+          if (/[\u0400-\u04FF]/.test(t)) return /[іїєґ]/i.test(t) ? 'uk' : 'ru';
+          if (/[\u3040-\u30FF]/.test(t)) return 'ja';
+          if (/[\uAC00-\uD7AF]/.test(t)) return 'ko';
+          if (/[\u4E00-\u9FFF]/.test(t)) return 'zh';
+          if (/[\u0E00-\u0E7F]/.test(t)) return 'th';
+          if (/[\u0900-\u097F]/.test(t)) return 'hi';
+          if (/[\u0370-\u03FF]/.test(t)) return 'el';
+          if (/[\u0530-\u058F]/.test(t)) return 'hy';
+          if (/[\u10A0-\u10FF]/.test(t)) return 'ka';
+          return (navigator.language || 'en').toLowerCase().split('-')[0];
+        },
+        voiceFor(text) {
+          const lang = this.noteLang(text);
+          const voices = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
+          const local = (navigator.language || '').toLowerCase();
+          const matches = voices.filter(v => v.lang.toLowerCase().split(/[-_]/)[0] === lang);
+          return matches.find(v => v.lang.toLowerCase() === local) || matches.find(v => v.default) || matches[0] || null;
+        },
+        // shown only when the phone has a voice for the note's language
+        canSpeak(text) {
+          const lang = this.noteLang(text);
+          return this.ttsVoices.some(l => l.split(/[-_]/)[0] === lang);
+        },
+        speakNote(key, text) {
+          try {
+            speechSynthesis.cancel();
+            if (this.ttsPlaying === key) { this.ttsPlaying = null; return; }
+            const voice = this.voiceFor(text);
+            if (!voice) return;
+            this.haptic('light');
+            const say = new SpeechSynthesisUtterance(text);
+            say.voice = voice; say.lang = voice.lang;
+            say.onend = say.onerror = () => { if (this.ttsPlaying === key) this.ttsPlaying = null; };
+            this.ttsPlaying = key;
+            speechSynthesis.speak(say);
+          } catch { this.ttsPlaying = null; }
+        },
+        stopSpeaking() { try { if (this.ttsPlaying !== null) speechSynthesis.cancel(); } catch {} this.ttsPlaying = null; },
         closeSheet() {
+          this.stopSpeaking();
           this.sheet = null;
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log

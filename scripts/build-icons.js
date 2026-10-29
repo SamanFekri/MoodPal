@@ -25,6 +25,8 @@ const NAMES = [
   'languages',
   // home screen widget
   'smartphone', 'chevron-right',
+  // reading notes aloud
+  'volume-2', 'square',
   'compass', 'users-round', 'calendar-check', 'waves', 'anchor', 'thumbs-up', 'messages-square', 'book-open', 'telescope', 'sun', 'handshake',
 ];
 
