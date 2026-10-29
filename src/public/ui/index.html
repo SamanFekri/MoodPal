@@ -694,12 +694,13 @@
     .ovr b { display: block; font-size: 2rem; font-weight: 900; letter-spacing: -.04em; background: linear-gradient(135deg, hsl(45 95% 55%), hsl(30 95% 50%)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .ovr span { display: block; font-size: 0.6471rem; font-weight: 800; letter-spacing: .12em; color: var(--hint); margin-top: 2px; }
 
-    .timeline { position: relative; padding-left: 44px; }
-    .timeline::before { content: ""; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: rgba(138,143,152,0.20); border-radius: 2px; }  /* fallback for WebViews without color-mix */
-    .timeline::before { content: ""; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
-    .tl-item { position: relative; padding: 6px 0 10px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
-    .tl-item .tl-ico { position: absolute; left: -38px; top: 2px; width: 34px; height: 34px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
-    .tl-item .tl-ico .sticker { width: 34px; height: 34px; margin: 0; }
+    .timeline { position: relative; padding-left: 58px; }
+    .timeline::before { content: ""; position: absolute; left: 25px; top: 24px; bottom: 24px; width: 2px; background: rgba(138,143,152,0.20); border-radius: 2px; }  /* fallback for WebViews without color-mix */
+    .timeline::before { content: ""; position: absolute; left: 25px; top: 24px; bottom: 24px; width: 2px; background: color-mix(in srgb, var(--hint) 20%, transparent); border-radius: 2px; }
+    /* each row is at least as tall as its sticker (plus a gap), so stickers never touch, with or without a note */
+    .tl-item { position: relative; min-height: 56px; padding: 12px 0 12px; animation: fade-up .4s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+    .tl-item .tl-ico { position: absolute; left: -52px; top: 6px; width: 40px; height: 40px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 3px var(--card); }
+    .tl-item .tl-ico .sticker { width: 40px; height: 40px; margin: 0; }
     .tl-item .tl-ico .sticker-fallback { font-size: 1.1765rem; }
     .tl-head { display: flex; align-items: baseline; gap: 8px; font-size: 0.8235rem; font-weight: 700; }
     .tl-head time { font-size: 0.6471rem; font-weight: 600; color: var(--hint); }
