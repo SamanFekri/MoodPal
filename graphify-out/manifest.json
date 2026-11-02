@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "src/controllers/user.js": {
-    "mtime": 1791181861.3572142,
-    "ast_hash": "aa404e2d0eaf865d1b69caa840d4e57f",
+    "mtime": 1793613659.2707784,
+    "ast_hash": "204614a6de4688b88cfeac067b0a3242",
     "semantic_hash": ""
   },
   "src/db.js": {
@@ -260,8 +260,8 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1793613295.9263663,
-    "ast_hash": "53df78a5110da5e13dc557b31676515a",
+    "mtime": 1793613677.9719312,
+    "ast_hash": "4ff5308f931783368e8078c8dba0b48c",
     "semantic_hash": ""
   },
   "src/utils/cache.js": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793613484.083276,
-    "ast_hash": "dac4f1354c490ed99d56ac0e9f744b89",
+    "mtime": 1793613814.0186875,
+    "ast_hash": "a06ba933b95a7ac3a8b38bef013a33aa",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
-    "mtime": 1793613306.3722413,
-    "ast_hash": "027009684681e9a181dcdf1eac6ef522",
+    "mtime": 1793613708.3581722,
+    "ast_hash": "f8200747754685e9b643af75f6268cb1",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -865,13 +865,13 @@
     "semantic_hash": ""
   },
   "scripts/build-icons.js": {
-    "mtime": 1793281243.4710183,
-    "ast_hash": "ada20d8a615f6b10461b2a79e977f136",
+    "mtime": 1793613696.4071045,
+    "ast_hash": "bd2b82b00842b93f27e261a8a3d39789",
     "semantic_hash": ""
   },
   "src/public/lib/vendor/icons.js": {
-    "mtime": 1793281243.5203018,
-    "ast_hash": "2043b924a841431e60d1ad22ad37c14b",
+    "mtime": 1793613696.4521234,
+    "ast_hash": "9ecbd8d91874e453b9fee76c9d903dc1",
     "semantic_hash": ""
   },
   "src/characteristics/catalog.js": {
@@ -955,13 +955,28 @@
     "semantic_hash": ""
   },
   "src/support/service.js": {
-    "mtime": 1793613431.4161744,
-    "ast_hash": "03cfc3077ac3393605d643cc4a077888",
+    "mtime": 1793613677.9728172,
+    "ast_hash": "c3d06585e2037dfe775d2fe1b57337ef",
     "semantic_hash": ""
   },
   "test/support/support.test.js": {
     "mtime": 1793613449.7227612,
     "ast_hash": "067e25a8da71029feb53d42d623ffd90",
+    "semantic_hash": ""
+  },
+  "src/models/nickname.js": {
+    "mtime": 1793613645.2069683,
+    "ast_hash": "032462efd820bacf6915c3233e635550",
+    "semantic_hash": ""
+  },
+  "src/nicknames/service.js": {
+    "mtime": 1793613645.2094429,
+    "ast_hash": "86fd87d55f912768083966eece875a65",
+    "semantic_hash": ""
+  },
+  "test/webapp/nicknames.test.js": {
+    "mtime": 1793613734.2755063,
+    "ast_hash": "9a36c2ee54a71a2970c6d6c08aa9e34e",
     "semantic_hash": ""
   }
 }
