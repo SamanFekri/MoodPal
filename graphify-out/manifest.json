@@ -995,8 +995,8 @@
     "semantic_hash": ""
   },
   "src/yearly/service.js": {
-    "mtime": 1793629935.6936405,
-    "ast_hash": "0dbe1ee94a2c333e09ea339699523200",
+    "mtime": 1793630148.8563979,
+    "ast_hash": "cd41d10a3de093b5dd8b8ff8502804fd",
     "semantic_hash": ""
   },
   "src/yearly/stats.js": {
@@ -1005,8 +1005,8 @@
     "semantic_hash": ""
   },
   "test/yearly/yearly.test.js": {
-    "mtime": 1793629949.9194524,
-    "ast_hash": "3c0ea12095d0fb0e7a74f5711bb820d4",
+    "mtime": 1793630194.797151,
+    "ast_hash": "e2e0f4cbdf29ab6628d693f98d7deea0",
     "semantic_hash": ""
   }
 }
