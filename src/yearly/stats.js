@@ -19,6 +19,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const MIN_MOODS = 5;
 const MIN_MONTH = 3;   // a month needs this many moods to be called best or toughest
 const MIN_RADAR_WEEKS = 4;   // the weekly radar needs this many weeks with moods
+const WEEK_FLOOR = 1;        // every radar corner gets this much each week, before its moods
 // the radar's corners, clockwise from the top (same six groups as the bars)
 const RADAR_AXES = ['positive', 'motivated', 'anxious', 'negative', 'drained', 'calm'];
 const groupOf = Object.fromEntries(GROUPS.flatMap(g => g.moods.map(code => [code, g.key])));
@@ -102,6 +103,8 @@ async function yearStats(userId, year) {
  * The radar that morphs week by week: for each week from the first to the last with moods, the share of
  * each group (RADAR_AXES order). Each week is blended with its neighbours (weighted by how many moods
  * they had), so one odd mood doesn't make the shape jump; a week without moods keeps the last shape.
+ * Every corner starts each week at 1 (WEEK_FLOOR), so no corner ever sits at zero and each week stays
+ * a full six-sided shape instead of collapsing into a line or a spike.
  * @returns {{ axes: string[], year: number[], weeks: Array<{ week: number, month: string, values: number[] }> } | null}
  */
 function weeklyRadar(weeks, year, groups) {
@@ -119,7 +122,7 @@ function weeklyRadar(weeks, year, groups) {
       for (const k of RADAR_AXES) sum[k] += weight * (w.g[k] || 0);
       n += weight * w.n;
     }
-    const values = n ? RADAR_AXES.map(k => sum[k] / n) : prev;
+    const values = n ? RADAR_AXES.map(k => (sum[k] + WEEK_FLOOR) / (n + WEEK_FLOOR * RADAR_AXES.length)) : prev;
     prev = values;
     const monthIndex = new Date(Date.UTC(year, 0, 1 + i * 7)).getUTCMonth();
     out.push({ week: i + 1, month: MONTHS[Math.min(11, monthIndex)], values });

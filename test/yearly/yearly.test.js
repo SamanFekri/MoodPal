@@ -91,8 +91,13 @@ describe('Year in Moods', () => {
       assert.equal(radar.weeks[0].month, 'January');
       assert.equal(radar.weeks[5].month, 'February');
       for (const w of radar.weeks) assert.ok(Math.abs(w.values.reduce((a, b) => a + b, 0) - 1) < 1e-9, 'each week is a whole');
-      assert.equal(radar.weeks[0].values[0], 1, 'week 1: all positive');
-      assert.ok(radar.weeks[4].values[3] > 0.5, 'week 5 leans Low');
+      const biggest = (v) => v.indexOf(Math.max(...v));
+      assert.equal(biggest(radar.weeks[0].values), 0, 'week 1 leans Positive');
+      for (const w of radar.weeks) assert.ok(Math.min(...w.values) > 0, 'every corner gets +1 each week, never zero');
+      // week 1: 1 happy, plus half of week 2's happy; every corner +1 → (1.5 + 1) / (1.5 + 6)
+      assert.ok(Math.abs(radar.weeks[0].values[0] - 2.5 / 7.5) < 1e-9);
+      assert.ok(Math.abs(radar.weeks[0].values[1] - 1 / 7.5) < 1e-9, 'a corner with no moods sits at the +1');
+      assert.equal(biggest(radar.weeks[4].values), 3, 'week 5 leans Low');
       assert.ok(radar.weeks[5].values[4] < 0.34, 'one angry mood in week 6 is smoothed, not a jump');
       assert.ok(Math.abs(radar.year.reduce((a, b) => a + b, 0) - 1) < 1e-9);
     });
