@@ -142,7 +142,7 @@ bot.action(/^fr_(uf|rm|both)_/, friendsCallback);
 bot.action('talk_note', talkCommands.talkAboutNoteCallback);
 // support network: invitations, "share how you're feeling?", hugs
 bot.action(/^sc_(ok|no)_[a-f0-9]{24}$/, supportCommands.inviteAnswerCallback);
-bot.action(/^ms_([a-f0-9]{24}_\d+|done|all_[a-f0-9]{24})$/, supportCommands.shareCallback);
+bot.action(/^ms_((t_)?[a-f0-9]{24}_\d+|done|(all|a|s)_[a-f0-9]{24})$/, supportCommands.shareCallback);
 bot.action(/^hug_\d+$/, supportCommands.hugCallback);
 bot.action([reminderService.CALLBACK_OFF, reminderService.CALLBACK_ON], remindersToggle);
 bot.action([new RegExp(`^${TZ_PREFIX}`), TZ_RESET], timezoneCallback);

@@ -36,11 +36,15 @@ const MAX_CONTACTS = 3;
 const DECLINE_COOLDOWN_MS = 7 * 24 * 3600 * 1000;   // after a "no", wait a week before asking the same person again
 const SHARE_WINDOW_MS = 24 * 3600 * 1000;            // a mood can be shared for a day
 const HUG_WINDOW_MS = 14 * 24 * 3600 * 1000;
-const PROMPT_FRIENDS = 6;
+const PROMPT_FRIENDS = 12;
 const TICK_MS = 20 * 1000;
 
 // callback_data prefixes (none contains "mood_" or "share_", which other handlers match)
-const CB = { ACCEPT: 'sc_ok_', DECLINE: 'sc_no_', SHARE: 'ms_', SHARE_ALL: 'ms_all_', SHARE_DONE: 'ms_done', HUG: 'hug_' };
+// SHARE_TICK / SHARE_ALL_TICK / SHARE_SEND drive the checklist; SHARE (one friend) and SHARE_ALL are the
+// older one-tap buttons, still answered for prompts already sitting in people's chats
+const CB = { ACCEPT: 'sc_ok_', DECLINE: 'sc_no_', SHARE: 'ms_', SHARE_ALL: 'ms_all_', SHARE_TICK: 'ms_t_', SHARE_ALL_TICK: 'ms_a_', SHARE_SEND: 'ms_s_', SHARE_DONE: 'ms_done', HUG: 'hug_' };
+const TICK_OFF = '⬜ ';
+const TICK_ON = '✅ ';
 const MAX_SHARE_AT_ONCE = 20;
 
 class SupportError extends Error {
@@ -177,7 +181,6 @@ async function afterMood(userId, moodDoc, { source = 'bot', now = new Date() } =
     const user = await User.findById(userId).lean();
     if (!user || user.is_blocked || !moodDoc) return result;
     const s = settingsOf(user);
-    result.updates = await sendMoodUpdates(user, moodDoc, s);
     if (!s.emotions.includes(moodDoc.mood?.code)) return result;
     result.hard = true;
     if (s.auto) result.scheduled = await scheduleAuto(user, moodDoc, s, now);
@@ -186,37 +189,6 @@ async function afterMood(userId, moodDoc, { source = 'bot', now = new Date() } =
     console.error('Support after mood failed:', error.message);
   }
   return result;
-}
-
-// ---------- mood updates ----------
-
-/**
- * Every new mood goes to the people who see this person's mood, unless they turned "Send my moods to
- * friends" off (it's on by default, existing users included) or the friend turned updates off. A hard mood skips accepted
- * support friends while automatic alerts are on, so nobody gets two messages for one mood.
- * @returns {Promise<number>} how many were sent
- */
-async function sendMoodUpdates(user, moodDoc, s) {
-  if (user.mood_updates?.send === false) return 0;
-  const shares = await Share.find({ followed: user._id, disabled: false }).populate('follower').lean();
-  let skip = new Set();
-  if (s.auto && s.emotions.includes(moodDoc.mood?.code)) {
-    const accepted = await SupportContact.find({ user: user._id, status: 'accepted' }).select('contact').lean();
-    skip = new Set(accepted.map(c => String(c.contact)));
-  }
-  const text = msgs.moodUpdateMsg(esc(firstName(user)), moodDoc.mood);
-  const markup = user.username ? { inline_keyboard: [[{ text: msgs.supportMessageButton(firstName(user)), url: `https://t.me/${user.username}` }]] } : undefined;
-  let sent = 0;
-  for (const { follower: f } of shares) {
-    if (!f || f.is_blocked || f.is_bot || f.mood_updates?.receive === false || f.reminder?.bot_blocked || skip.has(String(f._id))) continue;
-    try {
-      await getTelegram().sendMessage(f.id, text, { parse_mode: 'HTML', ...(markup ? { reply_markup: markup } : {}) });
-      sent++;
-    } catch (error) {
-      console.error(`Mood update to ${f.id} failed:`, error.message);
-    }
-  }
-  return sent;
 }
 
 async function scheduleAuto(user, moodDoc, s, now = new Date()) {
@@ -317,19 +289,37 @@ async function sharePrompt(userId, moodDoc) {
   return { mood_id: moodDoc._id, friends: targets.map(t => ({ id: t.user.id, fullname: fullname(t.user), support: t.support })) };
 }
 
+// The "tell some friends?" checklist: tapping a name only ticks it (⬜ ↔ ✅); Notify sends to the ticked
+// ones. The ticks live in the message's own keyboard, so nothing is stored until Notify.
 async function promptInBot(user, moodDoc) {
   const targets = (await shareTargets(user)).slice(0, PROMPT_FRIENDS);
   if (!targets.length) return false;
-  const rows = [];
-  for (let i = 0; i < targets.length; i += 2) {
-    rows.push(targets.slice(i, i + 2).map(t => ({ text: `${t.support ? '💛 ' : ''}${firstName(t.user)}`, callback_data: `${CB.SHARE}${moodDoc._id}_${t.user.id}` })));
-  }
-  // more than one friend: one tap tells them all (everyone the list offers, not just the buttons shown)
-  const all = await shareTargets(user);
-  if (all.length > 1) rows.push([{ text: msgs.supportShareAllButton(Math.min(all.length, MAX_SHARE_AT_ONCE)), callback_data: `${CB.SHARE_ALL}${moodDoc._id}` }]);
-  rows.push([{ text: msgs.supportSkipButton(), callback_data: CB.SHARE_DONE }]);
-  await getTelegram().sendMessage(user.id, msgs.supportPromptMsg(), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
+  const friends = targets.map(t => ({ id: t.user.id, name: `${t.support ? '💛 ' : ''}${firstName(t.user)}`, on: false }));
+  await getTelegram().sendMessage(user.id, msgs.supportPromptMsg(), { reply_markup: checklistKeyboard(moodDoc._id, friends) });
   return true;
+}
+
+function checklistKeyboard(moodId, friends) {
+  const rows = [];
+  for (let i = 0; i < friends.length; i += 2) {
+    rows.push(friends.slice(i, i + 2).map(f => ({ text: `${f.on ? TICK_ON : TICK_OFF}${f.name}`, callback_data: `${CB.SHARE_TICK}${moodId}_${f.id}` })));
+  }
+  if (friends.length > 1) rows.push([{ text: msgs.supportSelectAllButton(friends.every(f => f.on)), callback_data: `${CB.SHARE_ALL_TICK}${moodId}` }]);
+  rows.push([{ text: msgs.supportNotifyButton(friends.filter(f => f.on).length), callback_data: `${CB.SHARE_SEND}${moodId}` }]);
+  rows.push([{ text: msgs.supportSkipButton(), callback_data: CB.SHARE_DONE }]);
+  return { inline_keyboard: rows };
+}
+
+// reads the friends and their ticks back from a checklist keyboard
+function readChecklist(keyboard) {
+  const friends = [];
+  for (const b of (keyboard?.inline_keyboard || []).flat()) {
+    if (!b.callback_data?.startsWith(CB.SHARE_TICK)) continue;
+    const id = Number(b.callback_data.split('_').pop());
+    const on = b.text.startsWith(TICK_ON);
+    friends.push({ id, on, name: b.text.slice((on ? TICK_ON : TICK_OFF).length) });
+  }
+  return friends;
 }
 
 /**
@@ -517,7 +507,6 @@ async function adminView(userId) {
   ]);
   return {
     settings: s,
-    mood_updates: { send: user.mood_updates?.send !== false, receive: user.mood_updates?.receive !== false },
     hard_moods: MOODS.filter(m => s.emotions.includes(m.code)).map(m => ({ code: m.code, name: m.name, emoji: m.emoji })),
     default_hard: s.emotions.length === HARD_DEFAULT.length && HARD_DEFAULT.every(c => s.emotions.includes(c)),
     contacts: contacts.filter(c => c.contact).map(c => ({ id: c.contact.id, fullname: fullname(c.contact), username: c.contact.username || null, status: c.status, invited_at: c.invited_at, answered_at: c.answered_at, receives: c.contact.support?.receive !== false })),
@@ -548,9 +537,9 @@ async function start({ log = console.log } = {}) {
 function stop() { if (timer) clearInterval(timer); timer = null; }
 
 module.exports = {
-  CB, HARD_DEFAULT, OPTIONS, MAX_CONTACTS, SupportError,
+  CB, HARD_DEFAULT, OPTIONS, MAX_CONTACTS, SupportError, checklistKeyboard, readChecklist,
   settingsOf, updateSettings, connections, shareTargets, hardDayStreak, evaluate,
-  afterMood, sendMoodUpdates, scheduleAuto, processAlert, tick, start, stop,
+  afterMood, scheduleAuto, processAlert, tick, start, stop,
   sharePrompt, promptInBot, shareMood, shareMoodMany,
   invite, respond, removeContact, stopSupporting, sendHug, view, adminView,
 };

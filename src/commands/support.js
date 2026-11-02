@@ -31,7 +31,41 @@ async function shareCallback(ctx) {
       await answer(ctx);
       return ctx.editMessageText(msgs.supportPromptDoneMsg()).catch(() => {});
     }
-    // 💛 Share with everyone
+    const cb = data(ctx);
+    const keyboard = ctx.callbackQuery.message?.reply_markup;
+
+    // ⬜ / ✅ a friend: only ticks, nothing is sent yet
+    if (cb.startsWith(support.CB.SHARE_TICK)) {
+      const [moodId, friendId] = cb.slice(support.CB.SHARE_TICK.length).split('_');
+      const friends = support.readChecklist(keyboard).map(f => (f.id === Number(friendId) ? { ...f, on: !f.on } : f));
+      await answer(ctx);
+      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends)).catch(() => {});
+    }
+    // Select all / Clear all
+    if (cb.startsWith(support.CB.SHARE_ALL_TICK)) {
+      const moodId = cb.slice(support.CB.SHARE_ALL_TICK.length);
+      const friends = support.readChecklist(keyboard);
+      const all = friends.every(f => f.on);
+      await answer(ctx);
+      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends.map(f => ({ ...f, on: !all })))).catch(() => {});
+    }
+    // 💛 Notify N friends: send to the ticked ones
+    if (cb.startsWith(support.CB.SHARE_SEND)) {
+      const moodId = cb.slice(support.CB.SHARE_SEND.length);
+      const ids = support.readChecklist(keyboard).filter(f => f.on).map(f => f.id);
+      if (!ids.length) return answer(ctx, msgs.supportTickFirstMsg());
+      let results;
+      try { results = await support.shareMoodMany(ctx.user._id, moodId, ids); }
+      catch (error) { return answer(ctx, error.code === 'too_old' ? 'That mood is too old to share now' : "Couldn't share that"); }
+      const told = results.filter(r => r.status === 'sent' || r.status === 'already');
+      if (!told.length) return answer(ctx, "Couldn't reach them right now");
+      const names = told.map(r => r.first_name || 'a friend');
+      const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+      await answer(ctx, `Notified ${told.length} ${told.length === 1 ? 'friend' : 'friends'} 💛`);
+      return ctx.editMessageText(msgs.supportNotifiedMsg(list)).catch(() => {});
+    }
+
+    // older prompts: 💛 Share with everyone
     if (data(ctx).startsWith(support.CB.SHARE_ALL)) {
       let results;
       try { results = await support.shareMoodMany(ctx.user._id, data(ctx).slice(support.CB.SHARE_ALL.length), 'all'); }

@@ -2134,24 +2134,6 @@
             </section>
 
 
-            <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
-              <h3><ui-icon name="send" :size="17"></ui-icon> Mood updates</h3>
-              <div class="share-row">
-                <div>
-                  <div class="s-title">Send my moods to friends</div>
-                  <div class="s-desc">Every time you set a mood, the friends who see your mood get it in the bot. Never your notes.</div>
-                </div>
-                <button class="switch" :class="{ on: settings.privacy.mood_updates_send }" :disabled="privacyBusy" @click="setPrivacy({ mood_updates_send: !settings.privacy.mood_updates_send })" role="switch" :aria-checked="settings.privacy.mood_updates_send" aria-label="Send my moods to friends"></button>
-              </div>
-              <div class="share-row" style="margin-top:14px">
-                <div>
-                  <div class="s-title">Get friends' mood updates</div>
-                  <div class="s-desc">When a friend who sends updates sets a new mood.</div>
-                </div>
-                <button class="switch" :class="{ on: settings.privacy.mood_updates_receive }" :disabled="privacyBusy" @click="setPrivacy({ mood_updates_receive: !settings.privacy.mood_updates_receive })" role="switch" :aria-checked="settings.privacy.mood_updates_receive" aria-label="Get friends' mood updates"></button>
-              </div>
-            </section>
-
             <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }">
               <h3>Who can see my mood <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
               <div v-if="followers && !followers.length" class="muted-box">Nobody yet. Tap Add a friend on the Friends tab to share your mood.</div>
@@ -2592,7 +2574,6 @@
                     <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">Wait · at most</span><span class="v">{{ sheet.sup.settings.delay_minutes ? sheet.sup.settings.delay_minutes + ' min' : 'no wait' }} · once every {{ sheet.sup.settings.cooldown_hours }} h</span></div>
                     <div class="kv"><span class="k">Offer to share</span><span class="v">{{ sheet.sup.settings.manual_prompt ? 'On' : 'Off' }}</span></div>
                     <div class="kv"><span class="k">Gets support messages</span><span class="v">{{ sheet.sup.settings.receive ? 'Yes' : 'No' }}</span></div>
-                    <div class="kv"><span class="k">Mood updates</span><span class="v">sends {{ sheet.sup.mood_updates.send ? 'on' : 'off' }} · gets {{ sheet.sup.mood_updates.receive ? 'on' : 'off' }}</span></div>
 
                     <div class="af-label sup-gap">Recent support messages</div>
                     <div v-if="!sheet.sup.alerts.length" class="muted-box">None sent yet.</div>
@@ -5383,8 +5364,7 @@ Script.complete();
           this.privacyBusy = true;
           try {
             this.settings = await this.api('/api/me/settings/privacy', { method: 'POST', body: patch });
-            const msg = { mood_log_shared: ['Friends can see your mood history', 'Your mood history is hidden from friends'], mood_notes_shared: ['Friends can see your notes too', 'Your notes are private again'],
-              mood_updates_send: ['Friends will get your new moods', 'Your moods stay on your profile only'], mood_updates_receive: ["You'll get friends' mood updates", "Friends' mood updates are off"] };
+            const msg = { mood_log_shared: ['Friends can see your mood history', 'Your mood history is hidden from friends'], mood_notes_shared: ['Friends can see your notes too', 'Your notes are private again'] };
             const [key, on] = Object.entries(patch)[0];
             if (msg[key]) this.showToast(msg[key][on ? 0 : 1]);
           } catch { this.showToast("Couldn't save that"); }

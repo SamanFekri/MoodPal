@@ -99,8 +99,6 @@ describe('Emotional support network', () => {
   });
 
   describe('support friends need to agree', () => {
-    // these count support messages only, so Ada's everyday mood updates are off here
-    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); });
     test('invite → the friend gets a message with yes / not now; nothing automatic until they accept', async () => {
       await setSupport(ada, { auto: true });
       const { contact, delivered } = await support.invite(ada._id, bob.id);
@@ -153,8 +151,7 @@ describe('Emotional support network', () => {
   });
 
   describe('automatic alerts', () => {
-    // these count support messages only, so Ada's everyday mood updates are off here
-    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); await supportFriend(ada, bob); });
+    beforeEach(async () => { await supportFriend(ada, bob); });
 
     test('on by default: an accepted support friend hears about a hard mood without any setup', async () => {
       await User.collection.updateOne({ _id: ada._id }, { $unset: { support: '' } });
@@ -291,9 +288,43 @@ describe('Emotional support network', () => {
       assert.equal(to(ada).length, 0);
       const { mood: m } = await logMood(ada, 'sad');
       const prompt = to(ada)[0];
-      assert.match(prompt.text, /share how you're feeling with your friends/);
-      const buttons = prompt.extra.reply_markup.inline_keyboard.flat().map(b => b.callback_data);
-      assert.deepEqual(buttons.sort(), [`ms_${m._id}_8002`, `ms_${m._id}_8003`, `ms_all_${m._id}`, 'ms_done'].sort());
+      assert.match(prompt.text, /tell some friends how you're feeling/);
+      const buttons = prompt.extra.reply_markup.inline_keyboard.flat();
+      assert.deepEqual(buttons.map(b => b.callback_data).sort(), [`ms_t_${m._id}_8002`, `ms_t_${m._id}_8003`, `ms_a_${m._id}`, `ms_s_${m._id}`, 'ms_done'].sort());
+      assert.deepEqual(buttons.filter(b => b.callback_data.startsWith('ms_t_')).map(b => b.text).sort(), ['⬜ Bob', '⬜ Carol']);
+      assert.equal(buttons.find(b => b.callback_data.startsWith('ms_s_')).text, '💛 Notify 0 friends');
+      assert.equal(to(bob).length + to(carol).length, 0, 'nothing is sent by the question itself');
+    });
+
+    test('the checklist: ticking sends nothing, Notify sends to the ticked friends only', async () => {
+      const { mood: m } = await logMood(ada, 'sad');
+      let keyboard = to(ada)[0].extra.reply_markup;
+      const edits = [];
+      const press = async (cb) => {
+        const ctx = { user: await User.findById(ada._id), callbackQuery: { data: cb, message: { reply_markup: keyboard } }, answers: [],
+          answerCbQuery: async (t) => { ctx.answers.push(t); }, editMessageReplyMarkup: async (k) => { keyboard = k; }, editMessageText: async (t) => edits.push(t) };
+        await supportCommands.shareCallback(ctx);
+        return ctx;
+      };
+      const texts = () => keyboard.inline_keyboard.flat().map(b => b.text);
+
+      const empty = await press(`ms_s_${m._id}`);
+      assert.match(empty.answers[0], /Tick at least one/);
+      await press(`ms_t_${m._id}_8002`);
+      assert.ok(texts().includes('✅ Bob') && texts().includes('⬜ Carol'));
+      assert.ok(texts().includes('💛 Notify 1 friend'));
+      await press(`ms_t_${m._id}_8002`);   // untick
+      assert.ok(texts().includes('⬜ Bob'));
+      await press(`ms_a_${m._id}`);         // select all
+      assert.ok(texts().includes('✅ Bob') && texts().includes('✅ Carol') && texts().includes('Clear all'));
+      await press(`ms_t_${m._id}_8003`);   // untick Carol again
+      assert.equal(to(bob).length + to(carol).length, 0, 'still nothing sent');
+
+      await press(`ms_s_${m._id}`);
+      assert.equal(to(bob).length, 1);
+      assert.match(to(bob)[0].text, /Ada.*wanted you to know.*sad/);
+      assert.equal(to(carol).length, 0, 'Carol was unticked');
+      assert.match(edits[0], /Notified Bob/);
     });
 
     test('works without automatic sharing, and can be turned off', async () => {
@@ -341,7 +372,6 @@ describe('Emotional support network', () => {
   });
 
   describe('sharing with several friends at once', () => {
-    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); });
 
     test('the bot\'s "Share with everyone" tells everyone offered, once each', async () => {
       const m = await mood(ada, 'sad');
@@ -381,49 +411,15 @@ describe('Emotional support network', () => {
     });
   });
 
-  describe('mood updates (every mood, opt-in)', () => {
-    test('on by default, even for users from before it existed: every mood goes to the people who see it, and only them', async () => {
-      await User.collection.updateOne({ _id: ada._id }, { $unset: { mood_updates: '' } });   // an existing user
-      const r = await api('/api/me/settings', { as: ada });
-      assert.equal(r.body.privacy.mood_updates_send, true);
-      assert.equal(r.body.privacy.mood_updates_receive, true);
-      await logMood(ada, 'happy');
-      assert.match(to(bob)[0].text, /Ada.*feeling.*happy/);
-      assert.equal(to(bob)[0].extra.reply_markup.inline_keyboard[0][0].url, 'https://t.me/ada');
-      assert.equal(to(carol).length, 0, "Carol doesn't follow Ada");
-      assert.equal(to(dan).length, 0);
-    });
-
-    test('a mood that is not a hard one (confused) is only a labelled mood update, never a support message', async () => {
+  describe('a mood that is not hard', () => {
+    test('notifies nobody: no support message, no share question, nothing to friends', async () => {
       await supportFriend(ada, bob);
       sent.length = 0;
       await logMood(ada, 'confused');
-      assert.equal(to(bob).length, 1);
-      assert.match(to(bob)[0].text, /Mood update:.*Ada is feeling <b>confused<\/b>/);
-      assert.match(to(bob)[0].text, /Settings → Friends/);
-      assert.equal(await SupportAlert.countDocuments(), 0, 'no support alert for confused');
-      assert.ok(!to(ada).some(m => /share how you're feeling/.test(m.text)), 'no share prompt either');
-    });
-
-    test("the sender can turn it off, and a friend can turn friends' updates off", async () => {
-      await api('/api/me/settings/privacy', { as: ada, method: 'POST', body: { mood_updates_send: false } });
-      await logMood(ada, 'relaxed');
-      assert.equal(to(bob).length, 0);
-      await api('/api/me/settings/privacy', { as: ada, method: 'POST', body: { mood_updates_send: true } });
-      await api('/api/me/settings/privacy', { as: bob, method: 'POST', body: { mood_updates_receive: false } });
-      await logMood(ada, 'relaxed');
-      assert.equal(to(bob).length, 0);
-    });
-
-    test('a hard mood reaches a support friend once, as the support message', async () => {
-      await supportFriend(ada, bob);
-      await setSupport(ada, { auto: true, manual_prompt: false });
-      await User.updateOne({ _id: ada._id }, { 'mood_updates.send': true });
-      await logMood(ada, 'sad');
-      assert.equal(to(bob).length, 1);
-      assert.match(to(bob)[0].text, /feeling.*sad.*right now/);
-      await logMood(ada, 'happy', new Date(Date.now() + H));
-      assert.equal(to(bob).length, 2, 'easy moods still go as updates');
+      await logMood(ada, 'happy');
+      assert.equal(to(bob).length + to(carol).length + to(dan).length, 0);
+      assert.equal(to(ada).length, 0, 'no share question in the bot');
+      assert.equal(await SupportAlert.countDocuments(), 0);
     });
   });
 

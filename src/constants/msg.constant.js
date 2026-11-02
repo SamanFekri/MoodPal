@@ -204,14 +204,14 @@ export const supportAcceptedMsg = (name) => `💛 <b>${name}</b> agreed to be yo
 export const supportDeclinedMsg = (name) => `<b>${name}</b> can't be a support friend right now. You can pick someone else in the mini app → Settings.`
 export const supportStoppedMsg = (name) => `<b>${name}</b> is no longer your support friend.`
 // after a hard mood
-export const supportPromptMsg = () => `💛 Would you like to share how you're feeling with your friends? Pick one or more, or everyone.`
+export const supportPromptMsg = () => `💛 Would you like to tell some friends how you're feeling?
+Tick the friends you want, then tap Notify.`
+export const supportNotifyButton = (n) => `💛 Notify ${n} ${n === 1 ? 'friend' : 'friends'}`
+export const supportSelectAllButton = (all) => (all ? 'Clear all' : 'Select all')
+export const supportNotifiedMsg = (names) => `💛 Notified ${names}. Take care of yourself.`
+export const supportTickFirstMsg = () => `Tick at least one friend first`
 export const supportShareAllButton = (n) => `💛 Share with everyone (${n})`
 export const supportSharedAllMsg = (names) => `💛 Shared with ${names}. Take care of yourself.`
 export const supportSkipButton = () => `Skip`
 export const supportSharedWithMsg = (names) => `💛 Shared with ${names}. Want to tell anyone else?`
 export const supportPromptDoneMsg = () => `💛 OK. Take care of yourself.`
-// mood updates (every mood, to the friends who see it; opt-in)
-// a plain update, not a support message: labelled as such, with where to turn it off
-export const moodUpdateMsg = (name, mood) => `${mood.emoji || '🙂'} <b>Mood update:</b> ${name} is feeling <b>${String(mood.name || '').toLowerCase()}</b>.
-
-<i>You get these because ${name} shares their mood with you. Turn them off in the mini app → Settings → Friends.</i>`
