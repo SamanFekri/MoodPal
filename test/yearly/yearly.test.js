@@ -179,6 +179,7 @@ describe('Year in Moods', () => {
       });
       const me = await User.findById(saman._id).lean();
       const first = yearly.requestOwn(me);
+      for (let i = 0; i < 1000 && (await yearly.adminView()).in_queue < 1; i++) await new Promise(r => setTimeout(r, 5));
       const second = yearly.requestOwn(await User.findById(dan._id).lean());
       for (let i = 0; i < 1000 && (await yearly.adminView()).in_queue < 2; i++) await new Promise(r => setTimeout(r, 5));
       const again = await yearly.requestOwn(me);

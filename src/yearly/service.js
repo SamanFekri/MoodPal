@@ -21,8 +21,9 @@ const { yearStats, MIN_MOODS } = require('./stats');
 
 const REUSE_MS = 24 * 3600 * 1000;   // a made video is reused for at most a day
 const EDIT_EVERY_MS = 3000;           // how often the progress message in the chat moves
-const RENDER_TIMEOUT_MS = 5 * 60 * 1000;   // a render stuck longer than this is given up, so the queue keeps moving
-const STUCK_MS = 2 * 60 * 1000;            // no progress for this long: the admin view calls it stuck
+// no progress for this long: the admin view warns it is stuck. Only an admin restarts it; nothing is
+// given up on its own (a slow server can take a while).
+const STUCK_MS = 3 * 60 * 1000;
 const TMP = path.join(os.tmpdir(), 'moodpal-yearly');
 
 const state = { enabled: false, year: new Date().getFullYear(), announcedYear: null };
@@ -101,9 +102,7 @@ async function make(req) {
     progressEdit(req, msgs.yearlyMakingMsg(year, 0, 0));
     // the chat's progress bar moves every few seconds (Telegram limits how often a message can change)
     let lastPct = 0, lastEdit = Date.now();
-    let timer;
-    const tooLong = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('render took too long')), RENDER_TIMEOUT_MS); });
-    const video = await Promise.race([tooLong, stopped, renderer(stats, out, {
+    const video = await Promise.race([stopped, renderer(stats, out, {
       bot: bot(),
       signal: req.controller.signal,
       onProgress: (f) => {
@@ -112,7 +111,7 @@ async function make(req) {
         req.percent = pct;
         if (pct !== lastPct && Date.now() - lastEdit >= EDIT_EVERY_MS) { lastPct = pct; lastEdit = Date.now(); progressEdit(req, msgs.yearlyMakingMsg(year, pct, 0)); }
       },
-    })]).finally(() => clearTimeout(timer));
+    })]);
     const sent = await tg.sendVideo(chatId, { source: fs.createReadStream(video.path) }, {
       caption: req.caption, parse_mode: 'HTML', supports_streaming: true, width: video.width, height: video.height, duration: video.duration,
     });
@@ -130,7 +129,6 @@ async function make(req) {
     progressEdit(req, msgs.yearlyFailedMsg());
     return { status: 'failed' };
   } finally {
-    req.controller?.abort();   // stops a renderer that is still going (after a timeout, say)
     req.controller = null;
     fs.rm(out, { force: true }, () => {});
   }
