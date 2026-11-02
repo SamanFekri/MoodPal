@@ -80,8 +80,8 @@
     "semantic_hash": "5664171072dc6fbb5afa3ba8c50eb36f"
   },
   "src/constants/msg.constant.js": {
-    "mtime": 1793608847.6836033,
-    "ast_hash": "25a698942f04bf6b1bc310985f475c3b",
+    "mtime": 1793610198.2992654,
+    "ast_hash": "8b5c6fe213bcebf6288a8a2e58ac79dd",
     "semantic_hash": ""
   },
   "src/constants/personality.constant.js": {
@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "src/controllers/settings.js": {
-    "mtime": 1790790681.0746214,
-    "ast_hash": "5649ec47fe08e58c3b11aeaac4e5c8ba",
+    "mtime": 1793610435.0021508,
+    "ast_hash": "1cc375de6311bed21f28f2e28ee0d911",
     "semantic_hash": ""
   },
   "src/controllers/user.js": {
@@ -160,9 +160,9 @@
     "semantic_hash": "8ed661c89c80f44895f74bacc63f6b15"
   },
   "src/middlewares/olaf.middleware.js": {
-    "mtime": 1747649720.6499157,
-    "ast_hash": "6d33ba2dfa6d4fab01444481b3a91ddc",
-    "semantic_hash": "6d33ba2dfa6d4fab01444481b3a91ddc"
+    "mtime": 1793610265.5782888,
+    "ast_hash": "2702da813d69b3bb4d7fa495afdbd14f",
+    "semantic_hash": ""
   },
   "src/middlewares/user.middleware.js": {
     "mtime": 1790704088.2884278,
@@ -220,8 +220,8 @@
     "semantic_hash": "622a4baa351029b9b8078960ac4395f1"
   },
   "src/models/user.js": {
-    "mtime": 1793608728.8581433,
-    "ast_hash": "133d861fc2dc4cef2d51c7713e6d56ba",
+    "mtime": 1793610435.0010297,
+    "ast_hash": "7e7eaf166fe9fc4aa1d12c1aa03f854e",
     "semantic_hash": ""
   },
   "src/personality/catalog.seed.js": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793609254.5083084,
-    "ast_hash": "65624b37223784b7ae51cb9660aa2a44",
+    "mtime": 1793610435.0032098,
+    "ast_hash": "4203f9b48e0be0c07fbd4939b03f6703",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
-    "mtime": 1793609211.0454981,
-    "ast_hash": "17f3d29826bcb77b539af7944c4ee304",
+    "mtime": 1793610241.2248502,
+    "ast_hash": "94f7b33fc5d486fdf008e4ec79fb5952",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
@@ -955,13 +955,13 @@
     "semantic_hash": ""
   },
   "src/support/service.js": {
-    "mtime": 1793609254.507498,
-    "ast_hash": "b1b9483bf3e828aab007d39226a8c70c",
+    "mtime": 1793610435.0015924,
+    "ast_hash": "9a27d53b71781d7cd77ed93068075599",
     "semantic_hash": ""
   },
   "test/support/support.test.js": {
-    "mtime": 1793608961.1659355,
-    "ast_hash": "a4ba2920bca5eba925f99f804ff121aa",
+    "mtime": 1793610480.8039446,
+    "ast_hash": "ebcd3bdcf789693a8ae10f14cc89c86e",
     "semantic_hash": ""
   }
 }

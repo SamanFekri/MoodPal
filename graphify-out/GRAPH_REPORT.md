@@ -1,24 +1,24 @@
 # Graph Report - MoodPal  (2026-11-02)
 
 ## Corpus Check
-- 142 files · ~727,385 words
+- 142 files · ~728,615 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1545 nodes · 2387 edges · 111 communities (85 shown, 26 thin omitted)
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 282 edges (avg confidence: 0.55)
+- 1549 nodes · 2396 edges · 106 communities (82 shown, 24 thin omitted)
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 283 edges (avg confidence: 0.55)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `37b19314`
+- Built from commit: `58877426`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- talk.test.js
+- chat/talk.test.js
 - dependencies
 - report.js
-- time.js
+- reminders.test.js
 - bot.js
 - llm.js
 - personality.constant.js
@@ -30,7 +30,7 @@
 - reminders/service.js
 - mbti.js
 - PersonalityService
-- mbti.test.js
+- models/mood.js
 - resilience.test.js
 - migrate.js
 - characteristics.test.js
@@ -47,7 +47,7 @@
 - command.test.js
 - mood.constant.js
 - TgsElement
-- talk.js
+- controllers/reminders.js
 - friend-moods.test.js
 - server.js
 - fetchAdmin
@@ -62,7 +62,7 @@
 - MoodPal Logo (Smiley Brand Mark)
 - src/db.js
 - controllers/backup.js
-- reminders.test.js
+- followback.test.js
 - admin.js
 - memory.test.js
 - talk-learnings.test.js
@@ -72,8 +72,8 @@
 - commands/share.js
 - ChatService
 - support.test.js
-- menu.test.js
 - chat/service.js
+- friends.js
 - build-icons.js
 - controllers/index.js
 - unfollow.test.js
@@ -82,7 +82,7 @@
 - characteristic_analysis.js
 - devDependencies
 - catalog.js
-- render.js
+- auth.js
 - user_memory.js
 - package.json
 - widget.js
@@ -106,20 +106,15 @@
 - app_config.js
 - api.test.js
 - GotYouBroClient
-- getSettings
 - widget.test.js
 - moods.js
-- Cache
+- olaf.middleware.js
 - helpers/db.js
-- commands/reminders.js
 - user.middleware.js
-- reminder_job.js
 - telegram.js
 - controllers/broadcast.js
 - on_text.js
 - controllers/user.js
-- controllers/talk.js
-- models/mood.js
 - embed.js
 - models/share.js
 - support_alert.js
@@ -128,14 +123,14 @@
 ## God Nodes (most connected - your core abstractions)
 1. `PersonalityService` - 25 edges
 2. `api (fetch helper)` - 19 edges
-3. `app` - 14 edges
-4. `MoodPal Mini App (Vue root)` - 14 edges
+3. `MoodPal Mini App (Vue root)` - 14 edges
+4. `app` - 13 edges
 5. `MemoryService` - 12 edges
 6. `CharacteristicsService` - 11 edges
-7. `ChatService` - 10 edges
-8. `view()` - 10 edges
-9. `serveWidget()` - 9 edges
-10. `drain()` - 9 edges
+7. `view()` - 10 edges
+8. `ChatService` - 10 edges
+9. `firstName()` - 9 edges
+10. `serveWidget()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `radar (computed)` --semantically_similar_to--> `Mood Radar`  [INFERRED] [semantically similar]
@@ -158,11 +153,11 @@
 - **TGS sticker rendering pipeline** — readme_tgs_embed, src_public_ui_index_self_hosted_libs, src_public_ui_index_waitfortgsplayer, src_public_ui_index_mountstickers, src_public_ui_index_destroystickers [INFERRED 0.95]
 - **MoodPal Brand Identity System** — src_public_logo_brand_mark, src_public_logo_smiley_face_motif, src_public_logo_flat_minimal_style, src_public_logo_mood_visual_identity [INFERRED 0.75]
 
-## Communities (111 total, 26 thin omitted)
+## Communities (106 total, 24 thin omitted)
 
-### Community 0 - "talk.test.js"
-Cohesion: 0.12
-Nodes (15): assert, { CHAT_IDLE_MINUTES }, chatService, ChatSession, db, { ensurePersonalityCatalog }, handleTextMessage, last() (+7 more)
+### Community 0 - "chat/talk.test.js"
+Cohesion: 0.09
+Nodes (29): chatService, endTalkCommand(), handleTalkMessage(), learnFromSession(), llm, mainKeyboard(), { msgs, common }, respond() (+21 more)
 
 ### Community 1 - "dependencies"
 Cohesion: 0.15
@@ -172,17 +167,17 @@ Nodes (13): adm-zip, canvas, cors, crypto-js, express, node-cron, dependencies, 
 Cohesion: 0.08
 Nodes (36): buildVideoFromFrames(), crypto, ensureDirSync(), ffmpegPath, formatDateRangeLabel(), fs, generateMorphFrames(), generateReport() (+28 more)
 
-### Community 4 - "time.js"
-Cohesion: 0.12
-Nodes (26): AppConfig, clearQueue(), getReminders(), intIn(), reminders, saveSettings(), sendTest(), time (+18 more)
+### Community 4 - "reminders.test.js"
+Cohesion: 0.06
+Nodes (43): buttons(), fmt(), reminders, remindersCommand(), setAndConfirm(), time, timezoneCallback(), timezoneCommand() (+35 more)
 
 ### Community 5 - "bot.js"
 Cohesion: 0.05
 Nodes (38): { backupNowCommand }, backupScheduler, blockMiddleware, bot, BOT_COMMANDS, broadcastService, connectDB, { createShareLinkCommand, shareCallback, followBackCallback } (+30 more)
 
 ### Community 6 - "llm.js"
-Cohesion: 0.15
-Nodes (17): analyzeCharacteristics(), analyzeMoodWeek(), chatParams(), chatReply(), createChat(), extractMemories(), humanizeReply(), inferPersonalityUpdates() (+9 more)
+Cohesion: 0.10
+Nodes (26): chatService, endTalk(), getTalk(), llm, messageView(), sendMessage(), startTalk(), User (+18 more)
 
 ### Community 7 - "personality.constant.js"
 Cohesion: 0.10
@@ -209,8 +204,8 @@ Cohesion: 0.15
 Nodes (13): api(), { app }, assert, cryptoJs, db, googleCalls, googleNext, llmStub (+5 more)
 
 ### Community 13 - "reminders/service.js"
-Cohesion: 0.11
-Nodes (13): AppConfig, errorCode(), { getTelegram }, isBlockedError(), Mood, { MOOD_INLINE_KEYBOARD }, ReminderInputError, ReminderJob (+5 more)
+Cohesion: 0.10
+Nodes (27): AppConfig, drain(), effectiveFor(), enqueueDue(), errorCode(), getSettings(), { getTelegram }, initPending() (+19 more)
 
 ### Community 14 - "mbti.js"
 Cohesion: 0.23
@@ -220,9 +215,9 @@ Nodes (9): arms(), brows(), eyes(), head(), limb(), mouth(), neck(), prop() (+1 
 Cohesion: 0.18
 Nodes (4): PersonalityObservation, PersonalityProfile, PersonalityService, PersonalityTestSession
 
-### Community 16 - "mbti.test.js"
-Cohesion: 0.15
-Nodes (10): { app }, assert, cryptoJs, db, { ensurePersonalityCatalog }, MBTI, personalityService, seed (+2 more)
+### Community 16 - "models/mood.js"
+Cohesion: 0.12
+Nodes (12): mongoose, moodSchema, { app }, assert, cryptoJs, db, { ensurePersonalityCatalog }, MBTI (+4 more)
 
 ### Community 17 - "resilience.test.js"
 Cohesion: 0.06
@@ -284,9 +279,9 @@ Nodes (12): backupNowCommand(), backupService, { msgs, common }, AppConfig, asse
 Cohesion: 0.29
 Nodes (6): MOOD_CODES, MOOD_EMOJIS, MOOD_INLINE_KEYBOARD, MOOD_MAP, MOOD_NAMES, MOODS
 
-### Community 33 - "talk.js"
-Cohesion: 0.24
-Nodes (14): chatService, endTalkCommand(), handleTalkMessage(), learnFromSession(), llm, mainKeyboard(), { msgs, common }, respond() (+6 more)
+### Community 33 - "controllers/reminders.js"
+Cohesion: 0.31
+Nodes (9): AppConfig, clearQueue(), getReminders(), intIn(), reminders, saveSettings(), sendTest(), time (+1 more)
 
 ### Community 34 - "friend-moods.test.js"
 Cohesion: 0.18
@@ -322,7 +317,7 @@ Nodes (12): AdmZip, AppConfig, buildParts(), crypto, { EJSON }, EXCLUDED_COLLECT
 
 ### Community 42 - "support/service.js"
 Cohesion: 0.08
-Nodes (49): afterMood(), alertKeyboard(), alertText(), BOOLEANS, cancelOpen(), canReceive(), CB, connections() (+41 more)
+Nodes (50): afterMood(), alertKeyboard(), alertText(), BOOLEANS, cancelOpen(), canReceive(), CB, connections() (+42 more)
 
 ### Community 43 - "Personality Tests"
 Cohesion: 0.50
@@ -340,9 +335,9 @@ Nodes (4): MoodPal Logo (Smiley Brand Mark), Flat Minimal Icon Style (White Disc
 Cohesion: 0.20
 Nodes (7): AppConfig, backupService, getSettings(), { GotYouBroClient }, saveSettings(), scheduler, view()
 
-### Community 48 - "reminders.test.js"
-Cohesion: 0.12
-Nodes (13): { app }, AppConfig, assert, cryptoJs, db, Mood, ReminderJob, reminders (+5 more)
+### Community 48 - "followback.test.js"
+Cohesion: 0.22
+Nodes (6): assert, db, Share, { shareCallback, followBackCallback }, { test, describe, before, after, beforeEach }, User
 
 ### Community 49 - "admin.js"
 Cohesion: 0.07
@@ -361,20 +356,20 @@ Cohesion: 0.18
 Nodes (11): answer(), crypto, getMine(), getSession(), personalityService, publicUrl(), sessionView(), setSharing() (+3 more)
 
 ### Community 55 - "commands/share.js"
-Cohesion: 0.13
-Nodes (16): allowShareCallback(), followBackCallback(), isSharing(), { logTelegramError }, { msgs, share }, rejectShareCallback(), requestToFollow(), Share (+8 more)
+Cohesion: 0.26
+Nodes (10): allowShareCallback(), followBackCallback(), isSharing(), { logTelegramError }, { msgs, share }, rejectShareCallback(), requestToFollow(), Share (+2 more)
 
 ### Community 57 - "support.test.js"
 Cohesion: 0.09
 Nodes (18): api(), { app }, assert, cryptoJs, db, fakeTelegram, Mood, { MOOD_MAP } (+10 more)
 
-### Community 58 - "menu.test.js"
-Cohesion: 0.14
-Nodes (10): chatService, { common }, User, assert, ChatSession, { common }, db, menuMiddleware (+2 more)
+### Community 58 - "chat/service.js"
+Cohesion: 0.09
+Nodes (17): ChatSession, memoryService, personalityService, RISK_ORDER, User, chatService, { common }, User (+9 more)
 
-### Community 59 - "chat/service.js"
-Cohesion: 0.22
-Nodes (7): ChatSession, memoryService, personalityService, RISK_ORDER, User, chatSessionSchema, mongoose
+### Community 59 - "friends.js"
+Cohesion: 0.48
+Nodes (6): friendsCallback(), friendsCommand(), nameOf(), Share, User, view()
 
 ### Community 60 - "build-icons.js"
 Cohesion: 0.25
@@ -385,8 +380,8 @@ Cohesion: 0.14
 Nodes (13): admin, auth, backup, broadcast, embed, mood, personality, reminders (+5 more)
 
 ### Community 62 - "unfollow.test.js"
-Cohesion: 0.14
-Nodes (15): friendsCallback(), friendsCommand(), nameOf(), Share, User, view(), { app }, assert (+7 more)
+Cohesion: 0.17
+Nodes (9): { app }, assert, cryptoJs, db, { friendsCommand, friendsCallback }, Mood, Share, { test, describe, before, after, beforeEach } (+1 more)
 
 ### Community 64 - "export.test.js"
 Cohesion: 0.12
@@ -400,17 +395,17 @@ Nodes (3): characteristicAnalysisSchema, characteristicSchema, mongoose
 Cohesion: 0.29
 Nodes (7): lucide, mongodb-memory-server, nodemon, devDependencies, lucide, mongodb-memory-server, nodemon
 
-### Community 68 - "render.js"
-Cohesion: 0.19
-Nodes (17): ago(), charW(), clip(), drawCell(), esc(), fit(), fitFont(), GRIDS (+9 more)
+### Community 68 - "auth.js"
+Cohesion: 0.40
+Nodes (5): crypto, isAuthenticated(), isDataAuthenticated(), Mood, User
 
 ### Community 70 - "package.json"
 Cohesion: 0.33
 Nodes (5): description, main, name, packageManager, version
 
 ### Community 71 - "widget.js"
-Cohesion: 0.16
-Nodes (21): baseUrl(), crypto, disableWidget(), enableWidget(), friendCells(), friendImage(), friendsImage(), fullname() (+13 more)
+Cohesion: 0.09
+Nodes (38): baseUrl(), crypto, disableWidget(), enableWidget(), friendCells(), friendImage(), friendsImage(), fullname() (+30 more)
 
 ### Community 72 - "scripts"
 Cohesion: 0.33
@@ -429,8 +424,8 @@ Cohesion: 0.33
 Nodes (8): AppConfig, cron, reschedule(), { runBackup, sendHeartbeat }, stop(), timeToCron(), runBackup(), sendHeartbeat()
 
 ### Community 79 - "models/user.js"
-Cohesion: 0.14
-Nodes (11): crypto, isAuthenticated(), isDataAuthenticated(), Mood, User, { isDataAuthenticated }, User, { encrypt, decrypt } (+3 more)
+Cohesion: 0.20
+Nodes (6): { isDataAuthenticated }, User, { encrypt, decrypt }, mongoose, User, userSchema
 
 ### Community 90 - "app_config.js"
 Cohesion: 0.28
@@ -440,10 +435,6 @@ Nodes (7): appConfigSchema, { encrypt, decrypt }, mongoose, crypto, decrypt(), e
 Cohesion: 0.12
 Nodes (13): api(), { app }, assert, cryptoJs, db, { ensurePersonalityCatalog }, Mood, personalityService (+5 more)
 
-### Community 93 - "getSettings"
-Cohesion: 0.21
-Nodes (14): drain(), effectiveFor(), enqueueDue(), getSettings(), initPending(), nextFor(), setTimezone(), start() (+6 more)
-
 ### Community 94 - "widget.test.js"
 Cohesion: 0.18
 Nodes (12): api(), { app }, assert, cryptoJs, db, image(), Mood, Share (+4 more)
@@ -452,17 +443,13 @@ Nodes (12): api(), { app }, assert, cryptoJs, db, image(), Mood, Share (+4 more)
 Cohesion: 0.21
 Nodes (9): buildCsv(), cell(), ExportError, { getTelegram }, lastExport, Mood, sendToChat(), timezoneOf() (+1 more)
 
-### Community 96 - "Cache"
-Cohesion: 0.13
-Nodes (6): Cache, joinButton, Cache, olafCaption(), olafMiddleware(), Cache
+### Community 96 - "olaf.middleware.js"
+Cohesion: 0.14
+Nodes (8): Cache, joinButton, Cache, moodsLink(), olafButtons(), olafCaption(), olafMiddleware(), Cache
 
 ### Community 97 - "helpers/db.js"
 Cohesion: 0.12
 Nodes (12): mongoose, api(), { app }, assert, cryptoJs, db, Mood, moodController (+4 more)
-
-### Community 98 - "commands/reminders.js"
-Cohesion: 0.30
-Nodes (11): buttons(), fmt(), reminders, remindersCommand(), setAndConfirm(), time, timezoneCallback(), timezoneCommand() (+3 more)
 
 ### Community 101 - "telegram.js"
 Cohesion: 0.25
@@ -480,10 +467,6 @@ Nodes (17): { handleTalkMessage, TALK_ABOUT_NOTE_KEYBOARD }, handleTextMessage()
 Cohesion: 0.22
 Nodes (7): Mood, personalityService, removeFollower(), Share, unfollow(), User, userByTelegramId()
 
-### Community 105 - "controllers/talk.js"
-Cohesion: 0.31
-Nodes (9): chatService, endTalk(), getTalk(), llm, messageView(), sendMessage(), startTalk(), User (+1 more)
-
 ### Community 107 - "embed.js"
 Cohesion: 0.36
 Nodes (7): animatedMood(), emojiMood(), getMoodOfUser(), Mood, path, tgsMood(), User
@@ -499,9 +482,9 @@ Nodes (5): { MOOD_INLINE_KEYBOARD, msgs, share, common }, Share, User, mongoose,
   src/public/ui/index.html · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **646 isolated node(s):** `fs`, `{ Telegraf }`, `health`, `{ harden }`, `connectDB` (+641 more)
+- **645 isolated node(s):** `User`, `llm`, `reminders`, `memory`, `PRIVACY_FIELDS` (+640 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -511,12 +494,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Docker Deployment` and `destroyStickers`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `PersonalityService` connect `PersonalityService` to `service.test.js`, `personality/service.js`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **What connects `fs`, `{ Telegraf }`, `health` to the rest of the system?**
-  _646 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `talk.test.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.125 - nodes in this community are weakly interconnected._
-- **Should `report.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.08097165991902834 - nodes in this community are weakly interconnected._
-- **Should `msg.constant.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.029850746268656716 - nodes in this community are weakly interconnected._
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `ChatService` connect `ChatService` to `chat/service.js`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `CharacteristicsService` connect `CharacteristicsService` to `characteristics/service.js`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **What connects `User`, `llm`, `reminders` to the rest of the system?**
+  _645 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `chat/talk.test.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.08669354838709678 - nodes in this community are weakly interconnected._
