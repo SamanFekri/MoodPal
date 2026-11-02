@@ -1097,6 +1097,9 @@
     .sup-check { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0; font-size: 0.8235rem; font-weight: 600; line-height: 1.4; }
     .sup-check input[type=checkbox] { width: 20px; height: 20px; margin: 0 4px 0 0; accent-color: var(--accent); flex: none; }
     .sup-check select { font: inherit; font-size: 16px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.14); border: 0; border-radius: 10px; padding: 4px 8px; }
+    .sup-pickrow { cursor: pointer; }
+    .sup-pickrow input[type=checkbox] { width: 22px; height: 22px; margin: 0; flex: none; accent-color: var(--accent); }
+    .sup-all { margin: 0 0 4px auto; display: block; text-decoration: none; color: var(--accent-ink); font-weight: 700; }
     .sup-sheet-sub { font-size: 0.8235rem; color: var(--hint); line-height: 1.45; margin: 4px 0 10px; }
     .sup-invite { display: flex; gap: 12px; margin: 0 0 14px; padding: 14px; border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
     .sup-invite .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,159,10,0.16); color: var(--recent-ink); }
@@ -2044,7 +2047,7 @@
                   </div>
                   <button class="switch" :class="{ on: support.settings.auto }" :disabled="supportBusy" @click="saveSupport({ auto: !support.settings.auto })" role="switch" :aria-checked="support.settings.auto" aria-label="Tell support friends automatically"></button>
                 </div>
-                <div class="warn-box" v-if="support.settings.auto && !support.contacts.some(c => c.status === 'accepted')">No support friend has said yes yet, so nobody will hear from MoodPal.</div>
+                <div class="note-box" v-if="support.settings.auto && !support.contacts.some(c => c.status === 'accepted')">Nothing is sent until a support friend says yes. Add one above.</div>
                 <div v-if="support.settings.auto" class="sup-block">
                   <div class="af-label">When</div>
                   <label class="sup-check"><input type="checkbox" :checked="support.settings.immediate" :disabled="supportBusy" @change="saveSupport({ immediate: $event.target.checked })"> Right away, after a hard mood</label>
@@ -2434,18 +2437,22 @@
             </template>
 
             <!-- one Moodling, from the cast gallery -->
-            <!-- after a hard mood: share how you're feeling with a friend (POST /api/me/support/share) -->
+            <!-- after a hard mood: share how you're feeling with one or more friends (POST /api/me/support/share) -->
             <template v-else-if="sheet.type === 'share'">
               <h2 class="af-title">Want to share how you're feeling?</h2>
-              <p class="sup-sheet-sub">Let a friend know you're feeling {{ sheet.mood.name.toLowerCase() }} {{ sheet.mood.emoji }}. Only the mood is shared, not your note.</p>
+              <p class="sup-sheet-sub">Let your friends know you're feeling {{ sheet.mood.name.toLowerCase() }} {{ sheet.mood.emoji }}. Pick one or more. Only the mood is shared, not your note.</p>
+              <button v-if="sheet.friends.length > 1 && !sheet.done" class="mp-bot sup-all" @click="toggleShareAll">{{ sheet.friends.every(f => sheet.picked[f.id]) ? 'Clear' : 'Select all' }}</button>
               <div class="sup-share-list">
-                <div v-for="f in sheet.friends" :key="'sh' + f.id" class="mem-row">
+                <label v-for="f in sheet.friends" :key="'sh' + f.id" class="mem-row sup-pickrow">
+                  <input type="checkbox" :checked="Boolean(sheet.picked[f.id])" :disabled="sheet.busy || Boolean(sheet.done)" @change="sheet.picked[f.id] = $event.target.checked">
                   <span class="t"><b>{{ f.fullname }}</b><span v-if="f.support" class="sup-status accepted">Support friend</span></span>
-                  <button v-if="sheet.shared[f.id] === 'sent' || sheet.shared[f.id] === 'already'" class="btn ghost sup-small" disabled><ui-icon name="check" :size="14"></ui-icon>Shared</button>
-                  <button v-else class="btn sup-small" :disabled="sheet.shared[f.id] === 'busy'" @click="shareWith(f)">{{ sheet.shared[f.id] === 'busy' ? 'Sharing…' : 'Share' }}</button>
-                </div>
+                  <span v-if="sheet.done && sheet.done[f.id]" class="sup-status" :class="{ accepted: sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' }">{{ sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' ? 'Shared' : "Couldn't share" }}</span>
+                </label>
               </div>
-              <div class="row-actions"><button class="btn ghost" style="flex:1" @click="closeSheet">{{ Object.values(sheet.shared).some(v => v === 'sent') ? 'Done' : 'Not now' }}</button></div>
+              <div class="row-actions">
+                <button v-if="!sheet.done" class="btn" style="flex:1" :disabled="sheet.busy || !pickedCount" @click="shareWithPicked">{{ sheet.busy ? 'Sharing…' : pickedCount ? `Share with ${pickedCount} ${pickedCount === 1 ? 'friend' : 'friends'}` : 'Pick a friend' }}</button>
+                <button class="btn ghost" :style="sheet.done ? 'flex:1' : ''" @click="closeSheet">{{ sheet.done ? 'Done' : 'Not now' }}</button>
+              </div>
             </template>
 
             <!-- set my mood right here; the bot still posts it in the chat (POST /api/me/mood) -->
@@ -3577,6 +3584,7 @@
       },
 
       computed: {
+        pickedCount() { return this.sheet?.type === 'share' ? this.sheet.friends.filter(f => this.sheet.picked[f.id]).length : 0; },
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }, { key: 'talk', label: 'Talk', icon: 'message-circle' }];
           t.push({ key: 'logs', label: 'Logs', icon: 'scroll-text' });
@@ -3882,7 +3890,7 @@ Script.complete();
             this.myMood = data.mood;
             this.fetchedAt.logs = 0;   // the log shows it next time
             // a hard mood: offer to share it with a friend, right in this sheet
-            if (data.share?.friends?.length) this.sheet = { type: 'share', moodId: data.share.mood_id, mood: data.mood.mood, friends: data.share.friends, shared: {} };
+            if (data.share?.friends?.length) this.sheet = { type: 'share', moodId: data.share.mood_id, mood: data.mood.mood, friends: data.share.friends, picked: {}, busy: false, done: null };
             else this.closeSheet();
             this.showToast(`Saved as ${data.mood.mood.name.toLowerCase()}. It's in your chat too`);
             try { this.tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
@@ -3895,19 +3903,27 @@ Script.complete();
             this.showToast(error.data?.error === 'note_too_long' ? 'That note is too long' : "Couldn't save your mood. Try again");
           }
         },
-        async shareWith(f) {
+        toggleShareAll() {
           const sheet = this.sheet;
-          if (sheet?.type !== 'share' || sheet.shared[f.id]) return;
+          const all = sheet.friends.every(f => sheet.picked[f.id]);
           this.haptic('light');
-          sheet.shared[f.id] = 'busy';
+          sheet.picked = Object.fromEntries(sheet.friends.map(f => [f.id, !all]));
+        },
+        async shareWithPicked() {
+          const sheet = this.sheet;
+          if (sheet?.type !== 'share' || sheet.busy) return;
+          const ids = sheet.friends.filter(f => sheet.picked[f.id]).map(f => f.id);
+          if (!ids.length) return;
+          this.haptic('medium');
+          sheet.busy = true;
           try {
-            const r = await this.api('/api/me/support/share', { method: 'POST', body: { mood_id: sheet.moodId, telegram_id: f.id } });
-            sheet.shared[f.id] = r.status;
-            if (r.status === 'sent') this.showToast(`${f.fullname.split(' ')[0]} knows now 💛`);
+            const { results } = await this.api('/api/me/support/share', { method: 'POST', body: { mood_id: sheet.moodId, telegram_ids: ids } });
+            sheet.done = Object.fromEntries(results.map(r => [r.id, r.status]));
+            const ok = results.filter(r => r.status === 'sent' || r.status === 'already').length;
+            this.showToast(ok ? `${ok === 1 ? 'Your friend knows' : ok + ' friends know'} now 💛` : "Couldn't share right now");
           } catch (error) {
-            delete sheet.shared[f.id];
             this.showToast(error.data?.message || "Couldn't share right now");
-          }
+          } finally { sheet.busy = false; }
         },
 
         setSettingsTab(key) {

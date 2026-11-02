@@ -60,10 +60,10 @@ const userSchema = new mongoose.Schema({
     send: { type: Boolean, default: true },
     receive: { type: Boolean, default: true },
   },
-  // Emotional support network (src/support/service.js). Automatic sharing is off until the person turns
-  // it on; the "share with a friend?" prompt and receiving support messages are on by default.
+  // Emotional support network (src/support/service.js). Everything is on by default; automatic messages
+  // only ever go to support friends who said yes, so with none nobody gets anything.
   support: {
-    auto: { type: Boolean, default: false },
+    auto: { type: Boolean, default: true },
     // the moods that count as hard (codes from MOODS); null = the default list
     emotions: { type: [String], default: null },
     // what sends an automatic alert (any combination)

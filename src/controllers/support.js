@@ -43,8 +43,12 @@ const answerInvitation = handle(async (req, res) => {
 });
 // DELETE /api/me/support/supporting/:telegramId — stop being someone's support friend
 const stopSupporting = handle(async (req, res) => { await support.stopSupporting(req.user._id, req.params.telegramId); await send(req, res); });
-// POST /api/me/support/share { mood_id, telegram_id }
+// POST /api/me/support/share { mood_id, telegram_id } or { mood_id, telegram_ids: [...] | 'all' }
 const shareMood = handle(async (req, res) => {
+  if (req.body?.telegram_ids !== undefined) {
+    const results = await support.shareMoodMany(req.user._id, req.body.mood_id, req.body.telegram_ids);
+    return res.json({ results });
+  }
   const result = await support.shareMood(req.user._id, req.body?.mood_id, req.body?.telegram_id);
   res.status(result.status === 'failed' ? 502 : 200).json({ status: result.status, to: { id: result.to.id, first_name: result.to.first_name || '' } });
 });

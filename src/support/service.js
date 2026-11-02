@@ -2,7 +2,8 @@
 //
 // - Emergency (support) friends: up to MAX_CONTACTS people a user picks. Each gets an invitation in the
 //   bot and only receives automatic alerts after accepting. Either side can end it at any time.
-// - Automatic alerts (opt-in, user.support.auto): after a hard mood, triggers decide whether to alert —
+// - Automatic alerts (on by default, user.support.auto; only to support friends who accepted, so with none
+//   nobody is told): after a hard mood, triggers decide whether to alert —
 //   right away, after N hard moods within H hours, or after D hard days in a row (in the user's
 //   timezone). An optional delay holds the alert, and it's dropped if a better mood comes in meanwhile.
 //   One alert per friend per cooldown, never two waiting at once.
@@ -39,7 +40,8 @@ const PROMPT_FRIENDS = 6;
 const TICK_MS = 20 * 1000;
 
 // callback_data prefixes (none contains "mood_" or "share_", which other handlers match)
-const CB = { ACCEPT: 'sc_ok_', DECLINE: 'sc_no_', SHARE: 'ms_', SHARE_DONE: 'ms_done', HUG: 'hug_' };
+const CB = { ACCEPT: 'sc_ok_', DECLINE: 'sc_no_', SHARE: 'ms_', SHARE_ALL: 'ms_all_', SHARE_DONE: 'ms_done', HUG: 'hug_' };
+const MAX_SHARE_AT_ONCE = 20;
 
 class SupportError extends Error {
   constructor(code) { super(code); this.code = code; }
@@ -58,7 +60,7 @@ function settingsOf(user) {
   const pick = (key, def) => (OPTIONS[key].includes(s[key]) ? s[key] : def);
   const emotions = Array.isArray(s.emotions) && s.emotions.length ? s.emotions.filter(c => MOOD_MAP[c]) : HARD_DEFAULT;
   return {
-    auto: s.auto === true,
+    auto: s.auto !== false,
     emotions: emotions.length ? emotions : HARD_DEFAULT,
     immediate: s.immediate !== false,
     repeat_on: s.repeat_on === true,
@@ -322,6 +324,9 @@ async function promptInBot(user, moodDoc) {
   for (let i = 0; i < targets.length; i += 2) {
     rows.push(targets.slice(i, i + 2).map(t => ({ text: `${t.support ? '💛 ' : ''}${firstName(t.user)}`, callback_data: `${CB.SHARE}${moodDoc._id}_${t.user.id}` })));
   }
+  // more than one friend: one tap tells them all (everyone the list offers, not just the buttons shown)
+  const all = await shareTargets(user);
+  if (all.length > 1) rows.push([{ text: msgs.supportShareAllButton(Math.min(all.length, MAX_SHARE_AT_ONCE)), callback_data: `${CB.SHARE_ALL}${moodDoc._id}` }]);
   rows.push([{ text: msgs.supportSkipButton(), callback_data: CB.SHARE_DONE }]);
   await getTelegram().sendMessage(user.id, msgs.supportPromptMsg(), { parse_mode: 'HTML', reply_markup: { inline_keyboard: rows } });
   return true;
@@ -361,6 +366,35 @@ async function shareMood(userId, moodId, friendTelegramId, now = new Date()) {
     await finish(alert._id, { status: 'failed', error: isBlockedError(error) ? 'unreachable' : String(error.message || error).slice(0, 200) });
     return { status: 'failed', to: friend };
   }
+}
+
+/**
+ * Share one mood with several friends at once (the mini app's multi-select, the bot's "everyone").
+ * telegramIds = 'all' means everyone the prompt offers. Each friend is checked on its own: one that
+ * can't get it doesn't stop the rest.
+ * @returns {Promise<Array<{id:number, status:string, error?:string}>>}
+ */
+async function shareMoodMany(userId, moodId, telegramIds, now = new Date()) {
+  let ids = telegramIds;
+  if (ids === 'all') {
+    const user = await User.findById(userId).lean();
+    ids = user ? (await shareTargets(user)).map(t => t.user.id) : [];
+  }
+  if (!Array.isArray(ids) || !ids.length) throw new SupportError('invalid_value');
+  ids = [...new Set(ids.map(Number).filter(Number.isFinite))].slice(0, MAX_SHARE_AT_ONCE);
+  const results = [];
+  for (const id of ids) {
+    try {
+      const r = await shareMood(userId, moodId, id, now);
+      results.push({ id, status: r.status, first_name: r.to.first_name || '' });
+    } catch (error) {
+      if (!(error instanceof SupportError)) throw error;
+      // the mood itself is the problem: the same for everyone, so stop here
+      if (error.code === 'mood_not_found' || error.code === 'too_old') throw error;
+      results.push({ id, status: 'skipped', error: error.code });
+    }
+  }
+  return results;
 }
 
 // ---------- support friends (consent) ----------
@@ -495,6 +529,6 @@ module.exports = {
   CB, HARD_DEFAULT, OPTIONS, MAX_CONTACTS, SupportError,
   settingsOf, updateSettings, connections, shareTargets, hardDayStreak, evaluate,
   afterMood, sendMoodUpdates, scheduleAuto, processAlert, tick, start, stop,
-  sharePrompt, promptInBot, shareMood,
+  sharePrompt, promptInBot, shareMood, shareMoodMany,
   invite, respond, removeContact, stopSupporting, sendHug, view,
 };

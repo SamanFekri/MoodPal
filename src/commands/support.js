@@ -31,6 +31,18 @@ async function shareCallback(ctx) {
       await answer(ctx);
       return ctx.editMessageText(msgs.supportPromptDoneMsg()).catch(() => {});
     }
+    // 💛 Share with everyone
+    if (data(ctx).startsWith(support.CB.SHARE_ALL)) {
+      let results;
+      try { results = await support.shareMoodMany(ctx.user._id, data(ctx).slice(support.CB.SHARE_ALL.length), 'all'); }
+      catch (error) { return answer(ctx, error.code === 'too_old' ? 'That mood is too old to share now' : "Couldn't share that"); }
+      const told = results.filter(r => r.status === 'sent' || r.status === 'already');
+      if (!told.length) return answer(ctx, "Couldn't reach anyone right now");
+      const names = told.map(r => r.first_name || 'a friend');
+      const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
+      await answer(ctx, `Shared with ${told.length} ${told.length === 1 ? 'friend' : 'friends'} 💛`);
+      return ctx.editMessageText(msgs.supportSharedAllMsg(list)).catch(() => {});
+    }
     const [moodId, friendId] = data(ctx).slice(support.CB.SHARE.length).split('_');
     let result;
     try { result = await support.shareMood(ctx.user._id, moodId, friendId); }
@@ -44,7 +56,7 @@ async function shareCallback(ctx) {
     const rows = (ctx.callbackQuery.message?.reply_markup?.inline_keyboard || [])
       .map(row => row.filter(b => b.callback_data !== data(ctx)))
       .filter(row => row.length);
-    const others = rows.some(row => row.some(b => b.callback_data?.startsWith(support.CB.SHARE) && b.callback_data !== support.CB.SHARE_DONE));
+    const others = rows.some(row => row.some(b => b.callback_data?.startsWith(support.CB.SHARE) && b.callback_data !== support.CB.SHARE_DONE && !b.callback_data.startsWith(support.CB.SHARE_ALL)));
     await ctx.editMessageText(others ? msgs.supportSharedWithMsg(result.to.first_name || 'them') : msgs.supportPromptDoneMsg(), others ? { reply_markup: { inline_keyboard: rows } } : undefined).catch(() => {});
   } catch (error) {
     console.error('Error sharing a mood:', error);

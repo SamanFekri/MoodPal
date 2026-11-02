@@ -76,9 +76,10 @@ describe('Emotional support network', () => {
   });
 
   describe('settings', () => {
-    test('safe defaults: automatic sharing off, prompt and receiving on, the usual hard moods', async () => {
+    test('defaults: automatic sharing, prompt and receiving on (existing users too), the usual hard moods', async () => {
+      await User.collection.updateOne({ _id: ada._id }, { $unset: { support: '' } });   // a user from before the feature
       const s = support.settingsOf(await User.findById(ada._id).lean());
-      assert.equal(s.auto, false);
+      assert.equal(s.auto, true);
       assert.equal(s.manual_prompt, true);
       assert.equal(s.receive, true);
       assert.equal(s.immediate, true);
@@ -155,10 +156,27 @@ describe('Emotional support network', () => {
     // these count support messages only, so Ada's everyday mood updates are off here
     beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); await supportFriend(ada, bob); });
 
-    test('off by default: a hard mood alerts nobody', async () => {
+    test('on by default: an accepted support friend hears about a hard mood without any setup', async () => {
+      await User.collection.updateOne({ _id: ada._id }, { $unset: { support: '' } });
       const { result } = await logMood(ada, 'sad');
-      assert.equal(result.hard, true);
+      assert.equal(result.scheduled, 1);
+      assert.equal(to(bob).length, 1);
+      assert.match(to(bob)[0].text, /feeling.*sad/);
+    });
+
+    test('with no support friend who said yes, nobody gets anything', async () => {
+      await support.removeContact(ada._id, bob.id);
+      await support.invite(ada._id, carol.id);   // invited, not answered yet
+      sent.length = 0;
+      const { result } = await logMood(ada, 'sad');
       assert.equal(result.scheduled, 0);
+      assert.equal(to(bob).length + to(carol).length, 0);
+      assert.equal(await SupportAlert.countDocuments(), 0);
+    });
+
+    test('turned off: nobody gets an automatic message', async () => {
+      await setSupport(ada, { auto: false });
+      await logMood(ada, 'sad');
       assert.equal(to(bob).length, 0);
     });
 
@@ -273,9 +291,9 @@ describe('Emotional support network', () => {
       assert.equal(to(ada).length, 0);
       const { mood: m } = await logMood(ada, 'sad');
       const prompt = to(ada)[0];
-      assert.match(prompt.text, /share how you're feeling with a friend/);
+      assert.match(prompt.text, /share how you're feeling with your friends/);
       const buttons = prompt.extra.reply_markup.inline_keyboard.flat().map(b => b.callback_data);
-      assert.deepEqual(buttons.sort(), [`ms_${m._id}_8002`, `ms_${m._id}_8003`, 'ms_done'].sort());
+      assert.deepEqual(buttons.sort(), [`ms_${m._id}_8002`, `ms_${m._id}_8003`, `ms_all_${m._id}`, 'ms_done'].sort());
     });
 
     test('works without automatic sharing, and can be turned off', async () => {
@@ -319,6 +337,35 @@ describe('Emotional support network', () => {
       ctx.callbackQuery.data = 'ms_done';
       await supportCommands.shareCallback(ctx);
       assert.match(edits[1].t, /Take care/);
+    });
+  });
+
+  describe('sharing with several friends at once', () => {
+    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); });
+
+    test('the bot\'s "Share with everyone" tells everyone offered, once each', async () => {
+      const m = await mood(ada, 'sad');
+      const edits = [];
+      const ctx = { user: await User.findById(ada._id), callbackQuery: { data: `ms_all_${m._id}` }, answerCbQuery: async () => {}, editMessageText: async (t) => edits.push(t) };
+      await supportCommands.shareCallback(ctx);
+      assert.equal(to(bob).length, 1);
+      assert.equal(to(carol).length, 1);
+      assert.match(edits[0], /Shared with (Bob and Carol|Carol and Bob)/);
+      await supportCommands.shareCallback(ctx);   // tapped twice: nobody gets it twice
+      assert.equal(to(bob).length, 1);
+      assert.equal(to(carol).length, 1);
+    });
+
+    test('the mini app shares with the friends picked; one who can\'t get it doesn\'t stop the rest', async () => {
+      const m = await mood(ada, 'sad');
+      await setSupport(carol, { receive: false });
+      const r = await api('/api/me/support/share', { as: ada, method: 'POST', body: { mood_id: String(m._id), telegram_ids: [8002, 8003, 8004] } });
+      assert.equal(r.status, 200);
+      const byId = Object.fromEntries(r.body.results.map(x => [x.id, x.status]));
+      assert.deepEqual(byId, { 8002: 'sent', 8003: 'skipped', 8004: 'skipped' });
+      assert.equal(to(bob).length, 1);
+      assert.equal(to(carol).length + to(dan).length, 0);
+      assert.equal((await api('/api/me/support/share', { as: ada, method: 'POST', body: { mood_id: String(m._id), telegram_ids: [] } })).status, 400);
     });
   });
 
@@ -373,7 +420,7 @@ describe('Emotional support network', () => {
     test('view, settings, invite, answer, remove', async () => {
       let r = await api('/api/me/support', { as: ada });
       assert.equal(r.status, 200);
-      assert.equal(r.body.settings.auto, false);
+      assert.equal(r.body.settings.auto, true);
       assert.deepEqual(r.body.candidates.map(c => c.id).sort(), [8002, 8003]);
       assert.equal(r.body.emotions.length, 18);
 
