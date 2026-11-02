@@ -127,6 +127,21 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 **Olaf channel.** Each user card the bot posts to the Olaf channel has *📊 See moods* next to *👤 View Profile*. It's a `https://t.me/<bot>?startapp=u_<telegramId>` link that opens the bot's main mini app; for an admin, the app goes straight to that person's profile (Admin → their moods).
 
+### ✨ Year in Moods
+A short video of someone's year, made for an Instagram story: 1080×1920, about 22 seconds, H.264, no music (people add their own in Instagram). Scenes:
+- **Intro:** "<name>'s 2026 in moods" with their top mood's sticker.
+- **Their year in numbers:** moods logged, days checked in, longest streak.
+- **Mood of the year**, with its share.
+- **Mood mix:** the six mood groups as bars.
+- **Month by month:** each month's most common mood sticker.
+- **Best and toughest month:** at least 3 moods that month.
+- **Outro:** MoodPal and the bot link.
+
+Everything is counted in the person's own timezone. The stickers really animate, using each mood's webp frames. Content stays inside Instagram's safe area. Frames are drawn with `sharp` and encoded with the bundled `ffmpeg-static` (`src/yearly/render.js`); stats are in `src/yearly/stats.js`.
+- **Who gets it.** *Admin → ✨ Year* has *Available to everyone*. When it's off (the default), only admins can make one, to test it. When it's on, everyone gets *✨ 2026* in the bot menu (menus refresh on their next message), a card on the mini app's Logs tab, `/mood_2026`, and `t.me/<bot>?start=year`. Turning it on for a year the first time sends everyone one message through the broadcast queue, with a *✨ Get my 2026* button. The admin can also pick the year.
+- **Delivery.** The bot sends the video with *"Save the video and share it to your Instagram story…"* and the bot link. A progress message counts up while it's made. Videos render one at a time (about a minute each); asking again while one is being made joins that job. A made video is kept as its Telegram `file_id` (`yearly_videos`) and sent again instantly while the person's moods for that year haven't changed (or for 6 hours). A video needs at least 5 moods that year; with fewer, the bot explains.
+- **Admins** can make anyone's video from their profile (*✨ Year in moods*); it arrives in the admin's own chat, marked as a preview. API: `GET|POST /api/me/yearly`, `GET /api/admin/yearly`, `POST /api/admin/yearly/settings { enabled?, year? }`, `POST /api/admin/users/:telegramId/yearly`.
+
 ### ✏️ Nicknames
 On a friend's profile in the mini app, *✏️ Nickname* sets a private name for them, like "Mom". Only the person who set it sees it; the friend is never told. It shows everywhere in the mini app (the Friends grid and profile, *Who can see my mood*, the support lists, the share step) with the real name kept under it on the profile. It's also used in bot messages that person gets: the share checklist, support messages, hugs and invitations. Admin views always show real names. A nickname can be set only for someone connected either way, up to 32 characters; an empty name goes back to the real one. Stored in `nicknames` (`src/nicknames/service.js`); API `PUT /api/friends/:telegramId/nickname { name }`.
 

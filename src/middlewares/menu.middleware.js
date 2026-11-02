@@ -8,12 +8,12 @@ const chatService = require('../chat/service');
 const menuMiddleware = async (ctx, next) => {
   try {
     const isStart = /^\/start\b/.test(ctx.message?.text || '');   // /start sends the menu itself
-    if (ctx.user && ctx.chat?.type === 'private' && ctx.message && !isStart && ctx.user.menu_signature !== common.MENU_SIGNATURE) {
+    if (ctx.user && ctx.chat?.type === 'private' && ctx.message && !isStart && ctx.user.menu_signature !== common.menuSignature()) {
       const inTalk = Boolean(await chatService.getActive(ctx.user._id));
       const keyboard = inTalk ? common.makeTalkKeyboard() : common.makeKeyboardMenu(ctx);
       await ctx.reply('🆕 Your menu has been updated.', { reply_markup: { keyboard, resize_keyboard: true } });
-      await User.updateOne({ _id: ctx.user._id }, { menu_signature: common.MENU_SIGNATURE });
-      ctx.user.menu_signature = common.MENU_SIGNATURE;
+      await User.updateOne({ _id: ctx.user._id }, { menu_signature: common.menuSignature() });
+      ctx.user.menu_signature = common.menuSignature();
     }
   } catch (error) {
     console.error('Error in menuMiddleware:', error);

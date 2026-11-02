@@ -105,6 +105,12 @@ app.get('/api/me/talk', requireWebAppUser, controllers.talk.getTalk);
 app.post('/api/me/talk/start', requireWebAppUser, controllers.talk.startTalk);
 app.post('/api/me/talk/message', requireWebAppUser, controllers.talk.sendMessage);
 app.post('/api/me/talk/end', requireWebAppUser, controllers.talk.endTalk);
+// Year in Moods video (src/yearly)
+app.get('/api/me/yearly', requireWebAppUser, controllers.yearly.getMine);
+app.post('/api/me/yearly', requireWebAppUser, controllers.yearly.requestMine);
+app.get('/api/admin/yearly', requireWebAppUser, requireAdmin, controllers.yearly.adminView);
+app.post('/api/admin/yearly/settings', requireWebAppUser, requireAdmin, controllers.yearly.saveSettings);
+app.post('/api/admin/users/:telegramId/yearly', requireWebAppUser, requireAdmin, controllers.yearly.previewFor);
 // emotional support network (src/support/service.js)
 app.get('/api/me/support', requireWebAppUser, controllers.support.getSupport);
 app.post('/api/me/support/settings', requireWebAppUser, controllers.support.saveSettings);

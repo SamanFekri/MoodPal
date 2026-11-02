@@ -17,18 +17,28 @@ export const MENU_BUTTONS = {
 // Changes whenever the menu changes, so the bot can push the new keyboard to everyone
 export const MENU_SIGNATURE = Object.values(MENU_BUTTONS).join('|');
 
+// the ✨ <year> button (Year in Moods, src/yearly) comes and goes with the admin switch
+const yearly = () => globalThis.__moodpalYearly || { enabled: false, year: new Date().getFullYear() };
+export const yearButton = () => `✨ ${yearly().year}`;
+// the menu everyone should have now: changes when Year in Moods is switched on or off
+export const menuSignature = () => `${MENU_SIGNATURE}|year:${yearly().enabled ? yearly().year : 'off'}`;
+
 export const makeKeyboardMenu = (ctx) => {
   // sending the menu keyboard means this user's client now has the current layout
   const Model = ctx && ctx.user && ctx.user.constructor
-  if (Model && typeof Model.updateOne === 'function' && ctx.user.menu_signature !== MENU_SIGNATURE) {
-    ctx.user.menu_signature = MENU_SIGNATURE
-    Promise.resolve(Model.updateOne({ _id: ctx.user._id }, { menu_signature: MENU_SIGNATURE })).catch(() => {})
+  if (Model && typeof Model.updateOne === 'function' && ctx.user.menu_signature !== menuSignature()) {
+    ctx.user.menu_signature = menuSignature()
+    Promise.resolve(Model.updateOne({ _id: ctx.user._id }, { menu_signature: ctx.user.menu_signature })).catch(() => {})
   }
   let keyboard = []
   keyboard.push([MENU_BUTTONS.SET_MOOD])
   keyboard.push([MENU_BUTTONS.REPORT, MENU_BUTTONS.EXPORT, MENU_BUTTONS.SHARE])
   keyboard.push([MENU_BUTTONS.PERSONALITY_TEST, MENU_BUTTONS.MY_PERSONALITY])
   keyboard.push([MENU_BUTTONS.TALK])
+  // Year in Moods: everyone once it's switched on; admins always (to test it)
+  if (yearly().enabled || ctx.user.is_admin) {
+    keyboard.push([yearButton()])
+  }
   // admins only: trigger a database backup straight from the chat
   if (ctx.user.is_admin) {
     keyboard.push([MENU_BUTTONS.BACKUP_NOW])

@@ -32,6 +32,11 @@ module.exports = async (ctx) => {
           );
           await ctx.reply(msgs.waitingForShareMsg(followed), { parse_mode: 'HTML' });
           break;
+        // t.me/<bot>?start=year, from the Year in Moods announcement or a shared video
+        case 'year':
+          await ctx.reply(msgs.welocmeMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: { keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true } });
+          await require('./report').yearInMoods(ctx);
+          break;
         // t.me/<bot>?start=mbti, from a shared MBTI-style result: welcome, then straight into the test
         case 'mbti':
           await ctx.reply(msgs.welocmeMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: { keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true } });

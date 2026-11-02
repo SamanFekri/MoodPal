@@ -346,7 +346,19 @@ async function generateYearlyWeeklyReportVideo(
   return { images: [], videoPath, maxScale: fixedMax };
 }
 
-// /mood_<year> (hidden command: not in the menu keyboard or command list). Defaults to the current year.
+// /mood_<year>, the ✨ <year> menu button and t.me/<bot>?start=year: the Year in Moods video (src/yearly).
+// It's open to everyone once an admin switches it on; until then only admins get it.
+async function yearInMoods(ctx) {
+  try {
+    const yearly = require('../yearly/service');
+    const match = /(?:\/mood_|✨ )(\d{4})/.exec(ctx.message?.text || '');
+    await yearly.requestOwn(ctx.user, { year: match ? parseInt(match[1], 10) : undefined });
+  } catch (error) {
+    console.error('Error in Year in Moods:', error);
+  }
+}
+
+// the old radar-chart video (kept, no longer wired to a command)
 async function getYearlyMoodVideo(ctx) {
   const match = /\/mood_(\d{4})/.exec(ctx.message?.text || '');
   const year = match ? parseInt(match[1], 10) : new Date().getFullYear();
@@ -401,5 +413,6 @@ module.exports = {
   sendWeeklyReport,
   generateWeeklyImagesForYear,
   generateYearlyWeeklyReportVideo,
-  getYearlyMoodVideo
+  getYearlyMoodVideo,
+  yearInMoods
 };

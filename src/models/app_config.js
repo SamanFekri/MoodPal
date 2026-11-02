@@ -28,6 +28,14 @@ const appConfigSchema = new mongoose.Schema({
   last_heartbeat_status: { type: String, default: null },
   last_heartbeat_message: { type: String, default: null },
 
+  // ---- Year in Moods video (see src/yearly) ----
+  // off: only admins can make one (to test it); on: everyone, from the bot menu and the mini app
+  yearly_enabled: { type: Boolean, default: false },
+  // the year it's for; null = the current year
+  yearly_year: { type: Number, default: null },
+  // the year the "it's ready" message already went out for (only once per year)
+  yearly_announced_year: { type: Number, default: null },
+
   // ---- mood reminders (see src/reminders) ----
   // master switch: off stops scheduling and sending; queued reminders wait (and expire after the grace window)
   reminders_enabled: { type: Boolean, default: true },

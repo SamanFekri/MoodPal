@@ -44,7 +44,7 @@ const startCommand = require('./commands/start');
 const { setMoodCommand, saveMood, ge } = require('./commands/mood');
 const helpCommand = require('./commands/help');
 const setVisibilityCommand = require('./commands/set_visibility');
-const { showReportCommand, sendWeeklyReport, getReportCallback, getYearlyMoodVideo } = require('./commands/report');
+const { showReportCommand, sendWeeklyReport, getReportCallback, yearInMoods } = require('./commands/report');
 const { createShareLinkCommand, shareCallback, followBackCallback } = require('./commands/share');
 const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
 const personalityCommands = require('./commands/personality');
@@ -73,6 +73,7 @@ connectDB()
   .then(() => reminderService.start())
   .then(() => broadcastService.start())
   .then(() => supportService.start())
+  .then(() => require('./yearly/service').start())
   .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server
@@ -116,13 +117,14 @@ bot.command('friends', friendsCommand);
 bot.command('timezone', timezoneCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
-bot.command(['mood_2025', 'mood_2026', 'mood_2027'], getYearlyMoodVideo);
+bot.command(['mood_2025', 'mood_2026', 'mood_2027'], yearInMoods);
 
 bot.hears(common.MENU_BUTTONS.SET_MOOD, setMoodCommand)
 bot.hears(common.MENU_BUTTONS.REPORT, showReportCommand)
 bot.hears(common.MENU_BUTTONS.EXPORT, exportCommand)
 bot.hears(common.MENU_BUTTONS.SHARE, createShareLinkCommand)
-bot.hears(common.MENU_BUTTONS.LEGACY_YEAR_REPORT, getYearlyMoodVideo)
+// ✨ <year> (Year in Moods), including an old ✨ 2025 button still in someone's keyboard
+bot.hears(/^✨ \d{4}$/, yearInMoods)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPrivate)
 bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPublic)
 bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityTestCommand)

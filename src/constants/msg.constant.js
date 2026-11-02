@@ -215,3 +215,19 @@ export const supportSharedAllMsg = (names) => `💛 Shared with ${names}. Take c
 export const supportSkipButton = () => `Skip`
 export const supportSharedWithMsg = (names) => `💛 Shared with ${names}. Want to tell anyone else?`
 export const supportPromptDoneMsg = () => `💛 OK. Take care of yourself.`
+
+// ---- Year in Moods video (src/yearly) ----
+export const yearlyCaption = (year, bot) => `✨ <b>Your ${year} in moods is here!</b>
+
+📲 Save the video and share it to your Instagram story. Let your friends see your year!${bot ? `\n\nFriends can make theirs at t.me/${bot}` : ''}`
+export const yearlyAdminCaption = (name, year) => `🔍 ${name}'s ${year} in moods (admin preview, only you got this)`
+export const yearlyMakingMsg = (year, percent, ahead) => `✨ Making your ${year} in moods… ${Math.round(percent)}%${ahead ? `\n⏳ ${ahead} ahead of you, it starts soon` : ''}`
+export const yearlyReadyMsg = () => `✅ Ready! Here it is 👇`
+export const yearlyNotEnoughMsg = (year, min, n) => `Your ${year} in moods needs at least ${min} moods this year, and you have ${n} so far. Log how you feel and try again soon 💛`
+export const yearlyNotYetMsg = () => `✨ Your Year in Moods isn't open yet. We'll tell you when it's ready!`
+export const yearlyFailedMsg = () => `⚠️ Something went wrong while making your video. Please try again in a bit.`
+export const yearlyAnnounceMsg = (year) => `✨ Your ${year} in moods is ready!
+
+A short video of your year: your top mood, your best month, your streak and more. Made for your Instagram story 📲
+
+Tap ✨ ${year} in the menu (or the button below) to get yours, then share it!`

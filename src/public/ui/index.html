@@ -1111,6 +1111,14 @@
     .sup-invite .t { flex: 1; min-width: 0; }
     .sup-invite b { display: block; font-size: 0.8824rem; line-height: 1.3; }
     .sup-invite small { display: block; font-size: 0.7059rem; color: var(--hint); margin-top: 3px; line-height: 1.4; }
+    .year-step { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 6px; }
+    .year-step b { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; min-width: 4ch; text-align: center; }
+    .year-card { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 14px; border-radius: var(--radius); color: var(--text);
+      background: linear-gradient(135deg, rgba(255,180,84,0.18), rgba(175,82,222,0.16)), var(--card); box-shadow: var(--shadow); }
+    .year-card .ic { flex: none; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(255,180,84,0.2); color: var(--recent-ink); }
+    .year-card .t { flex: 1; min-width: 0; }
+    .year-card b { display: block; font-size: 0.8824rem; }
+    .year-card small { display: block; font-size: 0.7059rem; color: var(--hint); margin-top: 2px; line-height: 1.4; }
     .widget-cta { display: flex; align-items: center; gap: 12px; width: 100%; margin: 16px 0 0; padding: 12px 14px; border: 0; border-radius: var(--radius); background: var(--card); color: var(--text); font: inherit; text-align: left; box-shadow: var(--shadow); }
     .widget-cta .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(51,144,236,0.14); color: var(--accent-ink); }
     .widget-cta .t { flex: 1; min-width: 0; }
@@ -1472,6 +1480,7 @@
               <button :class="{ on: admin.view === 'reminders' }" @click="showReminderAdmin()"><ui-icon name="alarm-clock" :size="15"></ui-icon> Reminders</button>
               <button :class="{ on: admin.view === 'broadcast' }" @click="showBroadcast()"><ui-icon name="megaphone" :size="15"></ui-icon> Broadcast</button>
               <button :class="{ on: admin.view === 'backup' }" @click="showBackup()"><ui-icon name="hard-drive-download" :size="15"></ui-icon> Backup</button>
+              <button :class="{ on: admin.view === 'yearly' }" @click="showYearlyAdmin()"><ui-icon name="sparkles" :size="15"></ui-icon> Year</button>
             </div>
           </div>
 
@@ -1693,6 +1702,41 @@
           </template>
 
           <!-- ---------- Admin · Reminders ---------- -->
+          <!-- Year in Moods: open it to everyone, or keep it admins-only to test -->
+          <template v-else-if="admin.view === 'yearly'">
+            <div v-if="!yearlyAdmin" class="section"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+            <template v-else>
+              <section class="section">
+                <h3><ui-icon name="sparkles" :size="17"></ui-icon> Year in Moods <span class="sub">{{ yearlyAdmin.enabled ? 'open to everyone' : 'admins only' }}</span></h3>
+                <div class="share-row">
+                  <div>
+                    <div class="s-title">Available to everyone</div>
+                    <div class="s-desc">Off: only admins can make it, to test it. On: everyone gets ✨ {{ yearlyAdmin.year }} in the bot menu and a button in the mini app.<template v-if="!yearlyAdmin.announced"> Turning it on sends everyone a message once.</template></div>
+                  </div>
+                  <button class="switch" :class="{ on: yearlyAdmin.enabled }" :disabled="yearlyBusy" @click="setYearlyEnabled(!yearlyAdmin.enabled)" role="switch" :aria-checked="yearlyAdmin.enabled" aria-label="Available to everyone"></button>
+                </div>
+                <div class="af-label sup-gap">Year <span>the menu button and the video follow it</span></div>
+                <div class="year-step">
+                  <button class="icon-btn" :disabled="yearlyBusy || yearlyAdmin.year <= yearlyAdmin.min_year" aria-label="Previous year" @click="setYearlyYear(yearlyAdmin.year - 1)"><ui-icon name="chevron-left" :size="20"></ui-icon></button>
+                  <b>{{ yearlyAdmin.year }}</b>
+                  <button class="icon-btn" :disabled="yearlyBusy || yearlyAdmin.year >= yearlyAdmin.max_year" aria-label="Next year" @click="setYearlyYear(yearlyAdmin.year + 1)"><ui-icon name="chevron-right" :size="20"></ui-icon></button>
+                </div>
+                <div class="af-opts" style="margin-top:10px">
+                  <button class="af-opt" :class="{ on: yearlyAdmin.year === yearlyAdmin.current_year }" :disabled="yearlyBusy" @click="setYearlyYear(yearlyAdmin.current_year)">This year</button>
+                  <button class="af-opt" :class="{ on: yearlyAdmin.year === yearlyAdmin.current_year - 1 }" :disabled="yearlyBusy" @click="setYearlyYear(yearlyAdmin.current_year - 1)">Last year</button>
+                </div>
+                <div class="note-box" v-if="yearlyAdmin.enabled && !yearlyAdmin.announced">Everyone hasn't been told about {{ yearlyAdmin.year }} yet. Switch it off and on again to send the announcement for this year.</div>
+                <div class="kv sup-gap"><span class="k">Videos made for {{ yearlyAdmin.year }}</span><span class="v">{{ yearlyAdmin.made }}</span></div>
+                <div class="kv"><span class="k">Being made right now</span><span class="v">{{ yearlyAdmin.in_queue }}</span></div>
+                <div class="kv"><span class="k">Announcement</span><span class="v">{{ yearlyAdmin.announced ? 'sent' : 'not sent yet' }}</span></div>
+                <div class="row-actions">
+                  <button class="btn" :disabled="yearlyBusy" @click="requestYearly"><ui-icon name="send" :size="16"></ui-icon>Send me mine</button>
+                </div>
+                <div class="note-box">To check someone else's, open them in Users and tap ✨ Year in moods; it comes to your chat. A video needs at least {{ yearlyAdmin.min_moods }} moods that year and takes about a minute to make.</div>
+              </section>
+            </template>
+          </template>
+
           <template v-else-if="admin.view === 'reminders'">
             <template v-if="!remAdmin && !remAdminError">
               <div class="section" v-for="n in 3" :key="'rsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
@@ -1896,6 +1940,16 @@
               </button>
             </div>
           </header>
+
+          <!-- Year in Moods (src/yearly): a story video of the year, made by the bot -->
+          <div v-if="yearly?.available" class="year-card">
+            <span class="ic"><ui-icon name="sparkles" :size="22"></ui-icon></span>
+            <div class="t">
+              <b>Your {{ yearly.year }} in moods</b>
+              <small>A short video of your year, made for your Instagram story.<template v-if="!yearly.enabled"> Admins only for now.</template></small>
+            </div>
+            <button class="btn small" style="margin-top:0" :disabled="yearlyBusy" @click="requestYearly">{{ yearlyBusy ? 'Asking…' : 'Make it' }}</button>
+          </div>
 
           <template v-if="(logs.loading || !fetchedAt.logs) && logs.moods.length === 0 && !logs.error">
             <div v-for="n in 6" :key="'lsk' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
@@ -2542,6 +2596,7 @@
               <a v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :href="adminChatHref(sheet.user)" @click="openAdminChat($event, sheet.user)">
                 <ui-icon name="message-circle" :size="16"></ui-icon>Open chat with {{ firstNameOf(sheet.user) }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
               </a>
+              <button class="btn ghost adm-open-chat" style="margin-top:8px" :disabled="sheet.yearBusy" @click="previewYearly(sheet)"><ui-icon name="sparkles" :size="16"></ui-icon>{{ sheet.yearBusy ? 'Asking…' : 'Year in moods' }}</button>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
                   <ui-icon :name="sheet.user.is_friend ? 'user-check' : 'user-plus'" :size="16"></ui-icon>{{ sheet.savingFriend ? '…' : sheet.user.is_friend ? 'Friend · remove' : 'Add as friend' }}
@@ -3513,6 +3568,7 @@
           myMood: null,
           ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
+          yearly: null, yearlyAdmin: null, yearlyBusy: false,
           settingsTab: 'friends',
           SETTINGS_TABS: [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'support', label: 'Support', icon: 'heart-handshake' }, { key: 'ai', label: 'AI', icon: 'bot' }, { key: 'reminders', label: 'Reminders', icon: 'alarm-clock' }, { key: 'home', label: 'Home screen', icon: 'smartphone' }],
           support: null, supportBusy: false, supportPicking: false,
@@ -3772,6 +3828,7 @@ Script.complete();
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
             this.fetchSupport();
+            this.fetchYearly();
             if (this.isAdmin) { this.loadAdminPrefs(); loads.push(this.fetchAdmin()); }
             // Talk loads only when it is the tab being opened (otherwise on first visit)
             const talkLoad = this.tab === 'talk' ? this.fetchTalk() : null;
@@ -3971,6 +4028,57 @@ Script.complete();
           this.settingsTab = key;
           try { localStorage.setItem('moodpal.settingsTab', key); } catch {}
           window.scrollTo({ top: 0 });
+        },
+
+        // ----- Year in Moods (made by the bot; arrives in the chat) -----
+        async fetchYearly() {
+          try { this.yearly = await this.api('/api/me/yearly'); } catch { /* the card stays hidden */ }
+        },
+        async requestYearly() {
+          if (this.yearlyBusy) return;
+          this.haptic('medium');
+          this.yearlyBusy = true;
+          try {
+            await this.api('/api/me/yearly', { method: 'POST' });
+            this.showToast("It's being made ✨ It arrives in your chat with the bot in about a minute");
+          } catch (error) {
+            this.showToast(error.status === 403 ? "It isn't open yet" : "Couldn't ask for it right now");
+          } finally { this.yearlyBusy = false; }
+        },
+        showYearlyAdmin() { this.admin.view = 'yearly'; this.haptic('light'); this.fetchYearlyAdmin(); },
+        async fetchYearlyAdmin() {
+          try { this.yearlyAdmin = await this.api('/api/admin/yearly', { fresh: true }); } catch { this.showToast("Couldn't load Year in Moods"); }
+        },
+        async saveYearly(patch, done) {
+          if (this.yearlyBusy) return;
+          this.yearlyBusy = true;
+          try {
+            const r = await this.api('/api/admin/yearly/settings', { method: 'POST', body: patch });
+            this.yearlyAdmin = r;
+            this.fetchYearly();
+            this.showToast(r.just_announced ? 'Open to everyone, and the announcement is on its way ✨' : done);
+          } catch { this.showToast("Couldn't save that"); }
+          finally { this.yearlyBusy = false; }
+        },
+        setYearlyEnabled(on) {
+          if (on && !this.yearlyAdmin.announced && !window.confirm(`Open Year in Moods ${this.yearlyAdmin.year} to everyone? Everyone gets a message about it.`)) return;
+          this.haptic('medium');
+          this.saveYearly({ enabled: on }, on ? 'Open to everyone' : 'Admins only again');
+        },
+        setYearlyYear(y) {
+          if (!this.yearlyAdmin || y === this.yearlyAdmin.year || y < this.yearlyAdmin.min_year || y > this.yearlyAdmin.max_year) return;
+          this.haptic('light');
+          this.saveYearly({ year: y }, `Now for ${y}`);
+        },
+        async previewYearly(sheet) {
+          if (sheet.yearBusy) return;
+          this.haptic('medium');
+          sheet.yearBusy = true;
+          try {
+            await this.api(`/api/admin/users/${sheet.user.id}/yearly`, { method: 'POST' });
+            this.showToast(`Making ${this.firstNameOf(sheet.user)}'s video. It arrives in your chat`);
+          } catch { this.showToast("Couldn't ask for it"); }
+          finally { sheet.yearBusy = false; }
         },
 
         // ----- nicknames: my private name for a friend -----
@@ -4505,7 +4613,7 @@ Script.complete();
           try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '', translate: null, tr: {}, sup: null, supError: '' };
+          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '', translate: null, tr: {}, sup: null, supError: '', yearBusy: false };
           if (tab === 'insights') this.loadCharacteristics();
           document.querySelector('.sheet')?.scrollTo({ top: 0 });
           // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag

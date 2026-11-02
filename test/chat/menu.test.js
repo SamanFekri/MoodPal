@@ -29,7 +29,7 @@ describe('keyboard menu refresh', () => {
     const keys = ctx.sent[0].extra.reply_markup.keyboard.flat();
     assert.ok(keys.includes('💬 Talk') && keys.includes('🧠 Personality Test'));
     assert.ok(!keys.includes('🛑 End talk'), 'End talk only appears while talking');
-    assert.equal((await User.findById(alice._id)).menu_signature, common.MENU_SIGNATURE);
+    assert.equal((await User.findById(alice._id)).menu_signature, common.menuSignature());
 
     ctx = makeCtx(await User.findById(alice._id));
     await menuMiddleware(ctx, async () => {});
@@ -47,7 +47,7 @@ describe('keyboard menu refresh', () => {
     const ctx = makeCtx(alice);
     common.makeKeyboardMenu(ctx);              // what /start, mood saving etc. do
     await new Promise(r => setTimeout(r, 30));
-    assert.equal((await User.findById(alice._id)).menu_signature, common.MENU_SIGNATURE);
+    assert.equal((await User.findById(alice._id)).menu_signature, common.menuSignature());
     const next = makeCtx(await User.findById(alice._id));
     await menuMiddleware(next, async () => {});
     assert.equal(next.sent.length, 0);

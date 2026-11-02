@@ -11,6 +11,7 @@ const broadcast = require('./broadcast');
 const talk = require('./talk');
 const widget = require('./widget');
 const support = require('./support');
+const yearly = require('./yearly');
 
 module.exports = {
   embed: embed,
@@ -25,5 +26,6 @@ module.exports = {
   broadcast: broadcast,
   talk: talk,
   widget: widget,
-  support: support
+  support: support,
+  yearly: yearly
 }

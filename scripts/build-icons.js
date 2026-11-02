@@ -24,7 +24,7 @@ const NAMES = [
   // admin note translation
   'languages',
   // home screen widget
-  'smartphone', 'chevron-right',
+  'smartphone', 'chevron-right', 'chevron-left',
   // reading notes aloud
   'volume-2', 'square',
   // nicknames
