@@ -1089,6 +1089,12 @@
     .set-tab.on .ui-icon { color: inherit; }
     .real-name { font-size: 0.7059rem; color: var(--hint); font-weight: 600; margin: -2px 0 2px; }
     .nick-edit { margin: 12px 0 4px; }
+    .sup-friend { margin: 12px 0 4px; padding: 12px 14px; border-radius: 16px; background: rgba(255,159,10,0.08); }
+    .sup-friend .t { display: flex; gap: 10px; align-items: flex-start; }
+    .sup-friend .t .ui-icon { flex: none; margin-top: 2px; color: var(--recent-ink); }
+    .sup-friend b { display: block; font-size: 0.8235rem; }
+    .sup-friend small { display: block; font-size: 0.7059rem; color: var(--hint); margin-top: 2px; line-height: 1.4; }
+    .sup-ask { width: 100%; }
     .sup-desc { margin: 2px 0 6px; }
     .sup-status { display: block; font-size: 0.6471rem; font-weight: 700; color: var(--hint); margin-top: 1px; }
     .sup-status.accepted { color: var(--fresh-ink); }
@@ -2434,6 +2440,32 @@
                 </div>
               </div>
 
+              <!-- support friend: ask them, see where it stands, or answer their request (same data as Settings → Support) -->
+              <div v-if="support" class="sup-friend">
+                <template v-if="supportAsk(sheet.friend)">
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} asked you to be their support friend</b><small>You'd get a short message when they're having a hard time.</small></span></div>
+                  <div class="row-actions" style="margin-top:8px">
+                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), true)">Yes, I'm in</button>
+                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), false)">Not now</button>
+                  </div>
+                </template>
+                <template v-else-if="supportContact(sheet.friend)?.status === 'accepted'">
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} is your support friend</b><small>They hear from MoodPal when you're having a hard time.</small></span></div>
+                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">Remove</button></div>
+                </template>
+                <template v-else-if="supportContact(sheet.friend)?.status === 'pending'">
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>Waiting for {{ firstNameOf(sheet.friend) }} to answer</b><small>You asked them to be your support friend. They answer in the bot.</small></span></div>
+                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">Cancel</button></div>
+                </template>
+                <template v-else-if="supportContact(sheet.friend)?.status === 'declined'">
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} said not now</b><small>You can ask again after a week.</small></span></div>
+                </template>
+                <template v-else>
+                  <button class="btn ghost sup-ask" :disabled="supportBusy || supportFull" @click="inviteSupportFriend({ id: sheet.friend.id, fullname: sheet.friend.fullname })"><ui-icon name="heart-handshake" :size="16"></ui-icon>Ask to be my support friend</button>
+                  <div v-if="supportFull" class="note-box">You already have {{ support.max_contacts }} support friends. Remove one in Settings → Support to ask someone else.</div>
+                </template>
+              </div>
+
               <div class="seg grow sheet-tabs">
                 <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')"><ui-icon name="scroll-text" :size="15"></ui-icon> Mood log</button>
                 <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
@@ -3679,6 +3711,7 @@
       },
 
       computed: {
+        supportFull() { return Boolean(this.support) && this.support.contacts.filter(c => c.status !== 'declined').length >= this.support.max_contacts; },
         pickedCount() { return this.sheet?.type === 'share' ? this.sheet.friends.filter(f => this.sheet.picked[f.id]).length : 0; },
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }, { key: 'talk', label: 'Talk', icon: 'message-circle' }];
@@ -4126,6 +4159,9 @@ Script.complete();
           if (!next.length) return this.showToast('Keep at least one mood');
           this.saveSupport({ emotions: next });
         },
+        // where a friend stands in my support network (for their profile)
+        supportContact(f) { return this.support?.contacts.find(c => c.id === f.id) || null; },
+        supportAsk(f) { return this.support?.supporting.find(p => p.id === f.id && p.status === 'pending') || null; },
         async inviteSupportFriend(p) {
           this.haptic('medium');
           const first = p.fullname.split(' ')[0];
@@ -4241,6 +4277,7 @@ Script.complete();
         // ----- friend sheet -----
         async openFriend(friend) {
           this.haptic('light');
+          this.fetchSupport();   // the support-friend row on their profile
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
           this.sheet = { type: 'friend', friend, tab: 'log', loading: true, personality: null, logLoading: true, logShared: null, logError: false, notesShared: false, moods: [], has_more: false, next_before: null, loadingMore: false, nickEdit: null, nickBusy: false };
