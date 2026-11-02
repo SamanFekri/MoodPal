@@ -1000,13 +1000,13 @@
     "semantic_hash": ""
   },
   "src/yearly/stats.js": {
-    "mtime": 1793625679.4897747,
-    "ast_hash": "30ff9d710db420cc6f8d7f891cd6cf1a",
+    "mtime": 1793631413.293332,
+    "ast_hash": "a1984ef0aff5a1ffe93aa3392f467ad8",
     "semantic_hash": ""
   },
   "test/yearly/yearly.test.js": {
-    "mtime": 1793630194.797151,
-    "ast_hash": "e2e0f4cbdf29ab6628d693f98d7deea0",
+    "mtime": 1793631413.2937145,
+    "ast_hash": "2a7d8766d6f801008acefdfe63f6f119",
     "semantic_hash": ""
   }
 }
