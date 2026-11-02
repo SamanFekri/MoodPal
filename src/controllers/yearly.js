@@ -28,6 +28,9 @@ const saveSettings = async (req, res) => {
   }
 };
 
+// POST /api/admin/yearly/reset — forget this year's made videos so everyone gets a newly made one
+const resetYear = async (req, res) => res.json(await yearly.resetYear());
+
 // POST /api/admin/users/:telegramId/yearly — their video, sent to the admin's own chat to check
 const previewFor = async (req, res) => {
   const subject = await User.findOne({ id: Number(req.params.telegramId) }).select('_id').lean();
@@ -36,4 +39,4 @@ const previewFor = async (req, res) => {
   res.json({ ok: true });
 };
 
-module.exports = { getMine, requestMine, adminView, saveSettings, previewFor };
+module.exports = { getMine, requestMine, adminView, saveSettings, resetYear, previewFor };

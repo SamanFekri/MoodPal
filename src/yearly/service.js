@@ -148,6 +148,13 @@ async function updateSettings(adminId, { enabled, year } = {}) {
   return { ...await adminView(), just_announced: announced };
 }
 
+// "Start fresh": forget every video made for this year, so the next request makes a new one
+// (after a design change, for example). Nothing is sent to anyone.
+async function resetYear(year = state.year) {
+  const { deletedCount } = await YearlyVideo.deleteMany({ year });
+  return { ...await adminView(), cleared: deletedCount };
+}
+
 async function start({ log = console.log } = {}) {
   // videos are deleted once sent; this clears any a crash or restart left half-made
   fs.rmSync(TMP, { recursive: true, force: true });
@@ -155,4 +162,4 @@ async function start({ log = console.log } = {}) {
   log(`✨ Year in Moods ${state.enabled ? 'open to everyone' : 'admins only'} (${state.year})`);
 }
 
-module.exports = { state, load, start, available, deliver, requestOwn, adminView, updateSettings, _setRenderer, REUSE_MS };
+module.exports = { state, load, start, available, deliver, requestOwn, adminView, updateSettings, resetYear, _setRenderer, REUSE_MS };

@@ -110,6 +110,7 @@ app.get('/api/me/yearly', requireWebAppUser, controllers.yearly.getMine);
 app.post('/api/me/yearly', requireWebAppUser, controllers.yearly.requestMine);
 app.get('/api/admin/yearly', requireWebAppUser, requireAdmin, controllers.yearly.adminView);
 app.post('/api/admin/yearly/settings', requireWebAppUser, requireAdmin, controllers.yearly.saveSettings);
+app.post('/api/admin/yearly/reset', requireWebAppUser, requireAdmin, controllers.yearly.resetYear);
 app.post('/api/admin/users/:telegramId/yearly', requireWebAppUser, requireAdmin, controllers.yearly.previewFor);
 // emotional support network (src/support/service.js)
 app.get('/api/me/support', requireWebAppUser, controllers.support.getSupport);

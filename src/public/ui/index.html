@@ -1737,7 +1737,9 @@
                 <div class="kv"><span class="k">Announcement</span><span class="v">{{ yearlyAdmin.announced ? 'sent' : 'not sent yet' }}</span></div>
                 <div class="row-actions">
                   <button class="btn" :disabled="yearlyBusy" @click="requestYearly"><ui-icon name="send" :size="16"></ui-icon>Send me mine</button>
+                  <button class="btn ghost" :disabled="yearlyBusy || !yearlyAdmin.made" @click="resetYearly"><ui-icon name="refresh-cw" :size="16"></ui-icon>Start fresh</button>
                 </div>
+                <div class="note-box">Start fresh forgets the {{ yearlyAdmin.made }} videos already made for {{ yearlyAdmin.year }}, so everyone's next one is made new (after a design change, for example). Nobody gets a message.</div>
                 <div class="note-box">To check someone else's, open them in Users and tap ✨ Year in moods; it comes to your chat. A video needs at least {{ yearlyAdmin.min_moods }} moods that year and takes about a minute to make.</div>
               </section>
             </template>
@@ -4097,6 +4099,17 @@ Script.complete();
           if (on && !this.yearlyAdmin.announced && !window.confirm(`Open Year in Moods ${this.yearlyAdmin.year} to everyone? Everyone gets a message about it.`)) return;
           this.haptic('medium');
           this.saveYearly({ enabled: on }, on ? 'Open to everyone' : 'Admins only again');
+        },
+        async resetYearly() {
+          if (this.yearlyBusy || !window.confirm(`Start fresh? The ${this.yearlyAdmin.made} videos made for ${this.yearlyAdmin.year} are forgotten and made new the next time someone asks. Nobody gets a message.`)) return;
+          this.haptic('medium');
+          this.yearlyBusy = true;
+          try {
+            const r = await this.api('/api/admin/yearly/reset', { method: 'POST' });
+            this.yearlyAdmin = r;
+            this.showToast(`Cleared ${r.cleared} ${r.cleared === 1 ? 'video' : 'videos'}. New ones are made on request`);
+          } catch { this.showToast("Couldn't start fresh"); }
+          finally { this.yearlyBusy = false; }
         },
         setYearlyYear(y) {
           if (!this.yearlyAdmin || y === this.yearlyAdmin.year || y < this.yearlyAdmin.min_year || y > this.yearlyAdmin.max_year) return;

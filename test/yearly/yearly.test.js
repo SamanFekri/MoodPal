@@ -158,6 +158,24 @@ describe('Year in Moods', () => {
     });
   });
 
+  describe('start fresh', () => {
+    test('admins can forget this year\'s videos so the next request is made new; others cannot', async () => {
+      await yearly.updateSettings(root._id, { enabled: true });
+      await moods(saman, Array.from({ length: 6 }, (_, i) => ['happy', at(new Date().getFullYear(), 0, i + 1)]));
+      const me = await User.findById(saman._id).lean();
+      assert.equal((await yearly.requestOwn(me)).status, 'sent');
+      assert.equal((await yearly.requestOwn(me)).status, 'cached');
+      assert.equal((await api('/api/admin/yearly/reset', { as: saman, method: 'POST' })).status, 403);
+      const r = await api('/api/admin/yearly/reset', { as: root, method: 'POST' });
+      assert.equal(r.body.cleared, 1);
+      assert.equal(r.body.made, 0);
+      const before = renders;
+      assert.equal((await yearly.requestOwn(me)).status, 'sent', 'made again');
+      assert.equal(renders, before + 1);
+      assert.equal(videos(saman).length, 3, 'nobody was messaged by the reset itself');
+    });
+  });
+
   describe('disk space', () => {
     test('the video file is deleted after sending; leftovers are cleared at startup', async () => {
       const fs = require('fs'), os = require('os'), path = require('path');
