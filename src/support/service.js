@@ -22,6 +22,7 @@ const { msgs } = require('../constants');
 const { MOODS, MOOD_MAP } = require('../constants/mood.constant');
 const { getTelegram } = require('../utils/telegram');
 const time = require('../reminders/time');
+const nicknames = require('../nicknames/service');
 
 const HARD_DEFAULT = ['sad', 'disappointed', 'overwhelmed', 'anxious', 'overthinking', 'nervous', 'angry'];
 const OPTIONS = {
@@ -54,6 +55,7 @@ class SupportError extends Error {
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const firstName = (u) => u?.first_name || u?.username || 'Your friend';
 const fullname = (u) => [u?.first_name, u?.last_name].filter(Boolean).join(' ') || u?.username || 'Unnamed';
+const realFullname = fullname;
 const errorCode = (e) => e?.response?.error_code ?? e?.code;
 const isBlockedError = (e) => errorCode(e) === 403 || (errorCode(e) === 400 && /chat not found|user is deactivated/i.test(e?.description || e?.message || ''));
 
@@ -222,8 +224,7 @@ const snapshot = (moodDoc) => ({ code: moodDoc.mood.code, name: moodDoc.mood.nam
 
 // ---------- sending ----------
 
-function alertText(from, alert) {
-  const name = esc(firstName(from));
+function alertText(from, alert, name = esc(firstName(from))) {
   const mood = alert.mood_snapshot || {};
   if (alert.reason === 'manual') return msgs.supportSharedMsg(name, mood);
   if (alert.reason === 'days') return msgs.supportDaysMsg(name, alert.detail?.days || 2);
@@ -231,15 +232,17 @@ function alertText(from, alert) {
   return msgs.supportNowMsg(name, mood);
 }
 
-function alertKeyboard(from) {
+function alertKeyboard(from, name = firstName(from)) {
   const row = [];
-  if (from.username) row.push({ text: msgs.supportMessageButton(firstName(from)), url: `https://t.me/${from.username}` });
+  if (from.username) row.push({ text: msgs.supportMessageButton(name), url: `https://t.me/${from.username}` });
   row.push({ text: msgs.supportHugButton(), callback_data: `${CB.HUG}${from.id}` });
   return { inline_keyboard: [row] };
 }
 
+// the recipient sees the sender under the nickname they gave them, if any
 async function deliver(from, to, alert) {
-  await getTelegram().sendMessage(to.id, alertText(from, alert), { parse_mode: 'HTML', reply_markup: alertKeyboard(from) });
+  const name = await nicknames.nameFor(to._id, from, { first: true });
+  await getTelegram().sendMessage(to.id, alertText(from, alert, esc(name)), { parse_mode: 'HTML', reply_markup: alertKeyboard(from, name) });
 }
 
 const finish = (id, set) => SupportAlert.updateOne({ _id: id }, { $set: set, $unset: { open: '' } });
@@ -286,7 +289,8 @@ async function sharePrompt(userId, moodDoc) {
   if (!s.manual_prompt || !s.emotions.includes(moodDoc.mood?.code)) return null;
   const targets = await shareTargets(user);
   if (!targets.length) return null;
-  return { mood_id: moodDoc._id, friends: targets.map(t => ({ id: t.user.id, fullname: fullname(t.user), support: t.support })) };
+  const nicks = await nicknames.mapFor(userId, targets.map(t => t.user._id));
+  return { mood_id: moodDoc._id, friends: targets.map(t => ({ id: t.user.id, fullname: nicks.get(String(t.user._id)) || fullname(t.user), support: t.support })) };
 }
 
 // The "tell some friends?" checklist: tapping a name only ticks it (⬜ ↔ ✅); Notify sends to the ticked
@@ -294,7 +298,8 @@ async function sharePrompt(userId, moodDoc) {
 async function promptInBot(user, moodDoc) {
   const targets = (await shareTargets(user)).slice(0, PROMPT_FRIENDS);
   if (!targets.length) return false;
-  const friends = targets.map(t => ({ id: t.user.id, name: `${t.support ? '💛 ' : ''}${firstName(t.user)}`, on: false }));
+  const nicks = await nicknames.mapFor(user._id, targets.map(t => t.user._id));
+  const friends = targets.map(t => ({ id: t.user.id, name: `${t.support ? '💛 ' : ''}${nicks.get(String(t.user._id)) || firstName(t.user)}`, on: false }));
   await getTelegram().sendMessage(user.id, msgs.supportPromptMsg(), { reply_markup: checklistKeyboard(moodDoc._id, friends) });
   return true;
 }
@@ -408,7 +413,7 @@ async function invite(userId, friendTelegramId, now = new Date()) {
     : await SupportContact.create({ user: user._id, contact: friend._id, invited_at: now });
   let delivered = true;
   try {
-    await getTelegram().sendMessage(friend.id, msgs.supportInviteMsg(esc(firstName(user))), {
+    await getTelegram().sendMessage(friend.id, msgs.supportInviteMsg(esc(await nicknames.nameFor(friend._id, user, { first: true }))), {
       parse_mode: 'HTML',
       reply_markup: { inline_keyboard: [[{ text: msgs.supportAcceptButton(), callback_data: `${CB.ACCEPT}${contact._id}` }, { text: msgs.supportDeclineButton(), callback_data: `${CB.DECLINE}${contact._id}` }]] },
     });
@@ -429,7 +434,8 @@ async function respond(contactUserId, contactId, accept, now = new Date()) {
   await row.save();
   const [owner, helper] = await Promise.all([User.findById(row.user).lean(), User.findById(contactUserId).lean()]);
   if (owner) {
-    await getTelegram().sendMessage(owner.id, accept ? msgs.supportAcceptedMsg(esc(firstName(helper))) : msgs.supportDeclinedMsg(esc(firstName(helper))), { parse_mode: 'HTML' })
+    const helperName = esc(await nicknames.nameFor(owner._id, helper, { first: true }));
+    await getTelegram().sendMessage(owner.id, accept ? msgs.supportAcceptedMsg(helperName) : msgs.supportDeclinedMsg(helperName), { parse_mode: 'HTML' })
       .catch(error => console.error('Support answer notice failed:', error.message));
   }
   return { row, changed: true };
@@ -452,7 +458,7 @@ async function stopSupporting(helperId, ownerTelegramId) {
   await cancelOpen({ user: owner._id, contact: helperId }, 'removed');
   if (row.status === 'accepted') {
     const helper = await User.findById(helperId).lean();
-    await getTelegram().sendMessage(owner.id, msgs.supportStoppedMsg(esc(firstName(helper))), { parse_mode: 'HTML' })
+    await getTelegram().sendMessage(owner.id, msgs.supportStoppedMsg(esc(await nicknames.nameFor(owner._id, helper, { first: true }))), { parse_mode: 'HTML' })
       .catch(error => console.error('Support stop notice failed:', error.message));
   }
 }
@@ -466,7 +472,7 @@ async function sendHug(fromUser, toTelegramId, now = new Date()) {
   const allowed = await Share.exists({ follower: fromUser._id, followed: to._id, disabled: false })
     || await SupportAlert.exists({ user: to._id, contact: fromUser._id, status: 'sent', sent_at: { $gte: new Date(now - HUG_WINDOW_MS) } });
   if (!allowed) return false;
-  await getTelegram().sendMessage(to.id, msgs.supportHugMsg(esc(firstName(fromUser))), { parse_mode: 'HTML' });
+  await getTelegram().sendMessage(to.id, msgs.supportHugMsg(esc(await nicknames.nameFor(to._id, fromUser, { first: true }))), { parse_mode: 'HTML' });
   return true;
 }
 
@@ -482,6 +488,8 @@ async function view(userId) {
     SupportAlert.find({ user: userId, status: 'sent' }).sort({ sent_at: -1 }).limit(5).populate('contact', 'id first_name last_name username').lean(),
   ]);
   const taken = new Set(contacts.filter(c => c.contact).map(c => String(c.contact._id)));
+  const nicks = await nicknames.mapFor(userId);
+  const fullname = (u) => nicks.get(String(u?._id)) || realFullname(u);
   return {
     settings: s,
     options: OPTIONS,

@@ -27,6 +27,8 @@ const NAMES = [
   'smartphone', 'chevron-right',
   // reading notes aloud
   'volume-2', 'square',
+  // nicknames
+  'pencil',
   'compass', 'users-round', 'calendar-check', 'waves', 'anchor', 'thumbs-up', 'messages-square', 'book-open', 'telescope', 'sun', 'handshake',
 ];
 

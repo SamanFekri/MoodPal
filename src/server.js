@@ -81,6 +81,7 @@ app.get('/api/friends', requireWebAppUser, controllers.user.getFollowings);
 app.get('/api/friends/:telegramId/personality', requireWebAppUser, controllers.personality.getFriends);
 app.get('/api/friends/:telegramId/moods', requireWebAppUser, controllers.user.getFriendMoods);
 app.delete('/api/friends/:telegramId', requireWebAppUser, controllers.user.unfollow);
+app.put('/api/friends/:telegramId/nickname', requireWebAppUser, controllers.user.setNickname);
 app.get('/api/me/followers', requireWebAppUser, controllers.user.listFollowers);
 app.delete('/api/me/followers/:telegramId', requireWebAppUser, controllers.user.removeFollower);
 app.get('/api/moods', controllers.mood.listMoods);

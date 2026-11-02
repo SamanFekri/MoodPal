@@ -1,4 +1,5 @@
 const Share = require('../models/share');
+const nicknames = require('../nicknames/service');
 const Mood = require('../models/mood');
 const personalityService = require('../personality/service');
 
@@ -41,6 +42,19 @@ const getFollowings = async (req, res) => {
     const mbti = f._mbtiShared ? types.get(String(f._uid)) : null;
     f.mbti = mbti ? mbti.type : null;
     delete f._uid; delete f._mbtiShared;
+  }
+
+  // my nicknames for them replace their names (the real name stays available)
+  const nicks = await nicknames.mapFor(userId);
+  for (const f of followingsWithLastMood) {
+    if (!f) continue;
+    f.real_name = f.fullname;
+    f.nickname = null;
+  }
+  const byTelegramId = new Map(followings.filter(s => s.followed).map(s => [s.followed.id, String(s.followed._id)]));
+  for (const f of followingsWithLastMood) {
+    const nick = f && nicks.get(byTelegramId.get(f.id));
+    if (nick) { f.nickname = nick; f.fullname = nick; }
   }
 
   // Filter out null values, newest mood first
@@ -96,10 +110,12 @@ const listFollowers = async (req, res) => {
   const shares = await Share.find({ followed: req.user._id, disabled: false }).populate('follower', 'id first_name last_name username').lean();
   const mine = await Share.find({ follower: req.user._id, disabled: false }).select('followed').lean();
   const iFollow = new Set(mine.map(s => String(s.followed)));
+  const nicks = await nicknames.mapFor(req.user._id);
   res.json({
     followers: shares.filter(s => s.follower).map(s => ({
       id: s.follower.id,
-      fullname: [s.follower.first_name, s.follower.last_name].filter(Boolean).join(' '),
+      fullname: nicks.get(String(s.follower._id)) || [s.follower.first_name, s.follower.last_name].filter(Boolean).join(' '),
+      real_name: [s.follower.first_name, s.follower.last_name].filter(Boolean).join(' '),
       username: s.follower.username || null,
       i_follow_them: iFollow.has(String(s.follower._id)),
       since: s.updatedAt || s.createdAt,
@@ -115,7 +131,19 @@ const removeFollower = async (req, res) => {
   res.json({ ok: true });
 };
 
+// PUT /api/friends/:telegramId/nickname { name } — my private name for a friend ('' clears it)
+const setNickname = async (req, res) => {
+  try {
+    const nickname = await nicknames.set(req.user._id, req.params.telegramId, req.body?.name);
+    res.json({ nickname });
+  } catch (error) {
+    if (!(error instanceof nicknames.NicknameError)) throw error;
+    res.status(error.code === 'not_found' ? 404 : 400).json({ error: error.code });
+  }
+};
+
 module.exports = {
+  setNickname,
   getFollowings,
   getFriendMoods,
   unfollow,

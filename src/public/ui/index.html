@@ -1087,6 +1087,8 @@
     .set-tab .ui-icon { color: var(--hint); }
     .set-tab.on { background: var(--accent); color: var(--accent-text); }
     .set-tab.on .ui-icon { color: inherit; }
+    .real-name { font-size: 0.7059rem; color: var(--hint); font-weight: 600; margin: -2px 0 2px; }
+    .nick-edit { margin: 12px 0 4px; }
     .sup-desc { margin: 2px 0 6px; }
     .sup-status { display: block; font-size: 0.6471rem; font-weight: 700; color: var(--hint); margin-top: 1px; }
     .sup-status.accepted { color: var(--fresh-ink); }
@@ -2358,12 +2360,24 @@
                 </div>
                 <div>
                   <h2>{{ sheet.friend.fullname }}</h2>
+                  <div v-if="sheet.friend.nickname" class="real-name">{{ sheet.friend.real_name }}</div>
                   <div class="mood">{{ sheet.friend.mood.name }}</div>
                   <div class="when" :title="new Date(sheet.friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(sheet.friend.timestamp)"></span>{{ formatWhen(sheet.friend.timestamp) }}</div>
                 </div>
               </div>
               <div class="sheet-actions">
                 <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)"><ui-icon name="message-circle" :size="16"></ui-icon>Open chat</a>
+                <button class="btn ghost" @click="startNickname"><ui-icon name="pencil" :size="16"></ui-icon>Nickname</button>
+              </div>
+              <!-- my private name for this friend (only I see it; they're never told) -->
+              <div v-if="sheet.nickEdit !== null" class="nick-edit">
+                <div class="field" style="margin-top:0">
+                  <input v-model="sheet.nickEdit" maxlength="32" :placeholder="sheet.friend.real_name || sheet.friend.fullname" aria-label="Nickname" @keydown.enter="saveNickname">
+                  <button class="btn" :disabled="sheet.nickBusy" @click="saveNickname">Save</button>
+                </div>
+                <div class="note-box">Only you see this name, here and in the bot. {{ firstNameOf({ fullname: sheet.friend.real_name || sheet.friend.fullname }) }} isn't told.
+                  <button v-if="sheet.friend.nickname" class="mp-bot" style="display:inline;margin:0 0 0 4px" :disabled="sheet.nickBusy" @click="sheet.nickEdit = ''; saveNickname()">Use their real name</button>
+                </div>
               </div>
 
               <div class="seg grow sheet-tabs">
@@ -3959,6 +3973,33 @@ Script.complete();
           window.scrollTo({ top: 0 });
         },
 
+        // ----- nicknames: my private name for a friend -----
+        startNickname() {
+          this.haptic('light');
+          const sheet = this.sheet;
+          sheet.nickEdit = sheet.nickEdit === null ? (sheet.friend.nickname || '') : null;
+        },
+        async saveNickname() {
+          const sheet = this.sheet;
+          if (!sheet || sheet.nickBusy) return;
+          sheet.nickBusy = true;
+          try {
+            const { nickname } = await this.api(`/api/friends/${sheet.friend.id}/nickname`, { method: 'PUT', body: { name: sheet.nickEdit || '' } });
+            const real = sheet.friend.real_name || sheet.friend.fullname;
+            // the profile and the Friends grid show it right away
+            for (const f of [sheet.friend, ...this.friends.filter(x => x.id === sheet.friend.id)]) {
+              f.real_name = real; f.nickname = nickname; f.fullname = nickname || real;
+            }
+            sheet.nickEdit = null;
+            this.haptic('soft');
+            this.showToast(nickname ? `Saved. They show as ${nickname} for you` : 'Back to their real name');
+            this.loadFollowers();
+            if (this.support) this.fetchSupport();
+          } catch (error) {
+            this.showToast(error.data?.error === 'too_long' ? 'Keep it under 32 characters' : "Couldn't save the nickname");
+          } finally { sheet.nickBusy = false; }
+        },
+
         // ----- support network (Settings, and invitations on the Friends tab) -----
         async fetchSupport() {
           try { this.support = await this.api('/api/me/support'); } catch { /* the section keeps its loading line */ }
@@ -4094,7 +4135,7 @@ Script.complete();
           this.haptic('light');
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'friend', friend, tab: 'log', loading: true, personality: null, logLoading: true, logShared: null, logError: false, notesShared: false, moods: [], has_more: false, next_before: null, loadingMore: false };
+          this.sheet = { type: 'friend', friend, tab: 'log', loading: true, personality: null, logLoading: true, logShared: null, logError: false, notesShared: false, moods: [], has_more: false, next_before: null, loadingMore: false, nickEdit: null, nickBusy: false };
           const sheet = this.sheet;
           await nextTick();
           this.mountStickers();

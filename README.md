@@ -127,6 +127,9 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 
 **Olaf channel.** Each user card the bot posts to the Olaf channel has *📊 See moods* next to *👤 View Profile*. It's a `https://t.me/<bot>?startapp=u_<telegramId>` link that opens the bot's main mini app; for an admin, the app goes straight to that person's profile (Admin → their moods).
 
+### ✏️ Nicknames
+On a friend's profile in the mini app, *✏️ Nickname* sets a private name for them, like "Mom". Only the person who set it sees it; the friend is never told. It shows everywhere in the mini app (the Friends grid and profile, *Who can see my mood*, the support lists, the share step) with the real name kept under it on the profile. It's also used in bot messages that person gets: the share checklist, support messages, hugs and invitations. Admin views always show real names. A nickname can be set only for someone connected either way, up to 32 characters; an empty name goes back to the real one. Stored in `nicknames` (`src/nicknames/service.js`); API `PUT /api/friends/:telegramId/nickname { name }`.
+
 ### 💛 Emotional support network
 Friends can look out for each other on hard days. Everything lives in `src/support/service.js`; the bot and the mini app share it.
 - **Support friends.** In *Settings → Support network*, people pick up to 3 support friends from the people they share moods with, in either direction. Each one gets an invitation in the bot (*💛 Yes, I'm in* / *Not now*), or sees it as a card on the mini app's Friends tab. Only friends who said yes get automatic messages. Either side can end it at any time: removing someone is quiet, while stopping as a supporter tells the other person. After a *Not now*, the same person can't be asked again for a week.
