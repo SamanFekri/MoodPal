@@ -504,6 +504,28 @@ async function view(userId) {
   };
 }
 
+// ---------- admin view (one person's support setup) ----------
+
+async function adminView(userId) {
+  const user = await User.findById(userId).lean();
+  if (!user) throw new SupportError('not_found');
+  const s = settingsOf(user);
+  const [contacts, supporting, alerts] = await Promise.all([
+    SupportContact.find({ user: userId }).populate('contact', 'id first_name last_name username support').sort({ createdAt: 1 }).lean(),
+    SupportContact.find({ contact: userId }).populate('user', 'id first_name last_name username').sort({ createdAt: 1 }).lean(),
+    SupportAlert.find({ user: userId }).sort({ createdAt: -1 }).limit(15).populate('contact', 'id first_name last_name username').lean(),
+  ]);
+  return {
+    settings: s,
+    mood_updates: { send: user.mood_updates?.send !== false, receive: user.mood_updates?.receive !== false },
+    hard_moods: MOODS.filter(m => s.emotions.includes(m.code)).map(m => ({ code: m.code, name: m.name, emoji: m.emoji })),
+    default_hard: s.emotions.length === HARD_DEFAULT.length && HARD_DEFAULT.every(c => s.emotions.includes(c)),
+    contacts: contacts.filter(c => c.contact).map(c => ({ id: c.contact.id, fullname: fullname(c.contact), username: c.contact.username || null, status: c.status, invited_at: c.invited_at, answered_at: c.answered_at, receives: c.contact.support?.receive !== false })),
+    supporting: supporting.filter(c => c.user).map(c => ({ id: c.user.id, fullname: fullname(c.user), username: c.user.username || null, status: c.status })),
+    alerts: alerts.map(a => ({ to: a.contact ? fullname(a.contact) : 'Someone', to_id: a.contact?.id || null, kind: a.kind, reason: a.reason, detail: a.detail || {}, mood: a.mood_snapshot, status: a.status, cancel_reason: a.cancel_reason, error: a.error, at: a.sent_at || a.createdAt })),
+  };
+}
+
 // ---------- worker ----------
 
 let timer = null;
@@ -530,5 +552,5 @@ module.exports = {
   settingsOf, updateSettings, connections, shareTargets, hardDayStreak, evaluate,
   afterMood, sendMoodUpdates, scheduleAuto, processAlert, tick, start, stop,
   sharePrompt, promptInBot, shareMood, shareMoodMany,
-  invite, respond, removeContact, stopSupporting, sendHug, view,
+  invite, respond, removeContact, stopSupporting, sendHug, view, adminView,
 };

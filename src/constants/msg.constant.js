@@ -211,4 +211,7 @@ export const supportSkipButton = () => `Skip`
 export const supportSharedWithMsg = (names) => `💛 Shared with ${names}. Want to tell anyone else?`
 export const supportPromptDoneMsg = () => `💛 OK. Take care of yourself.`
 // mood updates (every mood, to the friends who see it; opt-in)
-export const moodUpdateMsg = (name, mood) => `${mood.emoji || '🙂'} <b>${name}</b> is feeling <b>${String(mood.name || '').toLowerCase()}</b> now.`
+// a plain update, not a support message: labelled as such, with where to turn it off
+export const moodUpdateMsg = (name, mood) => `${mood.emoji || '🙂'} <b>Mood update:</b> ${name} is feeling <b>${String(mood.name || '').toLowerCase()}</b>.
+
+<i>You get these because ${name} shares their mood with you. Turn them off in the mini app → Settings → Friends.</i>`

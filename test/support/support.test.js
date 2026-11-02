@@ -394,6 +394,17 @@ describe('Emotional support network', () => {
       assert.equal(to(dan).length, 0);
     });
 
+    test('a mood that is not a hard one (confused) is only a labelled mood update, never a support message', async () => {
+      await supportFriend(ada, bob);
+      sent.length = 0;
+      await logMood(ada, 'confused');
+      assert.equal(to(bob).length, 1);
+      assert.match(to(bob)[0].text, /Mood update:.*Ada is feeling <b>confused<\/b>/);
+      assert.match(to(bob)[0].text, /Settings → Friends/);
+      assert.equal(await SupportAlert.countDocuments(), 0, 'no support alert for confused');
+      assert.ok(!to(ada).some(m => /share how you're feeling/.test(m.text)), 'no share prompt either');
+    });
+
     test("the sender can turn it off, and a friend can turn friends' updates off", async () => {
       await api('/api/me/settings/privacy', { as: ada, method: 'POST', body: { mood_updates_send: false } });
       await logMood(ada, 'relaxed');
@@ -449,6 +460,30 @@ describe('Emotional support network', () => {
       assert.equal(r.body.status, 'sent');
       assert.equal(to(bob).length, 1);
       assert.equal((await api('/api/me/support/share', { as: ada, method: 'POST', body: { mood_id: 'nope', telegram_id: 8002 } })).status, 404);
+    });
+
+    test('admin: a person\'s support friends, hard moods, settings and recent messages; admins only', async () => {
+      const root = await User.create({ id: 8099, first_name: 'Root', is_admin: true });
+      await supportFriend(ada, bob);
+      await support.invite(ada._id, carol.id);
+      await setSupport(ada, { emotions: ['sad', 'tired'], repeat_on: true });
+      await Mood.create({ user: ada._id, mood: MOOD_MAP.sad, note: 'private note' });
+      const m = await mood(ada, 'sad');
+      await support.shareMood(ada._id, m._id, carol.id);
+      const r = await api('/api/admin/users/8001/support', { as: root });
+      assert.equal(r.status, 200);
+      assert.deepEqual(r.body.hard_moods.map(x => x.code), ['sad', 'tired']);
+      assert.equal(r.body.default_hard, false);
+      assert.deepEqual(r.body.contacts.map(c => [c.fullname, c.status]), [['Bob', 'accepted'], ['Carol', 'pending']]);
+      assert.equal(r.body.settings.auto, true);
+      assert.equal(r.body.settings.repeat_on, true);
+      assert.equal(r.body.alerts[0].kind, 'manual');
+      assert.equal(r.body.alerts[0].to, 'Carol');
+      assert.ok(!JSON.stringify(r.body).includes('private note'), 'never notes');
+      const bobs = await api('/api/admin/users/8002/support', { as: root });
+      assert.deepEqual(bobs.body.supporting.map(p => [p.fullname, p.status]), [['Ada', 'accepted']]);
+      assert.equal((await api('/api/admin/users/8001/support', { as: bob })).status, 403);
+      assert.equal((await api('/api/admin/users/123/support', { as: root })).status, 404);
     });
 
     test('the bot invitation buttons work too', async () => {

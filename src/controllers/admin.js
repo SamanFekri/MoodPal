@@ -211,6 +211,13 @@ const userMoods = async (req, res) => {
   });
 };
 
+// GET /api/admin/users/:telegramId/support — their support friends, hard moods and settings, and recent support messages (never notes)
+const userSupport = async (req, res) => {
+  const user = await User.findOne({ id: Number(req.params.telegramId) });
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  res.json(await require('../support/service').adminView(user._id));
+};
+
 // POST /api/admin/moods/:moodId/translate — the mood's note in English (only when the admin taps Translate)
 const TRANSLATE_ERRORS = {
   empty: [400, 'This mood has no note.'],
@@ -440,4 +447,4 @@ const calculateCharacteristics = async (req, res) => {
   }
 };
 
-module.exports = { listUsers, userMoods, translateNote, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph, userCharacteristics, userCharacteristicsAnalysis, calculateCharacteristics };
+module.exports = { listUsers, userMoods, userSupport, translateNote, setFriend, setBlocked, userPersonality, userConnections, listTraits, followGraph, userCharacteristics, userCharacteristicsAnalysis, calculateCharacteristics };

@@ -1006,6 +1006,9 @@
     .sheet-tabs { position: sticky; top: -10px; z-index: 2; margin: 4px 0 12px; box-shadow: 0 1px 0 rgba(138,143,152,0.14), 0 6px 14px -10px rgba(0,0,0,.25); }
     .sheet-tabs button { font-size: 0.7059rem !important; padding: 9px 4px !important; }
     .sheet-tabs:has(> button:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sheet-tabs:has(> button:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .adm-sup .af-opts { margin-top: 6px; }
+    .adm-chip-static { cursor: default; }
 
     /* ---- Admin: characteristics ---- */
     .ch-action { background: rgba(138,143,152,0.08); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
@@ -2558,6 +2561,47 @@
                 <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
                 <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')"><ui-icon name="waypoints" :size="15"></ui-icon> Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
                 <button :class="{ on: sheet.tab === 'insights' }" @click="setSheetTab('insights')"><ui-icon name="message-circle-heart" :size="15"></ui-icon> Insights</button>
+                <button :class="{ on: sheet.tab === 'support' }" @click="setSheetTab('support')"><ui-icon name="heart-handshake" :size="15"></ui-icon> Support</button>
+              </div>
+
+              <!-- admin only: this person's support network (GET /api/admin/users/:id/support); never notes -->
+              <div v-if="sheet.tab === 'support'" class="sheet-pane">
+                <div v-if="!sheet.sup && !sheet.supError" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+                <div v-else-if="sheet.supError" class="muted-box">{{ sheet.supError }}</div>
+                <template v-else>
+                  <div class="adm-sup">
+                    <div class="af-label">Hard moods <span>{{ sheet.sup.default_hard ? 'the default list' : 'chosen by them' }}</span></div>
+                    <div class="af-opts"><span v-for="m in sheet.sup.hard_moods" :key="'hm' + m.code" class="af-opt on adm-chip-static">{{ m.emoji }} {{ m.name }}</span></div>
+
+                    <div class="af-label sup-gap">Support friends <span>{{ sheet.sup.contacts.length }} of {{ 3 }}</span></div>
+                    <div v-if="!sheet.sup.contacts.length" class="muted-box">None yet.</div>
+                    <div v-for="c in sheet.sup.contacts" :key="'asc' + c.id" class="mem-row">
+                      <span class="t"><b>{{ c.fullname }}</b><small v-if="c.username" style="color:var(--hint);margin-left:6px">@{{ c.username }}</small>
+                        <span class="sup-status" :class="c.status">{{ c.status === 'accepted' ? (c.receives ? 'Ready' : 'Accepted, messages off') : c.status === 'pending' ? 'Waiting for an answer' : 'Said not now' }} · asked {{ formatWhen(c.invited_at) }}</span></span>
+                    </div>
+
+                    <div class="af-label sup-gap">Supports <span>people who picked them</span></div>
+                    <div v-if="!sheet.sup.supporting.length" class="muted-box">Nobody.</div>
+                    <div v-for="p in sheet.sup.supporting" :key="'asp' + p.id" class="mem-row">
+                      <span class="t"><b>{{ p.fullname }}</b><span class="sup-status" :class="p.status">{{ p.status === 'accepted' ? 'Supporting' : p.status === 'pending' ? 'Asked, no answer yet' : 'Said not now' }}</span></span>
+                    </div>
+
+                    <div class="af-label sup-gap">Settings</div>
+                    <div class="kv"><span class="k">Automatic messages</span><span class="v">{{ sheet.sup.settings.auto ? 'On' : 'Off' }}</span></div>
+                    <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">When</span><span class="v">{{ supportTriggers(sheet.sup.settings) }}</span></div>
+                    <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">Wait · at most</span><span class="v">{{ sheet.sup.settings.delay_minutes ? sheet.sup.settings.delay_minutes + ' min' : 'no wait' }} · once every {{ sheet.sup.settings.cooldown_hours }} h</span></div>
+                    <div class="kv"><span class="k">Offer to share</span><span class="v">{{ sheet.sup.settings.manual_prompt ? 'On' : 'Off' }}</span></div>
+                    <div class="kv"><span class="k">Gets support messages</span><span class="v">{{ sheet.sup.settings.receive ? 'Yes' : 'No' }}</span></div>
+                    <div class="kv"><span class="k">Mood updates</span><span class="v">sends {{ sheet.sup.mood_updates.send ? 'on' : 'off' }} · gets {{ sheet.sup.mood_updates.receive ? 'on' : 'off' }}</span></div>
+
+                    <div class="af-label sup-gap">Recent support messages</div>
+                    <div v-if="!sheet.sup.alerts.length" class="muted-box">None sent yet.</div>
+                    <div v-for="(a, i) in sheet.sup.alerts" :key="'aal' + i" class="mem-row">
+                      <span class="t"><b>{{ a.mood?.emoji }} {{ a.mood?.name }} → {{ a.to }}</b>
+                        <span class="sup-status" :class="{ accepted: a.status === 'sent', declined: a.status === 'failed' }">{{ supportAlertLabel(a) }} · {{ formatWhen(a.at) }}</span></span>
+                    </div>
+                  </div>
+                </template>
               </div>
 
               <!-- admin only: characteristics & how to communicate (OpenAI runs only when the admin clicks) -->
@@ -4439,7 +4483,7 @@ Script.complete();
           try { this.players.sheet?.destroy(); } catch {}
           delete this.loaded.sheet; delete this.failed.sheet; delete this.players.sheet;
           for (const k of Object.keys(this.players)) if (k.startsWith('tl')) { try { this.players[k].destroy(); } catch {} delete this.players[k]; delete this.loaded[k]; delete this.failed[k]; }
-          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '', translate: null, tr: {} };
+          this.sheet = { type: 'admin-user', tab, user: u, trail, loading: true, loadingMore: false, savingFriend: false, savingBlock: false, moods: [], has_more: false, next_before: null, personality: null, personalityLoading: true, connections: null, connectionsLoading: true, ch: null, chView: null, chBusy: false, chError: '', translate: null, tr: {}, sup: null, supError: '' };
           if (tab === 'insights') this.loadCharacteristics();
           document.querySelector('.sheet')?.scrollTo({ top: 0 });
           // admin-only: whose mood they see and who sees theirs. Also the authoritative friend flag
@@ -4597,6 +4641,29 @@ Script.complete();
           this.haptic('light');
           this.sheet.tab = tab;
           if (tab === 'insights' && this.sheet.type === 'admin-user' && !this.sheet.ch) this.loadCharacteristics();
+          if (tab === 'support' && this.sheet.type === 'admin-user' && !this.sheet.sup) this.loadAdminSupport();
+        },
+
+        // ----- admin: a person's support network -----
+        async loadAdminSupport() {
+          const sheet = this.sheet;
+          sheet.supError = '';
+          try {
+            const d = await this.api(`/api/admin/users/${sheet.user.id}/support`, { fresh: true });
+            if (this.sheet === sheet) sheet.sup = d;
+          } catch { if (this.sheet === sheet) sheet.supError = "Couldn't load their support network."; }
+        },
+        supportTriggers(st) {
+          const parts = [];
+          if (st.immediate) parts.push('right away');
+          if (st.repeat_on) parts.push(`${st.repeat_count}× in ${st.repeat_hours} h`);
+          if (st.days_on) parts.push(`${st.days} hard days in a row`);
+          return parts.join(', ') || 'nothing picked';
+        },
+        supportAlertLabel(a) {
+          const why = a.kind === 'manual' ? 'shared by them' : { immediate: 'automatic, right away', repeated: `automatic, ${a.detail?.count || ''} in ${a.detail?.hours || ''} h`, days: `automatic, ${a.detail?.days || ''} hard days` }[a.reason] || 'automatic';
+          const state = { sent: 'sent', pending: 'waiting', sending: 'sending', canceled: 'cancelled' + (a.cancel_reason === 'feeling_better' ? ' (felt better)' : ''), failed: "couldn't deliver" }[a.status] || a.status;
+          return `${why} · ${state}`;
         },
 
         // ----- admin: characteristics -----
