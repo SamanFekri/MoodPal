@@ -123,6 +123,13 @@ Delivery goes through a queue (`reminder_jobs`), so a lot of people with the sam
 ### 😊 Set your mood in the mini app
 *Update mood* (or *Set my mood*) on the Friends tab opens a picker with the same 18 moods as the bot, plus an optional note. The mood is saved right away (`POST /api/me/mood { code, note? }`), the "Your mood" card updates, and the bot posts it in the chat the same way it does for a mood picked there: the mood's name and emoji, then "note saved" with *💬 Talk about it* if a note was written, or the usual prompt to add one. If the bot can't reach the chat, the mood is still saved. *Or pick it in the bot chat* keeps the old way, where the bot posts its picker and the mini app closes. The list comes from `GET /api/moods`.
 
+### 📨 Mood updates
+*Settings → Friends → Send my moods to friends* (on by default, existing users included): every new mood, picked in the bot or in the mini app, goes to the people who see that person's mood, as *"😊 Ada is feeling happy now"* with *💬 Message Ada* when she has a username. Notes are never sent. Friends can turn off *Get friends' mood updates*. When automatic support messages are on, a hard mood reaches accepted support friends only once, as the support message. Settings: `mood_updates.send` / `mood_updates.receive` through `POST /api/me/settings/privacy { mood_updates_send?, mood_updates_receive? }`.
+
+**Settings tabs.** The mini app's Settings are split into *Friends*, *Support*, *AI*, *Reminders* and *Home screen*; the last one used is remembered on the device.
+
+**Olaf channel.** Each user card the bot posts to the Olaf channel has *📊 See moods* next to *👤 View Profile*. It's a `https://t.me/<bot>?startapp=u_<telegramId>` link that opens the bot's main mini app; for an admin, the app goes straight to that person's profile (Admin → their moods).
+
 ### 💛 Emotional support network
 Friends can look out for each other on hard days. Everything lives in `src/support/service.js`; the bot and the mini app share it.
 - **Support friends.** In *Settings → Support network*, people pick up to 3 support friends from the people they share moods with, in either direction. Each one gets an invitation in the bot (*💛 Yes, I'm in* / *Not now*), or sees it as a card on the mini app's Friends tab. Only friends who said yes get automatic messages. Either side can end it at any time: removing someone is quiet, while stopping as a supporter tells the other person. After a *Not now*, the same person can't be asked again for a week.

@@ -55,6 +55,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // mood updates: every new mood goes to the friends who see it (on by default; either side can turn it off)
+  mood_updates: {
+    send: { type: Boolean, default: true },
+    receive: { type: Boolean, default: true },
+  },
   // Emotional support network (src/support/service.js). Automatic sharing is off until the person turns
   // it on; the "share with a friend?" prompt and receiving support messages are on by default.
   support: {

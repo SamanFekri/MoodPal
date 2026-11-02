@@ -16,7 +16,7 @@ const view = async (user) => {
       models: llm.MODEL_CHOICES,
     },
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared').lean() || user;
+      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared mood_updates').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);
       return {
         reminders: reminders.viewFor(fresh, await reminders.getSettings()),
@@ -25,6 +25,7 @@ const view = async (user) => {
         privacy: {
           mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null,
           mood_log_shared: fresh.is_mood_log_shared !== false, mood_notes_shared: fresh.is_mood_notes_shared === true,
+          mood_updates_send: fresh.mood_updates?.send !== false, mood_updates_receive: fresh.mood_updates?.receive !== false,
         },
         // what Talk remembers about you
         memory: { enabled: fresh.memory_enabled !== false, count: await UserMemory.countDocuments({ user: user._id }), max: memory.MAX_MEMORIES },
@@ -88,7 +89,11 @@ const setTimezone = async (req, res) => {
 
 // POST /api/me/settings/privacy { mbti_shared?, mood_log_shared?, mood_notes_shared? } (booleans)
 // what friends who follow you can see: your Moodling, your mood history, the notes in it
-const PRIVACY_FIELDS = { mbti_shared: 'is_mbti_shared', mood_log_shared: 'is_mood_log_shared', mood_notes_shared: 'is_mood_notes_shared' };
+const PRIVACY_FIELDS = {
+  mbti_shared: 'is_mbti_shared', mood_log_shared: 'is_mood_log_shared', mood_notes_shared: 'is_mood_notes_shared',
+  // mood updates: send every new mood to friends / get friends' updates
+  mood_updates_send: 'mood_updates.send', mood_updates_receive: 'mood_updates.receive',
+};
 const setPrivacy = async (req, res) => {
   const set = {};
   for (const [key, field] of Object.entries(PRIVACY_FIELDS)) {

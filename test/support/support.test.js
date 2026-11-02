@@ -98,6 +98,8 @@ describe('Emotional support network', () => {
   });
 
   describe('support friends need to agree', () => {
+    // these count support messages only, so Ada's everyday mood updates are off here
+    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); });
     test('invite → the friend gets a message with yes / not now; nothing automatic until they accept', async () => {
       await setSupport(ada, { auto: true });
       const { contact, delivered } = await support.invite(ada._id, bob.id);
@@ -150,7 +152,8 @@ describe('Emotional support network', () => {
   });
 
   describe('automatic alerts', () => {
-    beforeEach(async () => { await supportFriend(ada, bob); });
+    // these count support messages only, so Ada's everyday mood updates are off here
+    beforeEach(async () => { await User.updateOne({ _id: ada._id }, { 'mood_updates.send': false }); await supportFriend(ada, bob); });
 
     test('off by default: a hard mood alerts nobody', async () => {
       const { result } = await logMood(ada, 'sad');
@@ -328,6 +331,41 @@ describe('Emotional support network', () => {
       assert.match(to(ada)[0].text, /Carol.*sent you a hug/);
       assert.equal(await support.sendHug(await User.findById(bob._id).lean(), ada.id), true);   // Bob follows Ada
       assert.equal(await support.sendHug(await User.findById(dan._id).lean(), ada.id), false);
+    });
+  });
+
+  describe('mood updates (every mood, opt-in)', () => {
+    test('on by default, even for users from before it existed: every mood goes to the people who see it, and only them', async () => {
+      await User.collection.updateOne({ _id: ada._id }, { $unset: { mood_updates: '' } });   // an existing user
+      const r = await api('/api/me/settings', { as: ada });
+      assert.equal(r.body.privacy.mood_updates_send, true);
+      assert.equal(r.body.privacy.mood_updates_receive, true);
+      await logMood(ada, 'happy');
+      assert.match(to(bob)[0].text, /Ada.*feeling.*happy/);
+      assert.equal(to(bob)[0].extra.reply_markup.inline_keyboard[0][0].url, 'https://t.me/ada');
+      assert.equal(to(carol).length, 0, "Carol doesn't follow Ada");
+      assert.equal(to(dan).length, 0);
+    });
+
+    test("the sender can turn it off, and a friend can turn friends' updates off", async () => {
+      await api('/api/me/settings/privacy', { as: ada, method: 'POST', body: { mood_updates_send: false } });
+      await logMood(ada, 'relaxed');
+      assert.equal(to(bob).length, 0);
+      await api('/api/me/settings/privacy', { as: ada, method: 'POST', body: { mood_updates_send: true } });
+      await api('/api/me/settings/privacy', { as: bob, method: 'POST', body: { mood_updates_receive: false } });
+      await logMood(ada, 'relaxed');
+      assert.equal(to(bob).length, 0);
+    });
+
+    test('a hard mood reaches a support friend once, as the support message', async () => {
+      await supportFriend(ada, bob);
+      await setSupport(ada, { auto: true, manual_prompt: false });
+      await User.updateOne({ _id: ada._id }, { 'mood_updates.send': true });
+      await logMood(ada, 'sad');
+      assert.equal(to(bob).length, 1);
+      assert.match(to(bob)[0].text, /feeling.*sad.*right now/);
+      await logMood(ada, 'happy', new Date(Date.now() + H));
+      assert.equal(to(bob).length, 2, 'easy moods still go as updates');
     });
   });
 

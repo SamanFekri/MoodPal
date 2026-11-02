@@ -208,3 +208,5 @@ export const supportPromptMsg = () => `💛 Would you like to share how you're f
 export const supportSkipButton = () => `Skip`
 export const supportSharedWithMsg = (names) => `💛 Shared with ${names}. Want to tell anyone else?`
 export const supportPromptDoneMsg = () => `💛 OK. Take care of yourself.`
+// mood updates (every mood, to the friends who see it; opt-in)
+export const moodUpdateMsg = (name, mood) => `${mood.emoji || '🙂'} <b>${name}</b> is feeling <b>${String(mood.name || '').toLowerCase()}</b> now.`

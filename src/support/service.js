@@ -175,6 +175,7 @@ async function afterMood(userId, moodDoc, { source = 'bot', now = new Date() } =
     const user = await User.findById(userId).lean();
     if (!user || user.is_blocked || !moodDoc) return result;
     const s = settingsOf(user);
+    result.updates = await sendMoodUpdates(user, moodDoc, s);
     if (!s.emotions.includes(moodDoc.mood?.code)) return result;
     result.hard = true;
     if (s.auto) result.scheduled = await scheduleAuto(user, moodDoc, s, now);
@@ -183,6 +184,37 @@ async function afterMood(userId, moodDoc, { source = 'bot', now = new Date() } =
     console.error('Support after mood failed:', error.message);
   }
   return result;
+}
+
+// ---------- mood updates ----------
+
+/**
+ * Every new mood goes to the people who see this person's mood, unless they turned "Send my moods to
+ * friends" off (it's on by default, existing users included) or the friend turned updates off. A hard mood skips accepted
+ * support friends while automatic alerts are on, so nobody gets two messages for one mood.
+ * @returns {Promise<number>} how many were sent
+ */
+async function sendMoodUpdates(user, moodDoc, s) {
+  if (user.mood_updates?.send === false) return 0;
+  const shares = await Share.find({ followed: user._id, disabled: false }).populate('follower').lean();
+  let skip = new Set();
+  if (s.auto && s.emotions.includes(moodDoc.mood?.code)) {
+    const accepted = await SupportContact.find({ user: user._id, status: 'accepted' }).select('contact').lean();
+    skip = new Set(accepted.map(c => String(c.contact)));
+  }
+  const text = msgs.moodUpdateMsg(esc(firstName(user)), moodDoc.mood);
+  const markup = user.username ? { inline_keyboard: [[{ text: msgs.supportMessageButton(firstName(user)), url: `https://t.me/${user.username}` }]] } : undefined;
+  let sent = 0;
+  for (const { follower: f } of shares) {
+    if (!f || f.is_blocked || f.is_bot || f.mood_updates?.receive === false || f.reminder?.bot_blocked || skip.has(String(f._id))) continue;
+    try {
+      await getTelegram().sendMessage(f.id, text, { parse_mode: 'HTML', ...(markup ? { reply_markup: markup } : {}) });
+      sent++;
+    } catch (error) {
+      console.error(`Mood update to ${f.id} failed:`, error.message);
+    }
+  }
+  return sent;
 }
 
 async function scheduleAuto(user, moodDoc, s, now = new Date()) {
@@ -462,7 +494,7 @@ function stop() { if (timer) clearInterval(timer); timer = null; }
 module.exports = {
   CB, HARD_DEFAULT, OPTIONS, MAX_CONTACTS, SupportError,
   settingsOf, updateSettings, connections, shareTargets, hardDayStreak, evaluate,
-  afterMood, scheduleAuto, processAlert, tick, start, stop,
+  afterMood, sendMoodUpdates, scheduleAuto, processAlert, tick, start, stop,
   sharePrompt, promptInBot, shareMood,
   invite, respond, removeContact, stopSupporting, sendHug, view,
 };

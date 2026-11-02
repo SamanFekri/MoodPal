@@ -1077,6 +1077,13 @@
     .kv .v.bad { color: var(--danger-ink); }
     .kv .v.warn { color: #ff9f0a; }
     .row-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    /* settings tabs: a row of chips that scrolls sideways on narrow phones */
+    .set-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 14px; padding: 2px 16px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .set-tabs::-webkit-scrollbar { display: none; }
+    .set-tab { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; font: inherit; font-size: 0.8235rem; font-weight: 700; color: var(--text); background: var(--card); box-shadow: var(--shadow); }
+    .set-tab .ui-icon { color: var(--hint); }
+    .set-tab.on { background: var(--accent); color: var(--accent-text); }
+    .set-tab.on .ui-icon { color: inherit; }
     .sup-desc { margin: 2px 0 6px; }
     .sup-status { display: block; font-size: 0.6471rem; font-weight: 700; color: var(--hint); margin-top: 1px; }
     .sup-status.accepted { color: var(--fresh-ink); }
@@ -1971,7 +1978,11 @@
           </template>
           <div v-else-if="!settings" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load settings</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">Try again</button></div>
           <template v-else>
-            <section class="section" :style="{ '--i': 0 }">
+            <!-- settings are split into tabs; the last one used is remembered on this device -->
+            <div class="set-tabs" role="tablist">
+              <button v-for="t in SETTINGS_TABS" :key="'st' + t.key" class="set-tab" :class="{ on: settingsTab === t.key }" role="tab" :aria-selected="settingsTab === t.key" @click="setSettingsTab(t.key)"><ui-icon :name="t.icon" :size="15"></ui-icon>{{ t.label }}</button>
+            </div>
+            <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 0 }">
               <h3>OpenAI key <span class="sub">{{ settings.openai.has_key ? 'connected' : 'not set' }}</span></h3>
               <div class="note-box">Talk and AI insights run on your own OpenAI key, so nobody else spends your credits. The key is verified once, stored encrypted, and only ever used for your account.</div>
               <div class="keyrow" v-if="settings.openai.has_key">
@@ -1985,7 +1996,7 @@
               <div class="note-box">Create one at platform.openai.com → API keys.</div>
             </section>
 
-            <section class="section" :style="{ '--i': 1 }">
+            <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 1 }">
               <h3>Model <span class="sub">{{ settings.openai.model }}</span></h3>
               <div class="note-box">Which model Talk and your weekly insights use. Costs differ per model on your OpenAI account.</div>
               <div class="models">
@@ -2001,7 +2012,7 @@
             </section>
 
             <!-- emotional support network (src/support/service.js) -->
-            <section class="section" :style="{ '--i': 2 }">
+            <section class="section" v-show="settingsTab === 'support'" :style="{ '--i': 2 }">
               <h3><ui-icon name="heart-handshake" :size="17"></ui-icon> Support network <span class="sub">{{ support ? (support.settings.auto ? 'automatic on' : 'automatic off') : '…' }}</span></h3>
               <div v-if="!support" class="shimmer sk-line" style="width:60%"></div>
               <template v-else>
@@ -2094,7 +2105,7 @@
             </section>
 
             <!-- home screen: Telegram's app icon, and the mood widget (builder sheet, src/controllers/widget.js) -->
-            <section class="section" :style="{ '--i': 2 }">
+            <section class="section" v-show="settingsTab === 'home'" :style="{ '--i': 2 }">
               <h3><ui-icon name="smartphone" :size="17"></ui-icon> Home screen <span class="sub">{{ widget?.enabled ? "widget on" : "widget off" }}</span></h3>
               <div class="share-row">
                 <div>
@@ -2117,7 +2128,25 @@
             </section>
 
 
-            <section class="section" :style="{ '--i': 2 }">
+            <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
+              <h3><ui-icon name="send" :size="17"></ui-icon> Mood updates</h3>
+              <div class="share-row">
+                <div>
+                  <div class="s-title">Send my moods to friends</div>
+                  <div class="s-desc">Every time you set a mood, the friends who see your mood get it in the bot. Never your notes.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.privacy.mood_updates_send }" :disabled="privacyBusy" @click="setPrivacy({ mood_updates_send: !settings.privacy.mood_updates_send })" role="switch" :aria-checked="settings.privacy.mood_updates_send" aria-label="Send my moods to friends"></button>
+              </div>
+              <div class="share-row" style="margin-top:14px">
+                <div>
+                  <div class="s-title">Get friends' mood updates</div>
+                  <div class="s-desc">When a friend who sends updates sets a new mood.</div>
+                </div>
+                <button class="switch" :class="{ on: settings.privacy.mood_updates_receive }" :disabled="privacyBusy" @click="setPrivacy({ mood_updates_receive: !settings.privacy.mood_updates_receive })" role="switch" :aria-checked="settings.privacy.mood_updates_receive" aria-label="Get friends' mood updates"></button>
+              </div>
+            </section>
+
+            <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }">
               <h3>Who can see my mood <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
               <div v-if="followers && !followers.length" class="muted-box">Nobody yet. Tap Add a friend on the Friends tab to share your mood.</div>
               <div v-for="f in followers || []" :key="'fl' + f.id" class="mem-row">
@@ -2127,7 +2156,7 @@
               <div class="note-box" v-if="followers && followers.length">Removing someone stops them seeing your mood. They are not notified.</div>
             </section>
 
-            <section class="section" :style="{ '--i': 2 }" v-if="settings.memory">
+            <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 2 }" v-if="settings.memory">
               <div class="share-row">
                 <div>
                   <div class="s-title">What MoodPal remembers</div>
@@ -2152,7 +2181,7 @@
               </div>
             </section>
 
-            <section class="section" :style="{ '--i': 2 }" v-if="settings.privacy">
+            <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
               <div class="share-row">
                 <div>
                   <div class="s-title">Friends can see my mood history</div>
@@ -2169,7 +2198,7 @@
               </div>
             </section>
 
-            <section class="section" :style="{ '--i': 2 }" v-if="settings.privacy">
+            <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
               <div class="share-row">
                 <div>
                   <div class="s-title">Show my Moodling to friends</div>
@@ -2182,7 +2211,7 @@
               <div class="note-box" v-else>You haven't taken the test yet. Your Moodling shows up here once you have.</div>
             </section>
 
-            <section class="section" :style="{ '--i': 2 }" v-if="settings.timezone">
+            <section class="section" v-show="settingsTab === 'reminders'" :style="{ '--i': 2 }" v-if="settings.timezone">
               <h3><ui-icon name="globe" :size="17"></ui-icon> Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
               <div class="tz-now">
                 <b>{{ settings.timezone.timezone }}</b>
@@ -2209,7 +2238,7 @@
               <div class="note-box">You can also set it from the bot: <code>/timezone Berlin</code> or <code>/timezone +2</code>.</div>
             </section>
 
-            <section class="section" :style="{ '--i': 3 }" v-if="settings.reminders">
+            <section class="section" v-show="settingsTab === 'reminders'" :style="{ '--i': 3 }" v-if="settings.reminders">
               <div class="share-row">
                 <div>
                   <div class="s-title"><ui-icon name="alarm-clock" :size="16"></ui-icon> Mood reminders</div>
@@ -2237,7 +2266,7 @@
               </template>
             </section>
 
-            <p class="disclaimer"><ui-icon name="bot" :size="14"></ui-icon> Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
+            <p class="disclaimer" v-show="settingsTab === 'ai'"><ui-icon name="bot" :size="14"></ui-icon> Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
           </template>
         </div>
       </transition>
@@ -3438,6 +3467,8 @@
           myMood: null,
           ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
+          settingsTab: 'friends',
+          SETTINGS_TABS: [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'support', label: 'Support', icon: 'heart-handshake' }, { key: 'ai', label: 'AI', icon: 'bot' }, { key: 'reminders', label: 'Reminders', icon: 'alarm-clock' }, { key: 'home', label: 'Home screen', icon: 'smartphone' }],
           support: null, supportBusy: false, supportPicking: false,
           shareLink: null,
           usingMainButton: false,
@@ -3684,6 +3715,10 @@ Script.complete();
             this.isAdmin = Boolean(data.isAdmin);
             this.myTelegramId = data.telegramId ?? this.tg.initDataUnsafe?.user?.id ?? null;
             try { const t = localStorage.getItem('moodpal.tab'); if (t && this.tabs.some(x => x.key === t)) this.tab = t; } catch {}
+            try { const st = localStorage.getItem('moodpal.settingsTab'); if (this.SETTINGS_TABS.some(x => x.key === st)) this.settingsTab = st; } catch {}
+            // an admin opened "📊 See moods" from the Olaf channel (startapp=u_<telegramId>): that person's profile
+            const linkedUser = /^u_(\d+)$/.exec(this.tg?.initDataUnsafe?.start_param || '');
+            if (linkedUser && this.isAdmin) { this.tab = 'admin'; this.openAdminFromLink(Number(linkedUser[1])); }
             // nice-to-haves: if Telegram's API misbehaves here, still load everything below
             try { this.watchActivation(); } catch (error) { console.error('Activation watch failed:', error); }
             this.checkHomeScreen();
@@ -3873,6 +3908,14 @@ Script.complete();
             delete sheet.shared[f.id];
             this.showToast(error.data?.message || "Couldn't share right now");
           }
+        },
+
+        setSettingsTab(key) {
+          if (this.settingsTab === key) return;
+          this.haptic('light');
+          this.settingsTab = key;
+          try { localStorage.setItem('moodpal.settingsTab', key); } catch {}
+          window.scrollTo({ top: 0 });
         },
 
         // ----- support network (Settings, and invitations on the Friends tab) -----
@@ -4368,6 +4411,13 @@ Script.complete();
         },
         flipAdminDir() { this.setAdminDir(this.admin.dir === 'asc' ? 'desc' : 'asc'); },
         setAdminLevel(key) { this.admin.level = key; this.applyAdminFilter(); },
+        async openAdminFromLink(telegramId) {
+          try {
+            const d = await this.api(`/api/admin/users?q=${telegramId}`, { fresh: true });
+            const row = d.users.find(u => u.id === telegramId);
+            if (row) this.openAdminUser(row); else this.showToast('That person is no longer here');
+          } catch { this.showToast("Couldn't open their moods"); }
+        },
         async openAdminUser(u, { trail = [], tab = 'moods' } = {}) {
           this.haptic('light');
           try { this.players.sheet?.destroy(); } catch {}
@@ -5250,7 +5300,8 @@ Script.complete();
           this.privacyBusy = true;
           try {
             this.settings = await this.api('/api/me/settings/privacy', { method: 'POST', body: patch });
-            const msg = { mood_log_shared: ['Friends can see your mood history', 'Your mood history is hidden from friends'], mood_notes_shared: ['Friends can see your notes too', 'Your notes are private again'] };
+            const msg = { mood_log_shared: ['Friends can see your mood history', 'Your mood history is hidden from friends'], mood_notes_shared: ['Friends can see your notes too', 'Your notes are private again'],
+              mood_updates_send: ['Friends will get your new moods', 'Your moods stay on your profile only'], mood_updates_receive: ["You'll get friends' mood updates", "Friends' mood updates are off"] };
             const [key, on] = Object.entries(patch)[0];
             if (msg[key]) this.showToast(msg[key][on ? 0 : 1]);
           } catch { this.showToast("Couldn't save that"); }
