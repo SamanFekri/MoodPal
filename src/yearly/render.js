@@ -90,6 +90,7 @@ function sceneTop(t, s) {
 }
 
 function sceneMix(t, s) {
+  if (s.radar) return sceneMixRadar(t, s);
   let svg = text(W / 2, 330, 80, '#ffffff', 'Your mood mix', { weight: 800, opacity: easeOut(prog(t, 0, 0.4)) });
   const max = Math.max(1, ...s.groups.map(g => g.pct));
   s.groups.forEach((g, i) => {
@@ -101,6 +102,70 @@ function sceneMix(t, s) {
       + `<rect x="150" y="${y + 30}" width="780" height="44" rx="22" fill="#ffffff" opacity="0.08"/>`
       + (width > 1 ? `<rect x="150" y="${y + 30}" width="${Math.max(44, width).toFixed(1)}" height="44" rx="22" fill="hsl(${g.hue},80%,62%)"/>` : '');
   });
+  return { hue: s.groups[0] ? s.groups[0].hue : 210, svg, stickers: [] };
+}
+
+// the bars (smaller) with a little radar under them that morphs week by week through the year, then
+// settles on the whole year's shape (dashed outline behind it the whole time)
+const RADAR = { cx: W / 2, cy: 1185, r: 185, from: 0.9, to: 4.7, settle: 0.5 };
+function radarPoints(values, max, scale = 1) {
+  return values.map((v, i) => {
+    const a = -Math.PI / 2 + (i * Math.PI) / 3;
+    const r = RADAR.r * scale * Math.sqrt(clamp(v / max));   // square root: small shares stay visible
+    return `${(RADAR.cx + r * Math.cos(a)).toFixed(1)},${(RADAR.cy + r * Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+}
+const mix = (a, b, f) => a.map((v, i) => v + (b[i] - v) * f);
+const smooth = (x) => x * x * (3 - 2 * x);
+
+function sceneMixRadar(t, s) {
+  const { cx, cy, r } = RADAR;
+  let svg = text(W / 2, 330, 76, '#ffffff', 'Your mood mix', { weight: 800, opacity: easeOut(prog(t, 0, 0.4)) });
+  const top = Math.max(1, ...s.groups.map(g => g.pct));
+  s.groups.forEach((g, i) => {
+    const p = easeOut(prog(t, 0.3 + i * 0.14, 0.6));
+    const y = 430 + i * 82;
+    const width = 780 * (g.pct / top) * p;
+    svg += text(150, y, 40, '#ffffff', g.label, { weight: 700, anchor: 'start', opacity: clamp(p * 2) })
+      + text(930, y, 40, '#c9ced7', `${Math.round(g.pct * p)}%`, { weight: 700, anchor: 'end', opacity: clamp(p * 2) })
+      + `<rect x="150" y="${y + 18}" width="780" height="26" rx="13" fill="#ffffff" opacity="0.08"/>`
+      + (width > 1 ? `<rect x="150" y="${y + 18}" width="${Math.max(26, width).toFixed(1)}" height="26" rx="13" fill="hsl(${g.hue},80%,62%)"/>` : '');
+  });
+
+  const { weeks, year, axes } = s.radar;
+  const max = Math.max(0.3, ...year, ...weeks.flatMap(w => w.values));
+  const show = easeOut(prog(t, 0.5, 0.5));
+  // grid, axes and corner labels
+  let g = '';
+  for (const f of [0.33, 0.66, 1]) g += `<polygon points="${radarPoints(Array(6).fill(max * f * f), max)}" fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="3"/>`;
+  axes.forEach((name, i) => {
+    const a = -Math.PI / 2 + (i * Math.PI) / 3;
+    g += `<line x1="${cx}" y1="${cy}" x2="${(cx + r * Math.cos(a)).toFixed(1)}" y2="${(cy + r * Math.sin(a)).toFixed(1)}" stroke="#ffffff" stroke-opacity="0.10" stroke-width="3"/>`
+      + text(cx + (r + 72) * Math.cos(a), cy + (r + 44) * Math.sin(a) + 12, 32, '#a3a9b4', name, { weight: 700 });
+  });
+  // the whole year, dashed
+  g += `<polygon points="${radarPoints(year, max)}" fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="4" stroke-dasharray="12 10" stroke-linejoin="round"/>`;
+
+  // which shape now: grow in, glide week to week, settle on the year
+  let values, label;
+  const u = prog(t, RADAR.from, RADAR.to - RADAR.from);
+  if (t < RADAR.from) { values = weeks[0].values; label = `Week ${weeks[0].week} · ${weeks[0].month}`; }
+  else if (t < RADAR.to) {
+    const pos = smooth(u) * (weeks.length - 1);
+    const i = Math.min(weeks.length - 2, Math.floor(pos));
+    const w = weeks.length > 1 ? weeks[i + 1] : weeks[0];
+    values = weeks.length > 1 ? mix(weeks[i].values, w.values, smooth(pos - i)) : weeks[0].values;
+    const cur = weeks[Math.round(pos)];
+    label = `Week ${cur.week} · ${cur.month}`;
+  } else {
+    values = mix(weeks[weeks.length - 1].values, year, smooth(prog(t, RADAR.to, RADAR.settle)));
+    label = 'Your whole year';
+  }
+  const grow = easeOut(prog(t, 0.5, 0.6));
+  g += `<polygon points="${radarPoints(values, max, grow)}" fill="#3390ec" fill-opacity="0.35" stroke="#5ab0ff" stroke-width="6" stroke-linejoin="round"/>`;
+  svg += `<g opacity="${show.toFixed(3)}">${g}</g>`
+    + text(cx, 1505, 46, '#ffb454', label, { weight: 800, opacity: show })
+    + text(cx, 1565, 32, '#7b818c', '- - -  your whole year', { weight: 600, opacity: show });
   return { hue: s.groups[0] ? s.groups[0].hue : 210, svg, stickers: [] };
 }
 
@@ -152,7 +217,8 @@ function sceneOutro(t, s, bot) {
 
 // the timeline: [scene, seconds]; highs and lows only when there's a month to show
 function timeline(s) {
-  const t = [[sceneIntro, 2.8], [sceneNumbers, 3.2], [sceneTop, 3.0], [sceneMix, 3.4], [sceneMonths, 3.8]];
+  // with the weekly radar the mix scene runs longer: the radar glides through the year in about 4 seconds
+  const t = [[sceneIntro, 2.8], [sceneNumbers, 3.2], [sceneTop, 3.0], [sceneMix, s.radar ? 5.6 : 3.4], [sceneMonths, 3.8]];
   if (s.best || s.toughest) t.push([sceneHighs, 3.2]);
   t.push([sceneOutro, 3.0]);
   return t;

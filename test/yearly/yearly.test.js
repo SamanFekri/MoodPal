@@ -79,6 +79,29 @@ describe('Year in Moods', () => {
       assert.equal(s.enough, true);
     });
 
+    test('the weekly radar: from the first to the last week with moods, smoothed, empty weeks hold the shape', async () => {
+      const Y = 2026;
+      // weeks 1, 2, 3 happy; nothing in week 4; week 5 sad; week 6 one angry mood among happy ones
+      await moods(saman, [['happy', at(Y, 0, 1)], ['happy', at(Y, 0, 8)], ['relaxed', at(Y, 0, 15)],
+        ['sad', at(Y, 0, 29)], ['sad', at(Y, 0, 30)], ['happy', at(Y, 1, 5)], ['happy', at(Y, 1, 6)], ['angry', at(Y, 1, 7)]]);
+      const { radar } = await yearStats(saman._id, Y);
+      assert.ok(radar, 'enough weeks for a radar');
+      assert.deepEqual(radar.axes, ['Positive', 'Motivated', 'Anxious', 'Low', 'Drained', 'Calm']);
+      assert.deepEqual(radar.weeks.map(w => w.week), [1, 2, 3, 4, 5, 6]);
+      assert.equal(radar.weeks[0].month, 'January');
+      assert.equal(radar.weeks[5].month, 'February');
+      for (const w of radar.weeks) assert.ok(Math.abs(w.values.reduce((a, b) => a + b, 0) - 1) < 1e-9, 'each week is a whole');
+      assert.equal(radar.weeks[0].values[0], 1, 'week 1: all positive');
+      assert.ok(radar.weeks[4].values[3] > 0.5, 'week 5 leans Low');
+      assert.ok(radar.weeks[5].values[4] < 0.34, 'one angry mood in week 6 is smoothed, not a jump');
+      assert.ok(Math.abs(radar.year.reduce((a, b) => a + b, 0) - 1) < 1e-9);
+    });
+
+    test('no radar with fewer than 4 weeks of moods', async () => {
+      await moods(saman, [['happy', at(2026, 0, 1)], ['happy', at(2026, 0, 2)], ['sad', at(2026, 0, 9)], ['happy', at(2026, 0, 16)]]);
+      assert.equal((await yearStats(saman._id, 2026)).radar, null);
+    });
+
     test('days follow the person\'s own timezone', async () => {
       // 21:00 UTC on Dec 31, 2025 is already Jan 1, 2026 in Tehran
       await moods(saman, [['happy', new Date(Date.UTC(2025, 11, 31, 21, 0))]]);
@@ -132,6 +155,23 @@ describe('Year in Moods', () => {
       assert.match(videos(root)[0].caption, /Saman's \d{4} in moods \(admin preview/);
       assert.equal(videos(saman).length, 0, 'Saman gets nothing');
       assert.equal((await api(`/api/admin/users/${saman.id}/yearly`, { as: saman, method: 'POST' })).status, 403);
+    });
+  });
+
+  describe('disk space', () => {
+    test('the video file is deleted after sending; leftovers are cleared at startup', async () => {
+      const fs = require('fs'), os = require('os'), path = require('path');
+      const dir = path.join(os.tmpdir(), 'moodpal-yearly');
+      let made = null;
+      yearly._setRenderer(async (stats, out) => { fs.writeFileSync(out, 'video'); made = out; return { path: out, width: 1080, height: 1920, duration: 22 }; });
+      await moods(root, Array.from({ length: 5 }, (_, i) => ['happy', at(new Date().getFullYear(), 0, i + 1)]));
+      assert.equal((await yearly.requestOwn(await User.findById(root._id).lean())).status, 'sent');
+      await new Promise(r => setTimeout(r, 50));
+      assert.ok(made && !fs.existsSync(made), 'gone after sending');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'left-by-a-crash.mp4'), 'x');
+      await yearly.start({ log: () => {} });
+      assert.ok(!fs.existsSync(dir), 'cleared at startup');
     });
   });
 

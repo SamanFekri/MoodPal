@@ -18,6 +18,10 @@ const HARD = ['sad', 'disappointed', 'overwhelmed', 'anxious', 'overthinking', '
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MIN_MOODS = 5;
 const MIN_MONTH = 3;   // a month needs this many moods to be called best or toughest
+const MIN_RADAR_WEEKS = 4;   // the weekly radar needs this many weeks with moods
+// the radar's corners, clockwise from the top (same six groups as the bars)
+const RADAR_AXES = ['positive', 'motivated', 'anxious', 'negative', 'drained', 'calm'];
+const groupOf = Object.fromEntries(GROUPS.flatMap(g => g.moods.map(code => [code, g.key])));
 
 const tzOf = (user) => (time.isValidTimezone(user?.timezone) ? user.timezone : time.envDefaultTimezone());
 function localParts(date, tz) {
@@ -40,6 +44,8 @@ async function yearStats(userId, year) {
   const counts = {};
   const days = new Set();
   const months = Array.from({ length: 12 }, () => ({ n: 0, counts: {} }));
+  const jan1 = dayNumber({ y: year, m: 0, d: 1 });
+  const weeks = Array.from({ length: 53 }, () => ({ n: 0, g: {} }));
   for (const m of moods) {
     const code = MOOD_MAP[m.mood?.code] ? m.mood.code : null;
     if (!code) continue;
@@ -48,6 +54,8 @@ async function yearStats(userId, year) {
     days.add(dayNumber(lp));
     const mo = months[lp.m];
     mo.n++; mo.counts[code] = (mo.counts[code] || 0) + 1;
+    const wk = weeks[Math.min(52, Math.floor((dayNumber(lp) - jan1) / 7))];
+    wk.n++; wk.g[groupOf[code]] = (wk.g[groupOf[code]] || 0) + 1;
   }
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -85,8 +93,44 @@ async function yearStats(userId, year) {
     months: monthView.map(({ index, label, short, code, n }) => ({ index, label, short, code, n })),
     best: best ? { label: best.label, code: best.code, pct: Math.round(best.good * 100) } : null,
     toughest: toughest ? { label: toughest.label, code: toughest.code, pct: Math.round(toughest.hard * 100) } : null,
+    radar: weeklyRadar(weeks, year, groups),
     enough: total >= MIN_MOODS,
   };
 }
 
-module.exports = { yearStats, GROUPS, MIN_MOODS, MONTHS };
+/**
+ * The radar that morphs week by week: for each week from the first to the last with moods, the share of
+ * each group (RADAR_AXES order). Each week is blended with its neighbours (weighted by how many moods
+ * they had), so one odd mood doesn't make the shape jump; a week without moods keeps the last shape.
+ * @returns {{ axes: string[], year: number[], weeks: Array<{ week: number, month: string, values: number[] }> } | null}
+ */
+function weeklyRadar(weeks, year, groups) {
+  const withData = weeks.map((w, i) => (w.n ? i : -1)).filter(i => i >= 0);
+  if (withData.length < MIN_RADAR_WEEKS) return null;
+  const first = withData[0], last = withData[withData.length - 1];
+  const out = [];
+  let prev = null;
+  for (let i = first; i <= last; i++) {
+    const sum = Object.fromEntries(RADAR_AXES.map(k => [k, 0]));
+    let n = 0;
+    for (const [j, weight] of [[i - 1, 0.5], [i, 1], [i + 1, 0.5]]) {
+      const w = weeks[j];
+      if (!w || !w.n) continue;
+      for (const k of RADAR_AXES) sum[k] += weight * (w.g[k] || 0);
+      n += weight * w.n;
+    }
+    const values = n ? RADAR_AXES.map(k => sum[k] / n) : prev;
+    prev = values;
+    const monthIndex = new Date(Date.UTC(year, 0, 1 + i * 7)).getUTCMonth();
+    out.push({ week: i + 1, month: MONTHS[Math.min(11, monthIndex)], values });
+  }
+  const total = groups.reduce((a, g) => a + g.count, 0) || 1;
+  const byKey = Object.fromEntries(groups.map(g => [g.key, g.count / total]));
+  return {
+    axes: RADAR_AXES.map(k => GROUPS.find(g => g.key === k).label),
+    year: RADAR_AXES.map(k => byKey[k] || 0),
+    weeks: out,
+  };
+}
+
+module.exports = { yearStats, GROUPS, MIN_MOODS, MONTHS, MIN_RADAR_WEEKS, RADAR_AXES };

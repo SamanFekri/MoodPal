@@ -149,6 +149,8 @@ async function updateSettings(adminId, { enabled, year } = {}) {
 }
 
 async function start({ log = console.log } = {}) {
+  // videos are deleted once sent; this clears any a crash or restart left half-made
+  fs.rmSync(TMP, { recursive: true, force: true });
   await load();
   log(`✨ Year in Moods ${state.enabled ? 'open to everyone' : 'admins only'} (${state.year})`);
 }
