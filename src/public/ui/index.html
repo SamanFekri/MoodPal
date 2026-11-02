@@ -1077,6 +1077,25 @@
     .kv .v.bad { color: var(--danger-ink); }
     .kv .v.warn { color: #ff9f0a; }
     .row-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .sup-desc { margin: 2px 0 6px; }
+    .sup-status { display: block; font-size: 0.6471rem; font-weight: 700; color: var(--hint); margin-top: 1px; }
+    .sup-status.accepted { color: var(--fresh-ink); }
+    .sup-status.declined { color: var(--danger-ink); }
+    .sup-small { padding: 7px 12px; font-size: 0.7647rem; box-shadow: none; margin: 0; }
+    .sup-pick { margin-top: 10px; }
+    .sup-pick .af-opt small { font-weight: 600; color: var(--hint); }
+    .sup-gap { margin-top: 16px; }
+    .sup-gap-s { margin-top: 12px; }
+    .sup-block { margin-top: 12px; padding: 12px; border-radius: 14px; background: rgba(138,143,152,0.08); }
+    .sup-check { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0; font-size: 0.8235rem; font-weight: 600; line-height: 1.4; }
+    .sup-check input[type=checkbox] { width: 20px; height: 20px; margin: 0 4px 0 0; accent-color: var(--accent); flex: none; }
+    .sup-check select { font: inherit; font-size: 16px; font-weight: 700; color: var(--text); background: rgba(138,143,152,0.14); border: 0; border-radius: 10px; padding: 4px 8px; }
+    .sup-sheet-sub { font-size: 0.8235rem; color: var(--hint); line-height: 1.45; margin: 4px 0 10px; }
+    .sup-invite { display: flex; gap: 12px; margin: 0 0 14px; padding: 14px; border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
+    .sup-invite .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,159,10,0.16); color: var(--recent-ink); }
+    .sup-invite .t { flex: 1; min-width: 0; }
+    .sup-invite b { display: block; font-size: 0.8824rem; line-height: 1.3; }
+    .sup-invite small { display: block; font-size: 0.7059rem; color: var(--hint); margin-top: 3px; line-height: 1.4; }
     .widget-cta { display: flex; align-items: center; gap: 12px; width: 100%; margin: 16px 0 0; padding: 12px 14px; border: 0; border-radius: var(--radius); background: var(--card); color: var(--text); font: inherit; text-align: left; box-shadow: var(--shadow); }
     .widget-cta .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(51,144,236,0.14); color: var(--accent-ink); }
     .widget-cta .t { flex: 1; min-width: 0; }
@@ -1243,6 +1262,17 @@
               </button>
             </div>
           </header>
+
+          <!-- someone asked me to be their support friend -->
+          <div v-for="p in (support?.supporting || []).filter(p => p.status === 'pending')" :key="'inv' + p.id" class="sup-invite">
+            <span class="ic"><ui-icon name="heart-handshake" :size="20"></ui-icon></span>
+            <div class="t"><b>{{ p.fullname }} asked you to be a support friend</b><small>You'd get a short message when they're having a hard time.</small>
+              <div class="row-actions" style="margin-top:8px">
+                <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">Yes, I'm in</button>
+                <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">Not now</button>
+              </div>
+            </div>
+          </div>
 
           <!-- my own mood -->
           <section class="me-card" :style="{ '--hue': myMood ? hueFor(myMood.mood.code) : 210 }">
@@ -1970,6 +2000,99 @@
               </div>
             </section>
 
+            <!-- emotional support network (src/support/service.js) -->
+            <section class="section" :style="{ '--i': 2 }">
+              <h3><ui-icon name="heart-handshake" :size="17"></ui-icon> Support network <span class="sub">{{ support ? (support.settings.auto ? 'automatic on' : 'automatic off') : '…' }}</span></h3>
+              <div v-if="!support" class="shimmer sk-line" style="width:60%"></div>
+              <template v-else>
+                <div class="w-head sup-desc">
+                  <div class="s-title">Support friends</div>
+                  <div class="s-desc">People who'll hear from MoodPal when you're having a hard time. They get a message and need to say yes first.</div>
+                </div>
+                <div v-for="c in support.contacts" :key="'sc' + c.id" class="mem-row">
+                  <span class="t"><b>{{ c.fullname }}</b>
+                    <span class="sup-status" :class="c.status">{{ c.status === 'accepted' ? (c.receives ? 'Ready' : 'Turned off messages') : c.status === 'pending' ? 'Waiting for an answer' : 'Said not now' }}</span>
+                  </span>
+                  <button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(c)">Remove</button>
+                </div>
+                <template v-if="support.contacts.filter(c => c.status !== 'declined').length < support.max_contacts">
+                  <div v-if="!supportPicking" class="row-actions"><button class="btn ghost" :disabled="supportBusy" @click="supportPicking = true"><ui-icon name="user-plus" :size="16"></ui-icon>Add a support friend</button></div>
+                  <div v-else class="sup-pick">
+                    <div v-if="!support.candidates.length" class="muted-box">Only people who share moods with you can be support friends. Add a friend on the Friends tab first.</div>
+                    <div class="af-opts">
+                      <button v-for="p in support.candidates" :key="'cand' + p.id" class="af-opt" :disabled="supportBusy || !p.receives" @click="inviteSupportFriend(p)"><ui-icon name="user-plus" :size="15"></ui-icon>{{ p.fullname }}<small v-if="!p.receives"> · messages off</small></button>
+                      <button class="af-opt" @click="supportPicking = false">Cancel</button>
+                    </div>
+                  </div>
+                </template>
+
+                <div class="share-row sup-gap">
+                  <div>
+                    <div class="s-title">Tell them automatically</div>
+                    <div class="s-desc">When you pick a hard mood, your support friends get a short, kind message. Only the mood, never your notes.</div>
+                  </div>
+                  <button class="switch" :class="{ on: support.settings.auto }" :disabled="supportBusy" @click="saveSupport({ auto: !support.settings.auto })" role="switch" :aria-checked="support.settings.auto" aria-label="Tell support friends automatically"></button>
+                </div>
+                <div class="warn-box" v-if="support.settings.auto && !support.contacts.some(c => c.status === 'accepted')">No support friend has said yes yet, so nobody will hear from MoodPal.</div>
+                <div v-if="support.settings.auto" class="sup-block">
+                  <div class="af-label">When</div>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.immediate" :disabled="supportBusy" @change="saveSupport({ immediate: $event.target.checked })"> Right away, after a hard mood</label>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.repeat_on" :disabled="supportBusy" @change="saveSupport({ repeat_on: $event.target.checked })"> When it keeps happening:
+                    <select :value="support.settings.repeat_count" :disabled="supportBusy" @change="saveSupport({ repeat_count: Number($event.target.value) })"><option v-for="n in support.options.repeat_count" :key="'rc' + n" :value="n">{{ n }} times</option></select>
+                    in
+                    <select :value="support.settings.repeat_hours" :disabled="supportBusy" @change="saveSupport({ repeat_hours: Number($event.target.value) })"><option v-for="n in support.options.repeat_hours" :key="'rh' + n" :value="n">{{ n }} hours</option></select>
+                  </label>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.days_on" :disabled="supportBusy" @change="saveSupport({ days_on: $event.target.checked })"> After hard days in a row:
+                    <select :value="support.settings.days" :disabled="supportBusy" @change="saveSupport({ days: Number($event.target.value) })"><option v-for="n in support.options.days" :key="'dd' + n" :value="n">{{ n }} days</option></select>
+                  </label>
+                  <div class="warn-box" v-if="!support.settings.immediate && !support.settings.repeat_on && !support.settings.days_on">Pick at least one, or nothing will be sent.</div>
+                  <div class="af-label sup-gap-s">Wait before sending <span>if you feel better meanwhile, nothing is sent</span></div>
+                  <div class="af-opts">
+                    <button v-for="m in support.options.delay_minutes" :key="'dl' + m" class="af-opt" :class="{ on: support.settings.delay_minutes === m }" :disabled="supportBusy" @click="saveSupport({ delay_minutes: m })">{{ m === 0 ? 'No wait' : m < 60 ? m + ' min' : (m / 60) + ' h' }}</button>
+                  </div>
+                  <div class="af-label sup-gap-s">At most once every</div>
+                  <div class="af-opts">
+                    <button v-for="h in support.options.cooldown_hours" :key="'cd' + h" class="af-opt" :class="{ on: support.settings.cooldown_hours === h }" :disabled="supportBusy" @click="saveSupport({ cooldown_hours: h })">{{ h }} hours</button>
+                  </div>
+                </div>
+
+                <div class="af-label sup-gap">Which moods count as hard <span>for both automatic messages and sharing</span></div>
+                <div class="af-opts">
+                  <button v-for="e in support.emotions" :key="'em' + e.code" class="af-opt" :class="{ on: e.on }" :disabled="supportBusy" @click="toggleSupportEmotion(e)">{{ e.emoji }} {{ e.name }}</button>
+                </div>
+
+                <div class="share-row sup-gap">
+                  <div>
+                    <div class="s-title">Offer to share after a hard mood</div>
+                    <div class="s-desc">MoodPal asks whether you'd like to tell a friend how you're feeling. You choose who, or skip.</div>
+                  </div>
+                  <button class="switch" :class="{ on: support.settings.manual_prompt }" :disabled="supportBusy" @click="saveSupport({ manual_prompt: !support.settings.manual_prompt })" role="switch" :aria-checked="support.settings.manual_prompt" aria-label="Offer to share after a hard mood"></button>
+                </div>
+
+                <div class="w-head sep">
+                  <div class="s-title">You support</div>
+                  <div class="s-desc">People who asked you to be their support friend.</div>
+                </div>
+                <div v-if="!support.supporting.length" class="muted-box">Nobody yet.</div>
+                <div v-for="p in support.supporting" :key="'sp' + p.id" class="mem-row">
+                  <span class="t"><b>{{ p.fullname }}</b><span class="sup-status" :class="p.status">{{ p.status === 'pending' ? 'Asked you' : 'You support them' }}</span></span>
+                  <template v-if="p.status === 'pending'">
+                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">Yes</button>
+                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">Not now</button>
+                  </template>
+                  <button v-else class="btn ghost sup-small" :disabled="supportBusy" @click="stopSupporting(p)">Stop</button>
+                </div>
+                <div class="share-row sup-gap">
+                  <div>
+                    <div class="s-title">Get support messages from friends</div>
+                    <div class="s-desc">When a friend is having a hard time and wants you to know.</div>
+                  </div>
+                  <button class="switch" :class="{ on: support.settings.receive }" :disabled="supportBusy" @click="saveSupport({ receive: !support.settings.receive })" role="switch" :aria-checked="support.settings.receive" aria-label="Get support messages from friends"></button>
+                </div>
+                <div v-if="support.recent.length" class="note-box">Last sent: {{ support.recent[0].to }}, {{ formatWhen(support.recent[0].at) }}.</div>
+              </template>
+            </section>
+
             <!-- home screen: Telegram's app icon, and the mood widget (builder sheet, src/controllers/widget.js) -->
             <section class="section" :style="{ '--i': 2 }">
               <h3><ui-icon name="smartphone" :size="17"></ui-icon> Home screen <span class="sub">{{ widget?.enabled ? "widget on" : "widget off" }}</span></h3>
@@ -2282,6 +2405,20 @@
             </template>
 
             <!-- one Moodling, from the cast gallery -->
+            <!-- after a hard mood: share how you're feeling with a friend (POST /api/me/support/share) -->
+            <template v-else-if="sheet.type === 'share'">
+              <h2 class="af-title">Want to share how you're feeling?</h2>
+              <p class="sup-sheet-sub">Let a friend know you're feeling {{ sheet.mood.name.toLowerCase() }} {{ sheet.mood.emoji }}. Only the mood is shared, not your note.</p>
+              <div class="sup-share-list">
+                <div v-for="f in sheet.friends" :key="'sh' + f.id" class="mem-row">
+                  <span class="t"><b>{{ f.fullname }}</b><span v-if="f.support" class="sup-status accepted">Support friend</span></span>
+                  <button v-if="sheet.shared[f.id] === 'sent' || sheet.shared[f.id] === 'already'" class="btn ghost sup-small" disabled><ui-icon name="check" :size="14"></ui-icon>Shared</button>
+                  <button v-else class="btn sup-small" :disabled="sheet.shared[f.id] === 'busy'" @click="shareWith(f)">{{ sheet.shared[f.id] === 'busy' ? 'Sharing…' : 'Share' }}</button>
+                </div>
+              </div>
+              <div class="row-actions"><button class="btn ghost" style="flex:1" @click="closeSheet">{{ Object.values(sheet.shared).some(v => v === 'sent') ? 'Done' : 'Not now' }}</button></div>
+            </template>
+
             <!-- set my mood right here; the bot still posts it in the chat (POST /api/me/mood) -->
             <template v-else-if="sheet.type === 'mood'">
               <h2 class="af-title">How are you feeling?</h2>
@@ -3301,6 +3438,7 @@
           myMood: null,
           ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
+          support: null, supportBusy: false, supportPicking: false,
           shareLink: null,
           usingMainButton: false,
           // personality
@@ -3551,6 +3689,7 @@ Script.complete();
             this.checkHomeScreen();
             // everything the tabs need loads at once; the splash lifts as soon as the current tab has data
             const loads = [this.fetchFriends(), this.fetchPersonality(), this.fetchLogs(), this.fetchSettings()];
+            this.fetchSupport();
             if (this.isAdmin) { this.loadAdminPrefs(); loads.push(this.fetchAdmin()); }
             // Talk loads only when it is the tab being opened (otherwise on first visit)
             const talkLoad = this.tab === 'talk' ? this.fetchTalk() : null;
@@ -3707,7 +3846,9 @@ Script.complete();
             const data = await this.api('/api/me/mood', { method: 'POST', body: { code: sheet.code, note: sheet.note } });
             this.myMood = data.mood;
             this.fetchedAt.logs = 0;   // the log shows it next time
-            this.closeSheet();
+            // a hard mood: offer to share it with a friend, right in this sheet
+            if (data.share?.friends?.length) this.sheet = { type: 'share', moodId: data.share.mood_id, mood: data.mood.mood, friends: data.share.friends, shared: {} };
+            else this.closeSheet();
             this.showToast(`Saved as ${data.mood.mood.name.toLowerCase()}. It's in your chat too`);
             try { this.tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
             // the "your mood" card has a new sticker
@@ -3719,6 +3860,61 @@ Script.complete();
             this.showToast(error.data?.error === 'note_too_long' ? 'That note is too long' : "Couldn't save your mood. Try again");
           }
         },
+        async shareWith(f) {
+          const sheet = this.sheet;
+          if (sheet?.type !== 'share' || sheet.shared[f.id]) return;
+          this.haptic('light');
+          sheet.shared[f.id] = 'busy';
+          try {
+            const r = await this.api('/api/me/support/share', { method: 'POST', body: { mood_id: sheet.moodId, telegram_id: f.id } });
+            sheet.shared[f.id] = r.status;
+            if (r.status === 'sent') this.showToast(`${f.fullname.split(' ')[0]} knows now 💛`);
+          } catch (error) {
+            delete sheet.shared[f.id];
+            this.showToast(error.data?.message || "Couldn't share right now");
+          }
+        },
+
+        // ----- support network (Settings, and invitations on the Friends tab) -----
+        async fetchSupport() {
+          try { this.support = await this.api('/api/me/support'); } catch { /* the section keeps its loading line */ }
+        },
+        async supportCall(path, opts, done) {
+          if (this.supportBusy) return null;
+          this.supportBusy = true;
+          try { const r = await this.api(path, opts); this.support = r; if (done) this.showToast(typeof done === 'function' ? done(r) : done); return r; }
+          catch (error) { this.showToast(error.data?.message || "Couldn't save that"); return null; }
+          finally { this.supportBusy = false; }
+        },
+        saveSupport(patch) { this.haptic('light'); return this.supportCall('/api/me/support/settings', { method: 'POST', body: patch }); },
+        toggleSupportEmotion(e) {
+          const on = this.support.emotions.filter(x => x.on).map(x => x.code);
+          const next = e.on ? on.filter(c => c !== e.code) : [...on, e.code];
+          if (!next.length) return this.showToast('Keep at least one mood');
+          this.saveSupport({ emotions: next });
+        },
+        async inviteSupportFriend(p) {
+          this.haptic('medium');
+          const first = p.fullname.split(' ')[0];
+          const r = await this.supportCall('/api/me/support/contacts', { method: 'POST', body: { telegram_id: p.id } },
+            (res) => res.delivered ? `Asked ${first}. They'll answer in the bot` : `Saved, but ${first} can't get bot messages right now`);
+          if (r) this.supportPicking = false;
+        },
+        removeSupportFriend(c) {
+          if (!window.confirm(`Remove ${c.fullname} as a support friend? They won't be told.`)) return;
+          this.haptic('medium');
+          this.supportCall(`/api/me/support/contacts/${c.id}`, { method: 'DELETE' }, 'Removed');
+        },
+        answerSupport(p, accept) {
+          this.haptic('medium');
+          this.supportCall(`/api/me/support/supporting/${p.invitation_id}`, { method: 'POST', body: { accept } }, accept ? `You're ${p.fullname.split(' ')[0]}'s support friend now 💛` : 'OK, nothing changes between you');
+        },
+        stopSupporting(p) {
+          if (!window.confirm(`Stop being ${p.fullname}'s support friend? They'll be told.`)) return;
+          this.haptic('medium');
+          this.supportCall(`/api/me/support/supporting/${p.id}`, { method: 'DELETE' }, 'Done');
+        },
+
         // the old way: the bot posts its mood picker in the chat, then we close so the user lands on it
         async pickInBot() {
           this.haptic('light');

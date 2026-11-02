@@ -10,6 +10,7 @@ const reminders = require('./reminders');
 const broadcast = require('./broadcast');
 const talk = require('./talk');
 const widget = require('./widget');
+const support = require('./support');
 
 module.exports = {
   embed: embed,
@@ -23,5 +24,6 @@ module.exports = {
   reminders: reminders,
   broadcast: broadcast,
   talk: talk,
-  widget: widget
+  widget: widget,
+  support: support
 }

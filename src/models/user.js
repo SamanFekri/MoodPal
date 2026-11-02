@@ -55,6 +55,26 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Emotional support network (src/support/service.js). Automatic sharing is off until the person turns
+  // it on; the "share with a friend?" prompt and receiving support messages are on by default.
+  support: {
+    auto: { type: Boolean, default: false },
+    // the moods that count as hard (codes from MOODS); null = the default list
+    emotions: { type: [String], default: null },
+    // what sends an automatic alert (any combination)
+    immediate: { type: Boolean, default: true },
+    repeat_on: { type: Boolean, default: false },
+    repeat_count: { type: Number, default: 3 },
+    repeat_hours: { type: Number, default: 24 },
+    days_on: { type: Boolean, default: false },
+    days: { type: Number, default: 2 },
+    // wait before sending (cancelled if a better mood comes in meanwhile), and at most one per friend per cooldown
+    delay_minutes: { type: Number, default: 0 },
+    cooldown_hours: { type: Number, default: 6 },
+    manual_prompt: { type: Boolean, default: true },
+    // get support messages from friends at all
+    receive: { type: Boolean, default: true },
+  },
   is_mbti_shared: {
     type: Boolean,
     default: true

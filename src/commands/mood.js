@@ -3,6 +3,7 @@ const { MOOD_INLINE_KEYBOARD, msgs, common } = require('../constants');
 const { MOOD_MAP } = require('../constants/mood.constant');
 const { keyboard } = require('telegraf/markup');
 const { logTelegramError } = require('../utils/tg_errors');
+const support = require('../support/service');
 
 async function setMoodCommand(ctx) {
   try {
@@ -34,7 +35,9 @@ async function saveMood(ctx) {
       await ctx.telegram.sendMessage(ctx.user.id, MOOD_MAP[code].emoji);
       await new Promise(resolve => setTimeout(resolve, 2000));
       await ctx.telegram.sendMessage(ctx.user.id, msgs.addNoteMsg(), {reply_markup: {keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true}});
-    })().catch(logTelegramError('mood saved messages'));
+    })().catch(logTelegramError('mood saved messages'))
+      // a hard mood: automatic alerts to support friends, and "share how you're feeling?" here in the chat
+      .then(() => support.afterMood(userId, mood, { source: 'bot' }));
   } catch (error) {
     console.error('Error saving mood:', error);
   }

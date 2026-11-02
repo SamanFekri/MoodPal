@@ -104,6 +104,14 @@ app.get('/api/me/talk', requireWebAppUser, controllers.talk.getTalk);
 app.post('/api/me/talk/start', requireWebAppUser, controllers.talk.startTalk);
 app.post('/api/me/talk/message', requireWebAppUser, controllers.talk.sendMessage);
 app.post('/api/me/talk/end', requireWebAppUser, controllers.talk.endTalk);
+// emotional support network (src/support/service.js)
+app.get('/api/me/support', requireWebAppUser, controllers.support.getSupport);
+app.post('/api/me/support/settings', requireWebAppUser, controllers.support.saveSettings);
+app.post('/api/me/support/contacts', requireWebAppUser, controllers.support.addContact);
+app.delete('/api/me/support/contacts/:telegramId', requireWebAppUser, controllers.support.removeContact);
+app.post('/api/me/support/supporting/:invitationId', requireWebAppUser, controllers.support.answerInvitation);
+app.delete('/api/me/support/supporting/:telegramId', requireWebAppUser, controllers.support.stopSupporting);
+app.post('/api/me/support/share', requireWebAppUser, controllers.support.shareMood);
 app.get('/api/me/widget', requireWebAppUser, controllers.widget.getWidget);
 app.post('/api/me/widget', requireWebAppUser, controllers.widget.enableWidget);
 app.delete('/api/me/widget', requireWebAppUser, controllers.widget.disableWidget);

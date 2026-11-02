@@ -33,10 +33,17 @@ const setMine = async (req, res) => {
   if (note.length > NOTE_MAX) return res.status(400).json({ error: 'note_too_long', max: NOTE_MAX });
 
   const mood = await Mood.create({ user: req.user._id, mood: MOOD_MAP[code], note });
+  const support = require('../support/service');
+  // a hard mood: the mini app asks "share how you're feeling with a friend?" itself (not the bot)
+  const share = await support.sharePrompt(req.user._id, mood).catch(() => null);
   res.json({
-    mood: { mood: mood.mood, note: mood.note || '', timestamp: mood.timestamp, image: `/public/moods/${code}.webp`, tgs: `/public/tgs/${code}.tgs` },
+    mood: { id: mood._id, mood: mood.mood, note: mood.note || '', timestamp: mood.timestamp, image: `/public/moods/${code}.webp`, tgs: `/public/tgs/${code}.tgs` },
+    share,
   });
-  module.exports.botJob = postToChat(req.user, MOOD_MAP[code], note).catch(error => console.error('Mood (mini app) chat messages failed:', error.message));
+  module.exports.botJob = postToChat(req.user, MOOD_MAP[code], note)
+    .catch(error => console.error('Mood (mini app) chat messages failed:', error.message))
+    // automatic alerts to support friends
+    .then(() => support.afterMood(req.user._id, mood, { source: 'app' }));
 };
 
 // what the bot says after a mood is picked, sent in order; a failure never undoes the saved mood

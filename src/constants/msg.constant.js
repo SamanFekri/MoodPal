@@ -170,3 +170,41 @@ const formatBytes = (n) => {
   const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
   return `${(n / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
 };
+
+// ---- Emotional support network (src/support/service.js) ----
+// to a friend
+export const supportNowMsg = (name, mood) => `💛 <b>${name}</b> is feeling <b>${String(mood.name || '').toLowerCase()}</b> ${mood.emoji || ''} right now.
+
+A small message from you could mean a lot.`
+export const supportRepeatedMsg = (name, count, hours) => `💛 <b>${name}</b> has had a rough time lately: ${count} hard moods in the last ${hours} hours.
+
+Maybe check in and see how they're doing?`
+export const supportDaysMsg = (name, days) => `💛 <b>${name}</b> has had ${days} hard days in a row.
+
+A message from you could really help.`
+export const supportSharedMsg = (name, mood) => `💛 <b>${name}</b> wanted you to know they're feeling <b>${String(mood.name || '').toLowerCase()}</b> ${mood.emoji || ''} right now.
+
+A small message from you could mean a lot.`
+export const supportMessageButton = (name) => `💬 Message ${name}`
+export const supportHugButton = () => `🤗 Send a hug`
+export const supportHugMsg = (name) => `🤗 <b>${name}</b> sent you a hug. They're thinking of you.`
+export const supportHugSentMsg = () => `Hug sent 💛`
+export const supportHugNotAllowedMsg = () => `You can't send them a hug anymore.`
+// invitation to be a support friend
+export const supportInviteMsg = (name) => `🤝 <b>${name}</b> would like you to be a support friend.
+
+If ${name} is having a hard time, MoodPal will send you a short message so you can check in. You can stop anytime in the mini app → Settings.`
+export const supportAcceptButton = () => `💛 Yes, I'm in`
+export const supportDeclineButton = () => `Not now`
+export const supportInviteAcceptedMsg = (name) => `💛 Thank you. You'll hear from MoodPal if ${name} is having a hard time.`
+export const supportInviteDeclinedMsg = () => `👍 No problem. Nothing changes between you two.`
+export const supportInviteGoneMsg = () => `This invitation isn't open anymore.`
+// to the person who asked
+export const supportAcceptedMsg = (name) => `💛 <b>${name}</b> agreed to be your support friend.`
+export const supportDeclinedMsg = (name) => `<b>${name}</b> can't be a support friend right now. You can pick someone else in the mini app → Settings.`
+export const supportStoppedMsg = (name) => `<b>${name}</b> is no longer your support friend.`
+// after a hard mood
+export const supportPromptMsg = () => `💛 Would you like to share how you're feeling with a friend?`
+export const supportSkipButton = () => `Skip`
+export const supportSharedWithMsg = (names) => `💛 Shared with ${names}. Want to tell anyone else?`
+export const supportPromptDoneMsg = () => `💛 OK. Take care of yourself.`

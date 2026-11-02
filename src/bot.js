@@ -49,6 +49,8 @@ const { createShareLinkCommand, shareCallback, followBackCallback } = require('.
 const { setOpenAIKeyCommand, removeOpenAIKeyCommand } = require('./commands/openai_key');
 const personalityCommands = require('./commands/personality');
 const talkCommands = require('./commands/talk');
+const supportCommands = require('./commands/support');
+const supportService = require('./support/service');
 const { ensurePersonalityCatalog } = require('./personality/migrate');
 const backupScheduler = require('./backup/scheduler');
 const { backupNowCommand } = require('./commands/backup');
@@ -70,6 +72,7 @@ connectDB()
   .then(() => backupScheduler.reschedule())
   .then(() => reminderService.start())
   .then(() => broadcastService.start())
+  .then(() => supportService.start())
   .catch(err => console.error('Startup migration failed:', err));
 
 // Start the server
@@ -137,6 +140,10 @@ bot.action(/share_/, shareCallback);
 bot.action(/^fb_(ask|give)_/, followBackCallback);
 bot.action(/^fr_(uf|rm|both)_/, friendsCallback);
 bot.action('talk_note', talkCommands.talkAboutNoteCallback);
+// support network: invitations, "share how you're feeling?", hugs
+bot.action(/^sc_(ok|no)_[a-f0-9]{24}$/, supportCommands.inviteAnswerCallback);
+bot.action(/^ms_([a-f0-9]{24}_\d+|done)$/, supportCommands.shareCallback);
+bot.action(/^hug_\d+$/, supportCommands.hugCallback);
 bot.action([reminderService.CALLBACK_OFF, reminderService.CALLBACK_ON], remindersToggle);
 bot.action([new RegExp(`^${TZ_PREFIX}`), TZ_RESET], timezoneCallback);
 bot.action(new RegExp(`^${personalityConstants.CALLBACK.TEST_PREFIX}`), personalityCommands.testCallback);
