@@ -221,8 +221,12 @@ export const yearlyCaption = (year, bot) => `✨ <b>Your ${year} in moods is her
 
 📲 Save the video and share it to your Instagram story. Let your friends see your year!${bot ? `\n\nFriends can make theirs at t.me/${bot}` : ''}`
 export const yearlyAdminCaption = (name, year) => `🔍 ${name}'s ${year} in moods (admin preview, only you got this)`
-export const yearlyMakingMsg = (year, percent, ahead) => `✨ Making your ${year} in moods… ${Math.round(percent)}%${ahead ? `\n⏳ ${ahead} ahead of you, it starts soon` : ''}`
+const progressBar = (percent, width = 12) => { const n = Math.round((Math.max(0, Math.min(100, percent)) / 100) * width); return '▓'.repeat(n) + '░'.repeat(width - n); }
+export const yearlyMakingMsg = (year, percent, ahead) => (ahead
+  ? `✨ Your ${year} in moods is in line\n⏳ ${ahead} ahead of you, yours starts soon`
+  : `✨ Making your ${year} in moods\n${progressBar(percent)} ${Math.round(percent)}%`)
 export const yearlyReadyMsg = () => `✅ Ready! Here it is 👇`
+export const yearlyInLineMsg = (place) => (place ? `⏳ You're already in line (${place} ahead of you). Your video comes here as soon as it's made.` : `✨ Your video is being made right now. It comes here in a moment.`)
 export const yearlyNotEnoughMsg = (year, min, n) => `Your ${year} in moods needs at least ${min} moods this year, and you have ${n} so far. Log how you feel and try again soon 💛`
 export const yearlyNotYetMsg = () => `✨ Your Year in Moods isn't open yet. We'll tell you when it's ready!`
 export const yearlyFailedMsg = () => `⚠️ Something went wrong while making your video. Please try again in a bit.`

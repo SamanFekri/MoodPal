@@ -6,7 +6,8 @@ const User = require('../models/user');
 const background = (p) => p.catch(error => console.error('Year in Moods request failed:', error.message));
 
 // GET /api/me/yearly
-const getMine = (req, res) => res.json({ available: yearly.available(req.user), year: yearly.state.year, enabled: yearly.state.enabled });
+// making: where my video is right now ({ place, percent }), or null
+const getMine = (req, res) => res.json({ available: yearly.available(req.user), year: yearly.state.year, enabled: yearly.state.enabled, making: yearly.statusOf(req.user.id) });
 
 // POST /api/me/yearly — make mine; it arrives in my chat with the bot
 const requestMine = (req, res) => {
@@ -31,6 +32,14 @@ const saveSettings = async (req, res) => {
 // POST /api/admin/yearly/reset — forget this year's made videos so everyone gets a newly made one
 const resetYear = async (req, res) => res.json(await yearly.resetYear());
 
+// POST /api/admin/yearly/restart: stop the video being made right now and make it again from the start
+const restartCurrent = async (req, res) => {
+  try { res.json(await yearly.restartCurrent()); } catch (error) {
+    if (error.message === 'nothing_running') return res.status(409).json({ error: 'nothing_running' });
+    throw error;
+  }
+};
+
 // POST /api/admin/users/:telegramId/yearly — their video, sent to the admin's own chat to check
 const previewFor = async (req, res) => {
   const subject = await User.findOne({ id: Number(req.params.telegramId) }).select('_id').lean();
@@ -39,4 +48,4 @@ const previewFor = async (req, res) => {
   res.json({ ok: true });
 };
 
-module.exports = { getMine, requestMine, adminView, saveSettings, resetYear, previewFor };
+module.exports = { getMine, requestMine, adminView, saveSettings, resetYear, restartCurrent, previewFor };

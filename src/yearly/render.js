@@ -249,10 +249,10 @@ async function renderFrame(s, scene, t, dur, frame, bot) {
 /**
  * Renders the video to `outPath`.
  * @param {object} stats from yearStats()
- * @param {{ bot?: string, onProgress?: (fraction:number)=>void }} opts
+ * @param {{ bot?: string, onProgress?: (fraction:number)=>void, signal?: AbortSignal }} opts signal: stop (an admin restart)
  * @returns {Promise<{ path: string, duration: number, width: number, height: number }>}
  */
-async function renderYearVideo(stats, outPath, { bot = '', onProgress } = {}) {
+async function renderYearVideo(stats, outPath, { bot = '', onProgress, signal } = {}) {
   const scenes = timeline(stats);
   const total = scenes.reduce((a, [, d]) => a + Math.round(d * FPS), 0);
   const proc = spawn(ffmpegPath, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
@@ -263,6 +263,8 @@ async function renderYearVideo(stats, outPath, { bot = '', onProgress } = {}) {
     proc.on('error', reject);
     proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-300)}`))));
   });
+  const stop = () => proc.kill('SIGKILL');
+  signal?.addEventListener('abort', stop, { once: true });
   const write = (buf) => new Promise((resolve, reject) => { proc.stdin.write(buf, (err) => (err ? reject(err) : resolve())); });
 
   let frame = 0, lastReport = -1;
@@ -270,13 +272,15 @@ async function renderYearVideo(stats, outPath, { bot = '', onProgress } = {}) {
     for (const [scene, dur] of scenes) {
       const frames = Math.round(dur * FPS);
       for (let i = 0; i < frames; i++, frame++) {
+        if (signal?.aborted) throw new Error('stopped');
         await write(await renderFrame(stats, scene, i / FPS, dur, frame, bot));
-        const pct = Math.floor((frame / total) * 20);
+        const pct = Math.floor((frame / total) * 100);
         if (onProgress && pct !== lastReport) { lastReport = pct; onProgress(frame / total); }
       }
     }
   } finally {
     proc.stdin.end();
+    signal?.removeEventListener('abort', stop);
   }
   await done;
   return { path: outPath, duration: Math.round(total / FPS), width: W, height: H };

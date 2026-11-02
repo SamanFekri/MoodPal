@@ -158,6 +158,97 @@ describe('Year in Moods', () => {
     });
   });
 
+  describe('the queue and the cache', () => {
+    beforeEach(async () => { await moods(saman, Array.from({ length: 6 }, (_, i) => ['happy', at(new Date().getFullYear(), 0, i + 1)])); });
+
+    test('one video at a time, in order; asking again while waiting does not add a second request', async (t) => {
+      await yearly.updateSettings(root._id, { enabled: true });
+      const dan = await User.create({ id: 9102, first_name: 'Dan' });
+      const y = new Date().getFullYear();
+      await moods(dan, Array.from({ length: 6 }, (_, i) => ['sad', at(y, 1, i + 1)]));
+      let running = 0, most = 0, open;
+      const gate = new Promise(r => { open = r; });
+      t.after(() => open());   // even if an assertion fails, the queue must not stay stuck for the next tests
+      const order = [];
+      yearly._setRenderer(async (stats) => {
+        running++; most = Math.max(most, running); renders++;
+        order.push(stats.name);
+        await gate;
+        running--;
+        return { path: __filename, width: 1080, height: 1920, duration: 22 };
+      });
+      const me = await User.findById(saman._id).lean();
+      const first = yearly.requestOwn(me);
+      const second = yearly.requestOwn(await User.findById(dan._id).lean());
+      for (let i = 0; i < 1000 && (await yearly.adminView()).in_queue < 2; i++) await new Promise(r => setTimeout(r, 5));
+      const again = await yearly.requestOwn(me);
+      assert.equal(again.status, 'already_queued');
+      assert.match(sent.filter(m => m.chatId === saman.id && !m.edit).at(-1).text, /already|being made right now/);
+      const view = await yearly.adminView();
+      assert.equal(view.in_queue, 2);
+      assert.equal(view.queue.now.name, 'Saman', 'the admin sees who is being made');
+      assert.deepEqual(view.queue.waiting.map(w => w.name), ['Dan'], 'and who is waiting, in order');
+      assert.deepEqual(yearly.statusOf(dan.id), { place: 1, percent: 0 }, 'the mini app shows Dan his place');
+      assert.equal(yearly.statusOf(saman.id).place, 0);
+      assert.equal(yearly.statusOf(root.id), null);
+      assert.match(sent.find(m => m.chatId === dan.id).text, /1 ahead of you/);
+      open();
+      assert.deepEqual([(await first).status, (await second).status], ['sent', 'sent']);
+      assert.equal(renders, 2, 'Saman\'s second tap made nothing');
+      assert.equal(most, 1, 'never two at once');
+      assert.deepEqual(order, ['Saman', 'Dan']);
+      assert.equal(videos(saman).length, 1);
+      assert.equal((await yearly.adminView()).in_queue, 0);
+    });
+
+    test('a kept video is made new after a day, or as soon as a mood is added', async () => {
+      await yearly.updateSettings(root._id, { enabled: true });
+      const me = await User.findById(saman._id).lean();
+      assert.equal((await yearly.requestOwn(me)).status, 'sent');
+      assert.equal((await yearly.requestOwn(me)).status, 'cached');
+      await YearlyVideo.updateOne({ user: saman._id }, { made_at: new Date(Date.now() - yearly.REUSE_MS - 1000) });
+      assert.equal((await yearly.requestOwn(me)).status, 'sent', 'older than a day');
+      assert.equal((await yearly.requestOwn(me)).status, 'cached');
+      await moods(saman, [['happy', at(new Date().getFullYear(), 0, 20)]]);
+      assert.equal((await yearly.requestOwn(me)).status, 'sent', 'a new mood');
+      assert.equal(renders, 3);
+    });
+  });
+
+  describe('a stuck video', () => {
+    beforeEach(async () => { await moods(saman, Array.from({ length: 6 }, (_, i) => ['happy', at(new Date().getFullYear(), 0, i + 1)])); });
+
+    test('the admin sees how long it has been stuck and can restart it; it is made again, first in line', async (t) => {
+      await yearly.updateSettings(root._id, { enabled: true });
+      let calls = 0, release;
+      t.after(() => release?.());
+      yearly._setRenderer(async (stats, out, { signal }) => {
+        calls++;
+        if (calls === 1) {   // the first try hangs until it is stopped
+          await new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('stopped'))));
+        }
+        await new Promise(r => { release = r; setTimeout(r, 10); });
+        return { path: __filename, width: 1080, height: 1920, duration: 22 };
+      });
+      const me = await User.findById(saman._id).lean();
+      const done = yearly.requestOwn(me);
+      for (let i = 0; i < 1000 && calls < 1; i++) await new Promise(r => setTimeout(r, 5));
+      let view = await yearly.adminView();
+      assert.equal(view.queue.now.name, 'Saman');
+      assert.equal(view.queue.now.stuck, false, 'just started');
+      assert.equal(view.queue.now.minutes, 0);
+
+      assert.equal((await api('/api/admin/yearly/restart', { as: saman, method: 'POST' })).status, 403);
+      const r = await api('/api/admin/yearly/restart', { as: root, method: 'POST' });
+      assert.equal(r.status, 200);
+      assert.equal((await done).status, 'sent', 'made on the second try');
+      assert.equal(calls, 2);
+      assert.equal(videos(saman).length, 1);
+      assert.ok(!sent.some(m => m.chatId === saman.id && /went wrong/.test(m.text)), 'Saman was not told it failed');
+      assert.equal((await api('/api/admin/yearly/restart', { as: root, method: 'POST' })).status, 409, 'nothing running now');
+    });
+  });
+
   describe('start fresh', () => {
     test('admins can forget this year\'s videos so the next request is made new; others cannot', async () => {
       await yearly.updateSettings(root._id, { enabled: true });
@@ -219,7 +310,7 @@ describe('Year in Moods', () => {
 
   describe('mini app API', () => {
     test('availability, asking for mine, admin view and settings (admins only)', async () => {
-      assert.deepEqual((await api('/api/me/yearly', { as: saman })).body, { available: false, year: yearly.state.year, enabled: false });
+      assert.deepEqual((await api('/api/me/yearly', { as: saman })).body, { available: false, year: yearly.state.year, enabled: false, making: null });
       assert.equal((await api('/api/me/yearly', { as: saman, method: 'POST' })).status, 403);
       assert.equal((await api('/api/admin/yearly', { as: saman })).status, 403);
       const v = (await api('/api/admin/yearly', { as: root })).body;

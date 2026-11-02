@@ -1119,6 +1119,25 @@
     .sup-invite small { display: block; font-size: 0.7059rem; color: var(--hint); margin-top: 3px; line-height: 1.4; }
     .year-step { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 6px; }
     .year-step b { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; min-width: 4ch; text-align: center; }
+    .yq { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .yq-count { font-weight: 500; color: var(--hint); margin-left: 4px; }
+    .yq-empty { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 12px; background: var(--secondary-bg); color: var(--hint); font-size: 0.8235rem; }
+    .yq-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--secondary-bg); }
+    .yq-row.now { background: linear-gradient(135deg, rgba(255,180,84,0.18), rgba(175,82,222,0.16)), var(--secondary-bg); }
+    .yq-dot { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7647rem; font-weight: 600; background: var(--card); color: var(--hint); }
+    .yq-row.now .yq-dot { color: var(--recent-ink); animation: yq-spin 2.4s linear infinite; }
+    .yq-row.stuck { background: rgba(255,95,109,0.16); }
+    .yq-row.stuck .yq-dot { animation: none; color: var(--danger-ink); }
+    .yq-row.stuck .yq-time { color: var(--danger-ink); font-weight: 600; }
+    .yq-time { display: block; margin-top: 4px; font-size: 0.7059rem; color: var(--hint); }
+    @keyframes yq-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .yq-row.now .yq-dot { animation: none; } }
+    .yq-t { flex: 1; min-width: 0; }
+    .yq-t b { display: block; font-size: 0.8235rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .yq-t b small, .yq-t > small { font-weight: 400; color: var(--hint); font-size: 0.7059rem; }
+    .yq-bar { height: 6px; border-radius: 3px; background: rgba(127,127,127,0.18); margin-top: 6px; overflow: hidden; }
+    .yq-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffb454, #af52de); transition: width 0.6s ease; }
+    .yq-pct { flex: none; font-variant-numeric: tabular-nums; font-size: 0.7647rem; color: var(--hint); }
     .year-card { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 14px; border-radius: var(--radius); color: var(--text);
       background: linear-gradient(135deg, rgba(255,180,84,0.18), rgba(175,82,222,0.16)), var(--card); box-shadow: var(--shadow); }
     .year-card .ic { flex: none; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(255,180,84,0.2); color: var(--recent-ink); }
@@ -1589,9 +1608,9 @@
                 <div class="s">{{ graphSelected.mood ? graphSelected.mood.name + ' · ' + formatWhen(graphSelected.mood.timestamp) : 'No mood yet' }}</div>
                 <div class="lists">
                   <div><b>Sees the mood of ({{ graphFollowing.length }})</b></div>
-                  <div class="people"><button v-for="p in graphFollowing" :key="'o' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowing.length">—</span></div>
+                  <div class="people"><button v-for="p in graphFollowing" :key="'o' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowing.length">nobody yet</span></div>
                   <div><b>Watched by ({{ graphFollowers.length }})</b></div>
-                  <div class="people"><button v-for="p in graphFollowers" :key="'i' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowers.length">—</span></div>
+                  <div class="people"><button v-for="p in graphFollowers" :key="'i' + p.id" class="g-pill" :class="{ mutual: p.mutual }" @click="focusGraphNode(p.id)"><template v-if="p.mood">{{ p.mood.emoji }}</template><ui-icon v-else name="user" :size="13"></ui-icon> {{ p.fullname || 'id ' + p.id }}</button><span v-if="!graphFollowers.length">nobody yet</span></div>
                 </div>
                 <div class="row-actions">
                   <button class="btn ghost" @click="openAdminUserById(graphSelected.id)">Open profile</button>
@@ -1733,7 +1752,31 @@
                 </div>
                 <div class="note-box" v-if="yearlyAdmin.enabled && !yearlyAdmin.announced">Everyone hasn't been told about {{ yearlyAdmin.year }} yet. Switch it off and on again to send the announcement for this year.</div>
                 <div class="kv sup-gap"><span class="k">Videos made for {{ yearlyAdmin.year }}</span><span class="v">{{ yearlyAdmin.made }}</span></div>
-                <div class="kv"><span class="k">Being made right now</span><span class="v">{{ yearlyAdmin.in_queue }}</span></div>
+                <!-- the line of videos waiting to be made, live while this screen is open -->
+                <div class="af-label sup-gap">Queue <span class="yq-count">{{ yearlyAdmin.in_queue ? yearlyAdmin.in_queue + ' in line' : 'empty' }}</span></div>
+                <div class="yq">
+                  <div v-if="!yearlyAdmin.queue?.now" class="yq-empty"><ui-icon name="check" :size="16"></ui-icon>Nothing being made right now</div>
+                  <template v-else>
+                    <div class="yq-row now" :class="{ stuck: yearlyAdmin.queue.now.stuck }">
+                      <span class="yq-dot"><ui-icon :name="yearlyAdmin.queue.now.stuck ? 'triangle-alert' : 'sparkles'" :size="15"></ui-icon></span>
+                      <div class="yq-t">
+                        <b>{{ yearlyAdmin.queue.now.name }}<small v-if="yearlyAdmin.queue.now.preview"> · admin check</small></b>
+                        <div class="yq-bar"><i :style="{ width: Math.max(4, yearlyAdmin.queue.now.percent) + '%' }"></i></div>
+                        <small class="yq-time">
+                          <template v-if="yearlyAdmin.queue.now.stuck">Stuck: no progress for {{ yearlyAdmin.queue.now.quiet_minutes }} min</template>
+                          <template v-else>Running for {{ yearlyAdmin.queue.now.minutes ? yearlyAdmin.queue.now.minutes + ' min' : 'less than a minute' }}</template>
+                          <template v-if="yearlyAdmin.queue.now.restarts"> · restarted {{ yearlyAdmin.queue.now.restarts }}×</template>
+                        </small>
+                      </div>
+                      <span class="yq-pct">{{ yearlyAdmin.queue.now.percent }}%</span>
+                    </div>
+                    <button class="btn small" :class="yearlyAdmin.queue.now.stuck ? 'danger' : 'ghost'" style="margin-top:0" :disabled="yearlyBusy" @click="restartYearlyCurrent"><ui-icon name="refresh-cw" :size="15"></ui-icon>Restart {{ yearlyAdmin.queue.now.name }}'s video</button>
+                    <div v-for="(w, i) in yearlyAdmin.queue.waiting" :key="'yq' + i" class="yq-row">
+                      <span class="yq-dot">{{ i + 1 }}</span>
+                      <div class="yq-t"><b>{{ w.name }}<small v-if="w.preview"> · admin check</small></b><small>waiting, about {{ i + 1 }} min</small></div>
+                    </div>
+                  </template>
+                </div>
                 <div class="kv"><span class="k">Announcement</span><span class="v">{{ yearlyAdmin.announced ? 'sent' : 'not sent yet' }}</span></div>
                 <div class="row-actions">
                   <button class="btn" :disabled="yearlyBusy" @click="requestYearly"><ui-icon name="send" :size="16"></ui-icon>Send me mine</button>
@@ -1954,9 +1997,13 @@
             <span class="ic"><ui-icon name="sparkles" :size="22"></ui-icon></span>
             <div class="t">
               <b>Your {{ yearly.year }} in moods</b>
-              <small>A short video of your year, made for your Instagram story.<template v-if="!yearly.enabled"> Admins only for now.</template></small>
+              <template v-if="yearly.making">
+                <small>{{ yearly.making.place ? `In line, ${yearly.making.place} ahead of you` : `Making it… ${yearly.making.percent}%` }}</small>
+                <div class="yq-bar" role="progressbar" :aria-valuenow="yearly.making.percent" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: Math.max(4, yearly.making.percent) + '%' }"></i></div>
+              </template>
+              <small v-else>A short video of your year, made for your Instagram story.<template v-if="!yearly.enabled"> Admins only for now.</template></small>
             </div>
-            <button class="btn small" style="margin-top:0" :disabled="yearlyBusy" @click="requestYearly">{{ yearlyBusy ? 'Asking…' : 'Make it' }}</button>
+            <button v-if="!yearly.making" class="btn small" style="margin-top:0" :disabled="yearlyBusy" @click="requestYearly">{{ yearlyBusy ? 'Asking…' : 'Make it' }}</button>
           </div>
 
           <template v-if="(logs.loading || !fetchedAt.logs) && logs.moods.length === 0 && !logs.error">
@@ -4067,7 +4114,12 @@ Script.complete();
 
         // ----- Year in Moods (made by the bot; arrives in the chat) -----
         async fetchYearly() {
-          try { this.yearly = await this.api('/api/me/yearly'); } catch { /* the card stays hidden */ }
+          const wasMaking = Boolean(this.yearly?.making);
+          try { this.yearly = await this.api('/api/me/yearly', { fresh: true }); } catch { return; /* the card stays as it was */ }
+          // while mine is in line or being made, the card's progress bar follows it
+          if (this.yearly.making && !this._yearlyTimer) this._yearlyTimer = setInterval(() => { if (!document.hidden) this.fetchYearly(); }, 1500);
+          if (!this.yearly.making && this._yearlyTimer) { clearInterval(this._yearlyTimer); this._yearlyTimer = null; }
+          if (wasMaking && !this.yearly.making) { this.haptic('medium'); this.showToast('Your video is in your chat with the bot ✨'); }
         },
         async requestYearly() {
           if (this.yearlyBusy) return;
@@ -4075,14 +4127,15 @@ Script.complete();
           this.yearlyBusy = true;
           try {
             await this.api('/api/me/yearly', { method: 'POST' });
-            this.showToast("It's being made ✨ It arrives in your chat with the bot in about a minute");
+            this.showToast("It's being made ✨ It arrives in your chat with the bot");
+            setTimeout(() => this.fetchYearly(), 600);
           } catch (error) {
             this.showToast(error.status === 403 ? "It isn't open yet" : "Couldn't ask for it right now");
           } finally { this.yearlyBusy = false; }
         },
         showYearlyAdmin() { this.admin.view = 'yearly'; this.haptic('light'); this.fetchYearlyAdmin(); },
-        async fetchYearlyAdmin() {
-          try { this.yearlyAdmin = await this.api('/api/admin/yearly', { fresh: true }); } catch { this.showToast("Couldn't load Year in Moods"); }
+        async fetchYearlyAdmin({ quiet = false } = {}) {
+          try { this.yearlyAdmin = await this.api('/api/admin/yearly', { fresh: true }); } catch { if (!quiet) this.showToast("Couldn't load Year in Moods"); }
         },
         async saveYearly(patch, done) {
           if (this.yearlyBusy) return;
@@ -4099,6 +4152,20 @@ Script.complete();
           if (on && !this.yearlyAdmin.announced && !window.confirm(`Open Year in Moods ${this.yearlyAdmin.year} to everyone? Everyone gets a message about it.`)) return;
           this.haptic('medium');
           this.saveYearly({ enabled: on }, on ? 'Open to everyone' : 'Admins only again');
+        },
+        async restartYearlyCurrent() {
+          const now = this.yearlyAdmin?.queue?.now;
+          if (!now || this.yearlyBusy) return;
+          if (!window.confirm(`Restart ${now.name}'s video? It stops and is made again from the start, still first in line. ${now.name} isn't sent any message.`)) return;
+          this.haptic('medium');
+          this.yearlyBusy = true;
+          try {
+            this.yearlyAdmin = await this.api('/api/admin/yearly/restart', { method: 'POST' });
+            this.showToast(`Restarting ${now.name}'s video`);
+          } catch (error) {
+            this.showToast(error.status === 409 ? 'It already finished' : "Couldn't restart it");
+            this.fetchYearlyAdmin({ quiet: true });
+          } finally { this.yearlyBusy = false; }
         },
         async resetYearly() {
           if (this.yearlyBusy || !window.confirm(`Start fresh? The ${this.yearlyAdmin.made} videos made for ${this.yearlyAdmin.year} are forgotten and made new the next time someone asks. Nobody gets a message.`)) return;
@@ -4966,6 +5033,10 @@ Script.complete();
           const bcOn = this.tab === 'admin' && this.admin.view === 'broadcast';
           if (bcOn && !this._bcTimer) this._bcTimer = setInterval(() => { if (!document.hidden) this.fetchBroadcast({ quiet: true }); }, 3000);
           if (!bcOn && this._bcTimer) { clearInterval(this._bcTimer); this._bcTimer = null; }
+          // the Year in Moods queue moves while that screen is open
+          const yrOn = this.tab === 'admin' && this.admin.view === 'yearly';
+          if (yrOn && !this._yrTimer) this._yrTimer = setInterval(() => { if (!document.hidden && !this.yearlyBusy) this.fetchYearlyAdmin({ quiet: true }); }, 3000);
+          if (!yrOn && this._yrTimer) { clearInterval(this._yrTimer); this._yrTimer = null; }
         },
 
         // ----- broadcast (admin) -----
@@ -5692,7 +5763,7 @@ Script.complete();
           const apply = () => {
             if (this.isMbtiType(this.resultType)) {
               const c = MBTI.CHARACTERS[this.resultType];
-              document.title = `${this.resultType} — ${c.title} · MoodPal`;
+              document.title = `${this.resultType}: ${c.title} · MoodPal`;
             }
           };
           apply();
