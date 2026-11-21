@@ -1,8 +1,10 @@
-const { MOOD_INLINE_KEYBOARD, msgs, share, common } = require('../constants');
+const { moodKeyboard, share, common } = require('../constants');
+const i18n = require('../i18n');
 const User = require('../models/user');
 const Share = require('../models/share');
 
 module.exports = async (ctx) => {
+  const msgs = i18n.forCtx(ctx);
   try {
     // if there is a start parameter, it means that the user is coming from a link
     if (ctx.payload) {
@@ -20,13 +22,15 @@ module.exports = async (ctx) => {
             return;
           }
 
+          // the request is read by the other person, so it's in their language
+          const theirs = i18n.forUser(followed);
           await ctx.telegram.sendMessage(
             followed.id,
-            msgs.askForShareMoodMsg(ctx.user),
+            theirs.askForShareMoodMsg(ctx.user),
             {
               parse_mode: 'HTML',
               reply_markup: {
-                inline_keyboard: share.ALLOW_SHARE_MOOD_INLINE_KEYBOARD(ctx.user),
+                inline_keyboard: share.ALLOW_SHARE_MOOD_INLINE_KEYBOARD(ctx.user, theirs),
               },
             }
           );
@@ -53,7 +57,7 @@ module.exports = async (ctx) => {
     await ctx.reply(msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
       reply_markup: {
-        inline_keyboard: MOOD_INLINE_KEYBOARD,
+        inline_keyboard: moodKeyboard(msgs),
       },
     });
   } catch (error) {

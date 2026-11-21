@@ -60,6 +60,8 @@ const { remindersCommand, toggleCallback: remindersToggle, timezoneCommand, time
 const reminderService = require('./reminders/service');
 const broadcastService = require('./broadcast/service');
 const { personality: personalityConstants } = require('./constants');
+const languageCommands = require('./commands/language');
+const i18n = require('./i18n');
 
 // Import actions
 const handleTextMessage = require('./actions/on_text');
@@ -115,28 +117,33 @@ bot.command('reminders', remindersCommand);
 bot.command('export', exportCommand);
 bot.command('friends', friendsCommand);
 bot.command('timezone', timezoneCommand);
+bot.command('language', languageCommands.languageCommand);
 
 // hidden: not listed in the command menu, works for any year e.g. /mood_2026
 bot.command(['mood_2025', 'mood_2026', 'mood_2027'], yearInMoods);
 
-bot.hears(common.MENU_BUTTONS.SET_MOOD, setMoodCommand)
-bot.hears(common.MENU_BUTTONS.REPORT, showReportCommand)
-bot.hears(common.MENU_BUTTONS.EXPORT, exportCommand)
-bot.hears(common.MENU_BUTTONS.SHARE, createShareLinkCommand)
+// menu buttons, in every language (a keyboard sent before a language change keeps working)
+const menu = (key) => i18n.allMenuTexts(key);
+bot.hears(menu('SET_MOOD'), setMoodCommand)
+bot.hears(menu('REPORT'), showReportCommand)
+bot.hears(menu('EXPORT'), exportCommand)
+bot.hears(menu('SHARE'), createShareLinkCommand)
 // ✨ <year> (Year in Moods), including an old ✨ 2025 button still in someone's keyboard
 bot.hears(/^✨ \d{4}$/, yearInMoods)
-bot.hears(common.MENU_BUTTONS.VISIBILITY_PRIVATE, setVisibilityCommand.setMoodPrivate)
-bot.hears(common.MENU_BUTTONS.VISIBILITY_PUBLIC, setVisibilityCommand.setMoodPublic)
-bot.hears(common.MENU_BUTTONS.PERSONALITY_TEST, personalityCommands.personalityTestCommand)
-bot.hears(common.MENU_BUTTONS.MY_PERSONALITY, (ctx) => personalityCommands.myPersonalityCommand(ctx))
-bot.hears(common.MENU_BUTTONS.TALK, talkCommands.talkCommand)
-bot.hears(common.MENU_BUTTONS.END_TALK, talkCommands.endTalkCommand)
-bot.hears(common.MENU_BUTTONS.BACKUP_NOW, backupNowCommand)
+bot.hears(menu('VISIBILITY_PRIVATE'), setVisibilityCommand.setMoodPrivate)
+bot.hears(menu('VISIBILITY_PUBLIC'), setVisibilityCommand.setMoodPublic)
+bot.hears(menu('PERSONALITY_TEST'), personalityCommands.personalityTestCommand)
+bot.hears(menu('MY_PERSONALITY'), (ctx) => personalityCommands.myPersonalityCommand(ctx))
+bot.hears(menu('TALK'), talkCommands.talkCommand)
+bot.hears(menu('END_TALK'), talkCommands.endTalkCommand)
+bot.hears(menu('BACKUP_NOW'), backupNowCommand)
+bot.hears(menu('LANGUAGE'), languageCommands.languageCommand)
 
 
 
 // Callbacks from inline buttons
 bot.action(/mood_/, saveMood);
+bot.action(languageCommands.CALLBACK_RE, languageCommands.languageCallback);
 bot.action(/report_/, getReportCallback);
 bot.action(/share_/, shareCallback);
 bot.action(/^fb_(ask|give)_/, followBackCallback);
@@ -160,31 +167,10 @@ bot.catch((err, ctx) => {
   console.error(`Error for ${ctx.updateType}:`, health.describe(err), health.redact(err?.stack || ''));
 });
 
-// Commands shown in Telegram's "Menu" button (yearly video stays hidden on purpose)
-const BOT_COMMANDS = [
-  { command: 'start', description: 'Start the bot' },
-  { command: 'set_mood', description: 'Set your current mood' },
-  { command: 'report', description: 'Mood report for the last days' },
-  { command: 'export', description: 'Get all your moods and notes as a file' },
-  { command: 'share', description: 'Share your mood with a friend' },
-  { command: 'friends', description: 'Who you follow and who follows you, unfollow anyone' },
-  { command: 'personality_test', description: 'Take a personality test' },
-  { command: 'my_personality', description: 'See your personality profile' },
-  { command: 'talk', description: 'Talk things through with the AI companion' },
-  { command: 'end_talk', description: 'End the conversation' },
-  { command: 'reminders', description: 'Mood check-in reminders on or off' },
-  { command: 'timezone', description: 'Set your timezone (e.g. /timezone Berlin)' },
-  { command: 'set_public', description: 'Make your mood public (embed codes)' },
-  { command: 'set_private', description: 'Make your mood private' },
-  { command: 'set_openai_key', description: 'Add your OpenAI key for AI insights' },
-  { command: 'remove_openai_key', description: 'Remove your OpenAI key' },
-  { command: 'backup', description: 'Admins: send a database backup now' },
-  { command: 'help', description: 'List all commands' },
-];
 
 // ---- start the bot, and keep it started (retries until Telegram is reachable, see supervisor.js) ----
 const supervisor = require('./supervisor').superviseBot(bot, {
-  onStarted: () => bot.telegram.setMyCommands(BOT_COMMANDS).catch(err => console.error('setMyCommands failed:', health.describe(err))),
+  onStarted: () => languageCommands.registerCommands(bot.telegram).catch(err => console.error('setMyCommands failed:', health.describe(err))),
 });
 
 // stop cleanly on docker stop / Ctrl+C

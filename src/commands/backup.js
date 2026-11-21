@@ -1,8 +1,9 @@
 // Admin-only: run a database backup from the chat (keyboard button or /backup).
-const { msgs, common } = require('../constants');
+const i18n = require('../i18n');
 const backupService = require('../backup/service');
 
 async function backupNowCommand(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     if (!ctx.user?.is_admin) return ctx.reply(msgs.backupNotAdminMsg());
 

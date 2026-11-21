@@ -1,6 +1,6 @@
 // Bot side of the support network: answering an invitation, sharing a hard mood with a friend after
 // the "share how you're feeling?" prompt, and "Send a hug". The logic lives in src/support/service.js.
-const { msgs } = require('../constants');
+const i18n = require('../i18n');
 const support = require('../support/service');
 const { logTelegramError } = require('../utils/tg_errors');
 
@@ -9,6 +9,7 @@ const data = (ctx) => ctx.callbackQuery?.data || '';
 
 // 💛 Yes, I'm in / Not now (under an invitation to be someone's support friend)
 async function inviteAnswerCallback(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     const accept = data(ctx).startsWith(support.CB.ACCEPT);
     const id = data(ctx).slice((accept ? support.CB.ACCEPT : support.CB.DECLINE).length);
@@ -18,7 +19,7 @@ async function inviteAnswerCallback(ctx) {
     await answer(ctx);
     if (!result.changed) return ctx.editMessageText(msgs.supportInviteGoneMsg()).catch(() => {});
     const owner = await require('../models/user').findById(result.row.user).select('first_name').lean();
-    await ctx.editMessageText(accept ? msgs.supportInviteAcceptedMsg(owner?.first_name || 'they') : msgs.supportInviteDeclinedMsg()).catch(() => {});
+    await ctx.editMessageText(accept ? msgs.supportInviteAcceptedMsg(owner?.first_name || msgs.they) : msgs.supportInviteDeclinedMsg()).catch(() => {});
   } catch (error) {
     console.error('Error answering a support invitation:', error);
   }
@@ -26,6 +27,8 @@ async function inviteAnswerCallback(ctx) {
 
 // a friend's name under "Would you like to share how you're feeling with a friend?"
 async function shareCallback(ctx) {
+  const msgs = i18n.forCtx(ctx);
+  const tooOld = (error) => (error.code === 'too_old' ? msgs.supportTooOldToast() : msgs.supportCouldntShareToast());
   try {
     if (data(ctx) === support.CB.SHARE_DONE) {
       await answer(ctx);
@@ -39,7 +42,7 @@ async function shareCallback(ctx) {
       const [moodId, friendId] = cb.slice(support.CB.SHARE_TICK.length).split('_');
       const friends = support.readChecklist(keyboard).map(f => (f.id === Number(friendId) ? { ...f, on: !f.on } : f));
       await answer(ctx);
-      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends)).catch(() => {});
+      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends, msgs)).catch(() => {});
     }
     // Select all / Clear all
     if (cb.startsWith(support.CB.SHARE_ALL_TICK)) {
@@ -47,7 +50,7 @@ async function shareCallback(ctx) {
       const friends = support.readChecklist(keyboard);
       const all = friends.every(f => f.on);
       await answer(ctx);
-      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends.map(f => ({ ...f, on: !all })))).catch(() => {});
+      return ctx.editMessageReplyMarkup(support.checklistKeyboard(moodId, friends.map(f => ({ ...f, on: !all })), msgs)).catch(() => {});
     }
     // 💛 Notify N friends: send to the ticked ones
     if (cb.startsWith(support.CB.SHARE_SEND)) {
@@ -56,12 +59,11 @@ async function shareCallback(ctx) {
       if (!ids.length) return answer(ctx, msgs.supportTickFirstMsg());
       let results;
       try { results = await support.shareMoodMany(ctx.user._id, moodId, ids); }
-      catch (error) { return answer(ctx, error.code === 'too_old' ? 'That mood is too old to share now' : "Couldn't share that"); }
+      catch (error) { return answer(ctx, tooOld(error)); }
       const told = results.filter(r => r.status === 'sent' || r.status === 'already');
-      if (!told.length) return answer(ctx, "Couldn't reach them right now");
-      const names = told.map(r => r.first_name || 'a friend');
-      const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
-      await answer(ctx, `Notified ${told.length} ${told.length === 1 ? 'friend' : 'friends'} 💛`);
+      if (!told.length) return answer(ctx, msgs.supportCouldntReachToast());
+      const list = msgs.joinNames(told.map(r => r.first_name || msgs.aFriend));
+      await answer(ctx, msgs.supportNotifiedToast(told.length));
       return ctx.editMessageText(msgs.supportNotifiedMsg(list)).catch(() => {});
     }
 
@@ -69,29 +71,28 @@ async function shareCallback(ctx) {
     if (data(ctx).startsWith(support.CB.SHARE_ALL)) {
       let results;
       try { results = await support.shareMoodMany(ctx.user._id, data(ctx).slice(support.CB.SHARE_ALL.length), 'all'); }
-      catch (error) { return answer(ctx, error.code === 'too_old' ? 'That mood is too old to share now' : "Couldn't share that"); }
+      catch (error) { return answer(ctx, tooOld(error)); }
       const told = results.filter(r => r.status === 'sent' || r.status === 'already');
-      if (!told.length) return answer(ctx, "Couldn't reach anyone right now");
-      const names = told.map(r => r.first_name || 'a friend');
-      const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0];
-      await answer(ctx, `Shared with ${told.length} ${told.length === 1 ? 'friend' : 'friends'} 💛`);
+      if (!told.length) return answer(ctx, msgs.supportCouldntReachAnyoneToast());
+      const list = msgs.joinNames(told.map(r => r.first_name || msgs.aFriend));
+      await answer(ctx, msgs.supportSharedCountToast(told.length));
       return ctx.editMessageText(msgs.supportSharedAllMsg(list)).catch(() => {});
     }
     const [moodId, friendId] = data(ctx).slice(support.CB.SHARE.length).split('_');
     let result;
     try { result = await support.shareMood(ctx.user._id, moodId, friendId); }
     catch (error) {
-      const why = { too_old: 'That mood is too old to share now', receive_off: "They've turned off support messages" }[error.code] || "Couldn't share that";
+      const why = { too_old: msgs.supportTooOldToast(), receive_off: msgs.supportReceiveOffToast() }[error.code] || msgs.supportCouldntShareToast();
       return answer(ctx, why);
     }
-    if (result.status === 'failed') return answer(ctx, "Couldn't reach them right now");
-    await answer(ctx, result.status === 'already' ? 'Already shared with them' : `Shared with ${result.to.first_name || 'them'} 💛`);
+    if (result.status === 'failed') return answer(ctx, msgs.supportCouldntReachToast());
+    await answer(ctx, result.status === 'already' ? msgs.supportAlreadySharedToast() : msgs.supportSharedWithToast(result.to.first_name || msgs.them));
     // the chosen friend leaves the list; the others stay so they can share with more people
     const rows = (ctx.callbackQuery.message?.reply_markup?.inline_keyboard || [])
       .map(row => row.filter(b => b.callback_data !== data(ctx)))
       .filter(row => row.length);
     const others = rows.some(row => row.some(b => b.callback_data?.startsWith(support.CB.SHARE) && b.callback_data !== support.CB.SHARE_DONE && !b.callback_data.startsWith(support.CB.SHARE_ALL)));
-    await ctx.editMessageText(others ? msgs.supportSharedWithMsg(result.to.first_name || 'them') : msgs.supportPromptDoneMsg(), others ? { reply_markup: { inline_keyboard: rows } } : undefined).catch(() => {});
+    await ctx.editMessageText(others ? msgs.supportSharedWithMsg(result.to.first_name || msgs.them) : msgs.supportPromptDoneMsg(), others ? { reply_markup: { inline_keyboard: rows } } : undefined).catch(() => {});
   } catch (error) {
     console.error('Error sharing a mood:', error);
   }
@@ -99,6 +100,7 @@ async function shareCallback(ctx) {
 
 // 🤗 Send a hug (under a support message): sent once, then the button goes away
 async function hugCallback(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     const toId = data(ctx).slice(support.CB.HUG.length);
     const ok = await support.sendHug(ctx.user, toId);

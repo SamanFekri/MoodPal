@@ -6,12 +6,13 @@ const Cache = require('../utils/cache');
 // CACHE
 const cache = new Cache(1000 * 60 * 60);
 
-const joinMsg = `🤩 Please join the MoodPals channel so we can notify you to set your mood.`
+const i18n = require('../i18n');
 
-const joinButton = {
-  text: '👉 Join',
-  url: `https://t.me/@${process.env.MAIN_CHANNEL_USERNAME}`
-}
+const joinUrl = `https://t.me/@${process.env.MAIN_CHANNEL_USERNAME}`;
+const askToJoin = (ctx) => {
+  const t = i18n.forCtx(ctx);
+  return ctx.reply(t.joinChannelMsg(), { reply_markup: { inline_keyboard: [[{ text: t.joinButton(), url: joinUrl }]] } });
+};
 
 
 const joinMiddleware = async (ctx, next) => {
@@ -39,18 +40,10 @@ const joinMiddleware = async (ctx, next) => {
       return;
     }
     // if user is not in the main channel, ask him to join the main channel
-    await ctx.reply(joinMsg, {
-      reply_markup: {
-        inline_keyboard: [[joinButton]]
-      }
-    });
+    await askToJoin(ctx);
   } catch (error) {
     // if user is not in the main channel, ask him to join the main channel
-    await ctx.reply(joinMsg, {
-      reply_markup: {
-        inline_keyboard: [[joinButton]]
-      }
-    });
+    await askToJoin(ctx).catch(() => {});
     console.error(error);
   }
 };

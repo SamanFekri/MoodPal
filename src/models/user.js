@@ -17,6 +17,13 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   language_code: String,
+  // the language MoodPal speaks to this user: 'en' | 'fa' | 'ru' (see src/i18n). null = English.
+  // New users start in their Telegram app's language when it's one of these; /language changes it.
+  language: {
+    type: String,
+    enum: ['en', 'fa', 'ru', null],
+    default: null
+  },
   is_premium: Boolean,
   is_blocked: {
     type: Boolean,

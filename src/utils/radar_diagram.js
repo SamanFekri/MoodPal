@@ -85,7 +85,8 @@ async function renderAggregatedRadar(aggregated, outputPath, options = {}) {
   const rawValues = categories.map(k => (aggregated[k] || 0) + 1);
 
   // No numbers in labels
-  const labels = categories.map(k => AGGREGATED_CATEGORY_MOODS[k].label);
+  // options.labels: the six group names in the user's language (src/i18n `moodGroups`)
+  const labels = categories.map(k => options.labels?.[k] || AGGREGATED_CATEGORY_MOODS[k].label);
 
   // Controller passes max on aggregated categories; add +1 here too
   const providedMax = (Number.isFinite(options.maxValue) && options.maxValue > 0)

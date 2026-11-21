@@ -1,4 +1,5 @@
-const { msgs, share } = require('../constants');
+const { share } = require('../constants');
+const i18n = require('../i18n');
 const User = require('../models/user');
 const Share = require('../models/share');
 const { logTelegramError } = require('../utils/tg_errors');
@@ -9,19 +10,22 @@ const isSharing = (followerId, followedId) => Share.exists({ follower: followerI
 // (/start sm-…) and by the follow-back button.
 async function requestToFollow(ctx, follower, followed) {
   if (!followed || String(followed._id) === String(follower._id)) return;
+  const msgs = i18n.forCtx(ctx);
   if (await isSharing(follower._id, followed._id)) {
     return ctx.reply(msgs.hasAlreadySharedMsg(followed), { parse_mode: 'HTML' });
   }
-  await ctx.telegram.sendMessage(followed.id, msgs.askForShareMoodMsg(follower), {
+  // they read the request, so it's in their language
+  const theirs = i18n.forUser(followed);
+  await ctx.telegram.sendMessage(followed.id, theirs.askForShareMoodMsg(follower), {
     parse_mode: 'HTML',
-    reply_markup: { inline_keyboard: share.ALLOW_SHARE_MOOD_INLINE_KEYBOARD(follower) },
+    reply_markup: { inline_keyboard: share.ALLOW_SHARE_MOOD_INLINE_KEYBOARD(follower, theirs) },
   });
   await ctx.reply(msgs.waitingForShareMsg(followed), { parse_mode: 'HTML' });
 }
 
 const createShareLinkCommand = async (ctx) => {
   return ctx.reply(
-    msgs.createShareLinkMsg(ctx.user),
+    i18n.forCtx(ctx).createShareLinkMsg(ctx.user),
     {
       parse_mode: 'HTML',
       // disable web page preview
@@ -34,17 +38,19 @@ const allowShareCallback = async (ctx, userId) => {
   try {
     const follower = await User.findById(userId);
     const followed = ctx.user;
+    const msgs = i18n.forCtx(ctx);
+    const theirs = i18n.forUser(follower);
     await Share.createShare(follower._id, followed._id);
     await ctx.deleteMessage().catch(logTelegramError('deleteMessage'));
     // offer to share the other way too, unless they already do
     const mutual = await isSharing(followed._id, follower._id);
     await ctx.reply(`${msgs.shareAllowedMsg(follower)}${mutual ? '' : `\n\n${msgs.followBackAskMsg(follower)}`}`, {
       parse_mode: 'HTML',
-      ...(mutual ? {} : { reply_markup: { inline_keyboard: share.FOLLOW_BACK_ASK_KEYBOARD(follower) } }),
+      ...(mutual ? {} : { reply_markup: { inline_keyboard: share.FOLLOW_BACK_ASK_KEYBOARD(follower, msgs) } }),
     }).catch(logTelegramError('reply'));
-    await ctx.telegram.sendMessage(follower.id, `${msgs.sharePermissionGrantedMsg(followed)}${mutual ? '' : `\n\n${msgs.followBackGiveMsg(followed)}`}`, {
+    await ctx.telegram.sendMessage(follower.id, `${theirs.sharePermissionGrantedMsg(followed)}${mutual ? '' : `\n\n${theirs.followBackGiveMsg(followed)}`}`, {
       parse_mode: 'HTML',
-      ...(mutual ? {} : { reply_markup: { inline_keyboard: share.FOLLOW_BACK_GIVE_KEYBOARD(followed) } }),
+      ...(mutual ? {} : { reply_markup: { inline_keyboard: share.FOLLOW_BACK_GIVE_KEYBOARD(followed, theirs) } }),
     }).catch(logTelegramError('sendMessage'));
   } catch (err) {
     console.log(err);
@@ -59,7 +65,7 @@ const rejectShareCallback = async (ctx, userId) => {
     await Share.disableShare(follower._id, ctx.user._id);
   }
   await ctx.deleteMessage().catch(logTelegramError('deleteMessage'));
-  await ctx.reply(msgs.rejectShareMsg(follower), { parse_mode: 'HTML' }).catch(logTelegramError('reply'));
+  await ctx.reply(i18n.forCtx(ctx).rejectShareMsg(follower), { parse_mode: 'HTML' }).catch(logTelegramError('reply'));
 }
 
 const shareCallback = async (ctx) => {
@@ -84,10 +90,11 @@ const followBackCallback = async (ctx) => {
   await ctx.editMessageReplyMarkup(undefined).catch(() => {});
   if (kind === 'ask') return requestToFollow(ctx, ctx.user, other);
   if (kind === 'give') {
+    const msgs = i18n.forCtx(ctx);
     if (await isSharing(other._id, ctx.user._id)) return ctx.reply(msgs.alreadySeesYouMsg(other), { parse_mode: 'HTML' });
     await Share.createShare(other._id, ctx.user._id);
     await ctx.reply(msgs.sharedBackMsg(other), { parse_mode: 'HTML' });
-    await ctx.telegram.sendMessage(other.id, msgs.sharedBackNoticeMsg(ctx.user), { parse_mode: 'HTML' }).catch(logTelegramError('sendMessage'));
+    await ctx.telegram.sendMessage(other.id, i18n.forUser(other).sharedBackNoticeMsg(ctx.user), { parse_mode: 'HTML' }).catch(logTelegramError('sendMessage'));
   }
 };
 

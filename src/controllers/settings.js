@@ -4,6 +4,7 @@ const llm = require('../utils/llm');
 const reminders = require('../reminders/service');
 const memory = require('../memory/service');
 const UserMemory = require('../models/user_memory');
+const i18n = require('../i18n');
 
 const view = async (user) => {
   const key = await User.getOpenAIKey(user._id);
@@ -16,7 +17,7 @@ const view = async (user) => {
       models: llm.MODEL_CHOICES,
     },
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared').lean() || user;
+      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared language').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);
       return {
         reminders: reminders.viewFor(fresh, await reminders.getSettings()),
@@ -26,6 +27,8 @@ const view = async (user) => {
           mbti_shared: fresh.is_mbti_shared !== false, mbti_type: mbti ? mbti.type : null,
           mood_log_shared: fresh.is_mood_log_shared !== false, mood_notes_shared: fresh.is_mood_notes_shared === true,
         },
+        // the language the bot and the mini app speak (src/i18n)
+        language: { current: i18n.normalize(fresh.language), choices: i18n.LANGS.map(code => ({ code, name: i18n.forLang(code).nativeName, flag: i18n.forLang(code).flag, dir: i18n.forLang(code).dir })) },
         // what Talk remembers about you
         memory: { enabled: fresh.memory_enabled !== false, count: await UserMemory.countDocuments({ user: user._id }), max: memory.MAX_MEMORIES },
       };
@@ -52,6 +55,19 @@ const setKey = async (req, res) => {
 // DELETE /api/me/settings/openai-key
 const removeKey = async (req, res) => {
   await User.setOpenAIKey(req.user._id, null);
+  res.json(await view(req.user));
+};
+
+// POST /api/me/settings/language { language: 'en' | 'fa' | 'ru' } — the bot's menu follows on the next message
+const setLanguage = async (req, res) => {
+  const lang = req.body?.language;
+  if (!i18n.isSupported(lang)) return res.status(400).json({ error: 'invalid_language' });
+  await User.updateOne({ _id: req.user._id }, { language: lang });
+  req.user.language = lang;
+  // the command list in Telegram's Menu button, for this chat
+  const { botCommands } = require('../commands/language');
+  require('../utils/telegram').getTelegram().setMyCommands(botCommands(lang), { scope: { type: 'chat', chat_id: req.user.id } })
+    .catch(error => console.error('setMyCommands from the mini app failed:', error.message));
   res.json(await view(req.user));
 };
 
@@ -134,4 +150,5 @@ const setMemory = async (req, res) => {
 // separate so tests can swap the OpenAI round-trip
 const verify = (key) => llm.verifyApiKey(key);
 
-module.exports = { getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, setMemory, listMemories, forgetMemory, forgetAllMemories, verify };
+module.exports = {
+  setLanguage, getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, setMemory, listMemories, forgetMemory, forgetAllMemories, verify };

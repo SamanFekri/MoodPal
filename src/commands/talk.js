@@ -1,5 +1,7 @@
 // Talk mode handlers. Conversation logic lives in src/chat/service.js.
-const { msgs, common } = require('../constants');
+const { common } = require('../constants');
+const i18n = require('../i18n');
+const { moodName } = i18n;
 const User = require('../models/user');
 const chatService = require('../chat/service');
 const llm = require('../utils/llm');
@@ -7,16 +9,17 @@ const llm = require('../utils/llm');
 const REMIND_EVERY = 8; // assistant replies between "I'm an AI" reminders
 
 const mainKeyboard = (ctx) => ({ keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true });
-const talkKeyboard = () => ({ keyboard: common.makeTalkKeyboard(), resize_keyboard: true });
+const talkKeyboard = (ctx) => ({ keyboard: common.makeTalkKeyboard(ctx), resize_keyboard: true });
 
 // 💬 Talk / /talk — start a conversation (requires the user's own OpenAI key)
 async function startTalk(ctx, { openedFrom = 'menu', opener = null } = {}) {
+  const msgs = i18n.forCtx(ctx);
   const apiKey = await User.getOpenAIKey(ctx.user._id);
   if (!apiKey) {
     return ctx.reply(msgs.talkNeedsKeyMsg(), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
   }
   await chatService.start(ctx.user._id, { openedFrom });
-  await ctx.reply(msgs.talkIntroMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: talkKeyboard() });
+  await ctx.reply(msgs.talkIntroMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
   // "talk about it" from a note: the note becomes the first thing they said
   if (opener) return respond(ctx, opener, apiKey);
 }
@@ -31,6 +34,7 @@ async function talkCommand(ctx) {
 
 // 🛑 End talk / /end_talk
 async function endTalkCommand(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     const session = await chatService.end(ctx.user._id, 'user');
     if (!session) return ctx.reply(msgs.talkNotActiveMsg(), { reply_markup: mainKeyboard(ctx) });
@@ -48,14 +52,15 @@ async function learnFromSession(userId, session) {
 }
 
 async function respond(ctx, text, apiKey) {
+  const msgs = i18n.forCtx(ctx);
   await ctx.sendChatAction('typing').catch(() => {});
   try {
-    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, apiKey, { firstName: ctx.user.first_name, model: ctx.user.openai_model || undefined });
+    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, apiKey, { firstName: ctx.user.first_name, model: ctx.user.openai_model || undefined, language: msgs.aiLanguage, fallbackReply: msgs.talkFallbackReply() });
     let out = reply;
     if (risk === 'medium' || risk === 'high') out += `\n${msgs.talkSafetyFooterMsg()}`;
     const assistantTurns = session.messages.filter(m => m.role === 'assistant').length;
     if (assistantTurns % REMIND_EVERY === 0) out += `\n\n${msgs.talkReminderMsg()}`;
-    await ctx.reply(out, { parse_mode: 'HTML', reply_markup: talkKeyboard() });
+    await ctx.reply(out, { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
   } catch (error) {
     console.error('Talk reply failed:', error.message);
     if (llm.isAuthError(error)) {
@@ -66,7 +71,7 @@ async function respond(ctx, text, apiKey) {
       await chatService.end(ctx.user._id, 'error');
       return ctx.reply(msgs.talkModelUnavailableMsg(ctx.user.openai_model || llm.DEFAULT_MODEL), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
     }
-    await ctx.reply(msgs.talkErrorMsg(), { reply_markup: talkKeyboard() });
+    await ctx.reply(msgs.talkErrorMsg(), { reply_markup: talkKeyboard(ctx) });
   }
 }
 
@@ -77,22 +82,22 @@ async function handleTalkMessage(ctx) {
   const apiKey = await User.getOpenAIKey(ctx.user._id);
   if (!apiKey) {
     await chatService.end(ctx.user._id, 'no_key');
-    await ctx.reply(msgs.talkNeedsKeyMsg(), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
+    await ctx.reply(i18n.forCtx(ctx).talkNeedsKeyMsg(), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
     return true;
   }
   await respond(ctx, ctx.message.text, apiKey);
   return true;
 }
 
-// inline button under a saved note
-const TALK_ABOUT_NOTE_KEYBOARD = [[{ text: '💬 Talk about it', callback_data: 'talk_note' }]];
+// inline button under a saved note (`t`: the user's dictionary from src/i18n)
+const TALK_ABOUT_NOTE_KEYBOARD = (t = i18n.forLang()) => [[{ text: t.talkAboutButton(), callback_data: 'talk_note' }]];
 
 async function talkAboutNoteCallback(ctx) {
   try {
     await ctx.answerCbQuery();
     const Mood = require('../models/mood');
     const lastMood = await Mood.getLastMood(ctx.user._id);
-    const opener = lastMood?.note ? `${lastMood.mood.name}: ${lastMood.note}` : null;
+    const opener = lastMood?.note ? `${moodName(ctx.user.language, lastMood.mood.code, lastMood.mood.name)}: ${lastMood.note}` : null;
     try { await ctx.editMessageReplyMarkup(undefined); } catch {}
     await startTalk(ctx, { openedFrom: 'note', opener });
   } catch (error) {

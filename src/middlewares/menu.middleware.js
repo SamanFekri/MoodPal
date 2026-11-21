@@ -4,16 +4,18 @@
 const { common } = require('../constants');
 const User = require('../models/user');
 const chatService = require('../chat/service');
+const i18n = require('../i18n');
 
 const menuMiddleware = async (ctx, next) => {
   try {
     const isStart = /^\/start\b/.test(ctx.message?.text || '');   // /start sends the menu itself
-    if (ctx.user && ctx.chat?.type === 'private' && ctx.message && !isStart && ctx.user.menu_signature !== common.menuSignature()) {
+    if (ctx.user && ctx.chat?.type === 'private' && ctx.message && !isStart && ctx.user.menu_signature !== common.menuSignature(ctx.user.language)) {
       const inTalk = Boolean(await chatService.getActive(ctx.user._id));
-      const keyboard = inTalk ? common.makeTalkKeyboard() : common.makeKeyboardMenu(ctx);
-      await ctx.reply('🆕 Your menu has been updated.', { reply_markup: { keyboard, resize_keyboard: true } });
-      await User.updateOne({ _id: ctx.user._id }, { menu_signature: common.menuSignature() });
-      ctx.user.menu_signature = common.menuSignature();
+      const keyboard = inTalk ? common.makeTalkKeyboard(ctx) : common.makeKeyboardMenu(ctx);
+      await ctx.reply(i18n.forCtx(ctx).menuUpdatedMsg(), { reply_markup: { keyboard, resize_keyboard: true } });
+      const signature = common.menuSignature(ctx.user.language);
+      await User.updateOne({ _id: ctx.user._id }, { menu_signature: signature });
+      ctx.user.menu_signature = signature;
     }
   } catch (error) {
     console.error('Error in menuMiddleware:', error);

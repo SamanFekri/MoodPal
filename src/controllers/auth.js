@@ -83,6 +83,8 @@ const isAuthenticated = async (req, res) => {
       telegramId: user.id,
       firstName: user.first_name,
       isAdmin: Boolean(user.is_admin),
+      // the language the mini app speaks (same as the bot's, see src/i18n): 'en' | 'fa' | 'ru'
+      language: require('../i18n').normalize(user.language),
       // the user's own latest mood (null until they set one in the bot)
       myMood: lastMood ? {
         mood: lastMood.mood,

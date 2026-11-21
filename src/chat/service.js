@@ -59,7 +59,7 @@ class ChatService {
    * Add the user's message, ask the model, store the answer.
    * @returns {{reply:string, risk:string, session}}
    */
-  async reply(userId, text, apiKey, { firstName = '', model = undefined } = {}) {
+  async reply(userId, text, apiKey, { firstName = '', model = undefined, language = undefined, fallbackReply = undefined } = {}) {
     if (!apiKey) throw new Error('Missing OpenAI API key for this user');
     const session = await this.getActive(userId);
     if (!session) throw new Error('No active talk session');
@@ -73,7 +73,7 @@ class ChatService {
       this.memory.memoryContext(userId),
     ]);
 
-    const result = await this.llm.chatReply(history, apiKey, { personalityContext, firstName, model, moodContext, memoryContext });
+    const result = await this.llm.chatReply(history, apiKey, { personalityContext, firstName, model, moodContext, memoryContext, ...(language ? { language } : {}), ...(fallbackReply ? { fallbackReply } : {}) });
     const risk = RISK_ORDER[result.risk] !== undefined ? result.risk : 'none';
 
     session.messages.push({ role: 'assistant', content: result.reply, risk });

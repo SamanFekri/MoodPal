@@ -1,4 +1,5 @@
 const User = require('../models/user'); // Assuming you have a User model
+const i18n = require('../i18n');
 
 const saveUserMiddleware = async (ctx, next) => {
   try {
@@ -17,8 +18,9 @@ const saveUserMiddleware = async (ctx, next) => {
     let existingUser = await User.findOne({ id: user.id });
 
     if (!existingUser) {
-      existingUser = new User(ctx.from);
-      u = await existingUser.save();
+      // a new user starts in their Telegram app's language when MoodPal speaks it (English otherwise)
+      existingUser = new User({ ...ctx.from, language: i18n.detect(ctx.from.language_code) });
+      await existingUser.save();
     }
     // get existing user from db and mark them active
     existingUser = await User.findOneAndUpdate({ id: user.id }, { last_active_at: new Date() }, { new: true });

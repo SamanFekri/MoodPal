@@ -47,6 +47,12 @@ const miniApp = (req, res) => res.sendFile(path.join(__dirname, 'public', 'ui', 
 app.get('/', miniApp);
 // public personality card (share link); the page reads the token from the URL
 app.get('/p/:token', miniApp);
+// the mini app's text in Farsi / Russian (src/i18n/miniapp.js); English is built into the page
+app.get('/i18n/:lang.json', (req, res) => {
+  const table = require('./i18n/miniapp').table(req.params.lang);
+  if (!table) return res.status(404).json({ error: 'unknown_language' });
+  res.set('Cache-Control', 'public, max-age=300').json(table);
+});
 // shareable MBTI-style result (/result/ENFP): the same page, with a link preview for that character
 const mbti = require('./public/ui/mbti');
 let miniAppHtml = null;
@@ -93,6 +99,7 @@ app.get('/api/me/settings', requireWebAppUser, controllers.settings.getSettings)
 app.post('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.setKey);
 app.delete('/api/me/settings/openai-key', requireWebAppUser, controllers.settings.removeKey);
 app.post('/api/me/settings/model', requireWebAppUser, controllers.settings.setModel);
+app.post('/api/me/settings/language', requireWebAppUser, controllers.settings.setLanguage);
 app.post('/api/me/settings/reminders', requireWebAppUser, controllers.settings.setReminders);
 app.post('/api/me/settings/timezone', requireWebAppUser, controllers.settings.setTimezone);
 app.post('/api/me/settings/privacy', requireWebAppUser, controllers.settings.setPrivacy);

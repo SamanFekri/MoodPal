@@ -13,7 +13,8 @@ const Mood = require('../models/mood');
 const AppConfig = require('../models/app_config');
 const ReminderJob = require('../models/reminder_job');
 const { getTelegram } = require('../utils/telegram');
-const { MOOD_INLINE_KEYBOARD } = require('../constants');
+const { moodKeyboard } = require('../constants');
+const i18n = require('../i18n');
 const time = require('./time');
 
 const TICK_MS = 30 * 1000;
@@ -149,12 +150,14 @@ async function tick(now = new Date()) {
 }
 
 // ---------- sending ----------
-function reminderMessage() {
+// in the user's language (src/i18n); `lang` null = English
+function reminderMessage(lang = null) {
+  const t = i18n.forLang(lang);
   return {
-    text: `⏰ <b>Mood check-in</b>\nHow are you feeling right now? Pick the mood that fits best:`,
+    text: t.reminderCheckInMsg(),
     extra: {
       parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: [...MOOD_INLINE_KEYBOARD, [{ text: '🔕 Turn off reminders', callback_data: CALLBACK_OFF }]] },
+      reply_markup: { inline_keyboard: [...moodKeyboard(t), [{ text: t.remindersOffButton(), callback_data: CALLBACK_OFF }]] },
     },
   };
 }
@@ -163,7 +166,7 @@ const errorCode = (e) => e?.response?.error_code ?? e?.code;
 const isBlockedError = (e) => errorCode(e) === 403 || (errorCode(e) === 400 && /chat not found|user is deactivated/i.test(e?.description || e?.message || ''));
 
 async function sendJob(job, s, now) {
-  const user = await User.findById(job.user).select('id is_blocked reminder').lean();
+  const user = await User.findById(job.user).select('id is_blocked reminder language').lean();
   const scheduled = job.kind === 'scheduled';
   let skip = null;
   if (!user) skip = 'user_gone';
@@ -176,7 +179,7 @@ async function sendJob(job, s, now) {
   }
 
   try {
-    const { text, extra } = reminderMessage();
+    const { text, extra } = reminderMessage(user.language);
     await getTelegram().sendMessage(user.id, text, extra);
     await ReminderJob.updateOne({ _id: job._id }, { status: 'sent', sent_at: new Date(), reason: null });
     await User.updateOne({ _id: user._id }, { 'reminder.last_sent_at': new Date() });

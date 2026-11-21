@@ -59,36 +59,41 @@ function bar(value, width = 10) {
 /**
  * Telegram (HTML) summary of a profile grouped by category. Only measured traits are listed.
  */
-function formatProfileSummary(profile, traitsByKey, { title = '🧠 <b>My Personality</b>' } = {}) {
-  const lines = [title, ''];
+function formatProfileSummary(profile, traitsByKey, { title = null, lang = null } = {}) {
+  // texts in the user's language (src/i18n); English when lang is null
+  const { forLang } = require('../i18n');
+  const { traitName, categoryName } = require('../i18n/personality');
+  const P = forLang(lang).personality;
+  const lines = [title || P.profileTitle, ''];
   const measured = Object.values(traitsByKey).filter(t =>
     profile?.traits?.[t.key] !== undefined && (profile.confidence?.[t.key] ?? 0) >= MIN_CONFIDENCE_FOR_CONTEXT
   );
 
   if (measured.length === 0) {
-    lines.push('No personality data yet. Take the 🧠 Personality Test to build your profile.');
+    lines.push(P.profileEmpty);
   } else {
     const byCategory = {};
     for (const t of measured) (byCategory[t.category] ||= []).push(t);
     for (const category of Object.keys(CATEGORY_NAMES)) {
       const traits = byCategory[category];
       if (!traits) continue;
-      lines.push(`<b>${CATEGORY_NAMES[category]}</b>`);
+      lines.push(`<b>${categoryName(category, CATEGORY_NAMES[category], lang)}</b>`);
       for (const t of traits) {
         const v = profile.traits[t.key];
         const c = profile.confidence[t.key] ?? 0;
-        lines.push(`${bar(v)} ${t.name}: <i>${describe(t.key, v)}</i> (${Math.round(v * 100)}%, confidence ${Math.round(c * 100)}%)`);
+        const level = describe(t.key, v);
+        lines.push(P.profileTraitLine(bar(v), traitName(t, lang), P.levels[level] || level, Math.round(v * 100), Math.round(c * 100)));
       }
       lines.push('');
     }
     const unmeasured = Object.values(traitsByKey).length - measured.length;
     if (unmeasured > 0) {
-      lines.push(`<i>${unmeasured} more traits will fill in as you take other tests and from your conversations.</i>`);
+      lines.push(P.profileMoreTraits(unmeasured));
       lines.push('');
     }
   }
 
-  lines.push('⚠️ <i>This is an approximate personality profile based on a short self-report questionnaire and conversation patterns. It is not a clinical or medical diagnosis.</i>');
+  lines.push(P.profileDisclaimer);
   return lines.join('\n');
 }
 

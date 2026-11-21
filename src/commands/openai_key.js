@@ -1,4 +1,4 @@
-const { msgs } = require('../constants');
+const i18n = require('../i18n');
 const User = require('../models/user');
 const llm = require('../utils/llm');
 
@@ -13,6 +13,7 @@ async function deleteUserMessage(ctx) {
 
 // Verify the key against OpenAI, then store it encrypted
 async function saveOpenAIKey(ctx, rawKey) {
+  const msgs = i18n.forCtx(ctx);
   const apiKey = (rawKey || '').trim();
 
   if (!llm.isValidKeyFormat(apiKey)) {
@@ -42,6 +43,7 @@ async function saveOpenAIKey(ctx, rawKey) {
 
 // /set_openai_key [key] — with a key it saves it directly, otherwise asks for it
 async function setOpenAIKeyCommand(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     if (ctx.payload) {
       return await saveOpenAIKey(ctx, ctx.payload);
@@ -57,6 +59,7 @@ async function setOpenAIKeyCommand(ctx) {
 }
 
 async function removeOpenAIKeyCommand(ctx) {
+  const msgs = i18n.forCtx(ctx);
   try {
     const existing = await User.getOpenAIKey(ctx.user._id);
     if (!existing) {
@@ -73,7 +76,8 @@ async function removeOpenAIKeyCommand(ctx) {
 function looksLikeOpenAIKey(ctx) {
   const text = ctx.message?.text || '';
   const repliedToPrompt = ctx.message?.reply_to_message?.from?.is_bot
-    && /OpenAI API key/i.test(ctx.message.reply_to_message.text || '');
+    // the prompt mentions OpenAI and sk- in every language (src/i18n askOpenAIKeyMsg)
+    && /OpenAI/.test(ctx.message.reply_to_message.text || '') && /sk-/.test(ctx.message.reply_to_message.text || '');
   return repliedToPrompt || llm.isValidKeyFormat(text);
 }
 

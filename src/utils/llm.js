@@ -149,7 +149,13 @@ export function withPersonalityContext(systemPrompt, personalityContext) {
 
 const PERSONALITY_CONTEXT_INSTRUCTIONS = "Use this context only to adapt your tone, length and style to the user. Do not mention, list or reveal these traits unless the user explicitly asks about their personality profile.";
 
-export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", model = DEFAULT_MODEL } = {}) {
+// Asks the model to write for the user in their chosen language (src/i18n `aiLanguage`, e.g. "Persian (Farsi)")
+export function withLanguage(systemPrompt, language) {
+  if (!language || language === "English") return systemPrompt;
+  return `${systemPrompt}\n\nWrite every text value in ${language}, in natural everyday ${language} (the JSON keys and the "risk" values stay in English).`;
+}
+
+export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", model = DEFAULT_MODEL, language = "", fallback = "I'm sorry, I couldn't analyze your mood data at this time." } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
@@ -160,7 +166,7 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", 
     ...chatParams(model, { temperature: 1, maxTokens: 420 }),
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: withPersonalityContext(SYSTEM_PROMPT, personalityContext) },
+      { role: "system", content: withLanguage(withPersonalityContext(SYSTEM_PROMPT, personalityContext), language) },
       { role: "user", content: JSON.stringify({ items }) }
     ]
   });
@@ -168,7 +174,7 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", 
   console.log('LLM Response:', response);
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    return "I'm sorry, I couldn't analyze your mood data at this time."
+    return fallback;
   }
 
   const result = JSON.parse(content);
@@ -410,7 +416,7 @@ export function humanizeReply(text) {
     .replace(/\*\*|__|`/g, "")                                   // bold / code markers
     .replace(/^\s*[-*•]\s+/gm, "")                                // list bullets
     .replace(/\s*(?:—|–|--)\s*$/gm, ".")                          // a dash ending a line
-    .replace(/(\w)\s*(?:—|–|--)\s*(?=[a-z])/g, "$1, ")           // mid-sentence dash -> comma
+    .replace(/([\p{L}\p{N}])\s*(?:—|–|--)\s*(?=[\p{Ll}\p{Lo}])/gu, "$1, ") // mid-sentence dash -> comma (any script)
     .replace(/\s*(?:—|–|--)\s*/g, ". ")                           // any other dash -> full stop
     .replace(/\.\s*\./g, ".")
     .replace(/[ \t]{2,}/g, " ")
@@ -422,7 +428,7 @@ export function humanizeReply(text) {
  * One turn of Talk mode. `history` is [{role:'user'|'assistant', content}] oldest first.
  * @returns {{reply:string, risk:string}}
  */
-export async function chatReply(history, apiKey, { personalityContext = "", firstName = "", model = DEFAULT_MODEL, moodContext = "", memoryContext = "" } = {}) {
+export async function chatReply(history, apiKey, { personalityContext = "", firstName = "", model = DEFAULT_MODEL, moodContext = "", memoryContext = "", language = "", fallbackReply = "Tell me a bit more, what's going on?" } = {}) {
   if (!apiKey) {
     throw new Error("Missing OpenAI API key for this user");
   }
@@ -430,6 +436,8 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   let system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
   // what a friend would simply know: how they've been feeling lately, and what they told you before
   if (moodContext || memoryContext) system += `\n\n${[moodContext, memoryContext].filter(Boolean).join("\n\n")}\n${KNOWN_CONTEXT_INSTRUCTIONS}`;
+  // the user's chosen language; if they write in another language, follow them
+  if (language && language !== "English") system += `\n\nThe user chose ${language} as their language. Reply in ${language}, written the way a native speaker texts a friend. If they write to you in a different language, reply in the language they wrote in. The JSON keys and the "risk" value stay in English.`;
 
   const response = await createChat(client, {
     ...chatParams(model, { temperature: 0.8, maxTokens: 220 }),
@@ -440,7 +448,7 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
   const content = response.choices[0]?.message?.content;
   let parsed = null;
   try { parsed = JSON.parse(content); } catch { parsed = null; }
-  const reply = typeof parsed?.reply === "string" && humanizeReply(parsed.reply) ? humanizeReply(parsed.reply) : "Tell me a bit more, what's going on?";
+  const reply = typeof parsed?.reply === "string" && humanizeReply(parsed.reply) ? humanizeReply(parsed.reply) : fallbackReply;
   const risk = ["none", "low", "medium", "high"].includes(parsed?.risk) ? parsed.risk : "none";
   return { reply, risk };
 }

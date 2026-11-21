@@ -4,6 +4,7 @@
 const Mood = require('../models/mood');
 const User = require('../models/user');
 const { getTelegram } = require('../utils/telegram');
+const i18n = require('../i18n');
 
 const COOLDOWN_MS = 60 * 1000;          // one export a minute per person is plenty
 const lastExport = new Map();
@@ -22,7 +23,7 @@ function timezoneOf(user, fallback) {
 
 // { buffer, filename, count, timezone }
 async function buildCsv(userId) {
-  const user = await User.findById(userId).select('id first_name timezone').lean();
+  const user = await User.findById(userId).select('id first_name timezone language').lean();
   if (!user) throw new Error('unknown_user');
   const defaultTz = (await require('../reminders/service').getSettings()).default_timezone;
   const tz = timezoneOf(user, defaultTz);
@@ -30,11 +31,14 @@ async function buildCsv(userId) {
     timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   }).formatToParts(d).map(p => [p.type, p.value]));
 
-  const lines = [['Date', 'Weekday', 'Time', 'Timezone', 'Mood', 'Note'].join(',')];
+  const t = i18n.forUser(user);
+  // weekday names in the user's language (dates stay YYYY-MM-DD so the file sorts and opens anywhere)
+  const weekday = new Intl.DateTimeFormat(t.code, { timeZone: tz, weekday: 'long' });
+  const lines = [t.exportColumns.map(cell).join(',')];
   let count = 0;
   for await (const m of Mood.find({ user: userId }).sort({ timestamp: 1 }).select('mood note timestamp').lean().cursor()) {
     const p = parts(new Date(m.timestamp));
-    lines.push([`${p.year}-${p.month}-${p.day}`, p.weekday, `${p.hour}:${p.minute}`, tz, m.mood?.name || m.mood?.code || '', m.note || ''].map(cell).join(','));
+    lines.push([`${p.year}-${p.month}-${p.day}`, t.code === 'en' ? p.weekday : weekday.format(new Date(m.timestamp)), `${p.hour}:${p.minute}`, tz, t.moods[m.mood?.code] || m.mood?.name || m.mood?.code || '', m.note || ''].map(cell).join(','));
     count++;
   }
   const today = parts(new Date());
@@ -53,9 +57,9 @@ async function sendToChat(userId, { now = Date.now() } = {}) {
   const file = await buildCsv(userId);
   if (!file.count) throw new ExportError('no_moods');
   lastExport.set(key, now);
-  const user = await User.findById(userId).select('id').lean();
+  const user = await User.findById(userId).select('id language').lean();
   await getTelegram().sendDocument(user.id, { source: file.buffer, filename: file.filename }, {
-    caption: `📥 Your mood log: ${file.count} ${file.count === 1 ? 'mood' : 'moods'} with notes, times in ${file.timezone}. Opens in Excel, Numbers or Google Sheets.`,
+    caption: i18n.forUser(user).exportCaption(file.count, file.timezone),
   });
   return { count: file.count, filename: file.filename, timezone: file.timezone };
 }

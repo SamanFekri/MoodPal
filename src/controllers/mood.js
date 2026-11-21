@@ -1,5 +1,6 @@
 // Mini app -> bot bridge for moods.
-const { MOOD_INLINE_KEYBOARD, msgs, common } = require('../constants');
+const { moodKeyboard, common } = require('../constants');
+const i18n = require('../i18n');
 const { getTelegram } = require('../utils/telegram');
 const Mood = require('../models/mood');
 
@@ -7,9 +8,10 @@ const Mood = require('../models/mood');
 // so the mini app can close and the user lands right on the picker.
 const requestMoodPicker = async (req, res) => {
   try {
+    const msgs = i18n.forUser(req.user);
     await getTelegram().sendMessage(req.user.id, msgs.chooseMoodMsg(), {
       parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: MOOD_INLINE_KEYBOARD },
+      reply_markup: { inline_keyboard: moodKeyboard(msgs) },
     });
     res.json({ ok: true });
   } catch (error) {
@@ -49,11 +51,12 @@ const setMine = async (req, res) => {
 // what the bot says after a mood is picked, sent in order; a failure never undoes the saved mood
 async function postToChat(user, mood, note) {
   const telegram = getTelegram();
-  await telegram.sendMessage(user.id, mood.name);
+  const msgs = i18n.forUser(user);
+  await telegram.sendMessage(user.id, msgs.moods[mood.code] || mood.name);
   await telegram.sendMessage(user.id, mood.emoji);
   if (note) {
     const { TALK_ABOUT_NOTE_KEYBOARD } = require('../commands/talk');
-    await telegram.sendMessage(user.id, `${msgs.noteSavedMsg()}\n${msgs.talkAboutNoteMsg()}`, { reply_markup: { inline_keyboard: TALK_ABOUT_NOTE_KEYBOARD } });
+    await telegram.sendMessage(user.id, `${msgs.noteSavedMsg()}\n${msgs.talkAboutNoteMsg()}`, { reply_markup: { inline_keyboard: TALK_ABOUT_NOTE_KEYBOARD(msgs) } });
   } else {
     await new Promise(resolve => setTimeout(resolve, module.exports.NOTE_PROMPT_DELAY_MS));
     await telegram.sendMessage(user.id, msgs.addNoteMsg(), { reply_markup: { keyboard: common.makeKeyboardMenu({ user }), resize_keyboard: true } });

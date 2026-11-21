@@ -335,9 +335,9 @@ class PersonalityService {
     return out;
   }
 
-  async getProfileSummary(userId) {
+  async getProfileSummary(userId, { lang = null } = {}) {
     const [profile, traits] = await Promise.all([this.getProfile(userId), this.getTraits()]);
-    return formatProfileSummary(profile, traits);
+    return formatProfileSummary(profile, traits, { lang });
   }
 
   // Ask the LLM what a piece of conversation reveals, then apply it gradually

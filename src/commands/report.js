@@ -1,4 +1,5 @@
-const { msgs, report } = require('../constants');
+const { report } = require('../constants');
+const i18n = require('../i18n');
 const Mood = require('../models/mood');
 const User = require('../models/user');
 const radar = require('../utils/radar_diagram');
@@ -53,14 +54,15 @@ async function generateReport(data, userId, options = {}) {
 
 async function sendReport(filePath, user, ctx, days) {
   await ctx.telegram.sendPhoto(user.id, { source: fs.createReadStream(filePath) }, {
-    caption: msgs.showReportMsg(user, days)
+    caption: i18n.forUser(user).showReportMsg(user, days)
   });
 }
 
 async function showReportCommand(ctx) {
+  const msgs = i18n.forCtx(ctx);
   return ctx.reply(msgs.reportMsg(ctx.user), {
     parse_mode: 'HTML',
-    reply_markup: { inline_keyboard: report.REPORT_DAYS_INLINE_KEYBOARD }
+    reply_markup: { inline_keyboard: report.reportDaysKeyboard(msgs) }
   });
 }
 
@@ -69,13 +71,13 @@ async function getReportCallback(ctx) {
     const days = parseInt(ctx.callbackQuery.data.split('_')[1], 10);
     const userId = ctx.user._id;
     const data = await getReport(userId, days);
-    const p = await generateReport(data, userId);
+    const p = await generateReport(data, userId, { labels: i18n.forCtx(ctx).moodGroups });
     await sendReport(p, ctx.user, ctx, days);
     fs.unlinkSync(p);
-    await ctx.answerCbQuery('📊 Report sent successfully!').catch(() => {});
+    await ctx.answerCbQuery(i18n.forCtx(ctx).reportSentToast()).catch(() => {});
   } catch (error) {
     console.error('Error in getReportCallback:', error);
-    await ctx.answerCbQuery('❌ Failed to generate report. Please try again.').catch(() => {});
+    await ctx.answerCbQuery(i18n.forCtx(ctx).reportFailedToast()).catch(() => {});
   }
 }
 
@@ -87,8 +89,9 @@ async function sendWeeklyReport(ctx) {
   const users = await User.find({ _id: { $in: distinctUsers } });
   for (const user of users) {
     try {
+      const t = i18n.forUser(user);
       const data = await getReport(user._id, 7);
-      const p = await generateReport(data, user._id);
+      const p = await generateReport(data, user._id, { labels: t.moodGroups });
       await sendReport(p, user, ctx, 7);
       fs.unlinkSync(p);
       
@@ -100,7 +103,7 @@ async function sendWeeklyReport(ctx) {
           try {
             // adapt the reply to the user's personality profile (if they have one)
             const personalityContext = await personalityService.getPersonalityContext(user._id);
-            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: user.openai_model || undefined });
+            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: user.openai_model || undefined, language: t.aiLanguage, fallback: t.insightFallback() });
             await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
 
             // let the week's notes refine the profile, gradually
@@ -112,7 +115,7 @@ async function sendWeeklyReport(ctx) {
           } catch (error) {
             console.error(`AI insight failed for user ${user.id}:`, error.message);
             if (llm.isAuthError(error)) {
-              await ctx.telegram.sendMessage(user.id, msgs.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
+              await ctx.telegram.sendMessage(user.id, t.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
             }
           }
         }

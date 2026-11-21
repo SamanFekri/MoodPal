@@ -1230,6 +1230,36 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }
+    /* ---- right-to-left (Farsi): mirror what flexbox doesn't mirror on its own ---- */
+    [dir="rtl"] .tab-indicator { left: auto; right: calc(4px + var(--active, 0) * (100% - 8px) / var(--tabs, 2)); transition: right .35s var(--ease-spring); }
+    [dir="rtl"] .switch::after { left: auto; right: 3px; }
+    [dir="rtl"] .switch.on::after { transform: translateX(-20px); }
+    [dir="rtl"] .me-card::before { left: auto; right: -20px; }
+    [dir="rtl"] .card .badge { right: auto; left: 10px; }
+    [dir="rtl"] .card .mb-chip { left: auto; right: 10px; }
+    [dir="rtl"] .sheet .close { right: auto; left: 14px; }
+    [dir="rtl"] .timeline { padding-left: 0; padding-right: 52px; }
+    [dir="rtl"] .timeline::before { left: auto; right: 22px; }
+    [dir="rtl"] .tl-item .tl-ico { left: auto; right: -46px; }
+    [dir="rtl"] .bubble.user { border-bottom-right-radius: 20px; border-bottom-left-radius: 6px; }
+    [dir="rtl"] .bubble.assistant { border-bottom-left-radius: 20px; border-bottom-right-radius: 6px; }
+    /* chat text lines up by its own language (a Russian message in a Farsi app, or the other way round) */
+    .bubble, .note, .tl-note, .row-sub { unicode-bidi: plaintext; }
+    [dir="rtl"] .me-body .note, [dir="rtl"] .model, [dir="rtl"] .tz-row, [dir="rtl"] .widget-cta, [dir="rtl"] .mb-visibility { text-align: right; }
+    [dir="rtl"] .mb-visibility b { margin-left: 0; margin-right: auto; }
+    [dir="rtl"] .row-right, [dir="rtl"] .kv .v { text-align: left; }
+    [dir="rtl"] .mb-li { margin-right: 0; margin-left: 6px; }
+    [dir="rtl"] .af-label span { margin-left: 0; margin-right: 4px; }
+    [dir="rtl"] .widget-cta > .ui-icon:last-child, [dir="rtl"] .ui-icon.flip-rtl { transform: scaleX(-1); }
+    [dir="rtl"] .mb-cta .cast { right: auto; left: -6px; }
+    /* the I/E, S/N... bars read left to right in every language (the letters sit on fixed sides) */
+    [dir="rtl"] .mb-dim { direction: ltr; }
+    /* codes, keys, links and model ids stay left to right inside Farsi text */
+    [dir="rtl"] code, [dir="rtl"] .link-box, [dir="rtl"] input[type="password"], [dir="rtl"] .keyrow code { direction: ltr; unicode-bidi: isolate; }
+    /* the language picker above the settings tabs */
+    .lang-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+    .lang-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.8235rem; color: var(--hint); }
+    .lang-opts { display: flex; gap: 6px; flex-wrap: wrap; }
   </style>
   <script>
     // the largest accessibility text sizes would overflow the fixed parts of the layout: cap 1rem at 30px (176%)
@@ -1253,40 +1283,40 @@
       <template v-else-if="publicProfile">
         <div class="public-hero">
           <div class="avatar" :style="{ '--hue': 265 }"><ui-icon name="brain" :size="30"></ui-icon></div>
-          <h1>{{ publicName }}'s personality</h1>
-          <p>An approximate profile from MoodPal tests and conversations</p>
+          <h1>{{ $t('{name}\'s personality', { name: publicName }) }}</h1>
+          <p>{{ $t('An approximate profile from MoodPal tests and conversations') }}</p>
         </div>
         <personality-view :profile="publicProfile" animate-key="public"></personality-view>
         <div class="public-foot">
-          <a :href="botLink" target="_blank">Make your own with MoodPal →</a>
-          <small>Not a clinical or medical diagnosis.</small>
+          <a :href="botLink" target="_blank">{{ $t('Make your own with MoodPal →') }}</a>
+          <small>{{ $t('Not a clinical or medical diagnosis.') }}</small>
         </div>
       </template>
       <div v-else class="state">
         <div class="art"><ui-icon name="link"></ui-icon></div>
-        <h2>Link not available</h2>
-        <p>This personality profile is private or the link has expired.</p>
-        <a class="btn" :href="botLink">Open MoodPal</a>
+        <h2>{{ $t('Link not available') }}</h2>
+        <p>{{ $t('This personality profile is private or the link has expired.') }}</p>
+        <a class="btn" :href="botLink">{{ $t('Open MoodPal') }}</a>
       </div>
     </template>
 
     <!-- ================= SHARED MBTI-STYLE RESULT (/result/ENFP) ================= -->
     <template v-else-if="mode === 'result'">
       <template v-if="isMbtiType(resultType)">
-        <mbti-card :mbti="{ type: resultType }" actions :retake="false" kicker="MoodPal personality" letters-label="The four letters" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @save-image="saveMbtiCard"></mbti-card>
-        <a class="btn mb-share" :href="mbtiTestLink" target="_blank" :style="mbtiStyleFor(resultType)" style="display:flex;text-decoration:none;margin-bottom:14px">Which one are you? Take the test</a>
+        <mbti-card :mbti="{ type: resultType }" actions :retake="false" :kicker="$t('MoodPal personality')" :letters-label="$t('The four letters')" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @save-image="saveMbtiCard"></mbti-card>
+        <a class="btn mb-share" :href="mbtiTestLink" target="_blank" :style="mbtiStyleFor(resultType)" style="display:flex;text-decoration:none;margin-bottom:14px">{{ $t('Which one are you? Take the test') }}</a>
         <section class="section">
-          <h3>Meet the cast <span class="sub">16 Moodlings</span></h3>
+          <h3>{{ $t('Meet the cast') }} <span class="sub">{{ $t('16 Moodlings') }}</span></h3>
           <mbti-cast :current="resultType" @pick="goToResult"></mbti-cast>
         </section>
-        <div class="public-foot"><small>A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.</small></div>
+        <div class="public-foot"><small>{{ $t('A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.') }}</small></div>
       </template>
       <template v-else>
         <div class="state">
           <div class="mb-mystery"><mbti-character type="ENFP"></mbti-character></div>
-          <h2>That's not one of the 16 types</h2>
-          <p>Pick a Moodling below, or take the test to find yours.</p>
-          <a class="btn" :href="mbtiTestLink" target="_blank">Take the test</a>
+          <h2>{{ $t('That\'s not one of the 16 types') }}</h2>
+          <p>{{ $t('Pick a Moodling below, or take the test to find yours.') }}</p>
+          <a class="btn" :href="mbtiTestLink" target="_blank">{{ $t('Take the test') }}</a>
         </div>
         <section class="section"><mbti-cast @pick="goToResult"></mbti-cast></section>
       </template>
@@ -1300,12 +1330,12 @@
         <div v-if="tab === 'friends'" key="friends">
           <header class="header">
             <div>
-              <p class="greeting" v-if="firstName">Hi, {{ firstName }}</p>
-              <h1>Friends' moods</h1>
+              <p class="greeting" v-if="firstName">{{ $t('Hi, {name}', { name: firstName }) }}</p>
+              <h1>{{ $t('Friends\' moods') }}</h1>
             </div>
             <div class="header-right">
-              <span class="pill" v-if="!loadingFriends">{{ friends.length }} {{ friends.length === 1 ? 'friend' : 'friends' }}</span>
-              <button class="icon-btn" :class="{ spinning: loadingFriends }" @click="refresh" aria-label="Refresh">
+              <span class="pill" v-if="!loadingFriends">{{ $tn(friends.length, '{n} friend', '{n} friends') }}</span>
+              <button class="icon-btn" :class="{ spinning: loadingFriends }" @click="refresh" :aria-label="$t('Refresh')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
               </button>
             </div>
@@ -1314,10 +1344,10 @@
           <!-- someone asked me to be their support friend -->
           <div v-for="p in (support?.supporting || []).filter(p => p.status === 'pending')" :key="'inv' + p.id" class="sup-invite">
             <span class="ic"><ui-icon name="heart-handshake" :size="20"></ui-icon></span>
-            <div class="t"><b>{{ p.fullname }} asked you to be a support friend</b><small>You'd get a short message when they're having a hard time.</small>
+            <div class="t"><b>{{ $t('{name} asked you to be a support friend', { name: p.fullname }) }}</b><small>{{ $t('You\'d get a short message when they\'re having a hard time.') }}</small>
               <div class="row-actions" style="margin-top:8px">
-                <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">Yes, I'm in</button>
-                <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">Not now</button>
+                <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">{{ $t('Yes, I\'m in') }}</button>
+                <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">{{ $t('Not now') }}</button>
               </div>
             </div>
           </div>
@@ -1329,23 +1359,23 @@
                 <span v-if="failed.me" class="sticker-fallback">{{ myMood.mood.emoji }}</span>
               </div>
               <div class="me-body">
-                <div class="me-label">Your mood</div>
-                <div class="me-mood">{{ myMood.mood.name }}</div>
+                <div class="me-label">{{ $t('Your mood') }}</div>
+                <div class="me-mood">{{ moodName(myMood.mood) }}</div>
                 <div class="when" :title="new Date(myMood.timestamp).toLocaleString()"><span class="dot" :class="freshness(myMood.timestamp)"></span>{{ formatWhen(myMood.timestamp) }}</div>
                 <div v-if="myMood.note" class="note">“{{ myMood.note }}”</div>
                 <button class="btn small" @click="updateMood">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                  Update mood
+                  {{ $t('Update mood') }}
                 </button>
               </div>
             </template>
             <template v-else>
               <div class="me-empty"><ui-icon name="smile-plus" :size="38" :stroke="1.7"></ui-icon></div>
               <div class="me-body">
-                <div class="me-label">Your mood</div>
-                <div class="me-mood">Not set yet</div>
-                <div class="me-hint">Tell the bot how you feel and it will show up here.</div>
-                <button class="btn small" @click="updateMood"><ui-icon name="smile-plus"></ui-icon>Set my mood</button>
+                <div class="me-label">{{ $t('Your mood') }}</div>
+                <div class="me-mood">{{ $t('Not set yet') }}</div>
+                <div class="me-hint">{{ $t('Tell the bot how you feel and it will show up here.') }}</div>
+                <button class="btn small" @click="updateMood"><ui-icon name="smile-plus"></ui-icon>{{ $t('Set my mood') }}</button>
               </div>
             </template>
           </section>
@@ -1358,40 +1388,40 @@
 
           <transition-group v-else-if="friends.length > 0" name="list" tag="div" class="grid">
             <div v-for="(friend, i) in friends" :key="friend.id" class="card" :style="{ '--i': i, '--hue': hueFor(friend.mood.code) }" @click="openFriend(friend)">
-              <span v-if="friend.personality_shared" class="badge" title="Shares their personality"><ui-icon name="brain" :size="15"></ui-icon></span>
+              <span v-if="friend.personality_shared" class="badge" :title="$t('Shares their personality')"><ui-icon name="brain" :size="15"></ui-icon></span>
               <span v-if="friend.mbti" class="mb-chip" :style="mbtiStyleFor(friend.mbti)" :title="friend.mbti + ' · ' + mbtiTitle(friend.mbti)">{{ friend.mbti }}</span>
               <div class="sticker" :class="{ loaded: loaded[friend.id] }" :data-id="friend.id" :data-tgs="friend.tgs" ref="stickers">
                 <span v-if="failed[friend.id]" class="sticker-fallback">{{ friend.mood.emoji }}</span>
               </div>
               <div class="name">{{ friend.fullname }}</div>
-              <div class="mood">{{ friend.mood.name }}</div>
+              <div class="mood">{{ moodName(friend.mood) }}</div>
               <div class="when" :title="new Date(friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(friend.timestamp)"></span>{{ formatWhen(friend.timestamp) }}</div>
             </div>
           </transition-group>
 
           <div v-else-if="friendsError" class="state">
             <div class="art"><ui-icon name="wifi-off"></ui-icon></div>
-            <h2>Couldn't load your friends</h2>
+            <h2>{{ $t('Couldn\'t load your friends') }}</h2>
             <p>{{ friendsError }}</p>
-            <button class="btn" @click="refresh">Try again</button>
+            <button class="btn" @click="refresh">{{ $t('Try again') }}</button>
           </div>
 
           <div v-else class="state">
             <div class="art"><ui-icon name="user-plus"></ui-icon></div>
-            <h2>No friends yet</h2>
-            <p>Share your link so a friend can follow your mood. Once they allow you back, they'll show up here.</p>
-            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
+            <h2>{{ $t('No friends yet') }}</h2>
+            <p>{{ $t('Share your link so a friend can follow your mood. Once they allow you back, they\'ll show up here.') }}</p>
+            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>{{ $t('Add a friend') }}</button>
           </div>
 
           <!-- sits right after the last friend card, scrolling with the list -->
           <div v-if="friends.length > 0" class="add-friend-end">
-            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add a friend</button>
+            <button class="btn" @click="addFriend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>{{ $t('Add a friend') }}</button>
           </div>
 
           <!-- below the friends, so the moods come first -->
           <button class="widget-cta" @click="openWidgetBuilder">
             <span class="ic"><ui-icon name="smartphone" :size="20"></ui-icon></span>
-            <span class="t"><b>Home screen widget</b><small>Your mood and your friends', right on your home screen</small></span>
+            <span class="t"><b>{{ $t('Home screen widget') }}</b><small>{{ $t('Your mood and your friends\', right on your home screen') }}</small></span>
             <ui-icon name="chevron-right" :size="18"></ui-icon>
           </button>
         </div>
@@ -1400,12 +1430,12 @@
         <div v-else-if="tab === 'personality'" key="personality">
           <header class="header">
             <div>
-              <p class="greeting">Approximate, evolving</p>
-              <h1>My personality</h1>
+              <p class="greeting">{{ $t('Approximate, evolving') }}</p>
+              <h1>{{ $t('My personality') }}</h1>
             </div>
             <div class="header-right">
-              <span class="pill" v-if="personality?.profile">{{ personality.profile.measured }}/{{ personality.profile.total }} traits</span>
-              <button class="icon-btn" :class="{ spinning: loadingPersonality }" @click="fetchPersonality(true)" aria-label="Refresh">
+              <span class="pill" v-if="personality?.profile">{{ $t('{a}/{b} traits', { a: personality.profile.measured, b: personality.profile.total }) }}</span>
+              <button class="icon-btn" :class="{ spinning: loadingPersonality }" @click="fetchPersonality(true)" :aria-label="$t('Refresh')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
               </button>
             </div>
@@ -1414,51 +1444,51 @@
           <template v-if="(loadingPersonality || !fetchedAt.personality) && !personality && !personalityError">
             <div class="section" v-for="n in 3" :key="'psk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
-          <div v-else-if="!personality && personalityError" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load your personality</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">Try again</button></div>
+          <div v-else-if="!personality && personalityError" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>{{ $t('Couldn\'t load your personality') }}</h2><p>{{ personalityError }}</p><button class="btn" @click="fetchPersonality(true)">{{ $t('Try again') }}</button></div>
 
           <template v-else-if="personality">
             <mbti-card v-if="personality.profile?.mbti" :mbti="personality.profile.mbti" actions :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
             <button v-if="personality.profile?.mbti && settings?.privacy" class="mb-visibility" @click="setTab('settings')">
               <span class="dot" :class="{ on: settings.privacy.mbti_shared }"></span>
-              {{ settings.privacy.mbti_shared ? 'Friends who follow your mood can see your Moodling' : 'Your Moodling is hidden from friends' }}
-              <b>Change</b>
+              {{ $t(settings.privacy.mbti_shared ? 'Friends who follow your mood can see your Moodling' : 'Your Moodling is hidden from friends') }}
+              <b>{{ $t('Change') }}</b>
             </button>
             <div v-else-if="mbtiTest" class="mb-cta" @click="startTest(mbtiTest)">
-              <h3>Which Moodling are you?</h3>
-              <p>{{ mbtiTest.question_count }} quick questions, 16 cartoon characters. Just for fun, inspired by MBTI.</p>
-              <button class="btn">Take the test</button>
+              <h3>{{ $t('Which Moodling are you?') }}</h3>
+              <p>{{ $t('{n} quick questions, 16 cartoon characters. Just for fun, inspired by MBTI.', { n: mbtiTest.question_count }) }}</p>
+              <button class="btn">{{ $t('Take the test') }}</button>
               <div class="cast"><mbti-character v-for="t in ['ENFP', 'INTP', 'ESFJ', 'ISTP']" :key="t" :type="t"></mbti-character></div>
             </div>
             <personality-view v-if="personality.profile" :profile="personality.profile" :animate-key="personalityAnimKey" :show-mbti="false"></personality-view>
             <div v-else class="state" style="padding-top: 24px">
               <div class="art"><ui-icon name="brain"></ui-icon></div>
-              <h2>No profile yet</h2>
-              <p>Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.</p>
-              <button class="btn" @click="startTest(personality.tests[0])"><ui-icon name="clipboard-list"></ui-icon>Take the Big Five test</button>
+              <h2>{{ $t('No profile yet') }}</h2>
+              <p>{{ $t('Take a short test in the chat and your personality will appear here, with a radar, trait bars and everything.') }}</p>
+              <button class="btn" @click="startTest(personality.tests[0])"><ui-icon name="clipboard-list"></ui-icon>{{ $t('Take the Big Five test') }}</button>
             </div>
 
             <!-- all 16 Moodlings -->
             <section class="section" :style="{ '--i': 3 }">
-              <h3>Meet the Moodlings <span class="sub">16 characters · tap one</span></h3>
+              <h3>{{ $t('Meet the Moodlings') }} <span class="sub">{{ $t('16 characters · tap one') }}</span></h3>
               <mbti-cast :current="personality.profile?.mbti?.type || ''" @pick="openMbtiCharacter"></mbti-cast>
             </section>
 
             <!-- unfinished test -->
             <div class="resume" v-if="quizSession && !quiz">
-              <div class="t"><b>Continue {{ quizSession.test.name }}</b><span>{{ quizSession.answered }}/{{ quizSession.total }} answered</span></div>
-              <button class="btn" @click="openQuiz(quizSession)">▶️ Continue</button>
+              <div class="t"><b>{{ $t('Continue {name}', { name: quizSession.test.name }) }}</b><span>{{ $t('{a}/{b} answered', { a: quizSession.answered, b: quizSession.total }) }}</span></div>
+              <button class="btn" @click="openQuiz(quizSession)">▶️ {{ $t('Continue') }}</button>
             </div>
 
             <!-- tests -->
             <section class="section" :style="{ '--i': 4 }">
-              <h3>Tests <span class="sub">{{ personality.tests.filter(t => t.completed).length }}/{{ personality.tests.length }} done</span></h3>
+              <h3>{{ $t('Tests') }} <span class="sub">{{ $t('{a}/{b} done', { a: personality.tests.filter(x => x.completed).length, b: personality.tests.length }) }}</span></h3>
               <div v-for="t in personality.tests" :key="t.key" class="test-row" @click="startTest(t)">
                 <div class="t-ico" :class="{ done: t.completed }"><ui-icon :name="t.completed ? 'circle-check' : 'clipboard-list'" :size="20"></ui-icon></div>
                 <div class="t-body">
                   <div class="t-title">{{ t.name }}</div>
                   <div class="t-desc">{{ t.description }}</div>
                 </div>
-                <div class="t-meta">{{ t.question_count }} q · ~{{ Math.max(1, Math.round(t.question_count * 8 / 60)) }} min</div>
+                <div class="t-meta">{{ $t('{n} q · ~{m} min', { n: t.question_count, m: Math.max(1, Math.round(t.question_count * 8 / 60)) }) }}</div>
               </div>
             </section>
 
@@ -1466,23 +1496,23 @@
             <section class="section" :style="{ '--i': 5 }">
               <div class="share-row">
                 <div>
-                  <div class="s-title">Share my personality</div>
-                  <div class="s-desc">Friends who follow your mood can tap your card to see it, and you get a link to share with anyone.</div>
+                  <div class="s-title">{{ $t('Share my personality') }}</div>
+                  <div class="s-desc">{{ $t('Friends who follow your mood can tap your card to see it, and you get a link to share with anyone.') }}</div>
                 </div>
                 <button class="switch" :class="{ on: personality.sharing.enabled }" :disabled="!personality.profile || savingSharing" @click="toggleSharing" role="switch" :aria-checked="personality.sharing.enabled"></button>
               </div>
               <template v-if="personality.sharing.enabled && personality.sharing.public_url">
                 <div class="share-actions">
-                  <button class="btn" @click="sharePersonality"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share link</button>
-                  <button class="btn ghost" @click="copyLink(personality.sharing.public_url)">Copy</button>
-                  <a class="btn ghost" :href="personality.sharing.public_url" target="_blank">Preview</a>
+                  <button class="btn" @click="sharePersonality"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>{{ $t('Share link') }}</button>
+                  <button class="btn ghost" @click="copyLink(personality.sharing.public_url)">{{ $t('Copy') }}</button>
+                  <a class="btn ghost" :href="personality.sharing.public_url" target="_blank">{{ $t('Preview') }}</a>
                 </div>
                 <div class="link-box">{{ personality.sharing.public_url }}</div>
               </template>
-              <div v-else-if="!personality.profile" class="s-desc" style="margin-top:10px">Take a test first to have something to share.</div>
+              <div v-else-if="!personality.profile" class="s-desc" style="margin-top:10px">{{ $t('Take a test first to have something to share.') }}</div>
             </section>
 
-            <p class="disclaimer"><ui-icon name="info" :size="14"></ui-icon> This is an approximate personality profile based on short self-report questionnaires and conversation patterns. It is not a clinical or medical diagnosis.</p>
+            <p class="disclaimer"><ui-icon name="info" :size="14"></ui-icon> {{ $t('This is an approximate personality profile based on short self-report questionnaires and conversation patterns. It is not a clinical or medical diagnosis.') }}</p>
           </template>
         </div>
 
@@ -1588,7 +1618,7 @@
               <button class="btn ghost" :disabled="admin.loading" @click="loadMoreAdmin">{{ admin.loading ? 'Loading…' : 'Load more users' }}</button>
             </div>
           </template>
-          <div v-else-if="admin.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">Try again</button></div>
+          <div v-else-if="admin.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>Couldn't load users</h2><p>{{ admin.error }}</p><button class="btn ghost" @click="fetchAdmin()">{{ $t('Try again') }}</button></div>
           <div v-else class="state"><div class="art"><ui-icon name="search-x"></ui-icon></div><h2>No one found</h2><p v-if="admin.query">Nobody matches “{{ admin.query }}”<template v-if="adminChips.length"> with these filters</template>.</p><p v-else-if="adminChips.length">Nobody matches these filters yet.</p><p v-else>No users yet.</p><button v-if="adminChips.length" class="btn ghost" @click="clearAdminFilters">Clear filters</button></div>
           </template>
 
@@ -1597,7 +1627,7 @@
             <template v-if="!graph && !graphError">
               <div class="section" :style="{ '--i': 1 }"><div class="shimmer sk-line" style="width:40%;margin-top:0"></div><div class="shimmer" style="height:280px;border-radius:16px;margin-top:10px"></div></div>
             </template>
-            <div v-else-if="!graph" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">Try again</button></div>
+            <div v-else-if="!graph" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load the graph</h2><p>{{ graphError }}</p><button class="btn" @click="fetchGraph()">{{ $t('Try again') }}</button></div>
             <div v-else-if="graph.nodes.length === 0" class="state"><div class="art"><ui-icon name="waypoints"></ui-icon></div><h2>Nobody follows anyone yet</h2><p>When people share their mood with each other, the connections show up here.</p></div>
             <template v-else>
               <follow-graph ref="followGraph" :nodes="graph.nodes" :edges="graph.edges" :selected-id="graphSelectedId"
@@ -1629,7 +1659,7 @@
             <template v-if="!bc && !bcError">
               <div class="section" v-for="n in 2" :key="'bcsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!bc" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">Try again</button></div>
+            <div v-else-if="!bc" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">{{ $t('Try again') }}</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <h3>New message <span class="sub">to everyone</span></h3>
@@ -1792,7 +1822,7 @@
             <template v-if="!remAdmin && !remAdminError">
               <div class="section" v-for="n in 3" :key="'rsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!remAdmin" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load reminders</h2><p>{{ remAdminError }}</p><button class="btn" @click="fetchReminderAdmin()">Try again</button></div>
+            <div v-else-if="!remAdmin" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load reminders</h2><p>{{ remAdminError }}</p><button class="btn" @click="fetchReminderAdmin()">{{ $t('Try again') }}</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <div class="share-row">
@@ -1891,7 +1921,7 @@
             <template v-if="!backup && !backupError">
               <div class="section" v-for="n in 3" :key="'bsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
             </template>
-            <div v-else-if="!backup" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load backup settings</h2><p>{{ backupError }}</p><button class="btn" @click="fetchBackup()">Try again</button></div>
+            <div v-else-if="!backup" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load backup settings</h2><p>{{ backupError }}</p><button class="btn" @click="fetchBackup()">{{ $t('Try again') }}</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <h3>GotYouBro <span class="sub">{{ backup.connected ? 'connected' : 'not set' }}</span></h3>
@@ -1981,12 +2011,12 @@
         <div v-else-if="tab === 'logs'" key="logs">
           <header class="header">
             <div>
-              <p class="greeting">Your history</p>
-              <h1>Mood log</h1>
+              <p class="greeting">{{ $t('Your history') }}</p>
+              <h1>{{ $t('Mood log') }}</h1>
             </div>
             <div class="header-right">
-              <span class="pill" v-if="logs.moods.length">{{ logs.moods.length }} shown</span>
-              <button class="icon-btn" :class="{ spinning: logs.loading }" @click="fetchLogs()" aria-label="Refresh">
+              <span class="pill" v-if="logs.moods.length">{{ $t('{n} shown', { n: logs.moods.length }) }}</span>
+              <button class="icon-btn" :class="{ spinning: logs.loading }" @click="fetchLogs()" :aria-label="$t('Refresh')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
               </button>
             </div>
@@ -2009,11 +2039,11 @@
           <template v-if="(logs.loading || !fetchedAt.logs) && logs.moods.length === 0 && !logs.error">
             <div v-for="n in 6" :key="'lsk' + n" class="skeleton row" :style="{ '--i': n }"><div class="shimmer sk-avatar"></div><div style="flex:1"><div class="shimmer sk-line" style="width:55%;margin-top:0"></div><div class="shimmer sk-line short"></div></div></div>
           </template>
-          <div v-else-if="logs.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>Couldn't load the log</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">Try again</button></div>
+          <div v-else-if="logs.error" class="state"><div class="art"><ui-icon name="triangle-alert"></ui-icon></div><h2>{{ $t('Couldn\'t load the log') }}</h2><p>{{ logs.error }}</p><button class="btn ghost" @click="fetchLogs()">{{ $t('Try again') }}</button></div>
           <template v-else-if="logs.moods.length > 0">
             <div class="export-card">
-              <div><b>Download my moods</b><span>Every mood with its note, day and hour, as a file that opens in Excel or Google Sheets. It arrives in your chat with the bot.</span></div>
-              <button class="btn" :disabled="exportBusy" @click="exportMoods"><ui-icon name="download" :size="16"></ui-icon>{{ exportBusy ? 'Sending…' : 'Export' }}</button>
+              <div><b>{{ $t('Download my moods') }}</b><span>{{ $t('Every mood with its note, day and hour, as a file that opens in Excel or Google Sheets. It arrives in your chat with the bot.') }}</span></div>
+              <button class="btn" :disabled="exportBusy" @click="exportMoods"><ui-icon name="download" :size="16"></ui-icon>{{ $t(exportBusy ? 'Sending…' : 'Export') }}</button>
             </div>
             <div v-for="(m, i) in logs.moods" :key="m.timestamp" class="row-card" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
               <div class="avatar anim">
@@ -2022,276 +2052,283 @@
                 </div>
               </div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ m.mood.name }}</span></div>
-                <div class="row-sub">{{ m.note ? '“' + m.note + '”' : 'No note' }}</div>
+                <div class="row-title"><span class="n">{{ moodName(m.mood) }}</span></div>
+                <div class="row-sub">{{ m.note ? '“' + m.note + '”' : $t('No note') }}</div>
               </div>
               <div class="row-right">
                 <div class="when"><span class="dot" :class="freshness(m.timestamp)"></span>{{ formatWhen(m.timestamp, true) }}</div>
               </div>
             </div>
             <div class="load-more" v-if="logs.has_more">
-              <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ logs.loadingMore ? 'Loading…' : 'Load older' }}</button>
+              <button class="btn ghost" :disabled="logs.loadingMore" @click="fetchLogs({ append: true })">{{ $t(logs.loadingMore ? 'Loading…' : 'Load older') }}</button>
             </div>
           </template>
-          <div v-else class="state"><div class="art"><ui-icon name="scroll-text"></ui-icon></div><h2>No moods yet</h2><p>Set your first mood in the bot and it will show up here.</p></div>
+          <div v-else class="state"><div class="art"><ui-icon name="scroll-text"></ui-icon></div><h2>{{ $t('No moods yet') }}</h2><p>{{ $t('Set your first mood in the bot and it will show up here.') }}</p></div>
         </div>
         <!-- ---------- Talk ---------- -->
         <div v-else-if="tab === 'talk'" key="talk">
           <header class="header">
             <div>
-              <p class="greeting">AI companion</p>
-              <h1>Talk</h1>
+              <p class="greeting">{{ $t('AI companion') }}</p>
+              <h1>{{ $t('Talk') }}</h1>
             </div>
             <div class="header-right" v-if="talk.data && talk.data.active">
-              <button class="btn ghost small" style="margin-top:0" :disabled="talk.sending || talk.ending" @click="endTalk"><ui-icon name="x" :size="15"></ui-icon>End talk</button>
+              <button class="btn ghost small" style="margin-top:0" :disabled="talk.sending || talk.ending" @click="endTalk"><ui-icon name="x" :size="15"></ui-icon>{{ $t('End talk') }}</button>
             </div>
           </header>
 
           <template v-if="!talk.data && !talk.error">
             <div class="section" v-for="n in 2" :key="'tsk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
-          <div v-else-if="!talk.data" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load Talk</h2><p>{{ talk.error }}</p><button class="btn" @click="fetchTalk()">Try again</button></div>
+          <div v-else-if="!talk.data" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>{{ $t('Couldn\'t load Talk') }}</h2><p>{{ talk.error }}</p><button class="btn" @click="fetchTalk()">{{ $t('Try again') }}</button></div>
           <div v-else-if="!talk.data.has_key" class="state">
             <div class="art"><ui-icon name="key-round"></ui-icon></div>
-            <h2>Talk needs your OpenAI key</h2>
-            <p>Talk runs on your own OpenAI key, so nobody else pays for your conversations. Add one in Settings, then come back here.</p>
-            <button class="btn" @click="setTab('settings')"><ui-icon name="settings" :size="16"></ui-icon>Add my key</button>
+            <h2>{{ $t('Talk needs your OpenAI key') }}</h2>
+            <p>{{ $t('Talk runs on your own OpenAI key, so nobody else pays for your conversations. Add one in Settings, then come back here.') }}</p>
+            <button class="btn" @click="setTab('settings')"><ui-icon name="settings" :size="16"></ui-icon>{{ $t('Add my key') }}</button>
           </div>
           <template v-else>
             <div class="talk-intro">
               <ui-icon name="bot" :size="18"></ui-icon>
-              <div>You're talking to an <b>AI</b>, not a human and not a therapist. It can be wrong, and this isn't therapy or medical advice. If you're in danger, contact your local emergency number or a crisis line right away. Messages go to OpenAI on <b>your own key</b> ({{ talk.data.model }}).</div>
+              <div v-html="$t('talkIntroHtml', { model: escapeHtml(talk.data.model) })"></div>
             </div>
 
             <div class="talk-list">
-              <div v-if="!talk.data.messages.length && !talk.pending" class="talk-empty"><b>What's on your mind?</b>Say anything, big or small. MoodPal knows how you've been feeling lately and what you've told it before.</div>
+              <div v-if="!talk.data.messages.length && !talk.pending" class="talk-empty"><b>{{ $t('What\'s on your mind?') }}</b>{{ $t('Say anything, big or small. MoodPal knows how you\'ve been feeling lately and what you\'ve told it before.') }}</div>
               <template v-for="(m, i) in talk.data.messages" :key="'tm' + i">
                 <div class="bubble" :class="m.role">{{ m.content }}</div>
-                <div v-if="m.role === 'assistant' && (m.risk === 'medium' || m.risk === 'high')" class="talk-safety"><b>If you might be in danger, please don't wait on a bot.</b>Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.</div>
-                <div v-if="m.role === 'assistant' && talkAssistantIndex(i) % 8 === 0" class="talk-reminder">Reminder: I'm an AI, not a therapist, and I can be wrong.</div>
+                <div v-if="m.role === 'assistant' && (m.risk === 'medium' || m.risk === 'high')" class="talk-safety"><b>{{ $t('If you might be in danger, please don\'t wait on a bot.') }}</b>{{ $t('Reach out to someone you trust, a local crisis line, or your emergency number right now. I\'m an AI and I can\'t keep you safe. A real person can.') }}</div>
+                <div v-if="m.role === 'assistant' && talkAssistantIndex(i) % 8 === 0" class="talk-reminder">{{ $t('Reminder: I\'m an AI, not a therapist, and I can be wrong.') }}</div>
               </template>
               <div v-if="talk.pending" class="bubble user">{{ talk.pending }}</div>
-              <div v-if="talk.sending" class="bubble assistant typing" aria-label="MoodPal is typing"><i></i><i></i><i></i></div>
+              <div v-if="talk.sending" class="bubble assistant typing" :aria-label="$t('MoodPal is typing')"><i></i><i></i><i></i></div>
             </div>
 
             <div class="composer">
-              <textarea ref="talkInput" v-model="talk.input" rows="1" :maxlength="TALK_MAX" placeholder="Message MoodPal…" :disabled="talk.sending" @input="growTalkInput" @keydown.enter.exact="onTalkEnter"></textarea>
-              <button class="send" :disabled="talk.sending || !talk.input.trim()" @click="sendTalk" aria-label="Send"><ui-icon name="send" :size="18"></ui-icon></button>
+              <textarea ref="talkInput" v-model="talk.input" rows="1" :maxlength="TALK_MAX" :placeholder="$t('Message MoodPal…')" :disabled="talk.sending" @input="growTalkInput" @keydown.enter.exact="onTalkEnter"></textarea>
+              <button class="send" :disabled="talk.sending || !talk.input.trim()" @click="sendTalk" :aria-label="$t('Send')"><ui-icon name="send" :size="18"></ui-icon></button>
             </div>
-            <p class="talk-foot">Same conversation as 💬 Talk in the bot. It ends when you tap End talk, or after 2 quiet hours.</p>
+            <p class="talk-foot">{{ $t('Same conversation as 💬 Talk in the bot. It ends when you tap End talk, or after 2 quiet hours.') }}</p>
           </template>
         </div>
         <!-- ---------- Settings ---------- -->
         <div v-else-if="tab === 'settings'" key="settings">
           <header class="header">
             <div>
-              <p class="greeting">Your account</p>
-              <h1>Settings</h1>
+              <p class="greeting">{{ $t('Your account') }}</p>
+              <h1>{{ $t('Settings') }}</h1>
             </div>
           </header>
 
           <template v-if="!settings && !settingsError">
             <div class="section" v-for="n in 2" :key="'ssk' + n" :style="{ '--i': n }"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
           </template>
-          <div v-else-if="!settings" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load settings</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">Try again</button></div>
+          <div v-else-if="!settings" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>{{ $t('Couldn\'t load settings') }}</h2><p>{{ settingsError }}</p><button class="btn" @click="fetchSettings()">{{ $t('Try again') }}</button></div>
           <template v-else>
+            <!-- the language MoodPal speaks, here and in the bot (src/i18n) -->
+            <div class="lang-row" v-if="settings.language">
+              <span class="lang-label"><ui-icon name="languages" :size="16"></ui-icon>{{ $t('Language') }}</span>
+              <div class="lang-opts" role="radiogroup">
+                <button v-for="l in settings.language.choices" :key="'lang' + l.code" class="af-opt" :class="{ on: settings.language.current === l.code }" :dir="l.dir" :lang="l.code" role="radio" :aria-checked="settings.language.current === l.code" :disabled="languageBusy" @click="setLanguage(l.code)">{{ l.flag }} {{ l.name }}</button>
+              </div>
+            </div>
             <!-- settings are split into tabs; the last one used is remembered on this device -->
             <div class="set-tabs" role="tablist">
-              <button v-for="t in SETTINGS_TABS" :key="'st' + t.key" class="set-tab" :class="{ on: settingsTab === t.key }" role="tab" :aria-selected="settingsTab === t.key" @click="setSettingsTab(t.key)"><ui-icon :name="t.icon" :size="15"></ui-icon>{{ t.label }}</button>
+              <button v-for="t in SETTINGS_TABS" :key="'st' + t.key" class="set-tab" :class="{ on: settingsTab === t.key }" role="tab" :aria-selected="settingsTab === t.key" @click="setSettingsTab(t.key)"><ui-icon :name="t.icon" :size="15"></ui-icon>{{ $t(t.label) }}</button>
             </div>
             <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 0 }">
-              <h3>OpenAI key <span class="sub">{{ settings.openai.has_key ? 'connected' : 'not set' }}</span></h3>
-              <div class="note-box">Talk and AI insights run on your own OpenAI key, so nobody else spends your credits. The key is verified once, stored encrypted, and only ever used for your account.</div>
+              <h3>{{ $t('OpenAI key') }} <span class="sub">{{ $t(settings.openai.has_key ? 'connected' : 'not set') }}</span></h3>
+              <div class="note-box">{{ $t('Talk and AI insights run on your own OpenAI key, so nobody else spends your credits. The key is verified once, stored encrypted, and only ever used for your account.') }}</div>
               <div class="keyrow" v-if="settings.openai.has_key">
                 <code>{{ settings.openai.key_hint }}</code>
-                <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" :disabled="settingsBusy" @click="removeKey">Remove</button>
+                <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" :disabled="settingsBusy" @click="removeKey">{{ $t('Remove') }}</button>
               </div>
               <div class="field">
-                <input v-model="keyInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="settings.openai.has_key ? 'Paste a new key to replace it' : 'sk-…'">
-                <button class="btn" :disabled="settingsBusy || !keyInput.trim()" @click="saveKey">{{ settingsBusy ? 'Checking…' : 'Save' }}</button>
+                <input v-model="keyInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="settings.openai.has_key ? $t('Paste a new key to replace it') : 'sk-…'">
+                <button class="btn" :disabled="settingsBusy || !keyInput.trim()" @click="saveKey">{{ $t(settingsBusy ? 'Checking…' : 'Save') }}</button>
               </div>
-              <div class="note-box">Create one at platform.openai.com → API keys.</div>
+              <div class="note-box">{{ $t('Create one at platform.openai.com → API keys.') }}</div>
             </section>
 
             <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 1 }">
-              <h3>Model <span class="sub">{{ settings.openai.model }}</span></h3>
-              <div class="note-box">Which model Talk and your weekly insights use. Costs differ per model on your OpenAI account.</div>
+              <h3>{{ $t('Model') }} <span class="sub">{{ settings.openai.model }}</span></h3>
+              <div class="note-box">{{ $t('Which model Talk and your weekly insights use. Costs differ per model on your OpenAI account.') }}</div>
               <div class="models">
                 <button v-for="m in settings.openai.models" :key="m.id" class="model" :class="{ on: settings.openai.model === m.id }" :disabled="settingsBusy" @click="setModel(m.id)">
                   <span class="radio"></span>
-                  <span><b>{{ m.name }}<template v-if="m.id === settings.openai.default_model"> · default</template></b><span>{{ m.note }} <i>({{ m.id }})</i></span></span>
+                  <span><b>{{ m.name }}<template v-if="m.id === settings.openai.default_model"> · {{ $t('default') }}</template></b><span>{{ $t(m.note) }} <i>({{ m.id }})</i></span></span>
                 </button>
               </div>
               <div class="field">
-                <input v-model="modelInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
-                <button class="btn ghost" :disabled="settingsBusy || !modelInput.trim()" @click="setModel(modelInput.trim())">Use</button>
+                <input v-model="modelInput" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="$t('Or type another model id')">
+                <button class="btn ghost" :disabled="settingsBusy || !modelInput.trim()" @click="setModel(modelInput.trim())">{{ $t('Use') }}</button>
               </div>
             </section>
 
             <!-- emotional support network (src/support/service.js) -->
             <section class="section" v-show="settingsTab === 'support'" :style="{ '--i': 2 }">
-              <h3><ui-icon name="heart-handshake" :size="17"></ui-icon> Support network <span class="sub">{{ support ? (support.settings.auto ? 'automatic on' : 'automatic off') : '…' }}</span></h3>
+              <h3><ui-icon name="heart-handshake" :size="17"></ui-icon> {{ $t('Support network') }} <span class="sub">{{ support ? $t(support.settings.auto ? 'automatic on' : 'automatic off') : '…' }}</span></h3>
               <div v-if="!support" class="shimmer sk-line" style="width:60%"></div>
               <template v-else>
                 <div class="w-head sup-desc">
-                  <div class="s-title">Support friends</div>
-                  <div class="s-desc">People who'll hear from MoodPal when you're having a hard time. They get a message and need to say yes first.</div>
+                  <div class="s-title">{{ $t('Support friends') }}</div>
+                  <div class="s-desc">{{ $t('People who\'ll hear from MoodPal when you\'re having a hard time. They get a message and need to say yes first.') }}</div>
                 </div>
                 <div v-for="c in support.contacts" :key="'sc' + c.id" class="mem-row">
                   <span class="t"><b>{{ c.fullname }}</b>
-                    <span class="sup-status" :class="c.status">{{ c.status === 'accepted' ? (c.receives ? 'Ready' : 'Turned off messages') : c.status === 'pending' ? 'Waiting for an answer' : 'Said not now' }}</span>
+                    <span class="sup-status" :class="c.status">{{ $t(c.status === 'accepted' ? (c.receives ? 'Ready' : 'Turned off messages') : c.status === 'pending' ? 'Waiting for an answer' : 'Said not now') }}</span>
                   </span>
-                  <button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(c)">Remove</button>
+                  <button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(c)">{{ $t('Remove') }}</button>
                 </div>
                 <template v-if="support.contacts.filter(c => c.status !== 'declined').length < support.max_contacts">
-                  <div v-if="!supportPicking" class="row-actions"><button class="btn ghost" :disabled="supportBusy" @click="supportPicking = true"><ui-icon name="user-plus" :size="16"></ui-icon>Add a support friend</button></div>
+                  <div v-if="!supportPicking" class="row-actions"><button class="btn ghost" :disabled="supportBusy" @click="supportPicking = true"><ui-icon name="user-plus" :size="16"></ui-icon>{{ $t('Add a support friend') }}</button></div>
                   <div v-else class="sup-pick">
-                    <div v-if="!support.candidates.length" class="muted-box">Only people who share moods with you can be support friends. Add a friend on the Friends tab first.</div>
+                    <div v-if="!support.candidates.length" class="muted-box">{{ $t('Only people who share moods with you can be support friends. Add a friend on the Friends tab first.') }}</div>
                     <div class="af-opts">
-                      <button v-for="p in support.candidates" :key="'cand' + p.id" class="af-opt" :disabled="supportBusy || !p.receives" @click="inviteSupportFriend(p)"><ui-icon name="user-plus" :size="15"></ui-icon>{{ p.fullname }}<small v-if="!p.receives"> · messages off</small></button>
-                      <button class="af-opt" @click="supportPicking = false">Cancel</button>
+                      <button v-for="p in support.candidates" :key="'cand' + p.id" class="af-opt" :disabled="supportBusy || !p.receives" @click="inviteSupportFriend(p)"><ui-icon name="user-plus" :size="15"></ui-icon>{{ p.fullname }}<small v-if="!p.receives"> · {{ $t('messages off') }}</small></button>
+                      <button class="af-opt" @click="supportPicking = false">{{ $t('Cancel') }}</button>
                     </div>
                   </div>
                 </template>
 
                 <div class="share-row sup-gap">
                   <div>
-                    <div class="s-title">Tell them automatically</div>
-                    <div class="s-desc">When you pick a hard mood, your support friends get a short, kind message. Only the mood, never your notes.</div>
+                    <div class="s-title">{{ $t('Tell them automatically') }}</div>
+                    <div class="s-desc">{{ $t('When you pick a hard mood, your support friends get a short, kind message. Only the mood, never your notes.') }}</div>
                   </div>
-                  <button class="switch" :class="{ on: support.settings.auto }" :disabled="supportBusy" @click="saveSupport({ auto: !support.settings.auto })" role="switch" :aria-checked="support.settings.auto" aria-label="Tell support friends automatically"></button>
+                  <button class="switch" :class="{ on: support.settings.auto }" :disabled="supportBusy" @click="saveSupport({ auto: !support.settings.auto })" role="switch" :aria-checked="support.settings.auto" :aria-label="$t('Tell support friends automatically')"></button>
                 </div>
-                <div class="note-box" v-if="support.settings.auto && !support.contacts.some(c => c.status === 'accepted')">Nothing is sent until a support friend says yes. Add one above.</div>
+                <div class="note-box" v-if="support.settings.auto && !support.contacts.some(c => c.status === 'accepted')">{{ $t('Nothing is sent until a support friend says yes. Add one above.') }}</div>
                 <div v-if="support.settings.auto" class="sup-block">
-                  <div class="af-label">When</div>
-                  <label class="sup-check"><input type="checkbox" :checked="support.settings.immediate" :disabled="supportBusy" @change="saveSupport({ immediate: $event.target.checked })"> Right away, after a hard mood</label>
-                  <label class="sup-check"><input type="checkbox" :checked="support.settings.repeat_on" :disabled="supportBusy" @change="saveSupport({ repeat_on: $event.target.checked })"> When it keeps happening:
-                    <select :value="support.settings.repeat_count" :disabled="supportBusy" @change="saveSupport({ repeat_count: Number($event.target.value) })"><option v-for="n in support.options.repeat_count" :key="'rc' + n" :value="n">{{ n }} times</option></select>
-                    in
-                    <select :value="support.settings.repeat_hours" :disabled="supportBusy" @change="saveSupport({ repeat_hours: Number($event.target.value) })"><option v-for="n in support.options.repeat_hours" :key="'rh' + n" :value="n">{{ n }} hours</option></select>
+                  <div class="af-label">{{ $t('When') }}</div>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.immediate" :disabled="supportBusy" @change="saveSupport({ immediate: $event.target.checked })"> {{ $t('Right away, after a hard mood') }}</label>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.repeat_on" :disabled="supportBusy" @change="saveSupport({ repeat_on: $event.target.checked })"> {{ $t('When it keeps happening:') }}
+                    <select :value="support.settings.repeat_count" :disabled="supportBusy" @change="saveSupport({ repeat_count: Number($event.target.value) })"><option v-for="n in support.options.repeat_count" :key="'rc' + n" :value="n">{{ $tn(n, '{n} times', '{n} times') }}</option></select>
+                    {{ $t('in') }}
+                    <select :value="support.settings.repeat_hours" :disabled="supportBusy" @change="saveSupport({ repeat_hours: Number($event.target.value) })"><option v-for="n in support.options.repeat_hours" :key="'rh' + n" :value="n">{{ $tn(n, '{n} hour', '{n} hours') }}</option></select>
                   </label>
-                  <label class="sup-check"><input type="checkbox" :checked="support.settings.days_on" :disabled="supportBusy" @change="saveSupport({ days_on: $event.target.checked })"> After hard days in a row:
-                    <select :value="support.settings.days" :disabled="supportBusy" @change="saveSupport({ days: Number($event.target.value) })"><option v-for="n in support.options.days" :key="'dd' + n" :value="n">{{ n }} days</option></select>
+                  <label class="sup-check"><input type="checkbox" :checked="support.settings.days_on" :disabled="supportBusy" @change="saveSupport({ days_on: $event.target.checked })"> {{ $t('After hard days in a row:') }}
+                    <select :value="support.settings.days" :disabled="supportBusy" @change="saveSupport({ days: Number($event.target.value) })"><option v-for="n in support.options.days" :key="'dd' + n" :value="n">{{ $tn(n, '{n} day', '{n} days') }}</option></select>
                   </label>
-                  <div class="warn-box" v-if="!support.settings.immediate && !support.settings.repeat_on && !support.settings.days_on">Pick at least one, or nothing will be sent.</div>
-                  <div class="af-label sup-gap-s">Wait before sending <span>if you feel better meanwhile, nothing is sent</span></div>
+                  <div class="warn-box" v-if="!support.settings.immediate && !support.settings.repeat_on && !support.settings.days_on">{{ $t('Pick at least one, or nothing will be sent.') }}</div>
+                  <div class="af-label sup-gap-s">{{ $t('Wait before sending') }} <span>{{ $t('if you feel better meanwhile, nothing is sent') }}</span></div>
                   <div class="af-opts">
-                    <button v-for="m in support.options.delay_minutes" :key="'dl' + m" class="af-opt" :class="{ on: support.settings.delay_minutes === m }" :disabled="supportBusy" @click="saveSupport({ delay_minutes: m })">{{ m === 0 ? 'No wait' : m < 60 ? m + ' min' : (m / 60) + ' h' }}</button>
+                    <button v-for="m in support.options.delay_minutes" :key="'dl' + m" class="af-opt" :class="{ on: support.settings.delay_minutes === m }" :disabled="supportBusy" @click="saveSupport({ delay_minutes: m })">{{ m === 0 ? $t('No wait') : m < 60 ? $t('{n} min', { n: m }) : $t('{n} h', { n: m / 60 }) }}</button>
                   </div>
-                  <div class="af-label sup-gap-s">At most once every</div>
+                  <div class="af-label sup-gap-s">{{ $t('At most once every') }}</div>
                   <div class="af-opts">
-                    <button v-for="h in support.options.cooldown_hours" :key="'cd' + h" class="af-opt" :class="{ on: support.settings.cooldown_hours === h }" :disabled="supportBusy" @click="saveSupport({ cooldown_hours: h })">{{ h }} hours</button>
+                    <button v-for="h in support.options.cooldown_hours" :key="'cd' + h" class="af-opt" :class="{ on: support.settings.cooldown_hours === h }" :disabled="supportBusy" @click="saveSupport({ cooldown_hours: h })">{{ $tn(h, '{n} hour', '{n} hours') }}</button>
                   </div>
                 </div>
 
-                <div class="af-label sup-gap">Which moods count as hard <span>for both automatic messages and sharing</span></div>
+                <div class="af-label sup-gap">{{ $t('Which moods count as hard') }} <span>{{ $t('for both automatic messages and sharing') }}</span></div>
                 <div class="af-opts">
-                  <button v-for="e in support.emotions" :key="'em' + e.code" class="af-opt" :class="{ on: e.on }" :disabled="supportBusy" @click="toggleSupportEmotion(e)">{{ e.emoji }} {{ e.name }}</button>
+                  <button v-for="e in support.emotions" :key="'em' + e.code" class="af-opt" :class="{ on: e.on }" :disabled="supportBusy" @click="toggleSupportEmotion(e)">{{ e.emoji }} {{ moodName(e) }}</button>
                 </div>
 
                 <div class="share-row sup-gap">
                   <div>
-                    <div class="s-title">Offer to share after a hard mood</div>
-                    <div class="s-desc">MoodPal asks whether you'd like to tell a friend how you're feeling. You choose who, or skip.</div>
+                    <div class="s-title">{{ $t('Offer to share after a hard mood') }}</div>
+                    <div class="s-desc">{{ $t('MoodPal asks whether you\'d like to tell a friend how you\'re feeling. You choose who, or skip.') }}</div>
                   </div>
-                  <button class="switch" :class="{ on: support.settings.manual_prompt }" :disabled="supportBusy" @click="saveSupport({ manual_prompt: !support.settings.manual_prompt })" role="switch" :aria-checked="support.settings.manual_prompt" aria-label="Offer to share after a hard mood"></button>
+                  <button class="switch" :class="{ on: support.settings.manual_prompt }" :disabled="supportBusy" @click="saveSupport({ manual_prompt: !support.settings.manual_prompt })" role="switch" :aria-checked="support.settings.manual_prompt" :aria-label="$t('Offer to share after a hard mood')"></button>
                 </div>
 
                 <div class="w-head sep">
-                  <div class="s-title">You support</div>
-                  <div class="s-desc">People who asked you to be their support friend.</div>
+                  <div class="s-title">{{ $t('You support') }}</div>
+                  <div class="s-desc">{{ $t('People who asked you to be their support friend.') }}</div>
                 </div>
-                <div v-if="!support.supporting.length" class="muted-box">Nobody yet.</div>
+                <div v-if="!support.supporting.length" class="muted-box">{{ $t('Nobody yet.') }}</div>
                 <div v-for="p in support.supporting" :key="'sp' + p.id" class="mem-row">
-                  <span class="t"><b>{{ p.fullname }}</b><span class="sup-status" :class="p.status">{{ p.status === 'pending' ? 'Asked you' : 'You support them' }}</span></span>
+                  <span class="t"><b>{{ p.fullname }}</b><span class="sup-status" :class="p.status">{{ $t(p.status === 'pending' ? 'Asked you' : 'You support them') }}</span></span>
                   <template v-if="p.status === 'pending'">
-                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">Yes</button>
-                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">Not now</button>
+                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(p, true)">{{ $t('Yes') }}</button>
+                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(p, false)">{{ $t('Not now') }}</button>
                   </template>
-                  <button v-else class="btn ghost sup-small" :disabled="supportBusy" @click="stopSupporting(p)">Stop</button>
+                  <button v-else class="btn ghost sup-small" :disabled="supportBusy" @click="stopSupporting(p)">{{ $t('Stop') }}</button>
                 </div>
                 <div class="share-row sup-gap">
                   <div>
-                    <div class="s-title">Get support messages from friends</div>
-                    <div class="s-desc">When a friend is having a hard time and wants you to know.</div>
+                    <div class="s-title">{{ $t('Get support messages from friends') }}</div>
+                    <div class="s-desc">{{ $t('When a friend is having a hard time and wants you to know.') }}</div>
                   </div>
-                  <button class="switch" :class="{ on: support.settings.receive }" :disabled="supportBusy" @click="saveSupport({ receive: !support.settings.receive })" role="switch" :aria-checked="support.settings.receive" aria-label="Get support messages from friends"></button>
+                  <button class="switch" :class="{ on: support.settings.receive }" :disabled="supportBusy" @click="saveSupport({ receive: !support.settings.receive })" role="switch" :aria-checked="support.settings.receive" :aria-label="$t('Get support messages from friends')"></button>
                 </div>
-                <div v-if="support.recent.length" class="note-box">Last sent: {{ support.recent[0].to }}, {{ formatWhen(support.recent[0].at) }}.</div>
+                <div v-if="support.recent.length" class="note-box">{{ $t('Last sent: {to}, {when}.', { to: support.recent[0].to, when: formatWhen(support.recent[0].at) }) }}</div>
               </template>
             </section>
 
             <!-- home screen: Telegram's app icon, and the mood widget (builder sheet, src/controllers/widget.js) -->
             <section class="section" v-show="settingsTab === 'home'" :style="{ '--i': 2 }">
-              <h3><ui-icon name="smartphone" :size="17"></ui-icon> Home screen <span class="sub">{{ widget?.enabled ? "widget on" : "widget off" }}</span></h3>
+              <h3><ui-icon name="smartphone" :size="17"></ui-icon> {{ $t('Home screen') }} <span class="sub">{{ $t(widget?.enabled ? 'widget on' : 'widget off') }}</span></h3>
               <div class="share-row">
                 <div>
-                  <div class="s-title">Mood widget</div>
-                  <div class="s-desc">Your mood and your friends' moods on your home screen, small, medium or large.</div>
+                  <div class="s-title">{{ $t('Mood widget') }}</div>
+                  <div class="s-desc">{{ $t('Your mood and your friends\' moods on your home screen, small, medium or large.') }}</div>
                 </div>
-                <button class="btn small" style="margin-top:0" @click="openWidgetBuilder">Make one</button>
+                <button class="btn small" style="margin-top:0" @click="openWidgetBuilder">{{ $t('Make one') }}</button>
               </div>
               <div class="row-actions" v-if="widget?.enabled">
-                <button class="btn ghost" :disabled="widgetBusy" @click="enableWidget(true)"><ui-icon name="refresh-cw" :size="15"></ui-icon>New links</button>
-                <button class="btn danger" :disabled="widgetBusy" @click="disableWidget"><ui-icon name="x" :size="15"></ui-icon>Turn off widget links</button>
+                <button class="btn ghost" :disabled="widgetBusy" @click="enableWidget(true)"><ui-icon name="refresh-cw" :size="15"></ui-icon>{{ $t('New links') }}</button>
+                <button class="btn danger" :disabled="widgetBusy" @click="disableWidget"><ui-icon name="x" :size="15"></ui-icon>{{ $t('Turn off widget links') }}</button>
               </div>
               <div class="share-row w-head sep" v-if="homeScreen.supported">
                 <div>
-                  <div class="s-title">App icon</div>
-                  <div class="s-desc">Only an icon that opens MoodPal. It doesn't show moods; for that, make a widget above.</div>
+                  <div class="s-title">{{ $t('App icon') }}</div>
+                  <div class="s-desc">{{ $t('Only an icon that opens MoodPal. It doesn\'t show moods; for that, make a widget above.') }}</div>
                 </div>
-                <button class="btn small ghost" style="margin-top:0" :disabled="homeScreen.status === 'added'" @click="addToHomeScreen">{{ homeScreen.status === 'added' ? 'Added' : 'Add icon' }}</button>
+                <button class="btn small ghost" style="margin-top:0" :disabled="homeScreen.status === 'added'" @click="addToHomeScreen">{{ $t(homeScreen.status === 'added' ? 'Added' : 'Add icon') }}</button>
               </div>
             </section>
 
 
             <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }">
-              <h3>Who can see my mood <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
-              <div v-if="followers && !followers.length" class="muted-box">Nobody yet. Tap Add a friend on the Friends tab to share your mood.</div>
+              <h3>{{ $t('Who can see my mood') }} <span class="sub">{{ followers ? followers.length : '…' }}</span></h3>
+              <div v-if="followers && !followers.length" class="muted-box">{{ $t('Nobody yet. Tap Add a friend on the Friends tab to share your mood.') }}</div>
               <div v-for="f in followers || []" :key="'fl' + f.id" class="mem-row">
-                <span class="t"><b>{{ f.fullname || 'Unnamed' }}</b><small v-if="f.username" style="color:var(--hint);margin-left:6px">@{{ f.username }}</small><small v-if="f.i_follow_them" style="color:var(--hint);margin-left:6px">· you see theirs too</small></span>
-                <button class="btn ghost" style="padding:7px 12px;font-size:0.7647rem;box-shadow:none" :disabled="friendBusy" @click="hideMyMoodFrom(f)">Remove</button>
+                <span class="t"><b>{{ f.fullname || $t('Unnamed') }}</b><small v-if="f.username" style="color:var(--hint);margin-left:6px">@{{ f.username }}</small><small v-if="f.i_follow_them" style="color:var(--hint);margin-left:6px">· {{ $t('you see theirs too') }}</small></span>
+                <button class="btn ghost" style="padding:7px 12px;font-size:0.7647rem;box-shadow:none" :disabled="friendBusy" @click="hideMyMoodFrom(f)">{{ $t('Remove') }}</button>
               </div>
-              <div class="note-box" v-if="followers && followers.length">Removing someone stops them seeing your mood. They are not notified.</div>
+              <div class="note-box" v-if="followers && followers.length">{{ $t('Removing someone stops them seeing your mood. They are not notified.') }}</div>
             </section>
 
             <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 2 }" v-if="settings.memory">
               <div class="share-row">
                 <div>
-                  <div class="s-title">What MoodPal remembers</div>
-                  <div class="s-desc">When you use Talk, MoodPal keeps short notes about what matters to you, so it can talk like someone who remembers. Up to {{ settings.memory.max }} notes; the least important go first. Only you can see them.</div>
+                  <div class="s-title">{{ $t('What MoodPal remembers') }}</div>
+                  <div class="s-desc">{{ $t('When you use Talk, MoodPal keeps short notes about what matters to you, so it can talk like someone who remembers. Up to {n} notes; the least important go first. Only you can see them.', { n: settings.memory.max }) }}</div>
                 </div>
                 <button class="switch" :class="{ on: settings.memory.enabled }" :disabled="memoryBusy" @click="setMemoryEnabled(!settings.memory.enabled)" role="switch" :aria-checked="settings.memory.enabled"></button>
               </div>
-              <div class="kv"><span class="k">Notes</span><span class="v">{{ settings.memory.count }} of {{ settings.memory.max }}</span></div>
+              <div class="kv"><span class="k">{{ $t('Notes') }}</span><span class="v">{{ $t('{a} of {b}', { a: settings.memory.count, b: settings.memory.max }) }}</span></div>
               <template v-if="memories">
-                <div v-if="!memories.length" class="muted-box">Nothing yet. Notes appear after you talk with MoodPal.</div>
+                <div v-if="!memories.length" class="muted-box">{{ $t('Nothing yet. Notes appear after you talk with MoodPal.') }}</div>
                 <div v-for="m in memories" :key="m.id" class="mem-row">
-                  <span class="imp" :title="'Importance ' + m.importance + ' of 5'"><i v-for="n in 5" :key="n" :class="{ on: n <= m.importance }"></i></span>
+                  <span class="imp" :title="$t('Importance {n} of 5', { n: m.importance })"><i v-for="n in 5" :key="n" :class="{ on: n <= m.importance }"></i></span>
                   <span class="t">{{ m.text }}</span>
-                  <button class="g-btn" title="Forget this" :disabled="memoryBusy" @click="forgetMemory(m)">×</button>
+                  <button class="g-btn" :title="$t('Forget this')" :disabled="memoryBusy" @click="forgetMemory(m)">×</button>
                 </div>
                 <div class="row-actions" v-if="memories.length">
-                  <button class="btn ghost" :disabled="memoryBusy" @click="forgetAllMemories">Forget everything</button>
+                  <button class="btn ghost" :disabled="memoryBusy" @click="forgetAllMemories">{{ $t('Forget everything') }}</button>
                 </div>
               </template>
               <div class="row-actions" v-else-if="settings.memory.count">
-                <button class="btn ghost" :disabled="memoryBusy" @click="loadMemories">Show notes</button>
+                <button class="btn ghost" :disabled="memoryBusy" @click="loadMemories">{{ $t('Show notes') }}</button>
               </div>
             </section>
 
             <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
               <div class="share-row">
                 <div>
-                  <div class="s-title">Friends can see my mood history</div>
-                  <div class="s-desc">Friends who follow your mood can open your profile and scroll back through your past moods.</div>
+                  <div class="s-title">{{ $t('Friends can see my mood history') }}</div>
+                  <div class="s-desc">{{ $t('Friends who follow your mood can open your profile and scroll back through your past moods.') }}</div>
                 </div>
                 <button class="switch" :class="{ on: settings.privacy.mood_log_shared }" :disabled="privacyBusy" @click="setPrivacy({ mood_log_shared: !settings.privacy.mood_log_shared })" role="switch" :aria-checked="settings.privacy.mood_log_shared"></button>
               </div>
               <div class="share-row" style="margin-top:14px" v-if="settings.privacy.mood_log_shared">
                 <div>
-                  <div class="s-title">Include my notes</div>
-                  <div class="s-desc">Off: friends see only the moods. On: they also see what you wrote with them.</div>
+                  <div class="s-title">{{ $t('Include my notes') }}</div>
+                  <div class="s-desc">{{ $t('Off: friends see only the moods. On: they also see what you wrote with them.') }}</div>
                 </div>
                 <button class="switch" :class="{ on: settings.privacy.mood_notes_shared }" :disabled="privacyBusy" @click="setPrivacy({ mood_notes_shared: !settings.privacy.mood_notes_shared })" role="switch" :aria-checked="settings.privacy.mood_notes_shared"></button>
               </div>
@@ -2300,72 +2337,72 @@
             <section class="section" v-show="settingsTab === 'friends'" :style="{ '--i': 2 }" v-if="settings.privacy">
               <div class="share-row">
                 <div>
-                  <div class="s-title">Show my Moodling to friends</div>
-                  <div class="s-desc">Your MBTI-style character appears on your card and profile for friends who follow your mood, and on your public personality link.</div>
+                  <div class="s-title">{{ $t('Show my Moodling to friends') }}</div>
+                  <div class="s-desc">{{ $t('Your MBTI-style character appears on your card and profile for friends who follow your mood, and on your public personality link.') }}</div>
                 </div>
                 <button class="switch" :class="{ on: settings.privacy.mbti_shared }" :disabled="privacyBusy" @click="setMbtiShared(!settings.privacy.mbti_shared)" role="switch" :aria-checked="settings.privacy.mbti_shared"></button>
               </div>
-              <div class="note-box" v-if="settings.privacy.mbti_type && settings.privacy.mbti_shared">Friends see <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>.</div>
-              <div class="note-box" v-else-if="settings.privacy.mbti_type">You're <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>. Friends can't see it right now.</div>
-              <div class="note-box" v-else>You haven't taken the test yet. Your Moodling shows up here once you have.</div>
+              <div class="note-box" v-if="settings.privacy.mbti_type && settings.privacy.mbti_shared">{{ $t('Friends see') }} <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>.</div>
+              <div class="note-box" v-else-if="settings.privacy.mbti_type">{{ $t('You\'re') }} <b>{{ settings.privacy.mbti_type }} · {{ mbtiTitle(settings.privacy.mbti_type) }}</b>. {{ $t('Friends can\'t see it right now.') }}</div>
+              <div class="note-box" v-else>{{ $t('You haven\'t taken the test yet. Your Moodling shows up here once you have.') }}</div>
             </section>
 
             <section class="section" v-show="settingsTab === 'reminders'" :style="{ '--i': 2 }" v-if="settings.timezone">
-              <h3><ui-icon name="globe" :size="17"></ui-icon> Timezone <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
+              <h3><ui-icon name="globe" :size="17"></ui-icon> {{ $t('Timezone') }} <span class="sub">{{ tzOffset(settings.timezone.timezone) }}</span></h3>
               <div class="tz-now">
                 <b>{{ settings.timezone.timezone }}</b>
-                <span>it's {{ localTimeIn(settings.timezone.timezone) }} there</span>
+                <span>{{ $t('it\'s {time} there', { time: localTimeIn(settings.timezone.timezone) }) }}</span>
               </div>
-              <div class="note-box" v-if="!settings.timezone.is_set">This is the default. Set yours so reminders arrive at your local time.</div>
+              <div class="note-box" v-if="!settings.timezone.is_set">{{ $t('This is the default. Set yours so reminders arrive at your local time.') }}</div>
               <div class="row-actions" v-if="browserTimezone && browserTimezone !== settings.timezone.timezone">
-                <button class="btn" :disabled="timezoneBusy" @click="setTimezone(browserTimezone)"><ui-icon name="map-pin" :size="16"></ui-icon>Use this device · {{ browserTimezone }} ({{ tzOffset(browserTimezone) }})</button>
+                <button class="btn" :disabled="timezoneBusy" @click="setTimezone(browserTimezone)"><ui-icon name="map-pin" :size="16"></ui-icon>{{ $t('Use this device') }} · {{ browserTimezone }} ({{ tzOffset(browserTimezone) }})</button>
               </div>
               <label class="search tz-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                <input v-model="tzQuery" type="search" autocomplete="off" placeholder="City or offset, e.g. Tehran or +3:30" @keydown.enter="tzMatches[0] && setTimezone(tzMatches[0])">
+                <input v-model="tzQuery" type="search" autocomplete="off" :placeholder="$t('City or offset, e.g. Tehran or +3:30')" @keydown.enter="tzMatches[0] && setTimezone(tzMatches[0])">
               </label>
               <div class="tz-results" v-if="tzQuery.trim()">
                 <button v-for="z in tzMatches" :key="z" class="tz-row" :class="{ on: z === settings.timezone.timezone }" :disabled="timezoneBusy" @click="setTimezone(z)">
                   <span class="z">{{ z.replace(/_/g, ' ') }}</span>
                   <span class="o">{{ tzOffset(z) }} · {{ localTimeIn(z) }}</span>
                 </button>
-                <div v-if="!tzMatches.length" class="muted-box">No timezone matches “{{ tzQuery.trim() }}”. Try a big city nearby or your UTC offset.</div>
+                <div v-if="!tzMatches.length" class="muted-box">{{ $t('No timezone matches “{q}”. Try a big city nearby or your UTC offset.', { q: tzQuery.trim() }) }}</div>
               </div>
               <div class="row-actions" v-if="settings.timezone.is_set">
-                <button class="btn ghost" :disabled="timezoneBusy" @click="setTimezone(null)">Back to default ({{ settings.timezone.default }})</button>
+                <button class="btn ghost" :disabled="timezoneBusy" @click="setTimezone(null)">{{ $t('Back to default ({d})', { d: settings.timezone.default }) }}</button>
               </div>
-              <div class="note-box">You can also set it from the bot: <code>/timezone Berlin</code> or <code>/timezone +2</code>.</div>
+              <div class="note-box">{{ $t('You can also set it from the bot:') }} <code>/timezone Berlin</code> · <code>/timezone +2</code></div>
             </section>
 
             <section class="section" v-show="settingsTab === 'reminders'" :style="{ '--i': 3 }" v-if="settings.reminders">
               <div class="share-row">
                 <div>
-                  <div class="s-title"><ui-icon name="alarm-clock" :size="16"></ui-icon> Mood reminders</div>
-                  <div class="s-desc">The bot sends you a quick mood picker {{ settings.reminders.times.length === 1 ? 'once' : settings.reminders.times.length === 2 ? 'twice' : settings.reminders.times.length + ' times' }} a day. If you've just logged a mood, it skips that one.</div>
+                  <div class="s-title"><ui-icon name="alarm-clock" :size="16"></ui-icon> {{ $t('Mood reminders') }}</div>
+                  <div class="s-desc">{{ $tn(settings.reminders.times.length, 'The bot sends you a quick mood picker once a day.', 'The bot sends you a quick mood picker {n} times a day.') }} {{ $t('If you\'ve just logged a mood, it skips that one.') }}</div>
                 </div>
                 <button class="switch" :class="{ on: settings.reminders.enabled }" :disabled="remindersBusy" @click="saveReminders({ enabled: !settings.reminders.enabled })" role="switch" :aria-checked="settings.reminders.enabled"></button>
               </div>
-              <div class="warn-box" v-if="settings.reminders.enabled && settings.reminders.bot_blocked">We couldn't reach you on Telegram. Send any message to the bot and your reminders will start again.</div>
-              <div class="note-box" v-if="!settings.reminders.service_enabled">Reminders are paused for everyone at the moment. Your times are kept.</div>
+              <div class="warn-box" v-if="settings.reminders.enabled && settings.reminders.bot_blocked">{{ $t('We couldn\'t reach you on Telegram. Send any message to the bot and your reminders will start again.') }}</div>
+              <div class="note-box" v-if="!settings.reminders.service_enabled">{{ $t('Reminders are paused for everyone at the moment. Your times are kept.') }}</div>
               <template v-if="settings.reminders.enabled">
                 <div class="rem-times">
                   <div v-for="(t, i) in settings.reminders.times" :key="'rt' + i + t" class="rem-time">
                     <input type="time" :value="t" :disabled="remindersBusy" @change="setReminderTime(i, $event.target.value)">
-                    <button class="g-btn" v-if="settings.reminders.times.length > 1" :disabled="remindersBusy" title="Remove this reminder" @click="removeReminderTime(i)">×</button>
+                    <button class="g-btn" v-if="settings.reminders.times.length > 1" :disabled="remindersBusy" :title="$t('Remove this reminder')" @click="removeReminderTime(i)">×</button>
                   </div>
-                  <button class="btn ghost rem-add" v-if="settings.reminders.times.length < settings.reminders.max_per_day" :disabled="remindersBusy" @click="addReminderTime">＋ Add a reminder</button>
+                  <button class="btn ghost rem-add" v-if="settings.reminders.times.length < settings.reminders.max_per_day" :disabled="remindersBusy" @click="addReminderTime">＋ {{ $t('Add a reminder') }}</button>
                 </div>
-                <div class="kv"><span class="k">In your timezone</span><span class="v">{{ settings.reminders.timezone }} · {{ tzOffset(settings.reminders.timezone) }}</span></div>
-                <div class="kv" v-if="settings.reminders.next_at"><span class="k">Next reminder</span><span class="v">{{ formatInTz(settings.reminders.next_at, settings.reminders.timezone) }}</span></div>
-                <div class="kv" v-if="settings.reminders.last_sent_at"><span class="k">Last sent</span><span class="v">{{ formatInTz(settings.reminders.last_sent_at, settings.reminders.timezone) }}</span></div>
+                <div class="kv"><span class="k">{{ $t('In your timezone') }}</span><span class="v">{{ settings.reminders.timezone }} · {{ tzOffset(settings.reminders.timezone) }}</span></div>
+                <div class="kv" v-if="settings.reminders.next_at"><span class="k">{{ $t('Next reminder') }}</span><span class="v">{{ formatInTz(settings.reminders.next_at, settings.reminders.timezone) }}</span></div>
+                <div class="kv" v-if="settings.reminders.last_sent_at"><span class="k">{{ $t('Last sent') }}</span><span class="v">{{ formatInTz(settings.reminders.last_sent_at, settings.reminders.timezone) }}</span></div>
                 <div class="row-actions" v-if="settings.reminders.custom_times">
-                  <button class="btn ghost" :disabled="remindersBusy" @click="saveReminders({ times: null })">Back to default ({{ settings.reminders.default_times.join(' & ') }})</button>
+                  <button class="btn ghost" :disabled="remindersBusy" @click="saveReminders({ times: null })">{{ $t('Back to default ({d})', { d: settings.reminders.default_times.join(' & ') }) }}</button>
                 </div>
-                <div class="note-box">Up to {{ settings.reminders.max_per_day }} a day. You can also turn them off from the bot with /reminders or the 🔕 button under a reminder.</div>
+                <div class="note-box">{{ $t('Up to {n} a day. You can also turn them off from the bot with /reminders or the 🔕 button under a reminder.', { n: settings.reminders.max_per_day }) }}</div>
               </template>
             </section>
 
-            <p class="disclaimer" v-show="settingsTab === 'ai'"><ui-icon name="bot" :size="14"></ui-icon> Talk is an AI, not a therapist. It can be wrong and is not medical advice.</p>
+            <p class="disclaimer" v-show="settingsTab === 'ai'"><ui-icon name="bot" :size="14"></ui-icon> {{ $t('Talk is an AI, not a therapist. It can be wrong and is not medical advice.') }}</p>
           </template>
         </div>
       </transition>
@@ -2374,7 +2411,7 @@
       <nav class="tabbar">
         <div class="tabbar-inner" :style="{ '--tabs': tabs.length, '--active': Math.max(0, tabs.findIndex(t => t.key === tab)) }">
           <div class="tab-indicator"></div>
-          <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: tab === t.key }" @click="setTab(t.key)"><span class="ico"><ui-icon :name="t.icon" :size="21" :stroke="tab === t.key ? 2.3 : 1.9"></ui-icon></span>{{ t.label }}</button>
+          <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: tab === t.key }" @click="setTab(t.key)"><span class="ico"><ui-icon :name="t.icon" :size="21" :stroke="tab === t.key ? 2.3 : 1.9"></ui-icon></span>{{ $t(t.label) }}</button>
         </div>
       </nav>
 
@@ -2384,7 +2421,7 @@
           <div class="sheet-backdrop" @click="closeSheet"></div>
           <div class="sheet" @touchstart="sheetTouchStart" @touchmove="sheetTouchMove" @touchend="sheetTouchEnd" @touchcancel="sheetTouchEnd">
             <div class="grip"></div>
-            <button class="close" @click="closeSheet" aria-label="Close"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
+            <button class="close" @click="closeSheet" :aria-label="$t('Close')"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
 
             <!-- admin: filter people -->
             <template v-if="sheet.type === 'admin-filters'">
@@ -2470,64 +2507,64 @@
                 <div>
                   <h2>{{ sheet.friend.fullname }}</h2>
                   <div v-if="sheet.friend.nickname" class="real-name">{{ sheet.friend.real_name }}</div>
-                  <div class="mood">{{ sheet.friend.mood.name }}</div>
+                  <div class="mood">{{ moodName(sheet.friend.mood) }}</div>
                   <div class="when" :title="new Date(sheet.friend.timestamp).toLocaleString()"><span class="dot" :class="freshness(sheet.friend.timestamp)"></span>{{ formatWhen(sheet.friend.timestamp) }}</div>
                 </div>
               </div>
               <div class="sheet-actions">
-                <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)"><ui-icon name="message-circle" :size="16"></ui-icon>Open chat</a>
-                <button class="btn ghost" @click="startNickname"><ui-icon name="pencil" :size="16"></ui-icon>Nickname</button>
+                <a class="btn ghost" :href="profileHref(sheet.friend)" @click="openProfile($event, sheet.friend)"><ui-icon name="message-circle" :size="16"></ui-icon>{{ $t('Open chat') }}</a>
+                <button class="btn ghost" @click="startNickname"><ui-icon name="pencil" :size="16"></ui-icon>{{ $t('Nickname') }}</button>
               </div>
               <!-- my private name for this friend (only I see it; they're never told) -->
               <div v-if="sheet.nickEdit !== null" class="nick-edit">
                 <div class="field" style="margin-top:0">
-                  <input v-model="sheet.nickEdit" maxlength="32" :placeholder="sheet.friend.real_name || sheet.friend.fullname" aria-label="Nickname" @keydown.enter="saveNickname">
-                  <button class="btn" :disabled="sheet.nickBusy" @click="saveNickname">Save</button>
+                  <input v-model="sheet.nickEdit" maxlength="32" :placeholder="sheet.friend.real_name || sheet.friend.fullname" :aria-label="$t('Nickname')" @keydown.enter="saveNickname">
+                  <button class="btn" :disabled="sheet.nickBusy" @click="saveNickname">{{ $t('Save') }}</button>
                 </div>
-                <div class="note-box">Only you see this name, here and in the bot. {{ firstNameOf({ fullname: sheet.friend.real_name || sheet.friend.fullname }) }} isn't told.
-                  <button v-if="sheet.friend.nickname" class="mp-bot" style="display:inline;margin:0 0 0 4px" :disabled="sheet.nickBusy" @click="sheet.nickEdit = ''; saveNickname()">Use their real name</button>
+                <div class="note-box">{{ $t('Only you see this name, here and in the bot. {name} isn\'t told.', { name: firstNameOf({ fullname: sheet.friend.real_name || sheet.friend.fullname }) }) }}
+                  <button v-if="sheet.friend.nickname" class="mp-bot" style="display:inline;margin:0 0 0 4px" :disabled="sheet.nickBusy" @click="sheet.nickEdit = ''; saveNickname()">{{ $t('Use their real name') }}</button>
                 </div>
               </div>
 
               <!-- support friend: ask them, see where it stands, or answer their request (same data as Settings → Support) -->
               <div v-if="support" class="sup-friend">
                 <template v-if="supportAsk(sheet.friend)">
-                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} asked you to be their support friend</b><small>You'd get a short message when they're having a hard time.</small></span></div>
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ $t('{name} asked you to be their support friend', { name: firstNameOf(sheet.friend) }) }}</b><small>{{ $t('You\'d get a short message when they\'re having a hard time.') }}</small></span></div>
                   <div class="row-actions" style="margin-top:8px">
-                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), true)">Yes, I'm in</button>
-                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), false)">Not now</button>
+                    <button class="btn sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), true)">{{ $t('Yes, I\'m in') }}</button>
+                    <button class="btn ghost sup-small" :disabled="supportBusy" @click="answerSupport(supportAsk(sheet.friend), false)">{{ $t('Not now') }}</button>
                   </div>
                 </template>
                 <template v-else-if="supportContact(sheet.friend)?.status === 'accepted'">
-                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} is your support friend</b><small>They hear from MoodPal when you're having a hard time.</small></span></div>
-                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">Remove</button></div>
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ $t('{name} is your support friend', { name: firstNameOf(sheet.friend) }) }}</b><small>{{ $t('They hear from MoodPal when you\'re having a hard time.') }}</small></span></div>
+                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">{{ $t('Remove') }}</button></div>
                 </template>
                 <template v-else-if="supportContact(sheet.friend)?.status === 'pending'">
-                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>Waiting for {{ firstNameOf(sheet.friend) }} to answer</b><small>You asked them to be your support friend. They answer in the bot.</small></span></div>
-                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">Cancel</button></div>
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ $t('Waiting for {name} to answer', { name: firstNameOf(sheet.friend) }) }}</b><small>{{ $t('You asked them to be your support friend. They answer in the bot.') }}</small></span></div>
+                  <div class="row-actions" style="margin-top:8px"><button class="btn ghost sup-small" :disabled="supportBusy" @click="removeSupportFriend(supportContact(sheet.friend))">{{ $t('Cancel') }}</button></div>
                 </template>
                 <template v-else-if="supportContact(sheet.friend)?.status === 'declined'">
-                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ firstNameOf(sheet.friend) }} said not now</b><small>You can ask again after a week.</small></span></div>
+                  <div class="t"><ui-icon name="heart-handshake" :size="18"></ui-icon><span><b>{{ $t('{name} said not now', { name: firstNameOf(sheet.friend) }) }}</b><small>{{ $t('You can ask again after a week.') }}</small></span></div>
                 </template>
                 <template v-else>
-                  <button class="btn ghost sup-ask" :disabled="supportBusy || supportFull" @click="inviteSupportFriend({ id: sheet.friend.id, fullname: sheet.friend.fullname })"><ui-icon name="heart-handshake" :size="16"></ui-icon>Ask to be my support friend</button>
-                  <div v-if="supportFull" class="note-box">You already have {{ support.max_contacts }} support friends. Remove one in Settings → Support to ask someone else.</div>
+                  <button class="btn ghost sup-ask" :disabled="supportBusy || supportFull" @click="inviteSupportFriend({ id: sheet.friend.id, fullname: sheet.friend.fullname })"><ui-icon name="heart-handshake" :size="16"></ui-icon>{{ $t('Ask to be my support friend') }}</button>
+                  <div v-if="supportFull" class="note-box">{{ $t('You already have {n} support friends. Remove one in Settings → Support to ask someone else.', { n: support.max_contacts }) }}</div>
                 </template>
               </div>
 
               <div class="seg grow sheet-tabs">
-                <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')"><ui-icon name="scroll-text" :size="15"></ui-icon> Mood log</button>
-                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
+                <button :class="{ on: sheet.tab === 'log' }" @click="setSheetTab('log')"><ui-icon name="scroll-text" :size="15"></ui-icon> {{ $t('Mood log') }}</button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> {{ $t('Personality') }}</button>
               </div>
 
               <!-- their mood history, if they share it (v-show keeps the stickers alive) -->
               <div v-show="sheet.tab === 'log'" class="sheet-pane">
                 <div v-if="sheet.logLoading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
-                <div v-else-if="sheet.logShared === false" class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ sheet.friend.fullname }} hasn't shared their mood history.</div>
-                <div v-else-if="sheet.logError" class="muted-box">Couldn't load their mood history.</div>
-                <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
+                <div v-else-if="sheet.logShared === false" class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ $t('{name} hasn\'t shared their mood history.', { name: sheet.friend.fullname }) }}</div>
+                <div v-else-if="sheet.logError" class="muted-box">{{ $t('Couldn\'t load their mood history.') }}</div>
+                <div v-else-if="sheet.moods.length === 0" class="muted-box">{{ $t('No moods yet.') }}</div>
                 <template v-else>
-                  <div class="note-box" style="margin:0 0 8px" v-if="!sheet.notesShared">Notes are private, so you only see the moods.</div>
+                  <div class="note-box" style="margin:0 0 8px" v-if="!sheet.notesShared">{{ $t('Notes are private, so you only see the moods.') }}</div>
                   <div class="timeline">
                     <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
                       <div class="tl-ico">
@@ -2535,124 +2572,124 @@
                           <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
                         </div>
                       </div>
-                      <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                      <div class="tl-head">{{ moodName(m.mood) }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
                       <div v-if="m.note" class="tl-note-row">
                         <div class="tl-note" :dir="noteLang(m.note) === 'fa' || noteLang(m.note) === 'ar' || noteLang(m.note) === 'he' ? 'rtl' : 'auto'">“{{ m.note }}”</div>
-                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note'" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
+                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="$t(ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note')" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
                       </div>
                     </div>
                   </div>
                   <div class="load-more" v-if="sheet.has_more">
-                    <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreFriendMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
+                    <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreFriendMoods">{{ $t(sheet.loadingMore ? 'Loading…' : 'Load older moods') }}</button>
                   </div>
                 </template>
               </div>
 
               <div v-if="sheet.tab === 'personality'" class="sheet-pane">
               <template v-if="sheet.personality?.mbti || sheet.friend.mbti">
-                <div class="sheet-section-title">Moodling</div>
-                <mbti-card :mbti="sheet.personality?.mbti || { type: sheet.friend.mbti }" compact :kicker="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s Moodling'" :letters-label="(sheet.friend.fullname || 'Their').split(' ')[0] + '\'s four letters'"></mbti-card>
+                <div class="sheet-section-title">{{ $t('Moodling') }}</div>
+                <mbti-card :mbti="sheet.personality?.mbti || { type: sheet.friend.mbti }" compact :kicker="$t('{name}\'s Moodling', { name: (sheet.friend.fullname || '').split(' ')[0] })" :letters-label="$t('{name}\'s four letters', { name: (sheet.friend.fullname || '').split(' ')[0] })"></mbti-card>
               </template>
-              <div class="sheet-section-title">Personality</div>
+              <div class="sheet-section-title">{{ $t('Personality') }}</div>
               <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
               <personality-view v-else-if="sheet.personality?.shared && sheet.personality.profile" :profile="sheet.personality.profile" :animate-key="'sheet-' + sheet.friend.id" compact :show-mbti="false"></personality-view>
-              <div v-else-if="sheet.personality?.shared" class="muted-box">{{ sheet.friend.fullname }} has enabled sharing but hasn't taken a test yet.</div>
-              <div v-else class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ sheet.friend.fullname }} hasn't shared their personality.</div>
+              <div v-else-if="sheet.personality?.shared" class="muted-box">{{ $t('{name} has enabled sharing but hasn\'t taken a test yet.', { name: sheet.friend.fullname }) }}</div>
+              <div v-else class="muted-box"><ui-icon name="lock" :size="15"></ui-icon> {{ $t('{name} hasn\'t shared their personality.', { name: sheet.friend.fullname }) }}</div>
               </div>
 
-              <div class="sheet-section-title">Friendship</div>
-              <div class="kv"><span class="k">{{ sheet.friend.follows_me ? 'You see each other\'s moods' : 'You see their mood' }}</span><span class="v">{{ sheet.friend.follows_me ? 'both ways' : 'one way' }}</span></div>
+              <div class="sheet-section-title">{{ $t('Friendship') }}</div>
+              <div class="kv"><span class="k">{{ $t(sheet.friend.follows_me ? 'You see each other\'s moods' : 'You see their mood') }}</span><span class="v">{{ $t(sheet.friend.follows_me ? 'both ways' : 'one way') }}</span></div>
               <div class="friend-actions">
-                <button class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend)"><ui-icon name="user-x" :size="16"></ui-icon>Unfollow {{ firstNameOf(sheet.friend) }}</button>
-                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="hideMyMoodFrom(sheet.friend)"><ui-icon name="eye-off" :size="16"></ui-icon>Hide my mood from {{ firstNameOf(sheet.friend) }}</button>
-                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend, { both: true })"><ui-icon name="heart-crack" :size="16"></ui-icon>Unfollow each other</button>
+                <button class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend)"><ui-icon name="user-x" :size="16"></ui-icon>{{ $t('Unfollow {name}', { name: firstNameOf(sheet.friend) }) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="hideMyMoodFrom(sheet.friend)"><ui-icon name="eye-off" :size="16"></ui-icon>{{ $t('Hide my mood from {name}', { name: firstNameOf(sheet.friend) }) }}</button>
+                <button v-if="sheet.friend.follows_me" class="btn ghost" :disabled="friendBusy" @click="unfollowFriend(sheet.friend, { both: true })"><ui-icon name="heart-crack" :size="16"></ui-icon>{{ $t('Unfollow each other') }}</button>
               </div>
-              <div class="note-box">Nobody gets notified. To see each other again, share your link again.</div>
+              <div class="note-box">{{ $t('Nobody gets notified. To see each other again, share your link again.') }}</div>
             </template>
 
             <!-- one Moodling, from the cast gallery -->
             <!-- after a hard mood: share how you're feeling with one or more friends (POST /api/me/support/share) -->
             <template v-else-if="sheet.type === 'share'">
-              <h2 class="af-title">Want to share how you're feeling?</h2>
-              <p class="sup-sheet-sub">Let your friends know you're feeling {{ sheet.mood.name.toLowerCase() }} {{ sheet.mood.emoji }}. Pick one or more. Only the mood is shared, not your note.</p>
-              <button v-if="sheet.friends.length > 1 && !sheet.done" class="mp-bot sup-all" @click="toggleShareAll">{{ sheet.friends.every(f => sheet.picked[f.id]) ? 'Clear' : 'Select all' }}</button>
+              <h2 class="af-title">{{ $t('Want to share how you\'re feeling?') }}</h2>
+              <p class="sup-sheet-sub">{{ $t('Let your friends know you\'re feeling {mood} {emoji}. Pick one or more. Only the mood is shared, not your note.', { mood: moodName(sheet.mood).toLowerCase(), emoji: sheet.mood.emoji }) }}</p>
+              <button v-if="sheet.friends.length > 1 && !sheet.done" class="mp-bot sup-all" @click="toggleShareAll">{{ $t(sheet.friends.every(f => sheet.picked[f.id]) ? 'Clear' : 'Select all') }}</button>
               <div class="sup-share-list">
                 <label v-for="f in sheet.friends" :key="'sh' + f.id" class="mem-row sup-pickrow">
                   <input type="checkbox" :checked="Boolean(sheet.picked[f.id])" :disabled="sheet.busy || Boolean(sheet.done)" @change="sheet.picked[f.id] = $event.target.checked">
-                  <span class="t"><b>{{ f.fullname }}</b><span v-if="f.support" class="sup-status accepted">Support friend</span></span>
-                  <span v-if="sheet.done && sheet.done[f.id]" class="sup-status" :class="{ accepted: sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' }">{{ sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' ? 'Shared' : "Couldn't share" }}</span>
+                  <span class="t"><b>{{ f.fullname }}</b><span v-if="f.support" class="sup-status accepted">{{ $t('Support friend') }}</span></span>
+                  <span v-if="sheet.done && sheet.done[f.id]" class="sup-status" :class="{ accepted: sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' }">{{ $t(sheet.done[f.id] === 'sent' || sheet.done[f.id] === 'already' ? 'Shared' : 'Couldn\'t share') }}</span>
                 </label>
               </div>
               <div class="row-actions">
-                <button v-if="!sheet.done" class="btn" style="flex:1" :disabled="sheet.busy || !pickedCount" @click="shareWithPicked">{{ sheet.busy ? 'Sharing…' : pickedCount ? `Share with ${pickedCount} ${pickedCount === 1 ? 'friend' : 'friends'}` : 'Pick a friend' }}</button>
-                <button class="btn ghost" :style="sheet.done ? 'flex:1' : ''" @click="closeSheet">{{ sheet.done ? 'Done' : 'Not now' }}</button>
+                <button v-if="!sheet.done" class="btn" style="flex:1" :disabled="sheet.busy || !pickedCount" @click="shareWithPicked">{{ sheet.busy ? $t('Sharing…') : pickedCount ? $tn(pickedCount, 'Share with {n} friend', 'Share with {n} friends') : $t('Pick a friend') }}</button>
+                <button class="btn ghost" :style="sheet.done ? 'flex:1' : ''" @click="closeSheet">{{ $t(sheet.done ? 'Done' : 'Not now') }}</button>
               </div>
             </template>
 
             <!-- set my mood right here; the bot still posts it in the chat (POST /api/me/mood) -->
             <template v-else-if="sheet.type === 'mood'">
-              <h2 class="af-title">How are you feeling?</h2>
+              <h2 class="af-title">{{ $t('How are you feeling?') }}</h2>
               <div v-if="!moodOptions.length" class="mp-grid"><div v-for="n in 9" :key="'mps' + n" class="shimmer" style="height:78px;border-radius:16px"></div></div>
               <div v-else class="mp-grid">
                 <button v-for="m in moodOptions" :key="m.code" class="mp-opt" :class="{ on: sheet.code === m.code }" :style="{ '--hue': hueFor(m.code) }" :disabled="sheet.saving" @click="pickMood(m.code)">
-                  <span class="e">{{ m.emoji }}</span><span class="n">{{ m.name }}</span>
+                  <span class="e">{{ m.emoji }}</span><span class="n">{{ moodName(m) }}</span>
                 </button>
               </div>
               <div class="mp-note" v-if="sheet.code">
-                <textarea v-model="sheet.note" rows="2" :maxlength="2000" placeholder="Add a note (optional): what's behind it?" :disabled="sheet.saving"></textarea>
+                <textarea v-model="sheet.note" rows="2" :maxlength="2000" :placeholder="$t('Add a note (optional): what\'s behind it?')" :disabled="sheet.saving"></textarea>
               </div>
               <div class="row-actions">
-                <button class="btn" style="flex:1" :disabled="!sheet.code || sheet.saving" @click="saveMyMood">{{ sheet.saving ? 'Saving…' : sheet.code ? 'Save ' + moodOptions.find(m => m.code === sheet.code)?.name.toLowerCase() : 'Pick a mood' }}</button>
+                <button class="btn" style="flex:1" :disabled="!sheet.code || sheet.saving" @click="saveMyMood">{{ sheet.saving ? $t('Saving…') : sheet.code ? $t('Save {mood}', { mood: moodName(moodOptions.find(m => m.code === sheet.code)).toLowerCase() }) : $t('Pick a mood') }}</button>
               </div>
-              <button class="mp-bot" :disabled="sheet.saving" @click="pickInBot">Or pick it in the bot chat</button>
+              <button class="mp-bot" :disabled="sheet.saving" @click="pickInBot">{{ $t('Or pick it in the bot chat') }}</button>
             </template>
 
             <!-- home screen widget builder (Friends tab / Settings) -->
             <template v-else-if="sheet.type === 'widget'">
-              <h2 class="af-title">Home screen widget</h2>
+              <h2 class="af-title">{{ $t('Home screen widget') }}</h2>
               <div v-if="!widget" class="shimmer sk-line" style="width:60%"></div>
               <div v-else-if="!widget.enabled" class="wb-off">
-                <p>Pick yourself and any friends, choose a size, and a widget app on your phone keeps their moods on your home screen.</p>
-                <p class="wb-note">This makes private picture links. Anyone with a link can see that picture, so keep it to yourself. Friends only appear while they share their mood with you, and notes are never shown.</p>
-                <button class="btn" :disabled="widgetBusy" @click="enableWidget()"><ui-icon name="link" :size="16"></ui-icon>Turn on widget links</button>
+                <p>{{ $t('Pick yourself and any friends, choose a size, and a widget app on your phone keeps their moods on your home screen.') }}</p>
+                <p class="wb-note">{{ $t('This makes private picture links. Anyone with a link can see that picture, so keep it to yourself. Friends only appear while they share their mood with you, and notes are never shown.') }}</p>
+                <button class="btn" :disabled="widgetBusy" @click="enableWidget()"><ui-icon name="link" :size="16"></ui-icon>{{ $t('Turn on widget links') }}</button>
               </div>
               <template v-else>
                 <div class="af-sec">
-                  <div class="af-label">Size</div>
+                  <div class="af-label">{{ $t('Size') }}</div>
                   <div class="wb-sizes">
                     <button v-for="z in WIDGET_SIZES" :key="z.key" class="wb-size" :class="{ on: wb.size === z.key }" @click="setWidgetSize(z.key)">
-                      <span class="shape" :class="z.key"></span><b>{{ z.label }}</b><small>up to {{ widget.sizes?.[z.key]?.max || z.max }}</small>
+                      <span class="shape" :class="z.key"></span><b>{{ $t(z.label) }}</b><small>{{ $t('up to {n}', { n: widget.sizes?.[z.key]?.max || z.max }) }}</small>
                     </button>
                   </div>
                 </div>
                 <div class="af-sec">
-                  <div class="af-label">Who <span>{{ wb.auto ? 'newest friend moods' : wb.people.length + ' of ' + widgetMax }}</span></div>
+                  <div class="af-label">{{ $t('Who') }} <span>{{ wb.auto ? $t('newest friend moods') : $t('{a} of {b}', { a: wb.people.length, b: widgetMax }) }}</span></div>
                   <div class="af-opts">
-                    <button class="af-opt" :class="{ on: !wb.auto && wb.people.includes('me') }" @click="toggleWidgetPerson('me')"><span v-if="!wb.auto && wb.people.includes('me')" class="wb-n">{{ wb.people.indexOf('me') + 1 }}</span>You</button>
+                    <button class="af-opt" :class="{ on: !wb.auto && wb.people.includes('me') }" @click="toggleWidgetPerson('me')"><span v-if="!wb.auto && wb.people.includes('me')" class="wb-n">{{ wb.people.indexOf('me') + 1 }}</span>{{ $t('You') }}</button>
                     <button v-for="f in widget.friends" :key="'wb' + f.id" class="af-opt" :class="{ on: !wb.auto && wb.people.includes(String(f.id)) }" @click="toggleWidgetPerson(String(f.id))"><span v-if="!wb.auto && wb.people.includes(String(f.id))" class="wb-n">{{ wb.people.indexOf(String(f.id)) + 1 }}</span>{{ f.fullname }}</button>
-                    <button v-if="widget.friends.length" class="af-opt" :class="{ on: wb.auto }" @click="setWidgetAuto"><ui-icon name="users" :size="15"></ui-icon>Newest friends</button>
+                    <button v-if="widget.friends.length" class="af-opt" :class="{ on: wb.auto }" @click="setWidgetAuto"><ui-icon name="users" :size="15"></ui-icon>{{ $t('Newest friends') }}</button>
                   </div>
-                  <div v-if="!widget.friends.length" class="wb-note">No friends share their mood with you yet. Once they do, you can add them here.</div>
+                  <div v-if="!widget.friends.length" class="wb-note">{{ $t('No friends share their mood with you yet. Once they do, you can add them here.') }}</div>
                 </div>
-                <img class="wb-preview" :class="wb.size" :src="widgetLink + '&v=' + widgetVersion" alt="Widget preview">
+                <img class="wb-preview" :class="wb.size" :src="widgetLink + '&v=' + widgetVersion" :alt="$t('Widget preview')">
                 <div class="row-actions">
-                  <button class="btn" @click="copyText(widgetLink, 'Widget link copied')"><ui-icon name="link" :size="16"></ui-icon>Copy link</button>
-                  <button class="btn ghost" @click="copyText(widgetScript, 'Script copied. Paste it into Scriptable')"><ui-icon name="clipboard-list" :size="16"></ui-icon>Copy iPhone script</button>
+                  <button class="btn" @click="copyText(widgetLink, $t('Widget link copied'))"><ui-icon name="link" :size="16"></ui-icon>{{ $t('Copy link') }}</button>
+                  <button class="btn ghost" @click="copyText(widgetScript, $t('Script copied. Paste it into Scriptable'))"><ui-icon name="clipboard-list" :size="16"></ui-icon>{{ $t('Copy iPhone script') }}</button>
                 </div>
                 <div class="w-steps">
-                  <b>iPhone</b> 1. Install the free <i>Scriptable</i> app. 2. Tap + and paste the copied script. 3. On your home screen, add a Scriptable widget in the <b class="inl">{{ widgetSizeLabel }}</b> size, long-press it, tap Edit Widget and choose the script.
-                  <b>Android</b> Install a widget app that shows a picture from a link (for example KWGT), add its {{ widgetSizeLabel.toLowerCase() }} widget and paste the copied link.
-                  <b>Why not in Telegram?</b> Telegram's "Add to home screen" can only add an app icon. A widget needs a widget app; MoodPal draws the picture and keeps it up to date.
+                  <b>iPhone</b> {{ $t('1. Install the free Scriptable app. 2. Tap + and paste the copied script. 3. On your home screen, add a Scriptable widget in the {size} size, long-press it, tap Edit Widget and choose the script.', { size: $t(widgetSizeLabel) }) }}
+                  <b>Android</b> {{ $t('Install a widget app that shows a picture from a link (for example KWGT), add its {size} widget and paste the copied link.', { size: $t(widgetSizeLabel).toLowerCase() }) }}
+                  <b>{{ $t('Why not in Telegram?') }}</b> {{ $t('Telegram\'s "Add to home screen" can only add an app icon. A widget needs a widget app; MoodPal draws the picture and keeps it up to date.') }}
                 </div>
               </template>
             </template>
 
             <template v-else-if="sheet.type === 'mbti'">
-              <mbti-card :key="sheet.mbtiType" :mbti="{ type: sheet.mbtiType }" :kicker="sheet.mbtiType === personality?.profile?.mbti?.type ? 'Your Moodling' : 'Meet'" letters-label="The four letters"></mbti-card>
+              <mbti-card :key="sheet.mbtiType" :mbti="{ type: sheet.mbtiType }" :kicker="$t(sheet.mbtiType === personality?.profile?.mbti?.type ? 'Your Moodling' : 'Meet')" :letters-label="$t('The four letters')"></mbti-card>
               <div class="row-actions" style="margin-top:0">
                 <button class="btn ghost" @click="openMbtiCharacter(MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 15) % 16])">‹ {{ MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 15) % 16] }}</button>
                 <button class="btn ghost" @click="openMbtiCharacter(MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 1) % 16])">{{ MBTI_TYPES[(MBTI_TYPES.indexOf(sheet.mbtiType) + 1) % 16] }} ›</button>
-                <button class="btn" v-if="!personality?.profile?.mbti && mbtiTest" @click="closeSheet(); startTest(mbtiTest)">Which one are you?</button>
+                <button class="btn" v-if="!personality?.profile?.mbti && mbtiTest" @click="closeSheet(); startTest(mbtiTest)">{{ $t('Which one are you?') }}</button>
               </div>
             </template>
 
@@ -2690,7 +2727,7 @@
 
               <div class="seg grow sheet-tabs">
                 <button :class="{ on: sheet.tab === 'moods' }" @click="setSheetTab('moods')"><ui-icon name="scroll-text" :size="15"></ui-icon> Moods<template v-if="sheet.user.mood_count"> · {{ sheet.user.mood_count }}</template></button>
-                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> Personality</button>
+                <button :class="{ on: sheet.tab === 'personality' }" @click="setSheetTab('personality')"><ui-icon name="brain" :size="15"></ui-icon> {{ $t('Personality') }}</button>
                 <button :class="{ on: sheet.tab === 'connections' }" @click="setSheetTab('connections')"><ui-icon name="waypoints" :size="15"></ui-icon> Connections<template v-if="sheet.connections"> · {{ new Set([...sheet.connections.sees, ...sheet.connections.seen_by].map(p => p.id)).size }}</template></button>
                 <button :class="{ on: sheet.tab === 'insights' }" @click="setSheetTab('insights')"><ui-icon name="message-circle-heart" :size="15"></ui-icon> Insights</button>
                 <button :class="{ on: sheet.tab === 'support' }" @click="setSheetTab('support')"><ui-icon name="heart-handshake" :size="15"></ui-icon> Support</button>
@@ -2718,9 +2755,9 @@
                       <span class="t"><b>{{ p.fullname }}</b><span class="sup-status" :class="p.status">{{ p.status === 'accepted' ? 'Supporting' : p.status === 'pending' ? 'Asked, no answer yet' : 'Said not now' }}</span></span>
                     </div>
 
-                    <div class="af-label sup-gap">Settings</div>
+                    <div class="af-label sup-gap">{{ $t('Settings') }}</div>
                     <div class="kv"><span class="k">Automatic messages</span><span class="v">{{ sheet.sup.settings.auto ? 'On' : 'Off' }}</span></div>
-                    <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">When</span><span class="v">{{ supportTriggers(sheet.sup.settings) }}</span></div>
+                    <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">{{ $t('When') }}</span><span class="v">{{ supportTriggers(sheet.sup.settings) }}</span></div>
                     <div class="kv" v-if="sheet.sup.settings.auto"><span class="k">Wait · at most</span><span class="v">{{ sheet.sup.settings.delay_minutes ? sheet.sup.settings.delay_minutes + ' min' : 'no wait' }} · once every {{ sheet.sup.settings.cooldown_hours }} h</span></div>
                     <div class="kv"><span class="k">Offer to share</span><span class="v">{{ sheet.sup.settings.manual_prompt ? 'On' : 'Off' }}</span></div>
                     <div class="kv"><span class="k">Gets support messages</span><span class="v">{{ sheet.sup.settings.receive ? 'Yes' : 'No' }}</span></div>
@@ -2814,7 +2851,7 @@
               <!-- v-show keeps the timeline (and its stickers) alive while another tab is open -->
               <div v-show="sheet.tab === 'moods'" class="sheet-pane">
                 <div v-if="sheet.loading" class="section" style="margin:0"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div><div class="shimmer sk-line short"></div></div>
-                <div v-else-if="sheet.moods.length === 0" class="muted-box">No moods yet.</div>
+                <div v-else-if="sheet.moods.length === 0" class="muted-box">{{ $t('No moods yet.') }}</div>
                 <div v-else class="timeline">
                   <div v-for="(m, i) in sheet.moods" :key="m.timestamp" class="tl-item" :style="{ '--i': Math.min(i % 30, 12), '--hue': hueFor(m.mood.code) }">
                     <div class="tl-ico">
@@ -2822,10 +2859,10 @@
                         <span v-if="failed['tl' + i]" class="sticker-fallback">{{ m.mood.emoji }}</span>
                       </div>
                     </div>
-                    <div class="tl-head">{{ m.mood.name }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
+                    <div class="tl-head">{{ moodName(m.mood) }} <time>{{ formatWhen(m.timestamp, true) }}</time></div>
                     <div v-if="m.note" class="tl-note-row">
                         <div class="tl-note" :dir="noteLang(m.note) === 'fa' || noteLang(m.note) === 'ar' || noteLang(m.note) === 'he' ? 'rtl' : 'auto'">“{{ m.note }}”</div>
-                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note'" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
+                        <button v-if="canSpeak(m.note)" class="tl-say" :class="{ on: ttsPlaying === m.timestamp }" :aria-label="$t(ttsPlaying === m.timestamp ? 'Stop reading the note' : 'Listen to the note')" @click="speakNote(m.timestamp, m.note)"><ui-icon :name="ttsPlaying === m.timestamp ? 'square' : 'volume-2'" :size="14"></ui-icon></button>
                       </div>
                     <!-- admin: the note in English (only when tapped; Google Translate or OpenAI, see src/translate/service.js) -->
                     <template v-if="m.note && m.id && sheet.translate?.available">
@@ -2838,7 +2875,7 @@
                   </div>
                 </div>
                 <div class="load-more" v-if="!sheet.loading && sheet.has_more">
-                  <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreMoods">{{ sheet.loadingMore ? 'Loading…' : 'Load older moods' }}</button>
+                  <button class="btn ghost" :disabled="sheet.loadingMore" @click="loadMoreMoods">{{ $t(sheet.loadingMore ? 'Loading…' : 'Load older moods') }}</button>
                 </div>
               </div>
 
@@ -2904,8 +2941,8 @@
     <transition name="sheet">
       <div class="quiz" v-if="quiz" key="quiz">
         <div class="quiz-top">
-          <div><div class="name">{{ quiz.session.test.name }}</div><div class="count" v-if="!quiz.done">Question {{ quiz.session.current_index + 1 }} of {{ quiz.session.total }}</div></div>
-          <button class="close" @click="closeQuiz" aria-label="Close"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
+          <div><div class="name">{{ quiz.session.test.name }}</div><div class="count" v-if="!quiz.done">{{ $t('Question {a} of {b}', { a: quiz.session.current_index + 1, b: quiz.session.total }) }}</div></div>
+          <button class="close" @click="closeQuiz" :aria-label="$t('Close')"><ui-icon name="x" :size="17" :stroke="2.4"></ui-icon></button>
         </div>
         <div class="progress" v-if="!quiz.done"><div :style="{ width: (quiz.session.current_index / quiz.session.total * 100) + '%' }"></div></div>
 
@@ -2913,29 +2950,29 @@
           <div v-if="quiz.done && quiz.mbti">
             <div v-if="quiz.revealing" class="mb-drumroll">
               <mbti-character :type="quiz.shuffle"></mbti-character>
-              <p>Finding your Moodling…</p>
+              <p>{{ $t('Finding your Moodling…') }}</p>
             </div>
             <template v-else>
-              <mbti-card :mbti="quiz.mbti" actions kicker="You are…" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
-              <mbti-card v-if="quiz.preview && quiz.preview !== quiz.mbti.type" :key="quiz.preview" :mbti="{ type: quiz.preview }" compact kicker="Meet" letters-label="The four letters"></mbti-card>
+              <mbti-card :mbti="quiz.mbti" actions :kicker="$t('You are…')" :can-save-image="canSaveImage" @share="shareMbti" @copy="copyMbti" @retake="startTest({ key: 'mbti' })" @save-image="saveMbtiCard"></mbti-card>
+              <mbti-card v-if="quiz.preview && quiz.preview !== quiz.mbti.type" :key="quiz.preview" :mbti="{ type: quiz.preview }" compact :kicker="$t('Meet')" :letters-label="$t('The four letters')"></mbti-card>
               <section class="section">
-                <h3>Meet the whole cast <span class="sub">tap one</span></h3>
+                <h3>{{ $t('Meet the whole cast') }} <span class="sub">{{ $t('tap one') }}</span></h3>
                 <mbti-cast :current="quiz.preview || quiz.mbti.type" @pick="quiz.preview = $event"></mbti-cast>
               </section>
-              <button class="btn ghost" style="width:100%" @click="closeQuiz">See my profile</button>
+              <button class="btn ghost" style="width:100%" @click="closeQuiz">{{ $t('See my profile') }}</button>
             </template>
           </div>
           <div v-else-if="quiz.done" class="done">
             <div class="done-art"><ui-icon name="party-popper"></ui-icon></div>
-            <h2>{{ quiz.session.test.name }} done</h2>
-            <p>Your profile has been updated. Take another test to fill in more of it, or share it with friends.</p>
-            <button class="btn" @click="closeQuiz">See my profile</button>
+            <h2>{{ $t('{name} done', { name: quiz.session.test.name }) }}</h2>
+            <p>{{ $t('Your profile has been updated. Take another test to fill in more of it, or share it with friends.') }}</p>
+            <button class="btn" @click="closeQuiz">{{ $t('See my profile') }}</button>
           </div>
           <div v-else class="q-wrap">
             <transition name="q" mode="out-in">
               <div :key="quiz.session.current_index">
                 <div class="mb-peek" v-if="quiz.session.test.key === 'mbti'"><mbti-character :type="MBTI_TYPES[quiz.session.current_index % MBTI_TYPES.length]"></mbti-character></div>
-                <div class="q-label">{{ quiz.session.test.key === 'mbti' ? 'Is this you?' : 'How accurately does this describe you?' }}</div>
+                <div class="q-label">{{ $t(quiz.session.test.key === 'mbti' ? 'Is this you?' : 'How accurately does this describe you?') }}</div>
                 <div class="q-text">{{ currentQuestion.text }}</div>
                 <div class="q-intro" v-if="quiz.session.current_index === 0">{{ quiz.session.test.intro }}</div>
                 <div class="answers">
@@ -2949,8 +2986,8 @@
         </div>
 
         <div class="quiz-foot" v-if="!quiz.done">
-          <span class="hint">No right or wrong answers. Go with your first instinct.</span>
-          <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" @click="cancelQuiz">Cancel test</button>
+          <span class="hint">{{ $t('No right or wrong answers. Go with your first instinct.') }}</span>
+          <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" @click="cancelQuiz">{{ $t('Cancel test') }}</button>
         </div>
       </div>
     </transition>
@@ -2971,6 +3008,45 @@
       throw new Error('Vue failed to load');
     }
     const { createApp, nextTick, markRaw } = Vue;
+
+    // ---------- languages: the mini app speaks the same language as the bot (src/i18n) ----------
+    // $t(englishText, vars) looks the text up in the language's table (/i18n/<lang>.json,
+    // built by src/i18n/miniapp.js); anything missing stays English. $tn() picks the plural form.
+    const I18N = Vue.reactive({ lang: 'en', dir: 'ltr', locale: undefined, ui: {}, characters: {} });
+    const UI_EN = {
+      talkIntroHtml: "You're talking to an <b>AI</b>, not a human and not a therapist. It can be wrong, and this isn't therapy or medical advice. If you're in danger, contact your local emergency number or a crisis line right away. Messages go to OpenAI on <b>your own key</b> ({model}).",
+    };
+    // numbers are written the language's way (۱۶ in Farsi), the rest goes in as is
+    const fmtVar = (v) => (typeof v === 'number' && I18N.lang !== 'en' ? v.toLocaleString(I18N.locale) : v);
+    const fillVars = (s, vars) => (vars ? String(s).replace(/\{(\w+)\}/g, (m, k) => (vars[k] === undefined || vars[k] === null ? m : fmtVar(vars[k]))) : String(s));
+    function $t(text, vars) {
+      const s = I18N.ui[text] ?? UI_EN[text] ?? text;
+      return fillVars(Array.isArray(s) ? s[s.length - 1] : s, vars);
+    }
+    // Russian: 1 друг, 2 друга, 5 друзей (the table holds [one, few, many]); Persian has one form
+    const ruForm = (n) => { const a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? 2 : b === 1 ? 0 : b >= 2 && b <= 4 ? 1 : 2; };
+    function $tn(n, one, many) {
+      const tr = I18N.ui[one];
+      const s = Array.isArray(tr) ? tr[ruForm(n)] : tr ?? (n === 1 ? one : many);
+      return fillVars(s, { n });
+    }
+    // a Moodling with its words in the current language (art and colours stay the same)
+    const mpCharacter = (type) => { const base = MBTI.CHARACTERS[type]; const tr = I18N.characters[type]; return base && tr ? { ...base, ...tr } : base; };
+    // moods are stored with their English name; show them in the current language
+    const moodName = (m) => (m ? $t(m.name || m.code || '') : '');
+    const mpShareText = (type) => (I18N.lang === 'en' ? MBTI.shareText(type) : $t('I got {type}, {title}!\nWhich Moodling are you?', { type, title: mpCharacter(type)?.title || '' }));
+    const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    async function loadLanguage(lang) {
+      const code = ['fa', 'ru'].includes(lang) ? lang : 'en';
+      let table = { ui: {}, characters: {}, dir: 'ltr', locale: undefined };
+      if (code !== 'en') {
+        try { const res = await fetch(`/i18n/${code}.json`); if (res.ok) table = await res.json(); } catch (error) { console.error('Language table failed to load:', error); }
+      }
+      Object.assign(I18N, { lang: code, dir: table.dir || 'ltr', locale: table.locale || undefined, ui: table.ui || {}, characters: table.characters || {} });
+      document.documentElement.lang = code;
+      document.documentElement.dir = I18N.dir;
+      return code;
+    }
 
     // hue per mood so each card gets a matching soft glow
     const MOOD_HUES = {
@@ -3154,15 +3230,15 @@
         actions: { type: Boolean, default: false },         // share / copy / retake buttons
         retake: { type: Boolean, default: true },
         canSaveImage: { type: Boolean, default: false },
-        kicker: { type: String, default: 'Your Moodling' },
-        lettersLabel: { type: String, default: 'Your four letters' },
+        kicker: { type: String, default: '' },
+        lettersLabel: { type: String, default: '' },
       },
       emits: ['share', 'copy', 'retake', 'save-image'],
       data() { return { LINE_ICONS }; },
       computed: {
         type() { return this.mbti.type; },
         groupKey() { return MBTI.groupOf(this.type); },
-        c() { return MBTI.CHARACTERS[this.type]; },
+        c() { return mpCharacter(this.type); },
         group() { return MBTI.GROUPS[MBTI.groupOf(this.type)]; },
         style() { return mbtiStyle(this.type); },
         dims() {
@@ -3180,40 +3256,40 @@
       template: `
         <div class="mb-card" :class="{ compact }" :style="style">
           <div class="mb-hero">
-            <div class="mb-kicker">{{ kicker }}</div>
+            <div class="mb-kicker">{{ kicker || $t('Your Moodling') }}</div>
             <mbti-character :type="type" enter :key="type"></mbti-character>
             <div class="mb-letters"><span v-for="(l, i) in type.split('')" :key="type + i" :style="{ '--i': i }">{{ l }}</span></div>
             <h2>{{ c.name }}, {{ c.title }}</h2>
             <p class="mb-tag">“{{ c.tagline }}”</p>
-            <span class="mb-group"><mbti-icon :kind="groupKey"></mbti-icon>{{ group.name }}</span>
+            <span class="mb-group"><mbti-icon :kind="groupKey"></mbti-icon>{{ $t(group.name) }}</span>
           </div>
           <div class="mb-body">
             <p class="mb-desc" v-if="!compact">{{ c.description }}</p>
-            <div class="mb-h" :style="{ marginTop: compact ? 0 : '' }">{{ lettersLabel }}</div>
+            <div class="mb-h" :style="{ marginTop: compact ? 0 : '' }">{{ lettersLabel || $t('Your four letters') }}</div>
             <div v-for="(d, i) in dims" :key="d.key" class="mb-dim" :style="{ '--i': i }">
               <div class="ends">
-                <span :class="{ win: !d.isRight }"><mbti-icon :kind="d.left.letter"></mbti-icon><b>{{ d.left.letter }}</b> {{ d.left.name }}<template v-if="d.percent !== null && !d.isRight"> · {{ d.percent }}%</template></span>
-                <span :class="{ win: d.isRight }"><template v-if="d.percent !== null && d.isRight">{{ d.percent }}% · </template>{{ d.right.name }} <b>{{ d.right.letter }}</b><mbti-icon :kind="d.right.letter"></mbti-icon></span>
+                <span :class="{ win: !d.isRight }"><mbti-icon :kind="d.left.letter"></mbti-icon><b>{{ d.left.letter }}</b> {{ $t(d.left.name) }}<template v-if="d.percent !== null && !d.isRight"> · {{ d.percent }}%</template></span>
+                <span :class="{ win: d.isRight }"><template v-if="d.percent !== null && d.isRight">{{ d.percent }}% · </template>{{ $t(d.right.name) }} <b>{{ d.right.letter }}</b><mbti-icon :kind="d.right.letter"></mbti-icon></span>
               </div>
               <div class="track"><div class="fill" :class="d.isRight ? 'right' : 'left'" :style="{ width: d.width + '%' }"></div><div class="mid"></div></div>
             </div>
             <template v-if="!compact">
-              <div class="mb-h"><mbti-icon kind="strengths" :color="c.colors.body"></mbti-icon>Strengths</div>
+              <div class="mb-h"><mbti-icon kind="strengths" :color="c.colors.body"></mbti-icon>{{ $t('Strengths') }}</div>
               <div class="mb-chips"><span v-for="(t, i) in c.strengths" :key="t" :style="{ '--i': i }">{{ t }}</span></div>
-              <div class="mb-h"><mbti-icon kind="tendencies" :color="c.colors.body"></mbti-icon>Common tendencies</div>
+              <div class="mb-h"><mbti-icon kind="tendencies" :color="c.colors.body"></mbti-icon>{{ $t('Common tendencies') }}</div>
               <ul class="mb-list"><li v-for="t in c.tendencies" :key="t"><i></i>{{ t }}</li></ul>
-              <div class="mb-h"><mbti-icon kind="fun" :color="c.colors.body"></mbti-icon>Fun traits</div>
+              <div class="mb-h"><mbti-icon kind="fun" :color="c.colors.body"></mbti-icon>{{ $t('Fun traits') }}</div>
               <ul class="mb-list"><li v-for="t in c.funTraits" :key="t"><i></i>{{ t }}</li></ul>
-              <div class="mb-h"><mbti-icon kind="behaviors" :color="c.colors.body"></mbti-icon>You, probably</div>
+              <div class="mb-h"><mbti-icon kind="behaviors" :color="c.colors.body"></mbti-icon>{{ $t('You, probably') }}</div>
               <ul class="mb-list"><li v-for="t in c.behaviors" :key="t"><i></i>{{ t }}</li></ul>
             </template>
             <div class="mb-actions" v-if="actions">
-              <button class="btn mb-share" @click="$emit('share', type)"><span class="mb-li" v-html="LINE_ICONS.share"></span>Share my result</button>
-              <button class="btn ghost" @click="$emit('copy', type)"><span class="mb-li" v-html="LINE_ICONS.link"></span>Copy link</button>
-              <button class="btn ghost" v-if="canSaveImage" @click="$emit('save-image', type)"><span class="mb-li" v-html="LINE_ICONS.image"></span>Save card</button>
-              <button class="btn ghost" v-if="retake" @click="$emit('retake')"><span class="mb-li" v-html="LINE_ICONS.retake"></span>Retake test</button>
+              <button class="btn mb-share" @click="$emit('share', type)"><span class="mb-li" v-html="LINE_ICONS.share"></span>{{ $t('Share my result') }}</button>
+              <button class="btn ghost" @click="$emit('copy', type)"><span class="mb-li" v-html="LINE_ICONS.link"></span>{{ $t('Copy link') }}</button>
+              <button class="btn ghost" v-if="canSaveImage" @click="$emit('save-image', type)"><span class="mb-li" v-html="LINE_ICONS.image"></span>{{ $t('Save card') }}</button>
+              <button class="btn ghost" v-if="retake" @click="$emit('retake')"><span class="mb-li" v-html="LINE_ICONS.retake"></span>{{ $t('Retake test') }}</button>
             </div>
-            <div class="mb-note" v-if="!compact">A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.</div>
+            <div class="mb-note" v-if="!compact">{{ $t('A fun personality test inspired by the MBTI framework. Not a scientific or clinical assessment.') }}</div>
           </div>
         </div>
       `,
@@ -3228,7 +3304,7 @@
         <div class="mb-cast">
           <button v-for="t in types" :key="t" :class="{ on: t === current }" :style="style(t)" @click="$emit('pick', t)">
             <mbti-character :type="t"></mbti-character>
-            <b>{{ t }}</b><small>{{ chars[t].title }}</small>
+            <b>{{ t }}</b><small>{{ mpCharacter(t).title }}</small>
           </button>
         </div>
       `,
@@ -3270,11 +3346,11 @@
       watch: { animateKey() { this.animated = false; nextTick(() => requestAnimationFrame(() => { this.animated = true; })); } },
       template: `
         <div>
-          <mbti-card v-if="showMbti && profile.mbti" :mbti="profile.mbti" :compact="compact" kicker="Moodling" letters-label="The four letters"></mbti-card>
+          <mbti-card v-if="showMbti && profile.mbti" :mbti="profile.mbti" :compact="compact" :kicker="$t('Moodling')" :letters-label="$t('The four letters')"></mbti-card>
           <section v-if="radar" class="section" :style="{ '--i': 0 }">
-            <h3>Overview <span class="sub">{{ radar.title }}</span></h3>
+            <h3>{{ $t('Overview') }} <span class="sub">{{ radar.title }}</span></h3>
             <div class="radar-wrap">
-              <div class="ovr" :class="{ show: animated }" :title="'Average of the ' + radar.title + ' axes'"><b>{{ radar.overall }}</b><span>OVR</span></div>
+              <div class="ovr" :class="{ show: animated }" :title="$t('Average of the {name} axes', { name: radar.title })"><b>{{ radar.overall }}</b><span>OVR</span></div>
               <svg class="radar" :class="{ animated }" viewBox="0 0 300 256">
                 <polygon v-for="(r, i) in radar.rings" :key="'r' + i" class="ring" :points="r"></polygon>
                 <line v-for="(a, i) in radar.axes" :key="'a' + i" class="axis" :x1="radar.cx" :y1="radar.cy" :x2="a[0]" :y2="a[1]"></line>
@@ -3287,30 +3363,30 @@
               </svg>
             </div>
             <div class="stats" v-if="!compact">
-              <div class="stat"><b>{{ profile.measured }}</b><span>traits measured</span></div>
-              <div class="stat"><b>{{ profile.tests_taken.length }}</b><span>tests taken</span></div>
-              <div class="stat"><b>{{ profile.observation_count }}</b><span>observations</span></div>
+              <div class="stat"><b>{{ profile.measured }}</b><span>{{ $t('traits measured') }}</span></div>
+              <div class="stat"><b>{{ profile.tests_taken.length }}</b><span>{{ $t('tests taken') }}</span></div>
+              <div class="stat"><b>{{ profile.observation_count }}</b><span>{{ $t('observations') }}</span></div>
             </div>
           </section>
 
           <section v-if="profile.from_talks && profile.from_talks.length" class="section" :style="{ '--i': 1, '--hue': 200 }">
-            <h3>Learned from your talks <span class="sub">with the AI companion</span></h3>
+            <h3>{{ $t('Learned from your talks') }} <span class="sub">{{ $t('with the AI companion') }}</span></h3>
             <div v-for="(t, i) in profile.from_talks" :key="'ft' + t.key" class="trait">
               <div class="t-name">{{ t.name }}</div>
-              <div class="t-label">{{ Math.round(t.value * 100) }}% <span class="talk-delta" :class="t.change >= 0 ? 'up' : 'down'">{{ t.change >= 0 ? '+' : '−' }}{{ Math.abs(Math.round(t.change * 100)) }}%</span> · {{ t.talks }} {{ t.talks === 1 ? 'talk' : 'talks' }}</div>
+              <div class="t-label">{{ Math.round(t.value * 100) }}% <span class="talk-delta" :class="t.change >= 0 ? 'up' : 'down'">{{ t.change >= 0 ? '+' : '−' }}{{ Math.abs(Math.round(t.change * 100)) }}%</span> · {{ $tn(t.talks, '{n} talk', '{n} talks') }}</div>
               <div class="t-bar"><div class="t-fill" :style="{ width: animated ? (t.value * 100) + '%' : '0%', '--i': i }"></div></div>
               <div class="t-conf" v-if="t.evidence">“{{ t.evidence }}”</div>
             </div>
-            <div class="t-conf" style="margin-top:8px">Each talk moves a trait a little; tests set the starting point.</div>
+            <div class="t-conf" style="margin-top:8px">{{ $t('Each talk moves a trait a little; tests set the starting point.') }}</div>
           </section>
 
           <section v-for="(cat, ci) in profile.categories" :key="cat.key" class="section" :style="{ '--i': ci + 1, '--hue': hueFor(cat.key) }">
-            <h3>{{ cat.name }} <span class="sub">{{ cat.traits.length }} traits</span></h3>
+            <h3>{{ cat.name }} <span class="sub">{{ $tn(cat.traits.length, '{n} trait', '{n} traits') }}</span></h3>
             <div v-for="(t, i) in cat.traits" :key="t.key" class="trait" :title="t.description">
               <div class="t-name">{{ t.name }}</div>
               <div class="t-label">{{ t.label }} · {{ Math.round(t.value * 100) }}%</div>
               <div class="t-bar"><div class="t-fill" :style="{ width: animated ? (t.value * 100) + '%' : '0%', '--i': i }"></div></div>
-              <div class="t-conf" v-if="!compact">confidence {{ Math.round(t.confidence * 100) }}%</div>
+              <div class="t-conf" v-if="!compact">{{ $t('confidence {n}%', { n: Math.round(t.confidence * 100) }) }}</div>
             </div>
           </section>
         </div>
@@ -3680,6 +3756,7 @@
           settings: null,
           settingsError: '',
           settingsBusy: false,
+          languageBusy: false,
           remindersBusy: false,
           timezoneBusy: false,
           tzQuery: '',
@@ -3878,6 +3955,8 @@ Script.complete();
           try { this.tg.setHeaderColor('secondary_bg_color'); } catch {}
         }
 
+        // public pages: the visitor's language (Telegram's, else the browser's)
+        if (this.mode !== 'app') await loadLanguage(String(webApp?.initDataUnsafe?.user?.language_code || navigator.language || '').slice(0, 2).toLowerCase());
         if (this.mode === 'public') { hideSplash(); return this.loadPublic(); }
         this.detectImageSharing();
         if (this.mode === 'result') { hideSplash(); return this.initResultPage(); }
@@ -3892,6 +3971,8 @@ Script.complete();
           const res = await fetch('/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: this.tg.initData }) });
           const data = await res.json();
           if (res.ok && data.authenticated) {
+            // the bot's language, loaded before the first screen shows so nothing flashes in English
+            await loadLanguage(data.language);
             this.isAuthenticated = true;
             this.userId = data.userId;
             this.firstName = data.firstName || this.tg.initDataUnsafe?.user?.first_name || '';
@@ -4024,7 +4105,7 @@ Script.complete();
             this.mountStickers();
           } catch (error) {
             console.error('Get friends failed:', error);
-            if (!this.fetchedAt.friends && seq === this._friendsSeq) this.friendsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+            if (!this.fetchedAt.friends && seq === this._friendsSeq) this.friendsError = $t(error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.");
           } finally {
             if (seq === this._friendsSeq) this.loadingFriends = false;
           }
@@ -4070,7 +4151,7 @@ Script.complete();
             // a hard mood: offer to share it with a friend, right in this sheet
             if (data.share?.friends?.length) this.sheet = { type: 'share', moodId: data.share.mood_id, mood: data.mood.mood, friends: data.share.friends, picked: {}, busy: false, done: null };
             else this.closeSheet();
-            this.showToast(`Saved as ${data.mood.mood.name.toLowerCase()}. It's in your chat too`);
+            this.showToast($t("Saved as {mood}. It's in your chat too", { mood: moodName(data.mood.mood).toLowerCase() }));
             try { this.tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
             // the "your mood" card has a new sticker
             this.dropSticker('me'); this.loaded.me = false; this.failed.me = false;
@@ -4098,7 +4179,7 @@ Script.complete();
             const { results } = await this.api('/api/me/support/share', { method: 'POST', body: { mood_id: sheet.moodId, telegram_ids: ids } });
             sheet.done = Object.fromEntries(results.map(r => [r.id, r.status]));
             const ok = results.filter(r => r.status === 'sent' || r.status === 'already').length;
-            this.showToast(ok ? `${ok === 1 ? 'Your friend knows' : ok + ' friends know'} now 💛` : "Couldn't share right now");
+            this.showToast(ok ? $tn(ok, 'Your friend knows now 💛', '{n} friends know now 💛') : "Couldn't share right now");
           } catch (error) {
             this.showToast(error.data?.message || "Couldn't share right now");
           } finally { sheet.busy = false; }
@@ -4213,7 +4294,7 @@ Script.complete();
             }
             sheet.nickEdit = null;
             this.haptic('soft');
-            this.showToast(nickname ? `Saved. They show as ${nickname} for you` : 'Back to their real name');
+            this.showToast(nickname ? $t('Saved. They show as {name} for you', { name: nickname }) : 'Back to their real name');
             this.loadFollowers();
             if (this.support) this.fetchSupport();
           } catch (error) {
@@ -4250,7 +4331,7 @@ Script.complete();
           if (r) this.supportPicking = false;
         },
         removeSupportFriend(c) {
-          if (!window.confirm(`Remove ${c.fullname} as a support friend? They won't be told.`)) return;
+          if (!window.confirm($t("Remove {name} as a support friend? They won't be told.", { name: c.fullname }))) return;
           this.haptic('medium');
           this.supportCall(`/api/me/support/contacts/${c.id}`, { method: 'DELETE' }, 'Removed');
         },
@@ -4259,7 +4340,7 @@ Script.complete();
           this.supportCall(`/api/me/support/supporting/${p.invitation_id}`, { method: 'POST', body: { accept } }, accept ? `You're ${p.fullname.split(' ')[0]}'s support friend now 💛` : 'OK, nothing changes between you');
         },
         stopSupporting(p) {
-          if (!window.confirm(`Stop being ${p.fullname}'s support friend? They'll be told.`)) return;
+          if (!window.confirm($t("Stop being {name}'s support friend? They'll be told.", { name: p.fullname }))) return;
           this.haptic('medium');
           this.supportCall(`/api/me/support/supporting/${p.id}`, { method: 'DELETE' }, 'Done');
         },
@@ -4345,6 +4426,7 @@ Script.complete();
           this.shareUrl(this.shareLink, '👀 Follow my mood on MoodPal');
         },
         shareUrl(url, text) {
+          text = $t(text);
           if (this.tg?.openTelegramLink) return this.tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
           if (navigator.share) return navigator.share({ title: 'MoodPal', text, url }).catch(() => {});
           this.copyLink(url);
@@ -4495,7 +4577,7 @@ Script.complete();
             this.personalityAnimKey = 'p' + Date.now();
           } catch (error) {
             console.error('Personality failed:', error);
-            this.personalityError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+            this.personalityError = $t(error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.");
           } finally {
             this.loadingPersonality = false;
           }
@@ -5262,7 +5344,7 @@ Script.complete();
             this.loadFollowers();
             this.fetchWidget();
           } catch (error) {
-            this.settingsError = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+            this.settingsError = $t(error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.");
           }
         },
         // ----- home screen: Telegram's shortcut (Bot API 8.0+) and the widget image links -----
@@ -5301,7 +5383,7 @@ Script.complete();
         setWidgetSize(size) {
           this.haptic('light');
           this.wb.size = size;
-          if (this.wb.people.length > this.widgetMax) { this.wb.people = this.wb.people.slice(0, this.widgetMax); this.showToast(`A ${this.widgetSizeLabel.toLowerCase()} widget fits ${this.widgetMax}`); }
+          if (this.wb.people.length > this.widgetMax) { this.wb.people = this.wb.people.slice(0, this.widgetMax); this.showToast($t('A {size} widget fits {n}', { size: $t(this.widgetSizeLabel).toLowerCase(), n: this.widgetMax })); }
           this.saveWidgetPrefs();
         },
         toggleWidgetPerson(id) {
@@ -5310,14 +5392,14 @@ Script.complete();
           if (w.auto) { w.auto = false; w.people = []; }
           const i = w.people.indexOf(id);
           if (i >= 0) w.people.splice(i, 1);
-          else if (w.people.length >= this.widgetMax) return this.showToast(`A ${this.widgetSizeLabel.toLowerCase()} widget fits ${this.widgetMax}. Pick a bigger size for more`);
+          else if (w.people.length >= this.widgetMax) return this.showToast($t('A {size} widget fits {n}. Pick a bigger size for more', { size: $t(this.widgetSizeLabel).toLowerCase(), n: this.widgetMax }));
           else w.people.push(id);
           this.saveWidgetPrefs();
         },
         setWidgetAuto() { this.haptic('light'); this.wb.auto = !this.wb.auto; if (!this.wb.auto && !this.wb.people.length) this.wb.people = ['me']; this.saveWidgetPrefs(); },
         async enableWidget(reset = false) {
           if (this.widgetBusy) return;
-          if (reset && !window.confirm('Make new links? Widgets using the old links will stop working until you paste the new ones.')) return;
+          if (reset && !window.confirm($t('Make new links? Widgets using the old links will stop working until you paste the new ones.'))) return;
           this.haptic('medium');
           this.widgetBusy = true;
           try {
@@ -5328,7 +5410,7 @@ Script.complete();
           finally { this.widgetBusy = false; }
         },
         async disableWidget() {
-          if (this.widgetBusy || !window.confirm('Turn off widget links? Every widget using them stops updating.')) return;
+          if (this.widgetBusy || !window.confirm($t('Turn off widget links? Every widget using them stops updating.'))) return;
           this.haptic('medium');
           this.widgetBusy = true;
           try { this.widget = await this.api('/api/me/widget', { method: 'DELETE' }); this.showToast('Widget links are off'); }
@@ -5358,11 +5440,27 @@ Script.complete();
           catch { this.showToast("Couldn't remove the key"); }
           finally { this.settingsBusy = false; }
         },
+        // Settings → Language: the mini app switches right away; the bot's menu follows on the next message
+        async setLanguage(code) {
+          if (this.languageBusy || this.settings?.language?.current === code) return;
+          this.haptic('light');
+          this.languageBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/language', { method: 'POST', body: { language: code } });
+            await loadLanguage(code);
+            // tests, profile and moods come back from the server in the new language
+            this.fetchPersonality(true);
+            this.fetchLogs();
+            this.fetchSupport();
+            this.moodOptions = [];
+          } catch { this.showToast("Couldn't change the language"); }
+          finally { this.languageBusy = false; }
+        },
         async setModel(model) {
           if (this.settingsBusy) return;
           this.haptic('light');
           this.settingsBusy = true;
-          try { this.settings = await this.api('/api/me/settings/model', { method: 'POST', body: { model } }); this.modelInput = ''; this.showToast(`Using ${this.settings.openai.model}`); }
+          try { this.settings = await this.api('/api/me/settings/model', { method: 'POST', body: { model } }); this.modelInput = ''; this.showToast($t('Using {model}', { model: this.settings.openai.model })); }
           catch (error) { this.showToast(error.status === 400 ? "That doesn't look like a model id" : "Couldn't save the model"); }
           finally { this.settingsBusy = false; }
         },
@@ -5385,14 +5483,14 @@ Script.complete();
             const day = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
             const d = new Date(ts), now = new Date(this.nowTick);
             const diff = Math.round((Date.parse(day(d)) - Date.parse(day(now))) / 86400000);
-            const time = d.toLocaleTimeString(undefined, { timeZone: tz, hour: '2-digit', minute: '2-digit' });
-            const label = diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : d.toLocaleDateString(undefined, { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
+            const time = d.toLocaleTimeString(I18N.locale, { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+            const label = diff === 0 ? $t('Today') : diff === 1 ? $t('Tomorrow') : diff === -1 ? $t('Yesterday') : d.toLocaleDateString(I18N.locale, { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
             return `${label} · ${time}`;
           } catch { return this.formatWhen(ts); }
         },
         // nowTick makes this re-render every half minute, so the clock stays right
         localTimeIn(tz) {
-          try { return new Date(this.nowTick).toLocaleTimeString(undefined, { timeZone: tz, hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
+          try { return new Date(this.nowTick).toLocaleTimeString(I18N.locale, { timeZone: tz, hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
         },
         async setTimezone(timezone) {
           if (this.timezoneBusy) return;
@@ -5402,7 +5500,7 @@ Script.complete();
             this.settings = await this.api('/api/me/settings/timezone', { method: 'POST', body: { timezone } });
             this.tzQuery = '';
             const r = this.settings.reminders;
-            this.showToast(r?.enabled && r.next_at ? `Saved · next reminder ${this.formatInTz(r.next_at, r.timezone).toLowerCase()}` : `Timezone: ${this.settings.timezone.timezone}`);
+            this.showToast(r?.enabled && r.next_at ? $t('Saved · next reminder {when}', { when: this.formatInTz(r.next_at, r.timezone).toLowerCase() }) : $t('Timezone: {tz}', { tz: this.settings.timezone.timezone }));
           } catch (error) {
             this.showToast(error.status === 400 ? 'Unknown timezone' : "Couldn't save your timezone");
           } finally {
@@ -5424,9 +5522,9 @@ Script.complete();
             const now = this.settings.reminders;
             if (patch.enabled === false) this.showToast('Reminders are off');
             else if (patch.enabled === true) this.showToast('Reminders are on');
-            else if (now.next_at) this.showToast(`Next reminder ${this.formatInTz(now.next_at, now.timezone).toLowerCase()}`);
+            else if (now.next_at) this.showToast($t('Next reminder {when}', { when: this.formatInTz(now.next_at, now.timezone).toLowerCase() }));
           } catch (error) {
-            const messages = { too_many_times: `At most ${r.max_per_day} a day`, invalid_times: "That time doesn't look right", invalid_timezone: 'Unknown timezone' };
+            const messages = { too_many_times: $t('At most {n} a day', { n: r.max_per_day }), invalid_times: "That time doesn't look right", invalid_timezone: 'Unknown timezone' };
             this.showToast(messages[error.message] || "Couldn't save reminders");
           } finally {
             this.remindersBusy = false;
@@ -5480,7 +5578,7 @@ Script.complete();
             this.fetchedAt.talk = Date.now();
             this.scrollTalkToEnd();
           } catch (error) {
-            this.talk.error = error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.";
+            this.talk.error = $t(error.status === 401 ? 'Please reopen the mini app from Telegram.' : "Couldn't reach the server.");
           }
         },
         // which assistant reply this is (1-based), for the "I'm an AI" reminder every 8 replies
@@ -5507,8 +5605,8 @@ Script.complete();
             const code = error.data?.error;
             if (code === 'no_key') { this.talk.data = { ...this.talk.data, has_key: false }; }
             else if (code === 'key_rejected') { this.showToast('OpenAI rejected your key. Update it in Settings'); this.fetchTalk(); }
-            else if (code === 'model_unavailable') { this.showToast(`Your OpenAI account can't use ${error.data.model}. Pick another model in Settings`); this.fetchTalk(); }
-            else if (code === 'too_long') this.showToast(`That's a long one. Keep it under ${this.TALK_MAX} characters`);
+            else if (code === 'model_unavailable') { this.showToast($t("Your OpenAI account can't use {model}. Pick another model in Settings", { model: error.data.model })); this.fetchTalk(); }
+            else if (code === 'too_long') this.showToast($t("That's a long one. Keep it under {n} characters", { n: this.TALK_MAX }));
             else this.showToast("Couldn't get a reply right now. Try again");
           } finally {
             this.talk.pending = '';
@@ -5543,7 +5641,7 @@ Script.complete();
         async unfollowFriend(f, { both = false } = {}) {
           if (this.friendBusy) return;
           const name = this.firstNameOf(f);
-          const question = both ? `Stop seeing each other's moods with ${name}?` : `Unfollow ${name}? You'll stop seeing their mood.`;
+          const question = both ? $t("Stop seeing each other's moods with {name}?", { name }) : $t("Unfollow {name}? You'll stop seeing their mood.", { name });
           if (!window.confirm(question)) return;
           this.haptic('medium');
           this.friendBusy = true;
@@ -5553,14 +5651,14 @@ Script.complete();
             this.friends = this.friends.filter(x => x.id !== f.id);
             if (this.sheet?.type === 'friend' && this.sheet.friend.id === f.id) this.closeSheet();
             this.loadFollowers();
-            this.showToast(both ? `You and ${name} no longer see each other's moods` : `You unfollowed ${name}`);
+            this.showToast(both ? $t("You and {name} no longer see each other's moods", { name }) : $t('You unfollowed {name}', { name }));
           } catch { this.showToast("Couldn't do that, try again"); }
           finally { this.friendBusy = false; }
         },
         async hideMyMoodFrom(f) {
           if (this.friendBusy) return;
           const name = this.firstNameOf(f);
-          if (!window.confirm(`Hide your mood from ${name}? They'll stop seeing it.`)) return;
+          if (!window.confirm($t("Hide your mood from {name}? They'll stop seeing it.", { name }))) return;
           this.haptic('medium');
           this.friendBusy = true;
           try {
@@ -5569,7 +5667,7 @@ Script.complete();
             if (friend) friend.follows_me = false;
             if (this.sheet?.type === 'friend' && this.sheet.friend.id === f.id) this.sheet.friend.follows_me = false;
             if (this.followers) this.followers = this.followers.filter(x => x.id !== f.id);
-            this.showToast(`${name} no longer sees your mood`);
+            this.showToast($t('{name} no longer sees your mood', { name }));
           } catch { this.showToast("Couldn't do that, try again"); }
           finally { this.friendBusy = false; }
         },
@@ -5581,7 +5679,7 @@ Script.complete();
           this.exportBusy = true;
           try {
             const r = await this.api('/api/me/export', { method: 'POST' });
-            this.showToast(`Sent ${r.count} ${r.count === 1 ? 'mood' : 'moods'} to your chat with the bot`);
+            this.showToast($tn(r.count, 'Sent {n} mood to your chat with the bot', 'Sent {n} moods to your chat with the bot'));
           } catch (error) {
             const m = { too_soon: 'Your file is on its way, try again in a minute', no_moods: 'Log a mood first' }[error.message];
             this.showToast(m || "Couldn't send the file. Try again in a minute");
@@ -5608,7 +5706,7 @@ Script.complete();
           finally { this.memoryBusy = false; }
         },
         async forgetAllMemories() {
-          if (this.memoryBusy || !window.confirm('Forget everything MoodPal remembers about you? This cannot be undone.')) return;
+          if (this.memoryBusy || !window.confirm($t('Forget everything MoodPal remembers about you? This cannot be undone.'))) return;
           this.haptic('medium');
           this.memoryBusy = true;
           try {
@@ -5671,7 +5769,7 @@ Script.complete();
         // Telegram's share sheet inside the mini app, the Web Share API in a browser, else copy
         shareMbti(type) {
           this.haptic('medium');
-          const url = this.mbtiUrl(type), text = MBTI.shareText(type);
+          const url = this.mbtiUrl(type), text = mpShareText(type);
           if (this.tg?.initData) return this.shareUrl(url, text);
           if (navigator.share) return navigator.share({ title: `${type} · MoodPal`, text, url }).catch(() => {});
           this.copyText(`${text}\n${url}`, 'Result copied, paste it anywhere');
@@ -5730,7 +5828,7 @@ Script.complete();
             const blob = await this.buildMbtiCard(type);
             const file = new File([blob], `moodpal-${type}.png`, { type: 'image/png' });
             if (navigator.canShare?.({ files: [file] })) {
-              return await navigator.share({ files: [file], title: `${type} · MoodPal`, text: `${MBTI.shareText(type)}\n${this.mbtiUrl(type)}` }).catch(() => {});
+              return await navigator.share({ files: [file], title: `${type} · MoodPal`, text: `${mpShareText(type)}\n${this.mbtiUrl(type)}` }).catch(() => {});
             }
             const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: file.name });
             document.body.appendChild(a); a.click(); a.remove();
@@ -5784,7 +5882,7 @@ Script.complete();
         async loadPublic() {
           const token = location.pathname.split('/p/')[1]?.split('/')[0];
           try {
-            const res = await fetch(`/api/public/personality/${encodeURIComponent(token)}`);
+            const res = await fetch(`/api/public/personality/${encodeURIComponent(token)}?lang=${I18N.lang}`);
             if (!res.ok) throw new Error('not found');
             const data = await res.json();
             this.publicName = data.first_name || 'Someone';
@@ -5809,16 +5907,16 @@ Script.complete();
         formatWhen(ts, short = false) {
           const d = new Date(ts);
           const days = this.daysAgo(ts);
-          const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-          if (days <= 0) return short ? time : `Today · ${time}`;
-          if (days === 1) return 'Yesterday';
-          if (days < 7) return d.toLocaleDateString(undefined, { weekday: short ? 'short' : 'long' });
+          const time = d.toLocaleTimeString(I18N.locale, { hour: '2-digit', minute: '2-digit' });
+          if (days <= 0) return short ? time : $t('Today · {time}', { time });
+          if (days === 1) return $t('Yesterday');
+          if (days < 7) return d.toLocaleDateString(I18N.locale, { weekday: short ? 'short' : 'long' });
           const sameYear = d.getFullYear() === new Date().getFullYear();
-          return d.toLocaleDateString(undefined, sameYear ? { day: 'numeric', month: 'short', ...(short ? {} : { weekday: 'short' }) } : { day: 'numeric', month: 'short', year: 'numeric' });
+          return d.toLocaleDateString(I18N.locale, sameYear ? { day: 'numeric', month: 'short', ...(short ? {} : { weekday: 'short' }) } : { day: 'numeric', month: 'short', year: 'numeric' });
         },
         haptic(style) { try { this.tg?.HapticFeedback?.impactOccurred(style); } catch {} },
         showToast(message) {
-          this.toast = message;
+          this.toast = $t(message);
           clearTimeout(this._toastTimer);
           this._toastTimer = setTimeout(() => { this.toast = ''; }, 2400);
         }
@@ -5834,7 +5932,10 @@ Script.complete();
       },
 
       beforeUnmount() { this.destroyStickers(); }
-    }).component('ui-icon', UiIcon).mount('#app');
+    })
+      .component('ui-icon', UiIcon)
+      .use({ install(app) { Object.assign(app.config.globalProperties, { $t, $tn, mpCharacter, moodName, escapeHtml }); } })
+      .mount('#app');
   </script>
 </body>
 

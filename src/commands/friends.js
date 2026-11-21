@@ -2,11 +2,14 @@
 // Quiet on purpose: the other person is not notified.
 const User = require('../models/user');
 const Share = require('../models/share');
+const i18n = require('../i18n');
 
 const MAX_BUTTONS = 30;
-const nameOf = (u) => [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Someone';
+const nameOf = (u, t = i18n.forLang()) => [u.first_name, u.last_name].filter(Boolean).join(' ') || t.someone;
 
 async function view(user) {
+  const t = i18n.forUser(user);
+  const name = (u) => nameOf(u, t);
   const [following, followers] = await Promise.all([
     Share.find({ follower: user._id, disabled: false }).populate('followed', 'id first_name last_name').lean(),
     Share.find({ followed: user._id, disabled: false }).populate('follower', 'id first_name last_name').lean(),
@@ -16,20 +19,21 @@ async function view(user) {
   const seeMeIds = new Set(seeMe.map(u => String(u._id)));
 
   if (!iSee.length && !seeMe.length) {
-    return { text: "🫂 You're not sharing moods with anyone yet.\nTap 🚀 Share and send your link to a friend.", keyboard: [] };
+    return { text: t.friendsNoneMsg(), keyboard: [] };
   }
-  const lines = ['🫂 <b>Your friends</b>'];
-  lines.push(`\n👀 <b>You see the mood of:</b> ${iSee.length ? iSee.map(nameOf).join(', ') : 'nobody'}`);
-  lines.push(`🙋 <b>They see your mood:</b> ${seeMe.length ? seeMe.map(nameOf).join(', ') : 'nobody'}`);
-  lines.push('\nTap to change. Nobody gets notified.');
+  const list = (users) => (users.length ? users.map(name).join(t.listSep) : t.nobody());
+  const lines = [t.friendsTitle()];
+  lines.push(`\n${t.friendsYouSee(list(iSee))}`);
+  lines.push(t.friendsSeeYou(list(seeMe)));
+  lines.push(`\n${t.friendsHint()}`);
 
   const keyboard = [];
   for (const u of iSee) {
-    const row = [{ text: `🚫 Unfollow ${nameOf(u)}`, callback_data: `fr_uf_${u._id}` }];
-    if (seeMeIds.has(String(u._id))) row.push({ text: '💔 Both', callback_data: `fr_both_${u._id}` });
+    const row = [{ text: t.friendsUnfollowButton(name(u)), callback_data: `fr_uf_${u._id}` }];
+    if (seeMeIds.has(String(u._id))) row.push({ text: t.friendsBothButton(), callback_data: `fr_both_${u._id}` });
     keyboard.push(row);
   }
-  for (const u of seeMe) keyboard.push([{ text: `🙈 Hide my mood from ${nameOf(u)}`, callback_data: `fr_rm_${u._id}` }]);
+  for (const u of seeMe) keyboard.push([{ text: t.friendsHideButton(name(u)), callback_data: `fr_rm_${u._id}` }]);
   return { text: lines.join('\n'), keyboard: keyboard.slice(0, MAX_BUTTONS) };
 }
 
@@ -45,7 +49,9 @@ async function friendsCallback(ctx) {
   if (!other) return ctx.answerCbQuery().catch(() => {});
   if (kind === 'uf' || kind === 'both') await Share.disableShare(ctx.user._id, other._id);
   if (kind === 'rm' || kind === 'both') await Share.disableShare(other._id, ctx.user._id);
-  const done = { uf: `You no longer see ${nameOf(other)}'s mood`, rm: `${nameOf(other)} no longer sees your mood`, both: `You and ${nameOf(other)} no longer see each other's moods` }[kind];
+  const t = i18n.forCtx(ctx);
+  const n = nameOf(other, t);
+  const done = { uf: t.friendsUnfollowedToast(n), rm: t.friendsRemovedToast(n), both: t.friendsBothToast(n) }[kind];
   await ctx.answerCbQuery(done).catch(() => {});
   const v = await view(ctx.user);
   await ctx.editMessageText(v.text, { parse_mode: 'HTML', reply_markup: v.keyboard.length ? { inline_keyboard: v.keyboard } : undefined }).catch(() => {});
