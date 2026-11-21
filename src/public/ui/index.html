@@ -945,6 +945,14 @@
     .bc-row .top { display: flex; align-items: center; gap: 8px; font-size: 0.7059rem; }
     .bc-row .st { font-weight: 800; color: var(--hint); } .bc-row .st.sending { color: var(--recent-ink); } .bc-row .st.done { color: var(--fresh-ink); }
     .bc-dest { margin-top: 12px; }
+    .lang-chip { font-size: 0.6471rem; font-weight: 800; letter-spacing: .03em; padding: 1px 7px; border-radius: 999px; background: rgba(51,144,236,0.12); color: var(--accent-ink); margin-left: 6px; white-space: nowrap; }
+    .adm-langs { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 12px; font-size: 0.7647rem; font-weight: 700; color: var(--hint); }
+    .adm-langs span { background: var(--card); border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow); }
+    .bc-langs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .bc-langs .af-opt { position: relative; }
+    .bc-langs small { opacity: .7; font-weight: 600; }
+    .bc-dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--fresh, #34c759); }
+    .bc-lang-note { margin: 0 0 10px; }
     .bc-tag.ch-sent { color: var(--fresh-ink); } .bc-tag.ch-failed, .bc-tag.ch-not_configured { color: var(--danger-ink); }
     .bc-row .when { margin-left: auto; color: var(--hint); font-weight: 600; }
     .bc-row .txt { font-size: 0.8235rem; margin: 6px 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1547,6 +1555,8 @@
             <div class="adm-stat"><b>{{ admin.active.day }}</b><span>active in<br>the last 24h</span></div>
             <div class="adm-stat"><b>{{ admin.active.week }}</b><span>active in<br>the last 7 days</span></div>
           </div>
+          <!-- how many people use each bot language -->
+          <div class="adm-langs" v-if="admin.languages"><span v-for="(n, code) in admin.languages" :key="'al' + code">{{ LANG_FLAGS[code] }} <bdi>{{ LANG_LABELS[code] }}</bdi> · {{ n }}</span></div>
 
           <!-- search + filters button; below it the sort menu and one removable chip per active filter -->
           <div class="adm-bar">
@@ -1602,7 +1612,7 @@
               </div>
               <div v-else class="avatar none">–</div>
               <div class="row-body">
-                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private"><ui-icon name="lock" :size="12"></ui-icon></span><span class="lock blocked" v-if="u.is_blocked" title="Blocked"><ui-icon name="ban" :size="12"></ui-icon></span><span class="lock has-key" v-if="u.has_openai_key" title="Has an OpenAI key"><ui-icon name="key-round" :size="12"></ui-icon></span><span class="chip" v-if="u.is_friend">friend</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
+                <div class="row-title"><span class="n">{{ u.fullname || 'Unnamed' }}</span><span class="u" v-if="u.username">@{{ u.username }}</span><span class="lock" v-if="u.is_mood_private" title="Mood is private"><ui-icon name="lock" :size="12"></ui-icon></span><span class="lock blocked" v-if="u.is_blocked" title="Blocked"><ui-icon name="ban" :size="12"></ui-icon></span><span class="lock has-key" v-if="u.has_openai_key" title="Has an OpenAI key"><ui-icon name="key-round" :size="12"></ui-icon></span><span class="chip" v-if="u.is_friend">friend</span><span class="lang-chip" v-if="u.language" :title="'Bot language: ' + LANG_LABELS[u.language]">{{ LANG_FLAGS[u.language] }} {{ u.language.toUpperCase() }}</span><span class="mb-type" v-if="u.mbti" :style="mbtiStyleFor(u.mbti)" :title="mbtiTitle(u.mbti)">{{ u.mbti }}</span></div>
                 <div class="row-sub" v-if="u.last_mood">{{ u.last_mood.mood.name }}<template v-if="u.last_mood.note"> · <i>“{{ u.last_mood.note }}”</i></template></div>
                 <div class="row-sub" v-else>No mood yet</div>
                 <span class="trait-pill" v-if="admin.trait && u.trait_value !== undefined && u.trait_value !== null">{{ adminTraitName }} {{ Math.round(u.trait_value * 100) }}%</span>
@@ -1665,24 +1675,32 @@
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
                 <h3>New message <span class="sub">{{ bcDraft.toUsers && bcDraft.toChannel ? 'to everyone and the channel' : bcDraft.toChannel ? 'to the channel only' : 'to everyone' }}</span></h3>
-                <textarea class="bc-text" v-model="bcDraft.text" :maxlength="bcLimit" rows="5" :placeholder="bcDraft.media ? 'Caption (optional)' : 'Write your message…'"></textarea>
-                <div class="bc-count">{{ bcDraft.text.length }} / {{ bcLimit }}</div>
+                <!-- one message per language: English is the base; Farsi and Russian are optional, and whatever
+                     a language leaves empty (text, attachment, button) its readers get from the English one -->
+                <div class="bc-langs" role="tablist">
+                  <button v-for="l in BC_LANGS" :key="'bcl' + l.code" class="af-opt small" :class="{ on: bcLang === l.code }" role="tab" :aria-selected="bcLang === l.code" @click="bcLang = l.code">
+                    {{ l.flag }} <bdi>{{ l.name }}</bdi><small v-if="bc.audience_by_lang"> · {{ bc.audience_by_lang[l.code] || 0 }}</small><i v-if="l.code !== 'en' && bcHasVariant(l.code)" class="bc-dot"></i>
+                  </button>
+                </div>
+                <div class="note-box bc-lang-note" v-if="bcLang !== 'en'">Optional. {{ bc.audience_by_lang?.[bcLang] || 0 }} {{ (bc.audience_by_lang?.[bcLang] || 0) === 1 ? 'person uses' : 'people use' }} {{ bcLangName(bcLang) }}. Anything you leave empty here, they get from the English message. Leave it all empty and they get the English one.</div>
+                <textarea class="bc-text" v-model="bcCur.text" dir="auto" :maxlength="bcLimit" rows="5" :placeholder="bcLang !== 'en' ? (bcDraft.text.trim() ? 'Empty: they get the English text' : 'Write the ' + bcLangName(bcLang) + ' text…') : bcDraft.media ? 'Caption (optional)' : 'Write your message…'"></textarea>
+                <div class="bc-count">{{ bcCur.text.length }} / {{ bcLimit }}</div>
 
-                <div v-if="bcDraft.media" class="bc-media">
-                  <span class="kind">{{ { photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[bcDraft.media.kind] }}</span>
-                  <span class="name">{{ bcDraft.media.file_name || 'attachment' }}</span>
-                  <button class="g-btn" title="Remove" :disabled="!!bcBusy" @click="bcDraft.media = null">×</button>
+                <div v-if="bcCur.media" class="bc-media">
+                  <span class="kind">{{ { photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[bcCur.media.kind] }}</span>
+                  <span class="name">{{ bcCur.media.file_name || 'attachment' }}</span>
+                  <button class="g-btn" title="Remove" :disabled="!!bcBusy" @click="bcCur.media = null">×</button>
                 </div>
                 <label v-else class="file-drop">
                   <input type="file" accept="image/*,video/*,audio/*,.pdf,.zip,.doc,.docx,.txt" @change="uploadBroadcastFile($event)">
-                  {{ bcBusy === 'upload' ? 'Uploading…' : 'Attach a photo, video, GIF, audio or file (optional, up to 50 MB)' }}
+                  {{ bcBusy === 'upload' ? 'Uploading…' : bcLang !== 'en' ? (bcDraft.media ? 'Attach a ' + bcLangName(bcLang) + ' version (empty: they get the English ' + ({ photo: 'photo', video: 'video', animation: 'GIF', audio: 'audio', document: 'file' }[bcDraft.media.kind]) + ')' : 'Attach a photo, video, GIF, audio or file for ' + bcLangName(bcLang) + ' only (optional)') : 'Attach a photo, video, GIF, audio or file (optional, up to 50 MB)' }}
                 </label>
 
-                <button class="bc-link" v-if="!bcDraft.showButton" @click="bcDraft.showButton = true">＋ Add a link button</button>
+                <button class="bc-link" v-if="!bcCur.showButton" @click="bcCur.showButton = true">＋ {{ bcLang !== 'en' && bcDraft.showButton ? 'Add a ' + bcLangName(bcLang) + ' button (empty: the English one)' : 'Add a link button' }}</button>
                 <div v-else class="field bc-button">
-                  <input v-model="bcDraft.buttonText" maxlength="40" placeholder="Button text">
-                  <input v-model="bcDraft.buttonUrl" placeholder="https://…" autocapitalize="off" spellcheck="false">
-                  <button class="g-btn" title="Remove button" @click="bcDraft.showButton = false; bcDraft.buttonText = ''; bcDraft.buttonUrl = ''">×</button>
+                  <input v-model="bcCur.buttonText" maxlength="40" placeholder="Button text" dir="auto">
+                  <input v-model="bcCur.buttonUrl" placeholder="https://…" autocapitalize="off" spellcheck="false">
+                  <button class="g-btn" title="Remove button" @click="bcCur.showButton = false; bcCur.buttonText = ''; bcCur.buttonUrl = ''">×</button>
                 </div>
 
                 <!-- where it goes: people's chats, the channel, or both (both on by default) -->
@@ -1730,6 +1748,7 @@
                     <span v-if="b.resent_from" class="bc-tag">{{ b.only_missed ? 'Resent to who missed it' : 'Resent' }}</span>
                     <span v-if="b.to_channel" class="bc-tag" :class="'ch-' + (b.channel_status || 'none')" :title="b.channel_error || ''">{{ { sent: 'Channel ✓', failed: 'Channel failed', not_configured: 'No channel set up' }[b.channel_status] || 'Channel' }}</span>
                     <span v-if="!b.to_users" class="bc-tag">Channel only</span>
+                    <span v-for="code in Object.keys(b.variants || {})" :key="b.id + code" class="bc-tag">+ {{ { fa: 'فارسی', ru: 'Русский' }[code] || code }}</span>
                     <span class="when">{{ formatWhen(b.started_at, true) }}</span>
                   </div>
                   <div class="txt">{{ b.text || b.file_name || '(no text)' }}</div>
@@ -2732,6 +2751,7 @@
                   <div class="mood"><template v-if="sheet.user.username">@{{ sheet.user.username }} · </template>id {{ sheet.user.id }}<template v-if="sheet.user.mood_count !== null && sheet.user.mood_count !== undefined"> · {{ sheet.user.mood_count }} {{ sheet.user.mood_count === 1 ? 'mood' : 'moods' }}</template></div>
                   <div class="mood">Active {{ formatWhen(sheet.user.last_active_at).toLowerCase() }}</div>
                   <div class="mood" v-if="sheet.user.timezone"><ui-icon name="globe" :size="14"></ui-icon> {{ sheet.user.timezone }} · {{ localTimeIn(sheet.user.timezone) }} there</div>
+                  <div class="mood" v-if="sheet.user.language"><ui-icon name="languages" :size="14"></ui-icon> Bot language: {{ LANG_FLAGS[sheet.user.language] }} <bdi>{{ LANG_LABELS[sheet.user.language] }}</bdi></div>
                 </div>
               </div>
               <!-- open this person's Telegram chat (by @username, else by id) -->
@@ -3059,6 +3079,9 @@
     // moods are stored with their English name; show them in the current language
     const moodName = (m) => (m ? $t(m.name || m.code || '') : '');
     const mpShareText = (type) => (I18N.lang === 'en' ? MBTI.shareText(type) : $t('I got {type}, {title}!\nWhich Moodling are you?', { type, title: mpCharacter(type)?.title || '' }));
+    // broadcast composer: the English message, plus an optional version per other language
+    const emptyBroadcastVariant = () => ({ text: '', media: null, showButton: false, buttonText: '', buttonUrl: '' });
+    const emptyBroadcastDraft = () => ({ text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active', toUsers: true, toChannel: true, variants: { fa: emptyBroadcastVariant(), ru: emptyBroadcastVariant() } });
     const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     async function loadLanguage(lang) {
       const code = ['fa', 'ru'].includes(lang) ? lang : 'en';
@@ -3791,7 +3814,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', active: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', key: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', active: null, languages: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', key: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           CH_ICONS: {
             straight_shooter: 'target', soft_landing: 'heart-handshake', deep_thinker: 'lightbulb', action_taker: 'zap',
             challenge_seeker: 'flame', independent: 'compass', people_powered: 'users-round', planner: 'calendar-check',
@@ -3847,7 +3870,11 @@
           bcError: '',
           bcBusy: '',
           bcResend: null,   // { id, audience, order } while picking how to send an earlier broadcast again
-          bcDraft: { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active', toUsers: true, toChannel: true },
+          bcDraft: emptyBroadcastDraft(),
+          bcLang: 'en',
+          LANG_FLAGS: { en: '🇬🇧', fa: '🇮🇷', ru: '🇷🇺' },
+          LANG_LABELS: { en: 'English', fa: 'فارسی', ru: 'Русский' },   // the language tab being edited in the broadcast composer
+          BC_LANGS: [{ code: 'en', flag: '🇬🇧', name: 'English' }, { code: 'fa', flag: '🇮🇷', name: 'فارسی' }, { code: 'ru', flag: '🇷🇺', name: 'Русский' }],
           memoryBusy: false,
           memories: null,
           publicName: '',
@@ -3876,7 +3903,10 @@
           for (const t of this.admin.traits) (groups[t.category] ||= { category: t.category, name: names[t.category] || t.category, traits: [] }).traits.push(t);
           return Object.values(groups);
         },
-        bcLimit() { return this.bcDraft.media ? 1024 : 4096; },
+        // the part of the draft the composer shows: the English message or one language's version
+        bcCur() { return this.bcLang === 'en' ? this.bcDraft : this.bcDraft.variants[this.bcLang]; },
+        // caption limit when the message that goes out has media (a language without its own uses the English one)
+        bcLimit() { return (this.bcCur.media || (this.bcLang !== 'en' && this.bcDraft.media)) ? 1024 : 4096; },
         // at least one destination, and someone to send to
         bcDestOk() { const d = this.bcDraft; return (d.toUsers || d.toChannel) && (!d.toUsers || this.bc?.audience > 0 || d.toChannel); },
         bcSendLabel() {
@@ -3884,7 +3914,10 @@
           if (d.toUsers && d.toChannel) return `Send to ${people} + channel`;
           return d.toChannel ? 'Post in the channel' : `Send to ${people}`;
         },
-        bcReady() { return Boolean(this.bcDraft.media || this.bcDraft.text.trim()) && (!this.bcDraft.showButton || (!this.bcDraft.buttonText && !this.bcDraft.buttonUrl) || (this.bcDraft.buttonText.trim() && /^https?:\/\/\S+$/i.test(this.bcDraft.buttonUrl.trim()))); },
+        bcReady() {
+          const buttonOk = (d) => !d.showButton || (!d.buttonText && !d.buttonUrl) || (d.buttonText.trim() && /^https?:\/\/\S+$/i.test(d.buttonUrl.trim()));
+          return Boolean(this.bcDraft.media || this.bcDraft.text.trim()) && buttonOk(this.bcDraft) && Object.values(this.bcDraft.variants).every(buttonOk);
+        },
         mbtiTest() { return this.personality?.tests?.find(t => t.key === 'mbti') || null; },
         // shared-result visitors land in the bot, which starts the test right away
         mbtiTestLink() { return `https://t.me/${this.publicBot || 'MoodPalBot'}?start=mbti`; },
@@ -4714,6 +4747,7 @@ Script.complete();
             this.admin.total_users = data.total_users;
             this.admin.total_moods = data.total_moods;
             this.admin.active = data.active || null;
+            this.admin.languages = data.languages || null;
             await nextTick();
             this.mountStickers();
           } catch (error) {
@@ -4853,6 +4887,7 @@ Script.complete();
             this.sheet.connections = d;
             this.sheet.user.is_friend = d.user.is_friend;
             this.sheet.user.timezone = d.user.timezone;
+            this.sheet.user.language = d.user.language;
             if (this.sheet.user.mood_count === null || this.sheet.user.mood_count === undefined) this.sheet.user.mood_count = d.user.mood_count;
           }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.connectionsLoading = false; });
           this.api(`/api/admin/users/${u.id}/personality`).then(d => { if (this.sheet?.user?.id === u.id) this.sheet.personality = d; }).catch(() => {}).finally(() => { if (this.sheet?.user?.id === u.id) this.sheet.personalityLoading = false; });
@@ -5158,6 +5193,8 @@ Script.complete();
           try { this.bc = await this.api('/api/admin/broadcasts', { retries: quiet ? 0 : 2 }); this.bcError = ''; }
           catch (error) { if (!quiet) this.bcError = error.status === 403 ? 'This account is not an admin.' : "Couldn't reach the server."; }
         },
+        bcLangName(code) { return { en: 'English', fa: 'Farsi', ru: 'Russian' }[code] || code; },
+        bcHasVariant(code) { const v = this.bcDraft.variants[code]; return Boolean(v && (v.text.trim() || v.media || (v.showButton && v.buttonText.trim()))); },
         broadcastPayload() {
           const d = this.bcDraft;
           return {
@@ -5169,6 +5206,14 @@ Script.complete();
             order: d.order,
             to_users: d.toUsers,
             to_channel: d.toChannel,
+            // only the languages that have something of their own
+            variants: Object.fromEntries(Object.entries(d.variants).filter(([code]) => this.bcHasVariant(code)).map(([code, v]) => [code, {
+              text: v.text,
+              kind: v.media ? v.media.kind : null,
+              file_id: v.media?.file_id || null,
+              file_name: v.media?.file_name || null,
+              button: v.showButton && v.buttonText.trim() ? { text: v.buttonText.trim(), url: v.buttonUrl.trim() } : null,
+            }])),
           };
         },
         toggleResend(b) {
@@ -5200,12 +5245,19 @@ Script.complete();
             showButton: Boolean(b.button), buttonText: b.button?.text || '', buttonUrl: b.button?.url || '',
             order: b.order || 'recent_active',
             toUsers: b.to_users !== false, toChannel: Boolean(b.to_channel),
+            variants: Object.fromEntries(['fa', 'ru'].map(code => {
+              const v = b.variants?.[code];
+              return [code, v ? { text: v.text || '', media: v.file_id ? { kind: v.kind, file_id: v.file_id, file_name: v.file_name } : null, showButton: Boolean(v.button?.text), buttonText: v.button?.text || '', buttonUrl: v.button?.url || '' } : emptyBroadcastVariant()];
+            })),
           };
+          this.bcLang = 'en';
           nextTick(() => document.querySelector('.bc-text')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
           this.showToast('Loaded into the message above');
         },
         broadcastError(error) {
-          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', still_sending: 'Wait until it has finished sending', no_destination: 'Turn on users, the channel, or both', telegram_failed: 'Telegram refused it' }[error.message];
+          const lang = error.data?.lang ? this.bcLangName(error.data.lang) + ': ' : '';
+          const m0 = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', still_sending: 'Wait until it has finished sending', no_destination: 'Turn on users, the channel, or both', telegram_failed: 'Telegram refused it' }[error.message];
+          const m = m0 && lang + m0;
           this.showToast(m || "Couldn't do that");
         },
         async uploadBroadcastFile(event) {
@@ -5222,7 +5274,7 @@ Script.complete();
             });
             const data = await res.json().catch(() => null);
             if (!res.ok) throw Object.assign(new Error(data?.error || 'upload_failed'), { status: res.status });
-            this.bcDraft.media = data;
+            this.bcCur.media = data;
             this.showToast('Attached. A preview is in your chat with the bot');
           } catch (error) { this.broadcastError(error); }
           finally { this.bcBusy = ''; }
@@ -5247,7 +5299,8 @@ Script.complete();
             const latest = this.bc.broadcasts?.[0];
             const channelNote = !d.toChannel ? '' : latest?.channel_status === 'sent' ? 'posted in the channel' : latest?.channel_status === 'not_configured' ? 'no channel set up' : "the channel post failed";
             this.showToast([d.toUsers ? `Sending to ${where.split(' and ')[0]}` : '', channelNote].filter(Boolean).join(', '));
-            this.bcDraft = { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active', toUsers: true, toChannel: true };
+            this.bcDraft = emptyBroadcastDraft();
+            this.bcLang = 'en';
           } catch (error) { this.broadcastError(error); }
           finally { this.bcBusy = ''; }
         },

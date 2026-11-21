@@ -9,6 +9,10 @@ const broadcastSchema = new mongoose.Schema({
   file_id: { type: String, default: null },
   file_name: { type: String, default: null },
   button: { text: { type: String, default: null }, url: { type: String, default: null } },
+  // other languages' versions: { fa: { text, kind, file_id, file_name, button }, ru: {...} }. The fields
+  // above are the English (base) message; a language gets its own text / media / button where it has
+  // one and the English one for whatever it leaves out. People with no version of their own get English.
+  variants: { type: mongoose.Schema.Types.Mixed, default: null },
   // who gets it first (see ORDERS in src/broadcast/service.js)
   order: { type: String, enum: ['recent_active', 'least_active', 'newest', 'oldest'], default: 'recent_active' },
   status: { type: String, enum: ['sending', 'done', 'cancelled'], default: 'sending', index: true },

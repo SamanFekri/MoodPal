@@ -122,6 +122,22 @@ describe('mini app language API', () => {
     assert.equal((await api('/api/me/settings/language', { as: ada, method: 'POST', body: { language: 'xx' } })).status, 400);
   });
 
+  test('admins see each person\'s language, and how many use each', async () => {
+    const boss = await User.create({ id: 72, first_name: 'Boss', is_admin: true });
+    await User.create({ id: 73, first_name: 'Dara', language: 'fa' });
+    await User.create({ id: 74, first_name: 'Olga', language: 'ru' });
+    const list = await api('/api/admin/users', { as: boss });
+    assert.equal(list.status, 200);
+    const lang = Object.fromEntries(list.body.users.map(u => [u.first_name || u.fullname, u.language]));
+    assert.equal(list.body.users.find(u => u.id === 73).language, 'fa');
+    assert.equal(list.body.users.find(u => u.id === 74).language, 'ru');
+    assert.equal(list.body.users.find(u => u.id === 71).language, 'en', 'no language set reads as English');
+    assert.deepEqual(list.body.languages, { en: 2, fa: 1, ru: 1 });
+    const one = await api('/api/admin/users/73/connections', { as: boss });
+    assert.equal(one.body.user.language, 'fa');
+    assert.ok(lang);
+  });
+
   test('tests and questions come back in the user\'s language', async () => {
     await User.updateOne({ _id: ada._id }, { language: 'fa' });
     const mine = await api('/api/me/personality', { as: ada });

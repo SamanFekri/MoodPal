@@ -5,6 +5,8 @@ const deliverySchema = new mongoose.Schema({
   broadcast: { type: mongoose.Schema.Types.ObjectId, ref: 'Broadcast', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   chat_id: { type: Number, required: true },
+  // the recipient's language when it was queued (src/i18n): which version of the broadcast they get
+  lang: { type: String, default: 'en' },
   // position in the send order chosen for the broadcast (0 goes first)
   seq: { type: Number, default: 0 },
   status: { type: String, enum: ['queued', 'sending', 'sent', 'failed', 'skipped'], default: 'queued' },

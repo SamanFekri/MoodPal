@@ -142,7 +142,7 @@ const listUsers = async (req, res) => {
         as: 'friend',
       } },
       // $arrayElemAt instead of $first: works on MongoDB 4.2+
-      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, timezone: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, has_openai_key: { $gt: [{ $strLenCP: { $ifNull: ['$openai_api_key', ''] } }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
+      { $project: { id: 1, first_name: 1, last_name: 1, username: 1, timezone: 1, language: 1, is_mood_private: 1, is_blocked: 1, is_admin: 1, has_note: 1, last_active_at: '$active_at', last_mood: '$last_mood_doc', mood_count: { $ifNull: [{ $arrayElemAt: ['$mood_count.n', 0] }, 0] }, is_friend: { $gt: [{ $size: '$friend' }, 0] }, has_openai_key: { $gt: [{ $strLenCP: { $ifNull: ['$openai_api_key', ''] } }, 0] }, trait_value: traitKey ? `$profile.traits.${traitKey}` : null } },
     ]),
     User.aggregate(countPipeline),
     Mood.estimatedDocumentCount(),
@@ -160,6 +160,8 @@ const listUsers = async (req, res) => {
     total_users: total,
     total_moods: moodCount,
     active: { day: activeDay, week: activeWeek },
+    // how many people use each language (everyone, not just the filtered list)
+    languages: await languageCounts(),
     sort: sortBy,
     dir,
     filter: {
@@ -178,6 +180,8 @@ const listUsers = async (req, res) => {
       has_openai_key: Boolean(u.has_openai_key),
       has_note: Boolean(u.has_note),
       timezone: u.timezone || null,
+      // the language the bot speaks to them (src/i18n); unset = English
+      language: require('../i18n').normalize(u.language),
       last_active_at: u.last_active_at,
       mood_count: u.mood_count,
       trait_value: traitKey ? u.trait_value : undefined,
@@ -341,6 +345,15 @@ const followGraph = async (req, res) => {
 // GET /api/admin/users/:telegramId/connections — one person's side of the follow graph:
 // whose mood they can see (`sees`) and who can see theirs (`seen_by`), with the latest mood
 // of everyone involved. Admin-only, regardless of anyone's privacy setting.
+// { en, fa, ru }: people per bot language (no language set counts as English)
+async function languageCounts() {
+  const i18n = require('../i18n');
+  const rows = await User.aggregate([{ $match: { is_bot: { $ne: true } } }, { $group: { _id: '$language', n: { $sum: 1 } } }]);
+  const out = Object.fromEntries(i18n.LANGS.map(l => [l, 0]));
+  for (const r of rows) out[i18n.normalize(r._id)] += r.n;
+  return out;
+}
+
 const userConnections = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) }).lean();
   if (!user) return res.status(404).json({ error: 'not_found' });
@@ -387,7 +400,7 @@ const userConnections = async (req, res) => {
   const seenByList = side(seenBy, 'follower');
   const seenByIds = new Set(seenByList.map(p => p.id));
   res.json({
-    user: { ...person(user), mood_count: moodCount, timezone: user.timezone || null },
+    user: { ...person(user), mood_count: moodCount, timezone: user.timezone || null, language: require('../i18n').normalize(user.language) },
     sees: seesList,
     seen_by: seenByList,
     mutual: seesList.filter(p => seenByIds.has(p.id)).map(p => p.id),

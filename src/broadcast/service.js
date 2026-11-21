@@ -10,6 +10,10 @@ const Broadcast = require('../models/broadcast');
 const BroadcastDelivery = require('../models/broadcast_delivery');
 const { getTelegram } = require('../utils/telegram');
 const reminders = require('../reminders/service');
+const i18n = require('../i18n');
+
+// languages a broadcast can have its own version in; English is the base message everyone else gets
+const VARIANT_LANGS = i18n.LANGS.filter(l => l !== i18n.DEFAULT_LANG);
 
 const DRAIN_MS = 1000;
 const MAX_ATTEMPTS = 3;
@@ -29,7 +33,7 @@ let timer = null;
 let draining = false;
 
 class BroadcastInputError extends Error {
-  constructor(code) { super(code); this.code = code; }
+  constructor(code, lang = null) { super(code); this.code = code; this.lang = lang; }
 }
 
 // ---------- the message ----------
@@ -38,19 +42,64 @@ class BroadcastInputError extends Error {
 const pausedUntil = () => reminders.state.paused_until;
 const pause = (ms) => { reminders.state.paused_until = new Date(Math.max(Date.now() + ms, reminders.state.paused_until?.getTime?.() || 0)); };
 
+function parseButton(button, lang = null) {
+  if (!button || !(button.text || button.url)) return null;
+  const bt = String(button.text || '').trim().slice(0, 40), bu = String(button.url || '').trim();
+  if (!bt || !/^https?:\/\/\S+$/i.test(bu)) throw new BroadcastInputError('invalid_button', lang);
+  return { text: bt, url: bu };
+}
+
+const checkLength = (msg, lang = null) => {
+  if (msg.text.length > (msg.kind === 'text' ? TEXT_LIMIT : CAPTION_LIMIT)) throw new BroadcastInputError(msg.kind === 'text' ? 'text_too_long' : 'caption_too_long', lang);
+};
+
+// the English (base) message
 function normalize({ text = '', kind = 'text', file_id = null, file_name = null, button = null } = {}) {
   const k = KINDS.includes(kind) ? kind : 'text';
   const t = String(text || '').trim();
   if (k === 'text' && !t) throw new BroadcastInputError('empty_message');
   if (k !== 'text' && !file_id) throw new BroadcastInputError('missing_media');
-  if (t.length > (k === 'text' ? TEXT_LIMIT : CAPTION_LIMIT)) throw new BroadcastInputError(k === 'text' ? 'text_too_long' : 'caption_too_long');
-  let btn = null;
-  if (button && (button.text || button.url)) {
-    const bt = String(button.text || '').trim().slice(0, 40), bu = String(button.url || '').trim();
-    if (!bt || !/^https?:\/\/\S+$/i.test(bu)) throw new BroadcastInputError('invalid_button');
-    btn = { text: bt, url: bu };
+  const msg = { kind: k, text: t, file_id: k === 'text' ? null : String(file_id), file_name: file_name ? String(file_name).slice(0, 120) : null, button: parseButton(button) };
+  checkLength(msg);
+  return msg;
+}
+
+// One language's own parts; null when it has none. Whatever it leaves out comes from the English message.
+function normalizeVariant(v, lang) {
+  if (!v || typeof v !== 'object') return null;
+  const t = String(v.text || '').trim();
+  const hasMedia = Boolean(v.file_id) && KINDS.includes(v.kind) && v.kind !== 'text';
+  const button = parseButton(v.button, lang);
+  if (!t && !hasMedia && !button) return null;
+  return {
+    text: t || null,
+    kind: hasMedia ? v.kind : null,
+    file_id: hasMedia ? String(v.file_id) : null,
+    file_name: hasMedia && v.file_name ? String(v.file_name).slice(0, 120) : null,
+    button,
+  };
+}
+
+// What someone gets: their language's own text, media and button, the English ones for anything missing
+function messageFor(base, variant) {
+  if (!variant) return { kind: base.kind, text: base.text || '', file_id: base.file_id || null, file_name: base.file_name || null, button: base.button?.text ? base.button : null };
+  const media = variant.file_id
+    ? { kind: variant.kind, file_id: variant.file_id, file_name: variant.file_name || null }
+    : { kind: base.kind, file_id: base.file_id || null, file_name: base.file_name || null };
+  return { ...media, text: variant.text || base.text || '', button: variant.button?.text ? variant.button : (base.button?.text ? base.button : null) };
+}
+
+// the base message plus every language version, each checked as the message that will actually be sent
+function normalizeAll(input = {}) {
+  const base = normalize(input);
+  const variants = {};
+  for (const lang of VARIANT_LANGS) {
+    const v = normalizeVariant(input.variants?.[lang], lang);
+    if (!v) continue;
+    checkLength(messageFor(base, v), lang);
+    variants[lang] = v;
   }
-  return { kind: k, text: t, file_id: k === 'text' ? null : String(file_id), file_name: file_name ? String(file_name).slice(0, 120) : null, button: btn };
+  return { base, variants: Object.keys(variants).length ? variants : null };
 }
 
 // send one broadcast message to one chat (plain text: nothing the admin types can break formatting)
@@ -130,16 +179,16 @@ const audienceCount = () => User.countDocuments(audienceFilter());
 const flag = (v, fallback) => (v === undefined || v === null ? fallback : v === true || v === 'true');
 
 async function create(adminId, input, { resentFrom = null, exclude = null } = {}) {
-  const msg = normalize(input);
+  const { base: msg, variants } = normalizeAll(input);
   const order = ORDERS[input?.order] ? input.order : 'recent_active';
   const toUsers = flag(input?.to_users, true);
   const toChannel = flag(input?.to_channel, true);
   if (!toUsers && !toChannel) throw new BroadcastInputError('no_destination');
-  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, order, resent_from: resentFrom, only_missed: Boolean(exclude), to_users: toUsers, to_channel: toChannel });
+  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, variants, order, resent_from: resentFrom, only_missed: Boolean(exclude), to_users: toUsers, to_channel: toChannel });
   if (toChannel) Object.assign(broadcast, await postToChannel(msg));
   let total = 0;
   const filter = exclude ? { ...audienceFilter(), _id: { $nin: exclude } } : audienceFilter();
-  const cursor = User.find(filter).sort(ORDERS[order]).select('_id id').lean().cursor();
+  const cursor = User.find(filter).sort(ORDERS[order]).select('_id id language').lean().cursor();
   let batch = [];
   const flush = async () => {
     if (!batch.length) return;
@@ -148,7 +197,7 @@ async function create(adminId, input, { resentFrom = null, exclude = null } = {}
     batch = [];
   };
   for await (const u of toUsers ? cursor : []) {
-    batch.push({ broadcast: broadcast._id, user: u._id, chat_id: u.id, seq: total + batch.length });
+    batch.push({ broadcast: broadcast._id, user: u._id, chat_id: u.id, lang: i18n.normalize(u.language), seq: total + batch.length });
     if (batch.length >= 1000) await flush();
   }
   await flush();
@@ -169,14 +218,16 @@ async function resend(adminId, id, { audience = 'everyone', order } = {}) {
     ? await BroadcastDelivery.find({ broadcast: original._id, status: 'sent' }).distinct('user')
     : null;
   // a resend goes to people's chats only: the channel already has the post
-  const input = { text: original.text, kind: original.kind, file_id: original.file_id, file_name: original.file_name, button: original.button?.text ? original.button : null, order: ORDERS[order] ? order : original.order, to_users: true, to_channel: false };
+  const input = { text: original.text, kind: original.kind, file_id: original.file_id, file_name: original.file_name, button: original.button?.text ? original.button : null, variants: original.variants || null, order: ORDERS[order] ? order : original.order, to_users: true, to_channel: false };
   return create(adminId, input, { resentFrom: original._id, exclude });
 }
 
+// "Send test to me": the English message, then each language that has its own version, as people will get it
 async function sendTest(chatId, input) {
-  const msg = normalize(input);
-  await sendTo(chatId, msg);
-  return msg;
+  const { base, variants } = normalizeAll(input);
+  await sendTo(chatId, base);
+  for (const lang of Object.keys(variants || {})) await sendTo(chatId, messageFor(base, variants[lang]));
+  return { languages: ['en', ...Object.keys(variants || {})] };
 }
 
 async function cancel(id) {
@@ -221,7 +272,9 @@ async function drain(now = new Date(), { limit } = {}) {
       ).lean();
       if (!d) break;
       touched.add(String(d.broadcast));
-      const msg = byId.get(String(d.broadcast));
+      const b = byId.get(String(d.broadcast));
+      // their language's version, with the English parts for anything it leaves out
+      const msg = messageFor(b, b.variants?.[d.lang]);
       try {
         await sendTo(d.chat_id, msg);
         await BroadcastDelivery.updateOne({ _id: d._id }, { status: 'sent', sent_at: new Date(), reason: null });
@@ -268,8 +321,14 @@ async function view({ limit = 8 } = {}) {
   ]);
   const by = {};
   for (const c of counts) (by[String(c._id.b)] ||= {})[c._id.s] = c.n;
+  // how many people can get it, per language (no language set = English)
+  const byLang = await User.aggregate([{ $match: audienceFilter() }, { $group: { _id: '$language', n: { $sum: 1 } } }]);
+  const audienceByLang = Object.fromEntries(i18n.LANGS.map(l => [l, 0]));
+  for (const row of byLang) audienceByLang[i18n.normalize(row._id)] += row.n;
   return {
     audience: await audienceCount(),
+    audience_by_lang: audienceByLang,
+    languages: VARIANT_LANGS,
     rate_per_second: await rate(),
     channel_configured: Boolean(channelId()),
     paused_until: pausedUntil() && pausedUntil() > new Date() ? pausedUntil() : null,
@@ -277,6 +336,7 @@ async function view({ limit = 8 } = {}) {
       const c = by[String(b._id)] || {};
       return {
         id: b._id, kind: b.kind, text: b.text, file_id: b.file_id, file_name: b.file_name, button: b.button?.text ? b.button : null, order: b.order,
+        variants: b.variants || null,
         resent_from: b.resent_from || null, only_missed: Boolean(b.only_missed),
         to_users: b.to_users !== false, to_channel: Boolean(b.to_channel), channel_status: b.channel_status || null, channel_error: b.channel_error || null,
         status: b.status, total: b.total, started_at: b.started_at, finished_at: b.finished_at,
@@ -307,5 +367,5 @@ function stop() {
 
 module.exports = {
   KINDS, ORDERS, TEXT_LIMIT, CAPTION_LIMIT, BroadcastInputError,
-  normalize, kindFor, uploadMedia, sendTest, create, resend, cancel, drain, view, audienceCount, start, stop, state,
+  VARIANT_LANGS, normalize, normalizeAll, messageFor, kindFor, uploadMedia, sendTest, create, resend, cancel, drain, view, audienceCount, start, stop, state,
 };

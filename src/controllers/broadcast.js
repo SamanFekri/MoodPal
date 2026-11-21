@@ -3,7 +3,7 @@ const AppConfig = require('../models/app_config');
 const broadcast = require('../broadcast/service');
 
 const fail = (res, error) => {
-  if (error instanceof broadcast.BroadcastInputError) return res.status(400).json({ error: error.code });
+  if (error instanceof broadcast.BroadcastInputError) return res.status(400).json({ error: error.code, ...(error.lang ? { lang: error.lang } : {}) });
   console.error('Broadcast failed:', error.message);
   return res.status(502).json({ error: 'telegram_failed', message: error.description || error.message });
 };
@@ -26,7 +26,9 @@ const test = async (req, res) => {
   try { await broadcast.sendTest(req.user.id, req.body || {}); res.json({ ok: true }); } catch (error) { fail(res, error); }
 };
 
-// POST /api/admin/broadcasts { text, kind, file_id, file_name, button, order, to_users, to_channel }
+// POST /api/admin/broadcasts { text, kind, file_id, file_name, button, order, to_users, to_channel,
+//   variants: { fa: { text, kind, file_id, file_name, button }, ru: {...} } } — the top-level fields are the
+//   English message; each language gets its own parts and the English ones for anything it leaves out
 // to_users: queue it for everyone; to_channel: post it in the main channel. Both default to true.
 const create = async (req, res) => {
   try {

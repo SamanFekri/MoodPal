@@ -186,6 +186,16 @@ describe('menu and language switch', () => {
     assert.ok(reply.extra.reply_markup.keyboard.flat().includes('🤩 حس جدید'));
   });
 
+  test('the t.me/<bot>?start=language link opens the language picker', async () => {
+    const start = require('../../src/commands/start');
+    const sent = [];
+    const ctx = { user: Object.assign(ada, { language: 'ru' }), payload: 'language', reply: async (t, extra) => sent.push({ t, extra }) };
+    await start(ctx);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].t, ru.languageChooseMsg());
+    assert.deepEqual(sent[0].extra.reply_markup.inline_keyboard[0].map(b => b.callback_data), ['lang_en', 'lang_fa', 'lang_ru']);
+  });
+
   test('an unknown language in the callback changes nothing', async () => {
     const ctx = { user: ada, chat: { type: 'private', id: ada.id }, callbackQuery: { data: 'lang_xx' }, answerCbQuery: async () => {} };
     await language.languageCallback(ctx);

@@ -42,6 +42,11 @@ module.exports = async (ctx) => {
           await require('./report').yearInMoods(ctx);
           break;
         // t.me/<bot>?start=mbti, from a shared MBTI-style result: welcome, then straight into the test
+        // t.me/<bot>?start=language, from the multi-language announcement: straight to the picker.
+        // Picking a language sends the menu in that language, so a brand-new user gets it too.
+        case 'language':
+          await require('./language').languageCommand(ctx);
+          break;
         case 'mbti':
           await ctx.reply(msgs.welocmeMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: { keyboard: common.makeKeyboardMenu(ctx), resize_keyboard: true } });
           await require('./personality').startTestByKey(ctx, 'mbti');

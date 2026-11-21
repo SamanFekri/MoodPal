@@ -155,6 +155,52 @@ describe('admin broadcasts', () => {
     assert.ok(!tg.calls.some(c => c.chatId === '-100777'), 'no second channel post');
   });
 
+  test('each person gets their language\'s version; anything it leaves out comes from the English one', async () => {
+    const mk = (id, name, language, active) => User.create({ id, first_name: name, language, last_active_at: new Date(active) });
+    await mk(11, 'Ann', 'en', '2026-09-29');
+    await mk(12, 'Dara', 'fa', '2026-09-28');
+    await mk(13, 'Olga', 'ru', '2026-09-27');
+    await mk(14, 'Sam', null, '2026-09-26');
+    const tg = fakeTelegram(); setTelegram(tg);
+    const body = {
+      text: 'MoodPal now speaks your language!', kind: 'video', file_id: 'VID_EN', button: { text: 'Language', url: 'https://t.me/bot?start=language' },
+      to_channel: false,
+      variants: {
+        fa: { text: 'MoodPal حالا به زبان تو حرف می‌زنه!', kind: 'video', file_id: 'VID_FA', button: { text: 'زبان', url: 'https://t.me/bot?start=language' } },
+        ru: { text: 'MoodPal теперь говорит на твоём языке!' },   // text only: the English video and button
+      },
+    };
+    const r = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body });
+    assert.equal(r.status, 200);
+    assert.deepEqual(r.body.audience_by_lang, { en: 3, fa: 1, ru: 1 }, 'admin + Ann + Sam (no language) are English');
+    await broadcast.drain(new Date(), { limit: 10 });
+    const to = (id) => tg.calls.find(c => c.chatId === id);
+    assert.equal(to(11).payload, 'VID_EN'); assert.equal(to(11).extra.caption, body.text);
+    assert.equal(to(14).payload, 'VID_EN', 'no language set: English');
+    assert.equal(to(12).payload, 'VID_FA'); assert.equal(to(12).extra.caption, body.variants.fa.text);
+    assert.equal(to(12).extra.reply_markup.inline_keyboard[0][0].text, 'زبان');
+    assert.equal(to(13).method, 'sendVideo'); assert.equal(to(13).payload, 'VID_EN', 'Russian without its own video gets the English one');
+    assert.equal(to(13).extra.caption, body.variants.ru.text);
+    assert.equal(to(13).extra.reply_markup.inline_keyboard[0][0].text, 'Language', 'and the English button');
+    const row = (await api('/api/admin/broadcasts', { as: admin })).body.broadcasts[0];
+    assert.deepEqual(Object.keys(row.variants).sort(), ['fa', 'ru']);
+
+    // a test sends the admin every language that has its own version
+    tg.calls.length = 0;
+    const t = await api('/api/admin/broadcasts/test', { as: admin, method: 'POST', body });
+    assert.equal(t.status, 200);
+    assert.deepEqual(tg.calls.map(c => c.extra.caption), [body.text, body.variants.fa.text, body.variants.ru.text]);
+
+    // an empty language version is ignored; a bad one names its language
+    const bad = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Hi', variants: { fa: { text: 'سلام', button: { text: 'x', url: 'nope' } } } } });
+    assert.equal(bad.status, 400); assert.equal(bad.body.error, 'invalid_button'); assert.equal(bad.body.lang, 'fa');
+    const long = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { kind: 'photo', file_id: 'P', text: 'ok', variants: { ru: { text: 'я'.repeat(1100) } } } });
+    assert.equal(long.body.error, 'caption_too_long', 'checked as the message that will be sent (a caption under the English photo)');
+    assert.equal(long.body.lang, 'ru');
+    const empty = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Hi', to_channel: false, variants: { fa: { text: '  ' } } } });
+    assert.equal(empty.status, 200); assert.equal(empty.body.broadcasts[0].variants, null);
+  });
+
   test('a failed or missing channel never stops the users getting it', async () => {
     await people();
     process.env.MAIN_CHANNEL_ID = '-100777';
