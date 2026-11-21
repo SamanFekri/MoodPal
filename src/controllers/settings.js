@@ -16,6 +16,14 @@ const view = async (user) => {
       default_model: llm.DEFAULT_MODEL,
       models: llm.MODEL_CHOICES,
     },
+    // which AI they're on: their own key (unlimited), MoodPal's shared key (limited), or none
+    ai: await (async () => {
+      const ai = require('../ai/access');
+      const access = await ai.forUser(user);
+      if (!access) return { source: 'none' };
+      if (access.own) return { source: 'own', provider: access.providerName };
+      return { source: 'shared', provider: access.providerName, model: access.model, today: await ai.talkToday(user) };
+    })(),
     ...(await (async () => {
       const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared language').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);

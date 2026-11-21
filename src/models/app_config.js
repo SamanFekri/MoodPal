@@ -55,6 +55,19 @@ const appConfigSchema = new mongoose.Schema({
   // ---- admin broadcasts (see src/broadcast) ----
   // with reminders at 10/s this keeps the bot under Telegram's ~30 messages/second
   broadcast_rate_per_second: { type: Number, default: 15, min: 1, max: 25 },
+
+  // ---- shared AI (see src/ai/access.js) ----
+  // One key the admin sets for everyone who hasn't added their own OpenAI key. Gemini by default;
+  // OpenAI or Claude also work. Stored encrypted and never selected by default.
+  ai_enabled: { type: Boolean, default: true },
+  ai_provider: { type: String, enum: ['gemini', 'openai', 'claude'], default: 'gemini' },
+  ai_api_key: { type: String, default: null, select: false },
+  // null = the provider's default model
+  ai_model: { type: String, default: null },
+  // Talk messages one person may send per day on the shared key (their own key has no limit)
+  ai_daily_talk_per_user: { type: Number, default: 20, min: 0, max: 1000 },
+  // every request through the shared key per day, all users together (0 = no cap)
+  ai_daily_total: { type: Number, default: 1000, min: 0, max: 1000000 },
 }, { timestamps: true, collection: 'app_config' });
 
 appConfigSchema.statics.get = async function () {
@@ -73,6 +86,22 @@ appConfigSchema.statics.getToken = async function () {
     return decrypt(doc.gyb_token);
   } catch (error) {
     console.error('Failed to decrypt the GotYouBro token:', error.message);
+    return null;
+  }
+};
+
+appConfigSchema.statics.setAiKey = async function (apiKey) {
+  await this.get();
+  await this.updateOne({ key: 'main' }, { ai_api_key: apiKey ? encrypt(apiKey) : null });
+};
+
+appConfigSchema.statics.getAiKey = async function () {
+  const doc = await this.findOne({ key: 'main' }).select('+ai_api_key');
+  if (!doc || !doc.ai_api_key) return null;
+  try {
+    return decrypt(doc.ai_api_key);
+  } catch (error) {
+    console.error('Failed to decrypt the shared AI key:', error.message);
     return null;
   }
 };

@@ -2,6 +2,7 @@
 // npm install openai
 
 import OpenAI from "openai";
+import providers from "../ai/providers.js";
 
 export const DEFAULT_MODEL = "gpt-5.6";
 // models a user may pick in Settings (any other id is accepted if it looks like a model id)
@@ -23,6 +24,10 @@ export const isReasoningModel = (model) => /^(gpt-5|o\d)/i.test(String(model || 
 
 export function chatParams(model, { temperature, maxTokens }) {
   const m = model || DEFAULT_MODEL;
+  // Gemini (OpenAI-compatible endpoint): thinking models too, so a light effort and room for the answer
+  if (/^gemini/i.test(m)) return { model: m, reasoning_effort: "low", max_tokens: Math.max(2000, maxTokens * 4) };
+  // Claude: the adapter in src/ai/providers.js sizes max_tokens and sets effort itself
+  if (/^claude/i.test(m)) return { model: m, max_completion_tokens: maxTokens };
   if (isReasoningModel(m)) {
     return { model: m, reasoning_effort: "low", max_completion_tokens: Math.max(2000, maxTokens * 4) };
   }
@@ -31,7 +36,8 @@ export function chatParams(model, { temperature, maxTokens }) {
 
 // A tuning parameter the model rejects (400 "unsupported parameter/value") is dropped and the
 // request retried once, so a new model with different rules still answers.
-const TUNING_PARAMS = ["temperature", "reasoning_effort"];
+// response_format too: a provider without JSON mode still answers in JSON from the prompt (parseJson)
+const TUNING_PARAMS = ["temperature", "reasoning_effort", "response_format"];
 export async function createChat(client, params) {
   try {
     return await client.chat.completions.create(params);
@@ -51,8 +57,19 @@ export function isModelError(error) {
 }
 
 // tests swap the OpenAI client
-let makeClient = (apiKey) => new OpenAI({ apiKey });
-export function _setClientFactory(factory) { makeClient = factory || ((apiKey) => new OpenAI({ apiKey })); }
+// `apiKey` everywhere below is a credential: a user's own OpenAI key (string) or the admin's shared
+// key ({ provider, apiKey, model }, see src/ai/providers.js); the shared key's model wins
+let makeClient = (cred) => providers.clientFor(cred);
+export function _setClientFactory(factory) { makeClient = factory || ((cred) => providers.clientFor(cred)); }
+
+// JSON from a model that may wrap it in a code fence or add a word around it
+export function parseJson(content) {
+  const text = providers.stripFences(content).trim();
+  try { return JSON.parse(text); } catch {}
+  const start = text.indexOf("{"), end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) return JSON.parse(text.slice(start, end + 1));
+  throw new SyntaxError("No JSON in the model's answer");
+}
 
 const SYSTEM_PROMPT = `
 You are a licensed clinical psychologist responding to a client’s recent mood check-ins.
@@ -138,6 +155,7 @@ export async function verifyApiKey(apiKey) {
 }
 
 export function isAuthError(error) {
+  if (providers.isAuthError(error)) return true;
   return error && (error.status === 401 || error.code === "invalid_api_key");
 }
 
@@ -161,6 +179,7 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", 
   }
 
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
 
   const response = await createChat(client, {
     ...chatParams(model, { temperature: 1, maxTokens: 420 }),
@@ -177,7 +196,7 @@ export async function analyzeMoodWeek(items, apiKey, { personalityContext = "", 
     return fallback;
   }
 
-  const result = JSON.parse(content);
+  const result = parseJson(content);
 
   // ---- Convert JSON → Telegram text ----
 
@@ -235,6 +254,7 @@ export async function inferPersonalityUpdates(text, apiKey, traits, { model = DE
     throw new Error("Missing OpenAI API key for this user");
   }
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
   const catalog = traits.map(t => ({ key: t.key, description: t.description }));
 
   const response = await createChat(client, {
@@ -249,7 +269,7 @@ export async function inferPersonalityUpdates(text, apiKey, traits, { model = DE
   const content = response.choices[0]?.message?.content;
   if (!content) return { updates: [] };
   try {
-    return JSON.parse(content);
+    return parseJson(content);
   } catch {
     return { updates: [] };
   }
@@ -328,6 +348,7 @@ Return ONLY valid JSON:
 export async function extractMemories(existing, messages, apiKey, { model = DEFAULT_MODEL } = {}) {
   if (!apiKey) throw new Error("Missing OpenAI API key for this user");
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
   const response = await createChat(client, {
     ...chatParams(model, { temperature: 0.2, maxTokens: 700 }),
     response_format: { type: "json_object" },
@@ -337,7 +358,7 @@ export async function extractMemories(existing, messages, apiKey, { model = DEFA
     ],
   });
   const content = response.choices[0]?.message?.content;
-  try { return JSON.parse(content); } catch { return { operations: [] }; }
+  try { return parseJson(content); } catch { return { operations: [] }; }
 }
 
 // ---- Admin: characteristics & communication guide ----
@@ -396,6 +417,7 @@ Return ONLY valid JSON, exactly:
 export async function analyzeCharacteristics(catalog, data, apiKey, { model = DEFAULT_MODEL } = {}) {
   if (!apiKey) throw new Error("Missing OpenAI API key");
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
   const response = await createChat(client, {
     ...chatParams(model, { temperature: 0.3, maxTokens: 2500 }),
     response_format: { type: "json_object" },
@@ -406,7 +428,7 @@ export async function analyzeCharacteristics(catalog, data, apiKey, { model = DE
   });
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error("Empty response from the model");
-  return JSON.parse(content);
+  return parseJson(content);
 }
 
 // Last line of defence for the "sounds like a bot" tells the prompt forbids: dashes, markdown
@@ -433,6 +455,7 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
     throw new Error("Missing OpenAI API key for this user");
   }
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
   let system = withPersonalityContext(CHAT_SYSTEM_PROMPT + (firstName ? `\nThe user's first name is ${firstName}.` : ""), personalityContext);
   // what a friend would simply know: how they've been feeling lately, and what they told you before
   if (moodContext || memoryContext) system += `\n\n${[moodContext, memoryContext].filter(Boolean).join("\n\n")}\n${KNOWN_CONTEXT_INSTRUCTIONS}`;
@@ -447,7 +470,7 @@ export async function chatReply(history, apiKey, { personalityContext = "", firs
 
   const content = response.choices[0]?.message?.content;
   let parsed = null;
-  try { parsed = JSON.parse(content); } catch { parsed = null; }
+  try { parsed = parseJson(content); } catch { parsed = null; }
   const reply = typeof parsed?.reply === "string" && humanizeReply(parsed.reply) ? humanizeReply(parsed.reply) : fallbackReply;
   const risk = ["none", "low", "medium", "high"].includes(parsed?.risk) ? parsed.risk : "none";
   return { reply, risk };
@@ -467,6 +490,7 @@ If the note is already English, return {"language": "en", "english": "<the note 
 export async function translateToEnglish(text, apiKey, { model = DEFAULT_MODEL } = {}) {
   if (!apiKey) throw new Error("Missing OpenAI API key");
   const client = makeClient(apiKey);
+  model = providers.modelFor(apiKey, model);
   const response = await createChat(client, {
     ...chatParams(model, { temperature: 0, maxTokens: 600 }),
     response_format: { type: "json_object" },
@@ -475,7 +499,7 @@ export async function translateToEnglish(text, apiKey, { model = DEFAULT_MODEL }
       { role: "user", content: String(text).slice(0, 4000) },
     ],
   });
-  const result = JSON.parse(response.choices[0]?.message?.content || "{}");
+  const result = parseJson(response.choices[0]?.message?.content || "{}");
   if (typeof result.english !== "string" || !result.english.trim()) throw new Error("Empty translation");
   const language = typeof result.language === "string" && /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(result.language) ? result.language : null;
   return { english: result.english.trim(), language };

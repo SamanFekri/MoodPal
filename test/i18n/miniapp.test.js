@@ -39,7 +39,7 @@ describe('mini app language tables', () => {
         for (const v of [].concat(value)) {
           // a plural form may leave {n} out only where the English does too
           // named keys (talkIntroHtml) aren't English text; their English lives in the page (UI_EN)
-          const english = key === 'talkIntroHtml' ? '{model}' : key;
+          const english = key === 'talkIntroHtml' ? '{provider} {model}' : key;
           // a count text may add {n} (Farsi has one plural form, so "once a day" becomes "{n} times a day")
           const mine = holes(v).split(',').filter(h => !(h === 'n' && !english.includes('{n}'))).join(',');
           assert.equal(mine, holes(english), `${name}: "${key}"`);

@@ -41,13 +41,17 @@ class CharacteristicsService {
     return this._llm;
   }
 
-  // the server's key (OPENAI_API_KEY) if set, otherwise the requesting admin's own saved key
+  // the server's key (OPENAI_API_KEY) if set, otherwise the requesting admin's own saved key,
+  // otherwise the shared AI key the admin set in the mini app (Admin → AI)
   async resolveKey(adminId) {
     const admin = await User.findById(adminId).select('openai_model').lean();
     const model = process.env.OPENAI_MODEL || admin?.openai_model || this.llm.DEFAULT_MODEL || 'gpt-5.6';
     if (process.env.OPENAI_API_KEY) return { apiKey: process.env.OPENAI_API_KEY, source: 'server', model };
     const apiKey = await User.getOpenAIKey(adminId);
-    return apiKey ? { apiKey, source: 'admin', model } : null;
+    if (apiKey) return { apiKey, source: 'admin', model };
+    // the shared key from Admin → AI (Gemini by default); counted, never blocked, for admin tools
+    const shared = await require('../ai/access').sharedCred();
+    return shared ? { apiKey: shared, source: 'shared', model: shared.model, provider: shared.provider } : null;
   }
 
   // What is sent to OpenAI: no name, username or ids; only what helps read how they communicate.

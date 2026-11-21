@@ -255,7 +255,7 @@ Use /remove_openai_key at any time to delete it.
   TALK_DISCLAIMER: `🤖 <b>Please read first</b>
 • You're talking to an <b>AI bot</b>, not a human and not a therapist. It tries to respond like a supportive psychologist, but it is <b>not accurate</b> and can be wrong.
 • This is <b>not</b> therapy, medical advice or a diagnosis. If you're in danger or thinking about hurting yourself, contact your local emergency number or a crisis line right away.
-• It runs on <b>your own OpenAI key</b> (/set_openai_key). Your messages are sent to OpenAI and stored here so the conversation has context.`,
+• It runs on <b>your own OpenAI key</b> if you added one (/set_openai_key), otherwise on MoodPal's shared AI. Your messages are sent to that AI service and stored here so the conversation has context.`,
   talkIntroMsg: (name) => `
 💬 <b>Let's talk${name ? `, ${name}` : ''}.</b>
 
@@ -281,6 +281,11 @@ Your messages are saved as mood notes again from now on.`,
 🛟 <b>If you might be in danger, please don't wait on a bot.</b> Reach out to someone you trust, a local crisis line, or your emergency number right now. I'm an AI and I can't keep you safe. A real person can.`,
   talkAboutNoteMsg: () => `💬 Want to talk about it?`,
   talkAboutButton: () => '💬 Talk about it',
+  // Talk on the admin's shared key (src/ai/access.js)
+  talkSharedNoteMsg: (provider, left, limit) => `🎁 You're on MoodPal's free AI (${provider}): <b>${left} of ${limit}</b> messages left today. Your messages go to ${provider}. For unlimited Talk, add your own OpenAI key with /set_openai_key.`,
+  talkLimitMsg: (limit) => `⏳ You've used today's ${limit} free AI messages. They reset at midnight, or add your own OpenAI key with /set_openai_key for unlimited Talk. 💛`,
+  talkDailyCapMsg: () => `⏳ MoodPal's free AI is busy for today. Please try again tomorrow, or add your own OpenAI key with /set_openai_key. 💛`,
+  talkSharedUnavailableMsg: () => `⚠️ MoodPal's free AI isn't working right now. Please try again later, or add your own OpenAI key with /set_openai_key.`,
   talkReminderMsg: () => `<i>🤖 Reminder: I'm an AI, not a therapist, and I can be wrong.</i>`,
   talkFallbackReply: () => "Tell me a bit more, what's going on?",
   insightFallback: () => "I'm sorry, I couldn't analyze your mood data at this time.",

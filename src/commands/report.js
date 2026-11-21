@@ -95,26 +95,34 @@ async function sendWeeklyReport(ctx) {
       await sendReport(p, user, ctx, 7);
       fs.unlinkSync(p);
       
-      // AI insights only for users who added their own OpenAI key
-      const apiKey = await User.getOpenAIKey(user._id);
-      if (apiKey) {
+      // AI insight: on their own OpenAI key, or on the admin's shared key (counts toward its daily cap)
+      const ai = require('../ai/access');
+      const access = await ai.forUser(user);
+      const apiKey = access?.cred;
+      let allowed = Boolean(access);
+      if (access && !access.own) {
+        try { await ai.consume(user, access, 'insight'); }
+        catch (error) { if (!(error instanceof ai.AiLimitError)) throw error; allowed = false; }
+      }
+      if (allowed) {
         const moods = await Mood.getLastWeekMoods(user._id);
         if (moods.length > 0) {
           try {
             // adapt the reply to the user's personality profile (if they have one)
             const personalityContext = await personalityService.getPersonalityContext(user._id);
-            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: user.openai_model || undefined, language: t.aiLanguage, fallback: t.insightFallback() });
+            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: access.model, language: t.aiLanguage, fallback: t.insightFallback() });
             await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
 
             // let the week's notes refine the profile, gradually
             const notes = moods.map(m => m.note).filter(Boolean).join('\n');
-            if (notes.length >= 40) {
+            if (notes.length >= 40 && await require('../chat/service').allowBackground(user._id, apiKey)) {
               await personalityService.inferFromText(user._id, notes, apiKey)
                 .catch(err => console.error(`Personality inference failed for user ${user.id}:`, err.message));
             }
           } catch (error) {
             console.error(`AI insight failed for user ${user.id}:`, error.message);
-            if (llm.isAuthError(error)) {
+            // only their own key is theirs to fix; a failing shared key is logged for the admin
+            if (llm.isAuthError(error) && access.own) {
               await ctx.telegram.sendMessage(user.id, t.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
             }
           }

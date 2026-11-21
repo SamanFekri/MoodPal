@@ -12,6 +12,7 @@ const talk = require('./talk');
 const widget = require('./widget');
 const support = require('./support');
 const yearly = require('./yearly');
+const ai = require('./ai');
 
 module.exports = {
   embed: embed,
@@ -27,5 +28,6 @@ module.exports = {
   talk: talk,
   widget: widget,
   support: support,
-  yearly: yearly
+  yearly: yearly,
+  ai: ai
 }

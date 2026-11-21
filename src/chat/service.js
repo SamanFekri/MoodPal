@@ -96,6 +96,8 @@ class ChatService {
     const from = session.memory_upto || 0;
     const fresh = userMessages.slice(from).map(m => m.content);
     if (!fresh.length) return null;
+    // on the admin's shared key, learning counts toward the daily cap; at the cap it waits (unread)
+    if (!await this.allowBackground(session.user, apiKey)) return null;
     await ChatSession.updateOne({ _id: session._id }, { memory_upto: userMessages.length });
     session.memory_upto = userMessages.length;
     return this.memory.learnFromMessages(session.user, fresh, apiKey, { model, sessionId: session._id });
@@ -104,14 +106,26 @@ class ChatService {
   // After a talk ends (by /end_talk or by going quiet): remember what matters (memory) and let
   // what they said refine their personality profile, gradually. Runs on the user's own key.
   async learnFromEnded(session) {
-    const apiKey = await User.getOpenAIKey(session.user);
-    if (!apiKey) return;
-    const user = await User.findById(session.user).select('openai_model').lean();
-    const model = user?.openai_model || undefined;
+    // their own OpenAI key, or the admin's shared key (src/ai/access.js)
+    const access = await require('../ai/access').forUser(session.user);
+    if (!access) return;
+    const apiKey = access.cred;
+    const model = access.model;
     await this.learnPending(session, apiKey, { model }).catch(err => console.error('Memory update failed:', err.message));
     const transcript = this.userTranscript(session);
     if (transcript.length < 60) return;
+    if (!await this.allowBackground(session.user, apiKey)) return;
     await this.personality.inferFromText(session.user, transcript, apiKey, { model });
+  }
+
+  // Background learning on the shared key uses one request of the bot's daily cap (never the person's
+  // Talk messages). An own key (a plain string) is never counted.
+  async allowBackground(userId, apiKey) {
+    if (!apiKey || typeof apiKey === 'string') return true;
+    const ai = require('../ai/access');
+    const user = await User.findById(userId).select('timezone').lean();
+    try { await ai.consume(user, { own: false }, 'background'); return true; }
+    catch (error) { if (error instanceof ai.AiLimitError) return false; throw error; }
   }
 
   // What the user said in a session, for personality inference when it ends

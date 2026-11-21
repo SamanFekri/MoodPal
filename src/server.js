@@ -154,6 +154,11 @@ app.get('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.br
 app.post('/api/admin/broadcasts/media', express.raw({ type: () => true, limit: '50mb' }), requireWebAppUser, requireAdmin, controllers.broadcast.upload);
 app.post('/api/admin/broadcasts/test', requireWebAppUser, requireAdmin, controllers.broadcast.test);
 app.post('/api/admin/broadcasts/settings', requireWebAppUser, requireAdmin, controllers.broadcast.settings);
+// Admin → AI: the shared AI key (Gemini by default, or OpenAI / Claude) and its limits
+app.get('/api/admin/ai', requireWebAppUser, requireAdmin, controllers.ai.get);
+app.post('/api/admin/ai/settings', requireWebAppUser, requireAdmin, controllers.ai.saveSettings);
+app.post('/api/admin/ai/key', requireWebAppUser, requireAdmin, controllers.ai.setKey);
+app.delete('/api/admin/ai/key', requireWebAppUser, requireAdmin, controllers.ai.removeKey);
 app.post('/api/admin/broadcasts/:id/resend', requireWebAppUser, requireAdmin, controllers.broadcast.resend);
 app.post('/api/admin/broadcasts/:id/cancel', requireWebAppUser, requireAdmin, controllers.broadcast.cancel);
 app.post('/api/admin/broadcasts', requireWebAppUser, requireAdmin, controllers.broadcast.create);

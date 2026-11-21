@@ -103,7 +103,7 @@ module.exports = {
   'Talk needs your OpenAI key': 'گفت‌وگو به کلید OpenAI تو نیاز داره',
   'Talk runs on your own OpenAI key, so nobody else pays for your conversations. Add one in Settings, then come back here.': 'گفت‌وگو با کلید OpenAI خودت کار می‌کنه، پس هزینه‌اش با کس دیگه‌ای نیست. یکی در تنظیمات اضافه کن و برگرد اینجا.',
   'Add my key': 'افزودن کلید',
-  talkIntroHtml: 'داری با یک <b>هوش مصنوعی</b> حرف می‌زنی، نه یک انسان و نه یک درمانگر. ممکنه اشتباه کنه، و این درمان یا توصیه پزشکی نیست. اگه در خطری، همین الان با شماره اورژانس یا خط کمک فوری تماس بگیر. پیام‌ها با <b>کلید خودت</b> به OpenAI فرستاده می‌شن ({model}).',
+  talkIntroHtml: 'داری با یک <b>هوش مصنوعی</b> حرف می‌زنی، نه یک انسان و نه یک درمانگر. ممکنه اشتباه کنه، و این درمان یا توصیه پزشکی نیست. اگه در خطری، همین الان با شماره اورژانس یا خط کمک فوری تماس بگیر. پیام‌ها به <b>{provider}</b> فرستاده می‌شن ({model}).',
   "What's on your mind?": 'چی تو ذهنته؟',
   "Say anything, big or small. MoodPal knows how you've been feeling lately and what you've told it before.": 'هر چیزی بگو، بزرگ یا کوچک. MoodPal می‌دونه این اواخر چه حسی داشتی و قبلاً چی بهش گفتی.',
   "If you might be in danger, please don't wait on a bot.": 'اگه ممکنه در خطر باشی، لطفاً منتظر یک ربات نمون.',
@@ -432,4 +432,13 @@ module.exports = {
   "Couldn't save that": 'ذخیره نشد',
   '👀 Follow my mood on MoodPal': '👀 حسم رو در MoodPal دنبال کن',
   '🧠 Check out my personality profile on MoodPal': '🧠 پروفایل شخصیتم رو در MoodPal ببین',
+  // shared AI (src/ai/access.js)
+  'OpenAI, on your own key': 'OpenAI، با کلید خودت',
+  'Free AI ({provider}): {left} of {limit} messages left today': 'هوش مصنوعی رایگان ({provider}): امروز {left} از {limit} پیام باقی مونده',
+  'You\'ve used today\'s {n} free AI messages. They reset at midnight, or add your own OpenAI key in Settings': '{n} پیام رایگان امروزت تموم شد. نیمه‌شب دوباره شارژ می‌شه، یا کلید OpenAI خودت رو در تنظیمات اضافه کن',
+  'MoodPal\'s free AI is busy for today. Try again tomorrow, or add your own OpenAI key in Settings': 'هوش مصنوعی رایگان MoodPal برای امروز پر شده. فردا دوباره امتحان کن، یا کلید OpenAI خودت رو در تنظیمات اضافه کن',
+  'MoodPal\'s free AI isn\'t working right now. Try again later': 'هوش مصنوعی رایگان MoodPal الان کار نمی‌کنه. کمی بعد دوباره امتحان کن',
+  'Your own OpenAI key: unlimited': 'کلید OpenAI خودت: نامحدود',
+  'MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.': 'هوش مصنوعی رایگان MoodPal ({provider}): امروز {left} از {limit} پیام گفت‌وگو باقی مونده. برای استفاده نامحدود، کلید خودت رو پایین اضافه کن.',
+  'No AI yet: add your own OpenAI key below to use Talk and AI insights.': 'هنوز هوش مصنوعی فعال نیست: برای گفت‌وگو و تحلیل هوشمند، کلید OpenAI خودت رو پایین اضافه کن.',
 };

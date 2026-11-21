@@ -1,10 +1,12 @@
-// Talk mode handlers. Conversation logic lives in src/chat/service.js.
+// Talk mode handlers. Conversation logic lives in src/chat/service.js; which AI key a person uses
+// (their own OpenAI key, or the admin's shared key with its limits) in src/ai/access.js.
 const { common } = require('../constants');
 const i18n = require('../i18n');
 const { moodName } = i18n;
 const User = require('../models/user');
 const chatService = require('../chat/service');
 const llm = require('../utils/llm');
+const ai = require('../ai/access');
 
 const REMIND_EVERY = 8; // assistant replies between "I'm an AI" reminders
 
@@ -12,16 +14,22 @@ const mainKeyboard = (ctx) => ({ keyboard: common.makeKeyboardMenu(ctx), resize_
 const talkKeyboard = (ctx) => ({ keyboard: common.makeTalkKeyboard(ctx), resize_keyboard: true });
 
 // 💬 Talk / /talk — start a conversation (requires the user's own OpenAI key)
+// own OpenAI key first (no limit), else the admin's shared key (limited), else no Talk
 async function startTalk(ctx, { openedFrom = 'menu', opener = null } = {}) {
   const msgs = i18n.forCtx(ctx);
-  const apiKey = await User.getOpenAIKey(ctx.user._id);
-  if (!apiKey) {
+  const access = await ai.forUser(ctx.user);
+  if (!access) {
     return ctx.reply(msgs.talkNeedsKeyMsg(), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
   }
   await chatService.start(ctx.user._id, { openedFrom });
-  await ctx.reply(msgs.talkIntroMsg(ctx.user.first_name), { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
+  let intro = msgs.talkIntroMsg(ctx.user.first_name);
+  if (!access.own) {
+    const today = await ai.talkToday(ctx.user);
+    intro += `\n${msgs.talkSharedNoteMsg(access.providerName, today.left, today.limit)}`;
+  }
+  await ctx.reply(intro, { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
   // "talk about it" from a note: the note becomes the first thing they said
-  if (opener) return respond(ctx, opener, apiKey);
+  if (opener) return respond(ctx, opener, access);
 }
 
 async function talkCommand(ctx) {
@@ -51,11 +59,18 @@ async function learnFromSession(userId, session) {
   return chatService.learnFromEnded(session);
 }
 
-async function respond(ctx, text, apiKey) {
+async function respond(ctx, text, access) {
   const msgs = i18n.forCtx(ctx);
+  // the shared key: one of today's messages, or a friendly stop when they're used up
+  try {
+    await ai.consume(ctx.user, access, 'talk');
+  } catch (error) {
+    if (!(error instanceof ai.AiLimitError)) throw error;
+    return ctx.reply(error.code === 'user_limit' ? msgs.talkLimitMsg(error.limit) : msgs.talkDailyCapMsg(), { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
+  }
   await ctx.sendChatAction('typing').catch(() => {});
   try {
-    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, apiKey, { firstName: ctx.user.first_name, model: ctx.user.openai_model || undefined, language: msgs.aiLanguage, fallbackReply: msgs.talkFallbackReply() });
+    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, access.cred, { firstName: ctx.user.first_name, model: access.own ? (ctx.user.openai_model || undefined) : access.model, language: msgs.aiLanguage, fallbackReply: msgs.talkFallbackReply() });
     let out = reply;
     if (risk === 'medium' || risk === 'high') out += `\n${msgs.talkSafetyFooterMsg()}`;
     const assistantTurns = session.messages.filter(m => m.role === 'assistant').length;
@@ -63,9 +78,14 @@ async function respond(ctx, text, apiKey) {
     await ctx.reply(out, { parse_mode: 'HTML', reply_markup: talkKeyboard(ctx) });
   } catch (error) {
     console.error('Talk reply failed:', error.message);
-    if (llm.isAuthError(error)) {
+    // a rejected key or a missing model: their own key is theirs to fix; the shared one is the admin's
+    if (llm.isAuthError(error) && access.own) {
       await chatService.end(ctx.user._id, 'no_key');
       return ctx.reply(msgs.talkKeyRejectedMsg(), { reply_markup: mainKeyboard(ctx) });
+    }
+    if (llm.isAuthError(error) || (llm.isModelError?.(error) && !access.own)) {
+      console.error('The shared AI key or model failed:', error.message);
+      return ctx.reply(msgs.talkSharedUnavailableMsg(), { reply_markup: talkKeyboard(ctx) });
     }
     if (llm.isModelError?.(error)) {
       await chatService.end(ctx.user._id, 'error');
@@ -79,13 +99,13 @@ async function respond(ctx, text, apiKey) {
 async function handleTalkMessage(ctx) {
   const session = await chatService.getActive(ctx.user._id);
   if (!session) return false;
-  const apiKey = await User.getOpenAIKey(ctx.user._id);
-  if (!apiKey) {
+  const access = await ai.forUser(ctx.user);
+  if (!access) {
     await chatService.end(ctx.user._id, 'no_key');
     await ctx.reply(i18n.forCtx(ctx).talkNeedsKeyMsg(), { parse_mode: 'HTML', reply_markup: mainKeyboard(ctx) });
     return true;
   }
-  await respond(ctx, ctx.message.text, apiKey);
+  await respond(ctx, ctx.message.text, access);
   return true;
 }
 

@@ -103,7 +103,7 @@ module.exports = {
   'Talk needs your OpenAI key': 'Для разговора нужен твой ключ OpenAI',
   'Talk runs on your own OpenAI key, so nobody else pays for your conversations. Add one in Settings, then come back here.': 'Разговор работает на твоём ключе OpenAI, так что никто другой не платит за твои беседы. Добавь ключ в настройках и возвращайся сюда.',
   'Add my key': 'Добавить ключ',
-  talkIntroHtml: 'Ты общаешься с <b>ИИ</b>, а не с человеком и не с психотерапевтом. Он может ошибаться, и это не терапия и не медицинский совет. Если ты в опасности, сразу звони в местную экстренную службу или на линию психологической помощи. Сообщения отправляются в OpenAI на <b>твоём ключе</b> ({model}).',
+  talkIntroHtml: 'Ты общаешься с <b>ИИ</b>, а не с человеком и не с психотерапевтом. Он может ошибаться, и это не терапия и не медицинский совет. Если ты в опасности, сразу звони в местную экстренную службу или на линию психологической помощи. Сообщения отправляются в <b>{provider}</b> ({model}).',
   "What's on your mind?": 'Что у тебя на душе?',
   "Say anything, big or small. MoodPal knows how you've been feeling lately and what you've told it before.": 'Говори что угодно, важное или мелочи. MoodPal знает, как ты себя чувствовал(а) в последнее время и что ты рассказывал(а) раньше.',
   "If you might be in danger, please don't wait on a bot.": 'Если ты можешь быть в опасности, не жди ответа от бота.',
@@ -432,4 +432,13 @@ module.exports = {
   "Couldn't save that": 'Не удалось сохранить',
   '👀 Follow my mood on MoodPal': '👀 Следи за моим настроением в MoodPal',
   '🧠 Check out my personality profile on MoodPal': '🧠 Посмотри мой профиль личности в MoodPal',
+  // shared AI (src/ai/access.js)
+  'OpenAI, on your own key': 'OpenAI, на твоём ключе',
+  'Free AI ({provider}): {left} of {limit} messages left today': 'Бесплатный ИИ ({provider}): сегодня осталось {left} из {limit} сообщений',
+  'You\'ve used today\'s {n} free AI messages. They reset at midnight, or add your own OpenAI key in Settings': 'Бесплатные сообщения на сегодня закончились ({n}). Они обновятся в полночь, или добавь свой ключ OpenAI в настройках',
+  'MoodPal\'s free AI is busy for today. Try again tomorrow, or add your own OpenAI key in Settings': 'Бесплатный ИИ MoodPal на сегодня перегружен. Попробуй завтра или добавь свой ключ OpenAI в настройках',
+  'MoodPal\'s free AI isn\'t working right now. Try again later': 'Бесплатный ИИ MoodPal сейчас не работает. Попробуй позже',
+  'Your own OpenAI key: unlimited': 'Твой ключ OpenAI: без ограничений',
+  'MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.': 'Бесплатный ИИ MoodPal ({provider}): сегодня осталось {left} из {limit} сообщений. Добавь свой ключ ниже, чтобы пользоваться без ограничений.',
+  'No AI yet: add your own OpenAI key below to use Talk and AI insights.': 'ИИ пока недоступен: добавь свой ключ OpenAI ниже, чтобы пользоваться разговором и ИИ-советами.',
 };

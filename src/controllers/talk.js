@@ -1,28 +1,38 @@
 // Talk in the mini app: the same conversation as 💬 Talk in the bot (one active session per user),
-// on the user's own OpenAI key. Conversation logic lives in src/chat/service.js.
-const User = require('../models/user');
+// on the user's own OpenAI key or the admin's shared key (src/ai/access.js). Conversation logic lives
+// in src/chat/service.js.
 const chatService = require('../chat/service');
 const llm = require('../utils/llm');
+const ai = require('../ai/access');
+const i18n = require('../i18n');
 
 const MAX_LENGTH = 2000;
 const REMIND_EVERY = 8; // assistant replies between "I'm an AI" reminders, same as the bot
 
 const messageView = (m) => ({ role: m.role, content: m.content, risk: m.risk || 'none', at: m.at });
 
-const view = async (user, session) => ({
-  has_key: Boolean(await User.getOpenAIKey(user._id)),
-  model: user.openai_model || llm.DEFAULT_MODEL,
+const view = async (user, session) => {
+  const access = await ai.forUser(user);
+  return {
+  // whether Talk works for them (own key or the shared one), and which
+  has_key: Boolean(access),
+  own_key: Boolean(access?.own),
+  provider: access?.providerName || null,
+  model: access ? (access.own ? (user.openai_model || llm.DEFAULT_MODEL) : access.model) : (user.openai_model || llm.DEFAULT_MODEL),
+  // the shared key's messages left today (null on their own key)
+  today: access && !access.own ? await ai.talkToday(user) : null,
   active: Boolean(session),
   started_at: session?.createdAt || null,
   messages: session ? session.messages.map(messageView) : [],
-});
+  };
+};
 
 // GET /api/me/talk — the active conversation (a quiet one is closed on the way)
 const getTalk = async (req, res) => res.json(await view(req.user, await chatService.getActive(req.user._id)));
 
 // POST /api/me/talk/start — keeps a conversation that is already going (it may have started in the bot)
 const startTalk = async (req, res) => {
-  if (!await User.getOpenAIKey(req.user._id)) return res.status(409).json({ error: 'no_key' });
+  if (!await ai.forUser(req.user)) return res.status(409).json({ error: 'no_key' });
   const session = await chatService.getActive(req.user._id) || await chatService.start(req.user._id, { openedFrom: 'app' });
   res.json(await view(req.user, session));
 };
@@ -32,20 +42,30 @@ const sendMessage = async (req, res) => {
   const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
   if (!text) return res.status(400).json({ error: 'empty' });
   if (text.length > MAX_LENGTH) return res.status(400).json({ error: 'too_long', max: MAX_LENGTH });
-  const apiKey = await User.getOpenAIKey(req.user._id);
-  if (!apiKey) return res.status(409).json({ error: 'no_key' });
+  const access = await ai.forUser(req.user);
+  if (!access) return res.status(409).json({ error: 'no_key' });
+  // the shared key: one of today's messages, or a stop when they're used up
+  try {
+    await ai.consume(req.user, access, 'talk');
+  } catch (error) {
+    if (!(error instanceof ai.AiLimitError)) throw error;
+    return res.status(429).json({ error: error.code, limit: error.limit });
+  }
   if (!await chatService.getActive(req.user._id)) await chatService.start(req.user._id, { openedFrom: 'app' });
 
-  const model = req.user.openai_model || undefined;
+  const model = access.own ? (req.user.openai_model || undefined) : access.model;
+  const t = i18n.forUser(req.user);
   let result;
   try {
-    result = await chatService.reply(req.user._id, text, apiKey, { firstName: req.user.first_name, model });
+    result = await chatService.reply(req.user._id, text, access.cred, { firstName: req.user.first_name, model, language: t.aiLanguage, fallbackReply: t.talkFallbackReply() });
   } catch (error) {
     console.error('Talk reply (mini app) failed:', error.message);
-    if (llm.isAuthError(error)) {
+    if (llm.isAuthError(error) && access.own) {
       await chatService.end(req.user._id, 'no_key');
       return res.status(409).json({ error: 'key_rejected' });
     }
+    // the shared key or its model failed: the admin's to fix, the conversation stays open
+    if (!access.own && (llm.isAuthError(error) || llm.isModelError?.(error))) return res.status(503).json({ error: 'shared_unavailable' });
     if (llm.isModelError?.(error)) {
       await chatService.end(req.user._id, 'error');
       return res.status(409).json({ error: 'model_unavailable', model: model || llm.DEFAULT_MODEL });

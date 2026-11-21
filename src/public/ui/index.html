@@ -945,14 +945,17 @@
     .bc-row .top { display: flex; align-items: center; gap: 8px; font-size: 0.7059rem; }
     .bc-row .st { font-weight: 800; color: var(--hint); } .bc-row .st.sending { color: var(--recent-ink); } .bc-row .st.done { color: var(--fresh-ink); }
     .bc-dest { margin-top: 12px; }
+    .talk-free, .ai-source { display: flex; align-items: center; gap: 8px; font-size: 0.7647rem; font-weight: 600; color: var(--hint); background: var(--card); border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; box-shadow: var(--shadow); }
+    .ai-source.own { color: var(--fresh-ink); } .ai-source.none { color: var(--recent-ink); }
+    .ai-num { width: 110px; flex: none; font: inherit; font-weight: 700; padding: 9px 12px; border-radius: 12px; border: 0; background: rgba(138,143,152,0.14); color: var(--text); text-align: center; }
     .lang-chip { font-size: 0.6471rem; font-weight: 800; letter-spacing: .03em; padding: 1px 7px; border-radius: 999px; background: rgba(51,144,236,0.12); color: var(--accent-ink); margin-left: 6px; white-space: nowrap; }
     .adm-langs { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 12px; font-size: 0.7647rem; font-weight: 700; color: var(--hint); }
     .adm-langs button { border: 0; font: inherit; color: inherit; cursor: pointer; background: var(--card); border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow); }
     .adm-langs button.on { background: var(--accent); color: var(--accent-text); }
-    .bc-langs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-    .bc-langs .af-opt { position: relative; }
-    .bc-langs small { opacity: .7; font-weight: 600; }
-    .bc-dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--fresh, #34c759); }
+    .bc-lang-pick { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .bc-lang-pick span { display: flex; flex-direction: column; font-size: 0.7647rem; }
+    .bc-lang-pick i { font-style: normal; color: var(--hint); font-size: 0.7059rem; }
+    .bc-lang-pick select { font: inherit; font-weight: 700; padding: 9px 12px; border-radius: 12px; border: 0; background: rgba(138,143,152,0.14); color: var(--text); max-width: 60%; }
     .bc-lang-note { margin: 0 0 10px; }
     .bc-tag.ch-sent { color: var(--fresh-ink); } .bc-tag.ch-failed, .bc-tag.ch-not_configured { color: var(--danger-ink); }
     .bc-row .when { margin-left: auto; color: var(--hint); font-weight: 600; }
@@ -1547,6 +1550,7 @@
               <button :class="{ on: admin.view === 'broadcast' }" @click="showBroadcast()"><ui-icon name="megaphone" :size="15"></ui-icon> Broadcast</button>
               <button :class="{ on: admin.view === 'backup' }" @click="showBackup()"><ui-icon name="hard-drive-download" :size="15"></ui-icon> Backup</button>
               <button :class="{ on: admin.view === 'yearly' }" @click="showYearlyAdmin()"><ui-icon name="sparkles" :size="15"></ui-icon> Year</button>
+              <button :class="{ on: admin.view === 'ai' }" @click="showAiAdmin()"><ui-icon name="bot" :size="15"></ui-icon> AI</button>
             </div>
           </div>
 
@@ -1678,11 +1682,12 @@
                 <h3>New message <span class="sub">{{ bcDraft.toUsers && bcDraft.toChannel ? 'to everyone and the channel' : bcDraft.toChannel ? 'to the channel only' : 'to everyone' }}</span></h3>
                 <!-- one message per language: English is the base; Farsi and Russian are optional, and whatever
                      a language leaves empty (text, attachment, button) its readers get from the English one -->
-                <div class="bc-langs" role="tablist">
-                  <button v-for="l in BC_LANGS" :key="'bcl' + l.code" class="af-opt small" :class="{ on: bcLang === l.code }" role="tab" :aria-selected="bcLang === l.code" @click="bcLang = l.code">
-                    {{ l.flag }} <bdi>{{ l.name }}</bdi><small v-if="bc.audience_by_lang"> · {{ bc.audience_by_lang[l.code] || 0 }}</small><i v-if="l.code !== 'en' && bcHasVariant(l.code)" class="bc-dot"></i>
-                  </button>
-                </div>
+                <label class="bc-lang-pick">
+                  <span><b>Language</b><i>{{ bcLang === 'en' ? 'English is the default everyone gets' : 'Only what you change here replaces the English' }}</i></span>
+                  <select v-model="bcLang" :disabled="!!bcBusy">
+                    <option v-for="l in BC_LANGS" :key="'bcl' + l.code" :value="l.code">{{ l.flag }} {{ '\u2068' + l.name + '\u2069' }}{{ bc.audience_by_lang ? ' · ' + (bc.audience_by_lang[l.code] || 0) : '' }}{{ l.code === 'en' ? ' (default)' : bcHasVariant(l.code) ? ' · edited' : '' }}</option>
+                  </select>
+                </label>
                 <div class="note-box bc-lang-note" v-if="bcLang !== 'en'">Optional. {{ bc.audience_by_lang?.[bcLang] || 0 }} {{ (bc.audience_by_lang?.[bcLang] || 0) === 1 ? 'person uses' : 'people use' }} {{ bcLangName(bcLang) }}. Anything you leave empty here, they get from the English message. Leave it all empty and they get the English one.</div>
                 <textarea class="bc-text" v-model="bcCur.text" dir="auto" :maxlength="bcLimit" rows="5" :placeholder="bcLang !== 'en' ? (bcDraft.text.trim() ? 'Empty: they get the English text' : 'Write the ' + bcLangName(bcLang) + ' text…') : bcDraft.media ? 'Caption (optional)' : 'Write your message…'"></textarea>
                 <div class="bc-count">{{ bcCur.text.length }} / {{ bcLimit }}</div>
@@ -1802,6 +1807,72 @@
 
           <!-- ---------- Admin · Reminders ---------- -->
           <!-- Year in Moods: open it to everyone, or keep it admins-only to test -->
+          <!-- ---------- Admin · AI: the shared key for everyone without their own (src/ai/access.js) ---------- -->
+          <template v-else-if="admin.view === 'ai'">
+            <div v-if="!aiAdmin" class="section"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
+            <template v-else>
+              <section class="section">
+                <h3><ui-icon name="bot" :size="17"></ui-icon> Shared AI <span class="sub">{{ !aiAdmin.has_key ? 'no key yet' : aiAdmin.enabled ? 'on for everyone without a key' : 'switched off' }}</span></h3>
+                <div class="note-box" style="margin-top:0">People who haven't added their own OpenAI key use this key, within the limits below. Their own key is always used first and has no limits.</div>
+                <div class="af-label sup-gap">Provider</div>
+                <div class="af-opts">
+                  <button v-for="p in aiAdmin.providers" :key="'aip' + p.id" class="af-opt" :class="{ on: aiDraft.provider === p.id }" :disabled="!!aiBusy" @click="aiDraft.provider = p.id; aiDraft.key = ''">{{ p.name }}<small v-if="p.id === aiAdmin.provider && aiAdmin.has_key"> · in use</small><small v-else-if="p.id === 'gemini'"> · default</small></button>
+                </div>
+                <div class="keyrow" v-if="aiAdmin.has_key && aiDraft.provider === aiAdmin.provider">
+                  <code>{{ aiAdmin.key_hint }}</code>
+                  <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" :disabled="!!aiBusy" @click="removeAiKey">Remove</button>
+                </div>
+                <div class="field">
+                  <input v-model="aiDraft.key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="aiAdmin.has_key && aiDraft.provider === aiAdmin.provider ? 'Paste a new key to replace it' : 'Paste the ' + aiProviderName(aiDraft.provider) + ' API key'">
+                  <button class="btn" :disabled="!!aiBusy || !aiDraft.key.trim()" @click="saveAiKey">{{ aiBusy === 'key' ? 'Checking…' : 'Save' }}</button>
+                </div>
+                <div class="note-box" v-if="aiDraft.provider === 'gemini'">Get a key at <b>aistudio.google.com</b> → Get API key. The free tier is enough for this, but on it Google may use the messages to improve its products; a paid key keeps them out.</div>
+                <div class="note-box" v-else-if="aiDraft.provider === 'openai'">Get a key at <b>platform.openai.com</b> → API keys. Billed to your OpenAI account.</div>
+                <div class="note-box" v-else>Get a key at <b>platform.claude.com</b> → API keys. Billed to your Anthropic account.</div>
+                <div class="warn-box" v-if="aiAdmin.has_key && aiDraft.provider !== aiAdmin.provider">Saving a {{ aiProviderName(aiDraft.provider) }} key switches everyone from {{ aiProviderName(aiAdmin.provider) }} to {{ aiProviderName(aiDraft.provider) }}.</div>
+              </section>
+
+              <section class="section" v-if="aiAdmin.has_key">
+                <div class="share-row">
+                  <div>
+                    <div class="s-title">Use it for everyone without a key</div>
+                    <div class="s-desc">Off: only people with their own OpenAI key get Talk and AI insights.</div>
+                  </div>
+                  <button class="switch" :class="{ on: aiAdmin.enabled }" :disabled="!!aiBusy" @click="saveAiSettings({ enabled: !aiAdmin.enabled })" role="switch" :aria-checked="aiAdmin.enabled" aria-label="Use the shared key for everyone without a key"></button>
+                </div>
+                <div class="af-label sup-gap">Model <span>{{ aiProviderName(aiAdmin.provider) }}</span></div>
+                <div class="models">
+                  <button v-for="m in aiModels" :key="'aim' + m.id" class="model" :class="{ on: aiAdmin.model === m.id }" :disabled="!!aiBusy" @click="saveAiSettings({ model: m.id })">
+                    <span class="radio"></span>
+                    <span><b>{{ m.id }}</b><span>{{ m.note }}</span></span>
+                  </button>
+                </div>
+                <div class="field">
+                  <input v-model="aiDraft.model" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
+                  <button class="btn ghost" :disabled="!!aiBusy || !aiDraft.model.trim()" @click="saveAiSettings({ model: aiDraft.model.trim() }); aiDraft.model = ''">Use</button>
+                </div>
+                <div class="af-label sup-gap">Limits <span>only for people on this key</span></div>
+                <div class="rem-limit">
+                  <span><b>Talk messages per person per day</b><i>Resets at midnight in their timezone. 0 turns Talk off on this key.</i></span>
+                  <input type="number" min="0" max="1000" class="ai-num" :value="aiAdmin.talk_per_user" :disabled="!!aiBusy" @change="saveAiSettings({ talk_per_user: Number($event.target.value) })">
+                </div>
+                <div class="rem-limit">
+                  <span><b>All requests per day, everyone together</b><i>Talk, weekly insights, memory and learning. Protects your bill. 0 = no cap.</i></span>
+                  <input type="number" min="0" max="1000000" class="ai-num" :value="aiAdmin.daily_total" :disabled="!!aiBusy" @change="saveAiSettings({ daily_total: Number($event.target.value) })">
+                </div>
+              </section>
+
+              <section class="section">
+                <h3>Usage <span class="sub">through the shared key</span></h3>
+                <div class="kv"><span class="k">Today (UTC)</span><span class="v">{{ aiAdmin.usage.today }}<template v-if="aiAdmin.daily_total"> / {{ aiAdmin.daily_total }}</template></span></div>
+                <div class="kv"><span class="k">This month</span><span class="v">{{ aiAdmin.usage.month }}</span></div>
+                <div class="af-label sup-gap" v-if="aiAdmin.usage.top_today.length">Most active today</div>
+                <div v-for="u in aiAdmin.usage.top_today" :key="'ait' + u.id" class="kv"><span class="k">{{ u.name }}</span><span class="v">{{ u.total }} · {{ u.talk }} Talk</span></div>
+                <div v-if="!aiAdmin.usage.top_today.length" class="muted-box">Nobody used it today yet.</div>
+              </section>
+            </template>
+          </template>
+
           <template v-else-if="admin.view === 'yearly'">
             <div v-if="!yearlyAdmin" class="section"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
             <template v-else>
@@ -2134,8 +2205,10 @@
           <template v-else>
             <div class="talk-intro">
               <ui-icon name="bot" :size="18"></ui-icon>
-              <div v-html="$t('talkIntroHtml', { model: escapeHtml(talk.data.model) })"></div>
+              <div v-html="$t('talkIntroHtml', { provider: escapeHtml(talk.data.own_key || !talk.data.provider ? $t('OpenAI, on your own key') : talk.data.provider), model: escapeHtml(talk.data.model) })"></div>
             </div>
+            <!-- on MoodPal's shared AI: today's free messages (their own OpenAI key has no limit) -->
+            <div v-if="talk.data.today" class="talk-free"><ui-icon name="sparkles" :size="15"></ui-icon><span>{{ $t('Free AI ({provider}): {left} of {limit} messages left today', { provider: talk.data.provider, left: talk.data.today.left, limit: talk.data.today.limit }) }}</span></div>
 
             <div class="talk-list">
               <div v-if="!talk.data.messages.length && !talk.pending" class="talk-empty"><b>{{ $t('What\'s on your mind?') }}</b>{{ $t('Say anything, big or small. MoodPal knows how you\'ve been feeling lately and what you\'ve told it before.') }}</div>
@@ -2179,6 +2252,13 @@
             <!-- settings are split into tabs; the last one used is remembered on this device -->
             <div class="set-tabs" role="tablist">
               <button v-for="t in SETTINGS_TABS" :key="'st' + t.key" class="set-tab" :class="{ on: settingsTab === t.key }" role="tab" :aria-selected="settingsTab === t.key" @click="setSettingsTab(t.key)"><ui-icon :name="t.icon" :size="15"></ui-icon>{{ $t(t.label) }}</button>
+            </div>
+            <!-- which AI Talk and insights use for them right now -->
+            <div class="ai-source" v-show="settingsTab === 'ai'" v-if="settings.ai" :class="settings.ai.source">
+              <ui-icon :name="settings.ai.source === 'own' ? 'key-round' : settings.ai.source === 'shared' ? 'sparkles' : 'circle-off'" :size="18"></ui-icon>
+              <span v-if="settings.ai.source === 'own'">{{ $t('Your own OpenAI key: unlimited') }}</span>
+              <span v-else-if="settings.ai.source === 'shared'">{{ $t('MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.', { provider: settings.ai.provider, left: settings.ai.today.left, limit: settings.ai.today.limit }) }}</span>
+              <span v-else>{{ $t('No AI yet: add your own OpenAI key below to use Talk and AI insights.') }}</span>
             </div>
             <section class="section" v-show="settingsTab === 'ai'" :style="{ '--i': 0 }">
               <h3>{{ $t('OpenAI key') }} <span class="sub">{{ $t(settings.openai.has_key ? 'connected' : 'not set') }}</span></h3>
@@ -3067,7 +3147,7 @@
     // built by src/i18n/miniapp.js); anything missing stays English. $tn() picks the plural form.
     const I18N = Vue.reactive({ lang: 'en', dir: 'ltr', locale: undefined, ui: {}, characters: {} });
     const UI_EN = {
-      talkIntroHtml: "You're talking to an <b>AI</b>, not a human and not a therapist. It can be wrong, and this isn't therapy or medical advice. If you're in danger, contact your local emergency number or a crisis line right away. Messages go to OpenAI on <b>your own key</b> ({model}).",
+      talkIntroHtml: "You're talking to an <b>AI</b>, not a human and not a therapist. It can be wrong, and this isn't therapy or medical advice. If you're in danger, contact your local emergency number or a crisis line right away. Messages go to <b>{provider}</b> ({model}).",
     };
     // numbers are written the language's way (۱۶ in Farsi), the rest goes in as is
     const fmtVar = (v) => (typeof v === 'number' && I18N.lang !== 'en' ? v.toLocaleString(I18N.locale) : v);
@@ -3782,6 +3862,7 @@
           ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
           yearly: null, yearlyAdmin: null, yearlyBusy: false,
+          aiAdmin: null, aiBusy: '', aiDraft: { provider: 'gemini', key: '', model: '' },
           settingsTab: 'friends',
           SETTINGS_TABS: [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'support', label: 'Support', icon: 'heart-handshake' }, { key: 'ai', label: 'AI', icon: 'bot' }, { key: 'reminders', label: 'Reminders', icon: 'alarm-clock' }, { key: 'home', label: 'Home screen', icon: 'smartphone' }],
           support: null, supportBusy: false, supportPicking: false,
@@ -3915,6 +3996,8 @@
         // the part of the draft the composer shows: the English message or one language's version
         bcCur() { return this.bcLang === 'en' ? this.bcDraft : this.bcDraft.variants[this.bcLang]; },
         // caption limit when the message that goes out has media (a language without its own uses the English one)
+        // the shared key's model list for the provider in use
+        aiModels() { return this.aiAdmin?.providers.find(p => p.id === this.aiAdmin.provider)?.models || []; },
         bcLimit() { return (this.bcCur.media || (this.bcLang !== 'en' && this.bcDraft.media)) ? 1024 : 4096; },
         // at least one destination, and someone to send to
         bcDestOk() { const d = this.bcDraft; return (d.toUsers || d.toChannel) && (!d.toUsers || this.bc?.audience > 0 || d.toChannel); },
@@ -4287,6 +4370,43 @@ Script.complete();
           } catch (error) {
             this.showToast(error.status === 403 ? "It isn't open yet" : "Couldn't ask for it right now");
           } finally { this.yearlyBusy = false; }
+        },
+        // ----- admin: shared AI key -----
+        showAiAdmin() { this.admin.view = 'ai'; this.haptic('light'); this.fetchAiAdmin(); },
+        aiProviderName(id) { return this.aiAdmin?.providers.find(p => p.id === id)?.name || id; },
+        async fetchAiAdmin() {
+          try { this.aiAdmin = await this.api('/api/admin/ai', { fresh: true }); this.aiDraft.provider = this.aiAdmin.provider; }
+          catch { this.showToast("Couldn't load the AI settings"); }
+        },
+        aiError(error) {
+          const m = { key_rejected: 'The provider rejected this key', invalid_key: "That doesn't look like an API key", invalid_model: "That doesn't look like a model id", invalid_talk_per_user: 'Pick 0 to 1000 messages', invalid_daily_total: 'Pick 0 or more requests', verify_failed: "Couldn't reach the provider to check the key" }[error.data?.error || error.message];
+          this.showToast(m || "Couldn't save that");
+        },
+        async saveAiKey() {
+          if (this.aiBusy) return;
+          this.haptic('medium');
+          this.aiBusy = 'key';
+          try {
+            this.aiAdmin = await this.api('/api/admin/ai/key', { method: 'POST', body: { provider: this.aiDraft.provider, key: this.aiDraft.key.trim() } });
+            this.aiDraft.key = '';
+            this.showToast(`Key checked and saved · ${this.aiProviderName(this.aiAdmin.provider)}`);
+          } catch (error) { this.aiError(error); }
+          finally { this.aiBusy = ''; }
+        },
+        async removeAiKey() {
+          if (this.aiBusy || !window.confirm('Remove the shared key? People without their own OpenAI key lose Talk and AI insights.')) return;
+          this.aiBusy = 'remove';
+          try { this.aiAdmin = await this.api('/api/admin/ai/key', { method: 'DELETE' }); this.showToast('Key removed'); }
+          catch (error) { this.aiError(error); }
+          finally { this.aiBusy = ''; }
+        },
+        async saveAiSettings(patch) {
+          if (this.aiBusy) return;
+          this.haptic('light');
+          this.aiBusy = 'settings';
+          try { this.aiAdmin = await this.api('/api/admin/ai/settings', { method: 'POST', body: patch }); this.showToast('Saved'); }
+          catch (error) { this.aiError(error); this.fetchAiAdmin(); }
+          finally { this.aiBusy = ''; }
         },
         showYearlyAdmin() { this.admin.view = 'yearly'; this.haptic('light'); this.fetchYearlyAdmin(); },
         async fetchYearlyAdmin({ quiet = false } = {}) {
@@ -5712,6 +5832,9 @@ Script.complete();
             const code = error.data?.error;
             if (code === 'no_key') { this.talk.data = { ...this.talk.data, has_key: false }; }
             else if (code === 'key_rejected') { this.showToast('OpenAI rejected your key. Update it in Settings'); this.fetchTalk(); }
+            else if (code === 'user_limit') { this.showToast($t("You've used today's {n} free AI messages. They reset at midnight, or add your own OpenAI key in Settings", { n: error.data.limit })); this.fetchTalk(); }
+            else if (code === 'daily_cap') this.showToast("MoodPal's free AI is busy for today. Try again tomorrow, or add your own OpenAI key in Settings");
+            else if (code === 'shared_unavailable') this.showToast("MoodPal's free AI isn't working right now. Try again later");
             else if (code === 'model_unavailable') { this.showToast($t("Your OpenAI account can't use {model}. Pick another model in Settings", { model: error.data.model })); this.fetchTalk(); }
             else if (code === 'too_long') this.showToast($t("That's a long one. Keep it under {n} characters", { n: this.TALK_MAX }));
             else this.showToast("Couldn't get a reply right now. Try again");

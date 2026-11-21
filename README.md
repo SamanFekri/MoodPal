@@ -92,6 +92,14 @@ Important, and stated to the user before every conversation:
 
 Mood notes keep working exactly as before: outside a conversation, text is saved as a note (with a *💬 Talk about it* button). `🛑 End talk` / `/end_talk` ends the conversation (it also ends after 2 idle hours). What the user said is then used to gradually refine their personality profile. This also happens when a conversation ends by going quiet. *Personality → Learned from your talks* lists the traits conversations have moved: each trait's current %, the total change from talks (+/−), how many talks touched it, and (only for you) the line that prompted the latest change.
 
+### 🤖 Shared AI key (Admin → AI)
+Talk, the weekly AI insight, Talk memory and personality learning need an AI key. Each person's **own OpenAI key** (Settings or `/set_openai_key`) is always used first, with no limits. Everyone else uses the **shared key** an admin sets in the mini app under *Admin → AI*:
+
+- **Provider:** Google Gemini (default), OpenAI or Anthropic Claude. Gemini goes through Google's OpenAI-compatible endpoint; Claude through the official `@anthropic-ai/sdk`, with server-side refusal fallbacks on Opus 5.5 / Sonnet 5.5 (`src/ai/providers.js`). Free Gemini models (checked Nov 2026): `gemini-3.8-flash` (default), `gemini-3.6-flash`, `gemini-3.5-flash-lite`, `gemini-4-hydrogen`. On Google's free tier, prompts may be used to improve Google's products; a paid key keeps them out.
+- **Key:** checked with the provider before it's saved, stored encrypted (`app_config.ai_api_key`), shown only as its last 4 characters.
+- **Limits** (only for people on the shared key): Talk messages per person per day (default 20, resets at midnight in their timezone) and all requests per day for the whole bot (default 1,000, 0 = no cap). The weekly insight, memory and personality learning don't use a person's Talk messages but count toward the daily cap, and stop quietly when it's reached. Admin tools (characteristics, note translation) fall back to the shared key and are counted, never blocked. Usage is in `ai_usage` and on the same screen (today, this month, most active today).
+- **What people see:** Talk works without a key of their own and says which AI answers and how many free messages are left; at the limit it tells them (in their language) when it resets and that their own key removes the limit. *Settings → AI* shows whether they're on their own key, the shared AI, or none.
+
 ### ⚙️ Settings (mini app)
 A *Settings* tab lets each user add their own OpenAI key (verified once, stored encrypted, shown masked) and pick the model Talk and the weekly insights use. The default is `gpt-5.6`; any model id can be typed in.
 
