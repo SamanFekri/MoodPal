@@ -270,8 +270,8 @@
     "semantic_hash": "9d95b86eb397af0ad7a79f9e43044c9b"
   },
   "src/utils/llm.js": {
-    "mtime": 1795255976.8900142,
-    "ast_hash": "35ebb71e708a566869cc6c9c0aa7fd88",
+    "mtime": 1795279972.0153205,
+    "ast_hash": "7a9ecfbed155c3a52e1cc83ff171ebf1",
     "semantic_hash": ""
   },
   "src/utils/not_implemented.js": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795256418.9784293,
-    "ast_hash": "74165da966c99d9c75ce5a80d8f89302",
+    "mtime": 1795279972.0157733,
+    "ast_hash": "c15a7fe5b5c1d9878eae446f50b9792a",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -1085,8 +1085,8 @@
     "semantic_hash": ""
   },
   "src/ai/providers.js": {
-    "mtime": 1795255958.7180398,
-    "ast_hash": "0f21b662d1dafd0babc1a9171fcd0292",
+    "mtime": 1795279972.015049,
+    "ast_hash": "93edd7e695b66c220c360f44f8901d89",
     "semantic_hash": ""
   },
   "src/controllers/ai.js": {
@@ -1100,8 +1100,13 @@
     "semantic_hash": ""
   },
   "test/ai/ai.test.js": {
-    "mtime": 1795278709.760784,
-    "ast_hash": "8fac0122f6fe3ad8a06d03629c3d68c8",
+    "mtime": 1795279983.7199326,
+    "ast_hash": "7f2104f1393a6e10ded2ccd1c98e4a5c",
+    "semantic_hash": ""
+  },
+  "scripts/check-ai.js": {
+    "mtime": 1795279627.5259328,
+    "ast_hash": "1dcd32e71ed97e477d5538351bc4e1f0",
     "semantic_hash": ""
   }
 }
