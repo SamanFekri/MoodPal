@@ -121,7 +121,7 @@ class ChatService {
   // Background learning on the shared key uses one request of the bot's daily cap (never the person's
   // Talk messages). An own key (a plain string) is never counted.
   async allowBackground(userId, apiKey) {
-    if (!apiKey || typeof apiKey === 'string') return true;
+    if (!apiKey || typeof apiKey === 'string' || apiKey.test) return true;   // own key, or an admin's test key
     const ai = require('../ai/access');
     const user = await User.findById(userId).select('timezone').lean();
     try { await ai.consume(user, { own: false }, 'background'); return true; }

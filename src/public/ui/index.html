@@ -1811,6 +1811,43 @@
           <template v-else-if="admin.view === 'ai'">
             <div v-if="!aiAdmin" class="section"><div class="shimmer sk-line" style="width:50%;margin-top:0"></div><div class="shimmer sk-line"></div></div>
             <template v-else>
+              <!-- for me only: which key this admin uses themselves, to test a provider without touching anyone else -->
+              <section class="section" v-if="aiAdmin.mine">
+                <h3><ui-icon name="key-round" :size="17"></ui-icon> For me only <span class="sub">to test, nobody else changes</span></h3>
+                <div class="note-box" style="margin-top:0">Which key your own Talk, weekly insight and admin tools use.
+                  <template v-if="aiAdmin.mine.using"> Now: <b>{{ aiSourceLabel(aiAdmin.mine.using.source) }}</b> · {{ aiAdmin.mine.using.provider_name }}<template v-if="aiAdmin.mine.using.model"> · {{ aiAdmin.mine.using.model }}</template></template>
+                  <template v-else> Now: <b>no AI</b>, the key you picked isn't set.</template>
+                </div>
+                <div class="af-opts">
+                  <button v-for="c in aiMyChoices" :key="'aic' + c.id" class="af-opt" :class="{ on: aiAdmin.mine.choice === c.id }" :disabled="!!aiBusy" @click="saveAiMine({ choice: c.id })">{{ c.label }}<small v-if="c.note"> · {{ c.note }}</small></button>
+                </div>
+                <div class="af-label sup-gap">Test key <span>only you use it, no limits</span></div>
+                <div class="af-opts">
+                  <button v-for="p in aiAdmin.providers" :key="'aimp' + p.id" class="af-opt" :class="{ on: aiMine.provider === p.id }" :disabled="!!aiBusy" @click="aiMine.provider = p.id; aiMine.key = ''">{{ p.name }}<small v-if="p.id === aiAdmin.mine.test.provider && aiAdmin.mine.test.has_key"> · saved</small></button>
+                </div>
+                <div class="keyrow" v-if="aiAdmin.mine.test.has_key && aiMine.provider === aiAdmin.mine.test.provider">
+                  <code>{{ aiAdmin.mine.test.key_hint }}</code>
+                  <button class="btn ghost" style="padding:9px 14px;font-size:0.7647rem" :disabled="!!aiBusy" @click="removeAiMyKey">Remove</button>
+                </div>
+                <div class="field">
+                  <input v-model="aiMine.key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" :placeholder="'Paste a ' + aiProviderName(aiMine.provider) + ' key to test'">
+                  <button class="btn" :disabled="!!aiBusy || !aiMine.key.trim()" @click="saveAiMyKey">{{ aiBusy === 'mykey' ? 'Checking…' : 'Save and use' }}</button>
+                </div>
+                <template v-if="aiAdmin.mine.test.has_key && aiMine.provider === aiAdmin.mine.test.provider">
+                  <div class="af-label sup-gap">Test model <span>{{ aiProviderName(aiAdmin.mine.test.provider) }}</span></div>
+                  <div class="models">
+                    <button v-for="m in aiMyModels" :key="'aimm' + m.id" class="model" :class="{ on: aiMyModel === m.id }" :disabled="!!aiBusy" @click="saveAiMine({ model: m.id })">
+                      <span class="radio"></span>
+                      <span><b>{{ m.id }}</b><span>{{ m.note }}</span></span>
+                    </button>
+                  </div>
+                  <div class="field">
+                    <input v-model="aiMine.model" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Or type another model id">
+                    <button class="btn ghost" :disabled="!!aiBusy || !aiMine.model.trim()" @click="saveAiMine({ model: aiMine.model.trim() }); aiMine.model = ''">Use</button>
+                  </div>
+                </template>
+              </section>
+
               <section class="section">
                 <h3><ui-icon name="bot" :size="17"></ui-icon> Shared AI <span class="sub">{{ !aiAdmin.has_key ? 'no key yet' : aiAdmin.enabled ? 'on for everyone without a key' : 'switched off' }}</span></h3>
                 <div class="note-box" style="margin-top:0">People who haven't added their own OpenAI key use this key, within the limits below. Their own key is always used first and has no limits.</div>
@@ -2255,8 +2292,9 @@
             </div>
             <!-- which AI Talk and insights use for them right now -->
             <div class="ai-source" v-show="settingsTab === 'ai'" v-if="settings.ai" :class="settings.ai.source">
-              <ui-icon :name="settings.ai.source === 'own' ? 'key-round' : settings.ai.source === 'shared' ? 'sparkles' : 'circle-off'" :size="18"></ui-icon>
+              <ui-icon :name="settings.ai.source === 'own' || settings.ai.source === 'test' ? 'key-round' : settings.ai.source === 'shared' ? 'sparkles' : 'circle-off'" :size="18"></ui-icon>
               <span v-if="settings.ai.source === 'own'">{{ $t('Your own OpenAI key: unlimited') }}</span>
+              <span v-else-if="settings.ai.source === 'test'">Admin test key ({{ settings.ai.provider }} · {{ settings.ai.model }}): unlimited, only you use it</span>
               <span v-else-if="settings.ai.source === 'shared'">{{ $t('MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.', { provider: settings.ai.provider, left: settings.ai.today.left, limit: settings.ai.today.limit }) }}</span>
               <span v-else>{{ $t('No AI yet: add your own OpenAI key below to use Talk and AI insights.') }}</span>
             </div>
@@ -3862,7 +3900,7 @@
           ttsVoices: [], ttsPlaying: null,
           moodOptions: [],
           yearly: null, yearlyAdmin: null, yearlyBusy: false,
-          aiAdmin: null, aiBusy: '', aiDraft: { provider: 'gemini', key: '', model: '' },
+          aiAdmin: null, aiBusy: '', aiDraft: { provider: 'gemini', key: '', model: '' }, aiMine: { provider: 'gemini', key: '', model: '' },
           settingsTab: 'friends',
           SETTINGS_TABS: [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'support', label: 'Support', icon: 'heart-handshake' }, { key: 'ai', label: 'AI', icon: 'bot' }, { key: 'reminders', label: 'Reminders', icon: 'alarm-clock' }, { key: 'home', label: 'Home screen', icon: 'smartphone' }],
           support: null, supportBusy: false, supportPicking: false,
@@ -3998,6 +4036,19 @@
         // caption limit when the message that goes out has media (a language without its own uses the English one)
         // the shared key's model list for the provider in use
         aiModels() { return this.aiAdmin?.providers.find(p => p.id === this.aiAdmin.provider)?.models || []; },
+        // Admin → AI → For me
+        aiMyChoices() {
+          const m = this.aiAdmin?.mine;
+          if (!m) return [];
+          return [
+            { id: 'auto', label: 'Automatic', note: 'like everyone' },
+            { id: 'own', label: 'My OpenAI key', note: m.has_own_key ? '' : 'not set' },
+            { id: 'shared', label: 'Shared key', note: this.aiAdmin.has_key ? this.aiProviderName(this.aiAdmin.provider) : 'not set' },
+            { id: 'test', label: 'Test key', note: m.test.has_key ? this.aiProviderName(m.test.provider) : 'add below' },
+          ];
+        },
+        aiMyModels() { const p = this.aiAdmin?.mine?.test.provider; return this.aiAdmin?.providers.find(x => x.id === p)?.models || []; },
+        aiMyModel() { const t = this.aiAdmin?.mine?.test; return t?.model || this.aiAdmin?.providers.find(x => x.id === t?.provider)?.default_model || null; },
         bcLimit() { return (this.bcCur.media || (this.bcLang !== 'en' && this.bcDraft.media)) ? 1024 : 4096; },
         // at least one destination, and someone to send to
         bcDestOk() { const d = this.bcDraft; return (d.toUsers || d.toChannel) && (!d.toUsers || this.bc?.audience > 0 || d.toChannel); },
@@ -4374,12 +4425,17 @@ Script.complete();
         // ----- admin: shared AI key -----
         showAiAdmin() { this.admin.view = 'ai'; this.haptic('light'); this.fetchAiAdmin(); },
         aiProviderName(id) { return this.aiAdmin?.providers.find(p => p.id === id)?.name || id; },
+        aiSourceLabel(src) { return { own: 'your OpenAI key', shared: 'the shared key', test: 'your test key' }[src] || src; },
         async fetchAiAdmin() {
-          try { this.aiAdmin = await this.api('/api/admin/ai', { fresh: true }); this.aiDraft.provider = this.aiAdmin.provider; }
+          try {
+            this.aiAdmin = await this.api('/api/admin/ai', { fresh: true });
+            this.aiDraft.provider = this.aiAdmin.provider;
+            this.aiMine.provider = this.aiAdmin.mine?.test.provider || this.aiAdmin.provider;
+          }
           catch { this.showToast("Couldn't load the AI settings"); }
         },
         aiError(error) {
-          const m = { key_rejected: 'The provider rejected this key', invalid_key: "That doesn't look like an API key", invalid_model: "That doesn't look like a model id", invalid_talk_per_user: 'Pick 0 to 1000 messages', invalid_daily_total: 'Pick 0 or more requests', verify_failed: "Couldn't reach the provider to check the key" }[error.data?.error || error.message];
+          const m = { key_rejected: 'The provider rejected this key', invalid_key: "That doesn't look like an API key", invalid_model: "That doesn't look like a model id", invalid_choice: "That isn't a choice", invalid_provider: 'Pick a provider', invalid_talk_per_user: 'Pick 0 to 1000 messages', invalid_daily_total: 'Pick 0 or more requests', verify_failed: "Couldn't reach the provider to check the key" }[error.data?.error || error.message];
           this.showToast(m || "Couldn't save that");
         },
         async saveAiKey() {
@@ -4397,6 +4453,35 @@ Script.complete();
           if (this.aiBusy || !window.confirm('Remove the shared key? People without their own OpenAI key lose Talk and AI insights.')) return;
           this.aiBusy = 'remove';
           try { this.aiAdmin = await this.api('/api/admin/ai/key', { method: 'DELETE' }); this.showToast('Key removed'); }
+          catch (error) { this.aiError(error); }
+          finally { this.aiBusy = ''; }
+        },
+        async saveAiMine(patch) {
+          if (this.aiBusy) return;
+          this.haptic('light');
+          this.aiBusy = 'mine';
+          try {
+            this.aiAdmin = await this.api('/api/admin/ai/mine', { method: 'POST', body: patch });
+            const u = this.aiAdmin.mine.using;
+            this.showToast(u ? `You now use ${this.aiSourceLabel(u.source)} · ${u.provider_name}` : 'Saved. That key isn\'t set yet');
+          } catch (error) { this.aiError(error); this.fetchAiAdmin(); }
+          finally { this.aiBusy = ''; }
+        },
+        async saveAiMyKey() {
+          if (this.aiBusy) return;
+          this.haptic('medium');
+          this.aiBusy = 'mykey';
+          try {
+            this.aiAdmin = await this.api('/api/admin/ai/mine/key', { method: 'POST', body: { provider: this.aiMine.provider, key: this.aiMine.key.trim() } });
+            this.aiMine.key = '';
+            this.showToast(`Test key checked · you now use ${this.aiProviderName(this.aiAdmin.mine.test.provider)}`);
+          } catch (error) { this.aiError(error); }
+          finally { this.aiBusy = ''; }
+        },
+        async removeAiMyKey() {
+          if (this.aiBusy) return;
+          this.aiBusy = 'myremove';
+          try { this.aiAdmin = await this.api('/api/admin/ai/mine/key', { method: 'DELETE' }); this.showToast('Test key removed'); }
           catch (error) { this.aiError(error); }
           finally { this.aiBusy = ''; }
         },

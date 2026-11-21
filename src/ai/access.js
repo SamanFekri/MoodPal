@@ -4,6 +4,9 @@
 //   2. otherwise the admin's shared key (Admin → AI): Gemini by default, or OpenAI / Claude, limited
 //   3. otherwise no AI
 //
+// Admins can pick for themselves only (Admin → AI → For me), to test: their own OpenAI key, the shared
+// key (with its limits), or a private test key of any provider (no limits, nobody else uses it).
+//
 // Limits on the shared key: Talk messages per person per day (their local day), and every request
 // through it per day for the whole bot (UTC day; 0 = no cap). The weekly insight, memory and
 // personality learning don't use up a person's Talk messages but do count toward the daily cap.
@@ -55,17 +58,42 @@ async function sharedCred() {
  * The key `user` uses right now.
  * @returns {Promise<null | { cred, own: boolean, provider: string, providerName: string, model: string }>}
  */
+const CHOICES = ['auto', 'own', 'shared', 'test'];
+
 async function forUser(userOrId) {
-  const user = userOrId?._id ? userOrId : await User.findById(userOrId).select('openai_model timezone').lean();
+  let user = userOrId?._id ? userOrId : await User.findById(userOrId).select('openai_model timezone is_admin ai_choice ai_test_provider ai_test_model').lean();
   if (!user) return null;
-  const ownKey = await User.getOpenAIKey(user._id);
-  if (ownKey) {
-    const model = user.openai_model || undefined;
-    return { cred: ownKey, own: true, provider: 'openai', providerName: providers.PROVIDERS.openai.name, model };
+  // a partial user (e.g. only _id), or an admin whose pick may have changed since this object was loaded:
+  // read the choice fresh from the database
+  if (user.is_admin === undefined || user.is_admin) {
+    const fresh = await User.findById(user._id).select('is_admin ai_choice ai_test_provider ai_test_model').lean();
+    if (fresh) user = { ...(user.toObject ? user.toObject() : user), ...fresh };
   }
-  const cred = await sharedCred();
-  if (!cred) return null;
-  return { cred, own: false, provider: cred.provider, providerName: providers.PROVIDERS[cred.provider].name, model: cred.model };
+  const choice = user.is_admin && CHOICES.includes(user.ai_choice) ? user.ai_choice : 'auto';
+
+  const own = async () => {
+    const ownKey = await User.getOpenAIKey(user._id);
+    if (!ownKey) return null;
+    return { cred: ownKey, own: true, provider: 'openai', providerName: providers.PROVIDERS.openai.name, model: user.openai_model || undefined };
+  };
+  const shared = async () => {
+    const cred = await sharedCred();
+    if (!cred) return null;
+    return { cred, own: false, provider: cred.provider, providerName: providers.PROVIDERS[cred.provider].name, model: cred.model };
+  };
+  // an admin's private test key: counted like their own key (no limits); test marks it for error messages
+  const test = async () => {
+    const provider = providers.PROVIDERS[user.ai_test_provider] ? user.ai_test_provider : null;
+    const apiKey = provider && await User.getAiTestKey(user._id);
+    if (!apiKey) return null;
+    const model = user.ai_test_model || providers.PROVIDERS[provider].defaultModel;
+    return { cred: { provider, apiKey, model, test: true }, own: true, test: true, provider, providerName: providers.PROVIDERS[provider].name, model };
+  };
+
+  if (choice === 'own') return own();
+  if (choice === 'shared') return shared();
+  if (choice === 'test') return test();
+  return (await own()) || shared();
 }
 
 // count one request in a row, but only while `field` is under `limit` (null = no limit); atomic
@@ -114,6 +142,60 @@ async function talkToday(user, { now = new Date() } = {}) {
 }
 
 // ---------- admin ----------
+
+// what an admin picked for themselves (Admin → AI → For me)
+async function mine(userOrId) {
+  const id = userOrId?._id || userOrId;
+  const u = await User.findById(id).select('is_admin ai_choice ai_test_provider ai_test_model').lean();
+  if (!u) return null;
+  const [ownKey, testKey, access] = await Promise.all([User.getOpenAIKey(id), User.getAiTestKey(id), forUser(id)]);
+  return {
+    choice: CHOICES.includes(u.ai_choice) ? u.ai_choice : 'auto',
+    has_own_key: Boolean(ownKey),
+    test: {
+      provider: providers.PROVIDERS[u.ai_test_provider] ? u.ai_test_provider : null,
+      model: u.ai_test_model || null,
+      has_key: Boolean(testKey),
+      key_hint: testKey ? `…${testKey.slice(-4)}` : null,
+    },
+    // what Talk, insights and admin tools use for them right now
+    using: access ? { source: access.test ? 'test' : access.own ? 'own' : 'shared', provider: access.provider, provider_name: access.providerName, model: access.model || null } : null,
+  };
+}
+
+// { choice?, model? } for the admin's own pick; the model is for their test key
+async function updateMine(userId, patch = {}) {
+  const set = {};
+  if (patch.choice !== undefined) {
+    if (!CHOICES.includes(patch.choice)) throw new AiSettingsError('invalid_choice');
+    set.ai_choice = patch.choice;
+  }
+  if (patch.model !== undefined) {
+    if (patch.model !== null && patch.model !== '' && !isModelId(patch.model)) throw new AiSettingsError('invalid_model');
+    set.ai_test_model = patch.model || null;
+  }
+  if (Object.keys(set).length) await User.updateOne({ _id: userId }, set);
+  return mine(userId);
+}
+
+// the admin's private test key, checked with the provider first; picking it switches them to it
+async function setMyKey(userId, provider, apiKey, { verify = providers.verify } = {}) {
+  if (!providers.PROVIDERS[provider]) throw new AiSettingsError('invalid_provider');
+  const key = String(apiKey || '').trim();
+  if (key.length < 20 || /\s/.test(key)) throw new AiSettingsError('invalid_key');
+  await verify(provider, key);
+  const u = await User.findById(userId).select('ai_test_provider').lean();
+  await User.updateOne({ _id: userId }, { ai_test_provider: provider, ai_choice: 'test', ...(u?.ai_test_provider !== provider ? { ai_test_model: null } : {}) });
+  await User.setAiTestKey(userId, key);
+  return mine(userId);
+}
+
+async function removeMyKey(userId) {
+  const u = await User.findById(userId).select('ai_choice').lean();
+  await User.updateOne({ _id: userId }, { ai_test_provider: null, ai_test_model: null, ...(u?.ai_choice === 'test' ? { ai_choice: 'auto' } : {}) });
+  await User.setAiTestKey(userId, null);
+  return mine(userId);
+}
 
 async function adminView({ now = new Date() } = {}) {
   const s = await settings();
@@ -193,4 +275,4 @@ async function removeKey() {
   return adminView();
 }
 
-module.exports = { forUser, sharedCred, consume, talkToday, settings, adminView, updateSettings, setKey, removeKey, AiLimitError, AiSettingsError, KINDS, _days: { userDay, botDay } };
+module.exports = { forUser, mine, updateMine, setMyKey, removeMyKey, CHOICES, sharedCred, consume, talkToday, settings, adminView, updateSettings, setKey, removeKey, AiLimitError, AiSettingsError, KINDS, _days: { userDay, botDay } };

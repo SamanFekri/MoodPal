@@ -70,7 +70,7 @@ async function respond(ctx, text, access) {
   }
   await ctx.sendChatAction('typing').catch(() => {});
   try {
-    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, access.cred, { firstName: ctx.user.first_name, model: access.own ? (ctx.user.openai_model || undefined) : access.model, language: msgs.aiLanguage, fallbackReply: msgs.talkFallbackReply() });
+    const { reply, risk, session } = await chatService.reply(ctx.user._id, text, access.cred, { firstName: ctx.user.first_name, model: access.model, language: msgs.aiLanguage, fallbackReply: msgs.talkFallbackReply() });
     let out = reply;
     if (risk === 'medium' || risk === 'high') out += `\n${msgs.talkSafetyFooterMsg()}`;
     const assistantTurns = session.messages.filter(m => m.role === 'assistant').length;
@@ -79,11 +79,11 @@ async function respond(ctx, text, access) {
   } catch (error) {
     console.error('Talk reply failed:', error.message);
     // a rejected key or a missing model: their own key is theirs to fix; the shared one is the admin's
-    if (llm.isAuthError(error) && access.own) {
+    if (llm.isAuthError(error) && access.own && !access.test) {
       await chatService.end(ctx.user._id, 'no_key');
       return ctx.reply(msgs.talkKeyRejectedMsg(), { reply_markup: mainKeyboard(ctx) });
     }
-    if (llm.isAuthError(error) || (llm.isModelError?.(error) && !access.own)) {
+    if (llm.isAuthError(error) || (llm.isModelError?.(error) && (!access.own || access.test))) {
       console.error('The shared AI key or model failed:', error.message);
       return ctx.reply(msgs.talkSharedUnavailableMsg(), { reply_markup: talkKeyboard(ctx) });
     }

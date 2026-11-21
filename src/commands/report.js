@@ -122,7 +122,7 @@ async function sendWeeklyReport(ctx) {
           } catch (error) {
             console.error(`AI insight failed for user ${user.id}:`, error.message);
             // only their own key is theirs to fix; a failing shared key is logged for the admin
-            if (llm.isAuthError(error) && access.own) {
+            if (llm.isAuthError(error) && access.own && !access.test) {
               await ctx.telegram.sendMessage(user.id, t.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
             }
           }

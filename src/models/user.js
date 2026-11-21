@@ -121,6 +121,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  // Admins only: which AI key they use themselves, to test (src/ai/access.js). 'auto' = like everyone
+  // (own key first, else the shared one); 'own' = only their OpenAI key; 'shared' = the shared key with
+  // its limits; 'test' = their private test key below, which nobody else uses.
+  ai_choice: { type: String, enum: ['auto', 'own', 'shared', 'test'], default: 'auto' },
+  ai_test_provider: { type: String, default: null },
+  ai_test_model: { type: String, default: null },
+  // stored encrypted and never selected by default, like openai_api_key
+  ai_test_key: { type: String, default: null, select: false },
   // IANA timezone the user picked (mini app Settings or /timezone); null = the admin's default.
   // Reminders fire in this zone.
   timezone: {
@@ -159,6 +167,16 @@ userSchema.statics.getUserById = async function(userId) {
 // Store the user's OpenAI key encrypted (null removes it)
 userSchema.statics.setOpenAIKey = async function(userId, apiKey) {
   await this.updateOne({ _id: userId }, { openai_api_key: apiKey ? encrypt(apiKey) : null });
+};
+
+// An admin's private test key (any provider), encrypted; null removes it
+userSchema.statics.setAiTestKey = async function(userId, apiKey) {
+  await this.updateOne({ _id: userId }, { ai_test_key: apiKey ? encrypt(apiKey) : null });
+};
+userSchema.statics.getAiTestKey = async function(userId) {
+  const user = await this.findById(userId).select('+ai_test_key');
+  if (!user || !user.ai_test_key) return null;
+  try { return decrypt(user.ai_test_key); } catch { return null; }
 };
 
 // Returns the decrypted key or null if the user has not set one

@@ -44,7 +44,13 @@ class CharacteristicsService {
   // the server's key (OPENAI_API_KEY) if set, otherwise the requesting admin's own saved key,
   // otherwise the shared AI key the admin set in the mini app (Admin → AI)
   async resolveKey(adminId) {
-    const admin = await User.findById(adminId).select('openai_model').lean();
+    const admin = await User.findById(adminId).select('openai_model is_admin ai_choice').lean();
+    // an admin who picked a key for themselves (Admin → AI → For me) tests with it here too
+    if (admin?.is_admin && admin.ai_choice && admin.ai_choice !== 'auto') {
+      const a = await require('../ai/access').forUser(adminId);
+      if (!a) return null;
+      return { apiKey: a.cred, source: a.test ? 'test' : a.own ? 'admin' : 'shared', model: a.model || this.llm.DEFAULT_MODEL || 'gpt-5.6', provider: a.provider };
+    }
     const model = process.env.OPENAI_MODEL || admin?.openai_model || this.llm.DEFAULT_MODEL || 'gpt-5.6';
     if (process.env.OPENAI_API_KEY) return { apiKey: process.env.OPENAI_API_KEY, source: 'server', model };
     const apiKey = await User.getOpenAIKey(adminId);

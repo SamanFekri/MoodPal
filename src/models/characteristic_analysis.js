@@ -18,7 +18,7 @@ const characteristicAnalysisSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   requested_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   model: { type: String, required: true },
-  key_source: { type: String, enum: ['server', 'admin', 'shared'], required: true },   // shared = Admin → AI key
+  key_source: { type: String, enum: ['server', 'admin', 'shared', 'test'], required: true },   // shared = Admin → AI key
   status: { type: String, enum: ['ok', 'insufficient_evidence'], required: true },
   characteristics: { type: [characteristicSchema], default: [] },
   guide: {

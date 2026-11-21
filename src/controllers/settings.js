@@ -21,6 +21,7 @@ const view = async (user) => {
       const ai = require('../ai/access');
       const access = await ai.forUser(user);
       if (!access) return { source: 'none' };
+      if (access.test) return { source: 'test', provider: access.providerName, model: access.model };
       if (access.own) return { source: 'own', provider: access.providerName };
       return { source: 'shared', provider: access.providerName, model: access.model, today: await ai.talkToday(user) };
     })(),

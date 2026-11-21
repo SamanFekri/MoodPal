@@ -18,7 +18,7 @@ const view = async (user, session) => {
   has_key: Boolean(access),
   own_key: Boolean(access?.own),
   provider: access?.providerName || null,
-  model: access ? (access.own ? (user.openai_model || llm.DEFAULT_MODEL) : access.model) : (user.openai_model || llm.DEFAULT_MODEL),
+  model: access ? (access.model || llm.DEFAULT_MODEL) : (user.openai_model || llm.DEFAULT_MODEL),
   // the shared key's messages left today (null on their own key)
   today: access && !access.own ? await ai.talkToday(user) : null,
   active: Boolean(session),
@@ -53,19 +53,19 @@ const sendMessage = async (req, res) => {
   }
   if (!await chatService.getActive(req.user._id)) await chatService.start(req.user._id, { openedFrom: 'app' });
 
-  const model = access.own ? (req.user.openai_model || undefined) : access.model;
+  const model = access.model;
   const t = i18n.forUser(req.user);
   let result;
   try {
     result = await chatService.reply(req.user._id, text, access.cred, { firstName: req.user.first_name, model, language: t.aiLanguage, fallbackReply: t.talkFallbackReply() });
   } catch (error) {
     console.error('Talk reply (mini app) failed:', error.message);
-    if (llm.isAuthError(error) && access.own) {
+    if (llm.isAuthError(error) && access.own && !access.test) {
       await chatService.end(req.user._id, 'no_key');
       return res.status(409).json({ error: 'key_rejected' });
     }
     // the shared key or its model failed: the admin's to fix, the conversation stays open
-    if (!access.own && (llm.isAuthError(error) || llm.isModelError?.(error))) return res.status(503).json({ error: 'shared_unavailable' });
+    if ((!access.own || access.test) && (llm.isAuthError(error) || llm.isModelError?.(error))) return res.status(503).json({ error: 'shared_unavailable' });
     if (llm.isModelError?.(error)) {
       await chatService.end(req.user._id, 'error');
       return res.status(409).json({ error: 'model_unavailable', model: model || llm.DEFAULT_MODEL });

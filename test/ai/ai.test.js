@@ -197,6 +197,53 @@ describe('shared AI key: access and limits', () => {
     assert.equal((await api('/api/admin/ai/key', { as: boss, method: 'DELETE' })).body.has_key, false);
   });
 
+  test('Admin → AI → For me: an admin picks their own key to test; nobody else changes', async () => {
+    await share();
+    await User.setOpenAIKey(boss._id, OWN_KEY);
+    let r = await api('/api/admin/ai', { as: boss });
+    assert.equal(r.body.mine.choice, 'auto');
+    assert.equal(r.body.mine.using.source, 'own', 'automatic: own key first, like everyone');
+
+    r = await api('/api/admin/ai/mine', { as: boss, method: 'POST', body: { choice: 'shared' } });
+    assert.equal(r.body.mine.using.source, 'shared');
+    assert.equal((await ai.forUser(boss)).own, false, 'the shared key, with its limits');
+
+    // a private Claude test key: checked, switched to, no limits, never sent back
+    let checked = null;
+    aiController.verify = async (provider, key) => { checked = { provider, key }; };
+    const TEST_KEY = 'sk-ant-admin-test-key-1234567890';
+    r = await api('/api/admin/ai/mine/key', { as: boss, method: 'POST', body: { provider: 'claude', key: TEST_KEY } });
+    assert.equal(r.status, 200);
+    assert.deepEqual(checked, { provider: 'claude', key: TEST_KEY });
+    assert.equal(r.body.mine.choice, 'test');
+    assert.deepEqual(r.body.mine.using, { source: 'test', provider: 'claude', provider_name: 'Anthropic Claude', model: 'claude-opus-5-5' });
+    assert.equal(r.body.mine.test.key_hint, '…7890');
+    assert.ok(!JSON.stringify(r.body).includes(TEST_KEY), 'the key never comes back');
+    assert.equal(r.body.provider, 'gemini', 'the shared key is untouched');
+
+    r = await api('/api/admin/ai/mine', { as: boss, method: 'POST', body: { model: 'claude-haiku-5-5' } });
+    assert.equal(r.body.mine.using.model, 'claude-haiku-5-5');
+    const access = await ai.forUser(boss);
+    assert.equal(access.test, true);
+    assert.equal(access.cred.apiKey, TEST_KEY);
+    assert.equal(access.model, 'claude-haiku-5-5');
+    assert.deepEqual(await ai.consume(boss, access, 'talk'), { own: true }, 'a test key is never counted');
+    assert.equal(await chatService.allowBackground(boss._id, access.cred), true);
+    assert.equal(await AiUsage.countDocuments({}), 0);
+
+    // others still get the shared Gemini key; a non-admin's choice is ignored
+    assert.equal((await ai.forUser(alice)).provider, 'gemini');
+    await User.updateOne({ _id: alice._id }, { ai_choice: 'shared' });
+    await User.setOpenAIKey(alice._id, OWN_KEY);
+    assert.equal((await ai.forUser(alice)).own, true, 'only admins can pick');
+
+    // removing the test key goes back to automatic
+    r = await api('/api/admin/ai/mine/key', { as: boss, method: 'DELETE' });
+    assert.equal(r.body.mine.choice, 'auto'); assert.equal(r.body.mine.test.has_key, false);
+    assert.equal((await api('/api/admin/ai/mine', { as: boss, method: 'POST', body: { choice: 'nope' } })).body.error, 'invalid_choice');
+    assert.equal((await api('/api/admin/ai/mine', { as: alice, method: 'POST', body: { choice: 'own' } })).status, 403);
+  });
+
   describe('Talk on the shared key', () => {
     const stub = { calls: [] };
     before(async () => {
