@@ -441,4 +441,13 @@ module.exports = {
   'Your own OpenAI key: unlimited': 'کلید OpenAI خودت: نامحدود',
   'MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.': 'هوش مصنوعی رایگان MoodPal ({provider}): امروز {left} از {limit} پیام گفت‌وگو باقی مونده. برای استفاده نامحدود، کلید خودت رو پایین اضافه کن.',
   'No AI yet: add your own OpenAI key below to use Talk and AI insights.': 'هنوز هوش مصنوعی فعال نیست: برای گفت‌وگو و تحلیل هوشمند، کلید OpenAI خودت رو پایین اضافه کن.',
+  // weekly review
+  'Weekly review': 'مرور هفتگی',
+  'Once a week, the bot sends your week\'s mood chart and a short AI review of your week with a few suggestions.': 'هفته‌ای یک بار، ربات نمودار حس‌های هفته‌ات رو با یه مرور کوتاه هوش مصنوعی و چند پیشنهاد برات می‌فرسته.',
+  'Day': 'روز', 'Time': 'ساعت', 'Next review': 'مرور بعدی',
+  'Only weeks with at least one mood get a review. Moving the day never sends a second one in the same week.': 'فقط هفته‌هایی که حداقل یه حس ثبت کردی مرور دارن. عوض کردن روز، توی همون هفته مرور دوم نمی‌فرسته.',
+  'Weekly review is off': 'مرور هفتگی خاموش شد',
+  'Next review {when}': 'مرور بعدی {when}',
+  'Couldn\'t save the weekly review': 'ذخیره مرور هفتگی نشد',
+  'Review language': 'زبان مرور', 'Same as the app': 'مثل زبان برنامه',
 };

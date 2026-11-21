@@ -73,6 +73,7 @@ connectDB()
   .then(() => require('./models/user').backfillLastActive())
   .then(() => backupScheduler.reschedule())
   .then(() => reminderService.start())
+  .then(() => require('./weekly/service').start())
   .then(() => broadcastService.start())
   .then(() => supportService.start())
   .then(() => require('./yearly/service').start())
@@ -204,11 +205,6 @@ cron.schedule(process.env.CRON_JOB_TIME, () => {
   ).catch(err => console.error('Channel mood post failed:', health.describe(err)));
 });
 
-// run the cron job every week monday 9:00 AM
-cron.schedule(process.env.WEEKLY_CRON_JOB_TIME, () => {
-  console.log('======================');
-  console.log(`Running cron job at ${new Date().toLocaleString()}`);
-  console.log('======================');
-  Promise.resolve(sendWeeklyReport(bot)).catch(err => console.error('Weekly report failed:', health.describe(err)));
-});
+// Weekly reviews go out per person, on their own day and time (src/weekly/service.js);
+// WEEKLY_CRON_JOB_TIME is now only the default day and time.
 

@@ -52,9 +52,9 @@ async function generateReport(data, userId, options = {}) {
   return outputPath;
 }
 
-async function sendReport(filePath, user, ctx, days) {
+async function sendReport(filePath, user, ctx, days, t = i18n.forUser(user)) {
   await ctx.telegram.sendPhoto(user.id, { source: fs.createReadStream(filePath) }, {
-    caption: i18n.forUser(user).showReportMsg(user, days)
+    caption: t.showReportMsg(user, days)
   });
 }
 
@@ -81,54 +81,66 @@ async function getReportCallback(ctx) {
   }
 }
 
+// One person's weekly review: the week's mood chart, then the AI's read of their week with a few
+// suggestions (their own OpenAI key, else the admin's shared key, Gemini by default). Returns false
+// when they logged no moods in the last 7 days (nothing is sent).
+async function sendWeeklyReviewTo(telegram, user) {
+  const ctx = { telegram };
+  if (!await Mood.exists({ user: user._id, timestamp: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } })) return false;
+  // written in the language they picked for it (Settings → Reminders → Weekly review), else the app's
+  const reviewLang = user.weekly_review?.language;
+  const t = i18n.isSupported(reviewLang) ? i18n.forLang(reviewLang) : i18n.forUser(user);
+  const data = await getReport(user._id, 7);
+  const p = await generateReport(data, user._id, { labels: t.moodGroups });
+  await sendReport(p, user, ctx, 7, t);
+  fs.unlinkSync(p);
+
+  // AI insight: on their own OpenAI key, or on the admin's shared key (counts toward its daily cap)
+  const ai = require('../ai/access');
+  const access = await ai.forUser(user);
+  const apiKey = access?.cred;
+  let allowed = Boolean(access);
+  if (access && !access.own) {
+    try { await ai.consume(user, access, 'insight'); }
+    catch (error) { if (!(error instanceof ai.AiLimitError)) throw error; allowed = false; }
+  }
+  if (allowed) {
+    const moods = await Mood.getLastWeekMoods(user._id);
+    if (moods.length > 0) {
+      try {
+        // adapt the reply to the user's personality profile (if they have one)
+        const personalityContext = await personalityService.getPersonalityContext(user._id);
+        const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: access.model, language: t.aiLanguage, fallback: t.insightFallback() });
+        await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
+
+        // let the week's notes refine the profile, gradually
+        const notes = moods.map(m => m.note).filter(Boolean).join('\n');
+        if (notes.length >= 40 && await require('../chat/service').allowBackground(user._id, apiKey)) {
+          await personalityService.inferFromText(user._id, notes, apiKey)
+            .catch(err => console.error(`Personality inference failed for user ${user.id}:`, err.message));
+        }
+      } catch (error) {
+        console.error(`AI insight failed for user ${user.id}:`, error.message);
+        // only their own key is theirs to fix; a failing shared key is logged for the admin
+        if (llm.isAuthError(error) && access.own && !access.test) {
+          await ctx.telegram.sendMessage(user.id, t.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// Everyone at once (the old Monday cron). Each person now gets theirs on their own day and time
+// (src/weekly/service.js); this stays for a manual run.
 async function sendWeeklyReport(ctx) {
   const distinctUsers = await Mood.find({
     timestamp: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
   }).distinct('user');
-
   const users = await User.find({ _id: { $in: distinctUsers } });
   for (const user of users) {
     try {
-      const t = i18n.forUser(user);
-      const data = await getReport(user._id, 7);
-      const p = await generateReport(data, user._id, { labels: t.moodGroups });
-      await sendReport(p, user, ctx, 7);
-      fs.unlinkSync(p);
-      
-      // AI insight: on their own OpenAI key, or on the admin's shared key (counts toward its daily cap)
-      const ai = require('../ai/access');
-      const access = await ai.forUser(user);
-      const apiKey = access?.cred;
-      let allowed = Boolean(access);
-      if (access && !access.own) {
-        try { await ai.consume(user, access, 'insight'); }
-        catch (error) { if (!(error instanceof ai.AiLimitError)) throw error; allowed = false; }
-      }
-      if (allowed) {
-        const moods = await Mood.getLastWeekMoods(user._id);
-        if (moods.length > 0) {
-          try {
-            // adapt the reply to the user's personality profile (if they have one)
-            const personalityContext = await personalityService.getPersonalityContext(user._id);
-            const suggestionText = await llm.analyzeMoodWeek(moods, apiKey, { personalityContext, model: access.model, language: t.aiLanguage, fallback: t.insightFallback() });
-            await ctx.telegram.sendMessage(user.id, suggestionText, { parse_mode: 'HTML' });
-
-            // let the week's notes refine the profile, gradually
-            const notes = moods.map(m => m.note).filter(Boolean).join('\n');
-            if (notes.length >= 40 && await require('../chat/service').allowBackground(user._id, apiKey)) {
-              await personalityService.inferFromText(user._id, notes, apiKey)
-                .catch(err => console.error(`Personality inference failed for user ${user.id}:`, err.message));
-            }
-          } catch (error) {
-            console.error(`AI insight failed for user ${user.id}:`, error.message);
-            // only their own key is theirs to fix; a failing shared key is logged for the admin
-            if (llm.isAuthError(error) && access.own && !access.test) {
-              await ctx.telegram.sendMessage(user.id, t.openAIKeyStoppedWorkingMsg(), { parse_mode: 'HTML' });
-            }
-          }
-        }
-      }
-
+      await sendWeeklyReviewTo(ctx.telegram, user);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } catch (error) {
       console.error('Error in sendWeeklyReport:', error);
@@ -422,6 +434,7 @@ module.exports = {
   showReportCommand,
   getReportCallback,
   sendWeeklyReport,
+  sendWeeklyReviewTo,
   generateWeeklyImagesForYear,
   generateYearlyWeeklyReportVideo,
   getYearlyMoodVideo,

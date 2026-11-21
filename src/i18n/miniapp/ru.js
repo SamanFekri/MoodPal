@@ -441,4 +441,13 @@ module.exports = {
   'Your own OpenAI key: unlimited': 'Твой ключ OpenAI: без ограничений',
   'MoodPal\'s free AI ({provider}): {left} of {limit} Talk messages left today. Add your own key below for unlimited use.': 'Бесплатный ИИ MoodPal ({provider}): сегодня осталось {left} из {limit} сообщений. Добавь свой ключ ниже, чтобы пользоваться без ограничений.',
   'No AI yet: add your own OpenAI key below to use Talk and AI insights.': 'ИИ пока недоступен: добавь свой ключ OpenAI ниже, чтобы пользоваться разговором и ИИ-советами.',
+  // weekly review
+  'Weekly review': 'Итоги недели',
+  'Once a week, the bot sends your week\'s mood chart and a short AI review of your week with a few suggestions.': 'Раз в неделю бот присылает график твоих настроений за неделю и короткий разбор недели от ИИ с парой советов.',
+  'Day': 'День', 'Time': 'Время', 'Next review': 'Следующие итоги',
+  'Only weeks with at least one mood get a review. Moving the day never sends a second one in the same week.': 'Итоги приходят только за недели, где есть хотя бы одно настроение. Если поменять день, вторых итогов на той же неделе не будет.',
+  'Weekly review is off': 'Итоги недели выключены',
+  'Next review {when}': 'Следующие итоги {when}',
+  'Couldn\'t save the weekly review': 'Не удалось сохранить итоги недели',
+  'Review language': 'Язык итогов', 'Same as the app': 'Как в приложении',
 };

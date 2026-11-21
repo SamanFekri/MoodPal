@@ -2565,6 +2565,39 @@
               </template>
             </section>
 
+            <!-- weekly review: the week's chart and the AI's read of it, on their own day and time, once a week -->
+            <section class="section" v-show="settingsTab === 'reminders'" :style="{ '--i': 4 }" v-if="settings.weekly">
+              <div class="share-row">
+                <div>
+                  <div class="s-title"><ui-icon name="chart-column" :size="16"></ui-icon> {{ $t('Weekly review') }}</div>
+                  <div class="s-desc">{{ $t('Once a week, the bot sends your week\'s mood chart and a short AI review of your week with a few suggestions.') }}</div>
+                </div>
+                <button class="switch" :class="{ on: settings.weekly.enabled }" :disabled="weeklyBusy" @click="saveWeekly({ enabled: !settings.weekly.enabled })" role="switch" :aria-checked="settings.weekly.enabled"></button>
+              </div>
+              <template v-if="settings.weekly.enabled">
+                <div class="af-label sup-gap">{{ $t('Day') }}</div>
+                <div class="af-opts">
+                  <button v-for="d in weekDays" :key="'wd' + d" class="af-opt" :class="{ on: settings.weekly.day === d }" :disabled="weeklyBusy" @click="saveWeekly({ day: d })">{{ weekdayName(d) }}</button>
+                </div>
+                <div class="af-label sup-gap">{{ $t('Time') }}</div>
+                <div class="rem-times">
+                  <div class="rem-time"><input type="time" :value="settings.weekly.time" :disabled="weeklyBusy" @change="$event.target.value && saveWeekly({ time: $event.target.value })"></div>
+                </div>
+                <div class="af-label sup-gap">{{ $t('Review language') }}</div>
+                <div class="af-opts">
+                  <button class="af-opt" :class="{ on: !settings.weekly.language }" :disabled="weeklyBusy" @click="saveWeekly({ language: null })">{{ $t('Same as the app') }}</button>
+                  <button v-for="l in settings.weekly.languages" :key="'wl' + l.code" class="af-opt" :class="{ on: settings.weekly.language === l.code }" :disabled="weeklyBusy" @click="saveWeekly({ language: l.code })">{{ l.flag }} <bdi>{{ l.name }}</bdi></button>
+                </div>
+                <div class="kv"><span class="k">{{ $t('In your timezone') }}</span><span class="v">{{ settings.weekly.timezone }} · {{ tzOffset(settings.weekly.timezone) }}</span></div>
+                <div class="kv" v-if="settings.weekly.next_at"><span class="k">{{ $t('Next review') }}</span><span class="v">{{ formatInTz(settings.weekly.next_at, settings.weekly.timezone) }}</span></div>
+                <div class="kv" v-if="settings.weekly.last_sent_at"><span class="k">{{ $t('Last sent') }}</span><span class="v">{{ formatInTz(settings.weekly.last_sent_at, settings.weekly.timezone) }}</span></div>
+                <div class="row-actions" v-if="settings.weekly.custom">
+                  <button class="btn ghost" :disabled="weeklyBusy" @click="saveWeekly({ day: null, time: null })">{{ $t('Back to default ({d})', { d: weekdayName(settings.weekly.default_day) + ' ' + settings.weekly.default_time }) }}</button>
+                </div>
+                <div class="note-box">{{ $t('Only weeks with at least one mood get a review. Moving the day never sends a second one in the same week.') }}</div>
+              </template>
+            </section>
+
             <p class="disclaimer" v-show="settingsTab === 'ai'"><ui-icon name="bot" :size="14"></ui-icon> {{ $t('Talk is an AI, not a therapist. It can be wrong and is not medical advice.') }}</p>
           </template>
         </div>
@@ -3934,6 +3967,7 @@
           settingsBusy: false,
           languageBusy: false,
           remindersBusy: false,
+          weeklyBusy: false,
           timezoneBusy: false,
           tzQuery: '',
           nowTick: Date.now(),
@@ -4019,6 +4053,7 @@
       computed: {
         supportFull() { return Boolean(this.support) && this.support.contacts.filter(c => c.status !== 'declined').length >= this.support.max_contacts; },
         pickedCount() { return this.sheet?.type === 'share' ? this.sheet.friends.filter(f => this.sheet.picked[f.id]).length : 0; },
+        weekDays() { return I18N.lang === 'fa' ? [6, 0, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6, 0]; },
         tabs() {
           const t = [{ key: 'friends', label: 'Friends', icon: 'users' }, { key: 'personality', label: 'Personality', icon: 'brain' }, { key: 'talk', label: 'Talk', icon: 'message-circle' }];
           t.push({ key: 'logs', label: 'Logs', icon: 'scroll-text' });
@@ -5837,6 +5872,23 @@ Script.complete();
         },
 
         // ----- mood reminders -----
+        // weekly review: days in the order people expect (Saturday first in Farsi, Monday first otherwise)
+        weekdayName(d) { try { return new Date(Date.UTC(2026, 0, 4 + d)).toLocaleDateString(I18N.locale, { weekday: 'short', timeZone: 'UTC' }); } catch { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]; } },
+        async saveWeekly(patch) {
+          if (this.weeklyBusy) return;
+          this.haptic('light');
+          this.weeklyBusy = true;
+          try {
+            this.settings = await this.api('/api/me/settings/weekly', { method: 'POST', body: patch });
+            const w = this.settings.weekly;
+            if (patch.enabled === false) this.showToast($t('Weekly review is off'));
+            else if (w.next_at) this.showToast($t('Next review {when}', { when: this.formatInTz(w.next_at, w.timezone).toLowerCase() }));
+          } catch (error) {
+            this.showToast({ invalid_time: "That time doesn't look right", invalid_day: "That day doesn't look right", invalid_language: "That language isn't available" }[error.message] || $t("Couldn't save the weekly review"));
+          } finally {
+            this.weeklyBusy = false;
+          }
+        },
         async saveReminders(patch) {
           if (this.remindersBusy) return;
           this.haptic('light');

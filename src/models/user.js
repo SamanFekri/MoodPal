@@ -137,6 +137,18 @@ const userSchema = new mongoose.Schema({
   },
   // Mood check-in reminders. times null = the admin's defaults. next_at is the next due
   // reminder (UTC); unset means "recompute", which the scheduler does on its next tick.
+  // Weekly review (src/weekly/service.js): the week's chart and the AI's read of it, on their own day
+  // and time. day/time null = the default from WEEKLY_CRON_JOB_TIME. next_at unset = "recompute".
+  weekly_review: {
+    enabled: { type: Boolean, default: true },
+    day: { type: Number, min: 0, max: 6, default: null },
+    time: { type: String, default: null },
+    // the language the review is written in; null = the same as the app (user.language)
+    language: { type: String, default: null },
+    next_at: { type: Date, default: null },
+    last_sent_at: { type: Date, default: null },
+    attempts: { type: Number, default: 0 },   // failed tries of the current one
+  },
   reminder: {
     enabled: { type: Boolean, default: true },
     times: { type: [String], default: null },
@@ -148,6 +160,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.index({ 'reminder.next_at': 1 });
+userSchema.index({ 'weekly_review.next_at': 1 });
 
 // One-off: give users created before last_active_at existed a sensible value
 userSchema.statics.backfillLastActive = async function() {

@@ -101,6 +101,7 @@ app.delete('/api/me/settings/openai-key', requireWebAppUser, controllers.setting
 app.post('/api/me/settings/model', requireWebAppUser, controllers.settings.setModel);
 app.post('/api/me/settings/language', requireWebAppUser, controllers.settings.setLanguage);
 app.post('/api/me/settings/reminders', requireWebAppUser, controllers.settings.setReminders);
+app.post('/api/me/settings/weekly', requireWebAppUser, controllers.settings.setWeekly);
 app.post('/api/me/settings/timezone', requireWebAppUser, controllers.settings.setTimezone);
 app.post('/api/me/settings/privacy', requireWebAppUser, controllers.settings.setPrivacy);
 app.post('/api/me/settings/memory', requireWebAppUser, controllers.settings.setMemory);

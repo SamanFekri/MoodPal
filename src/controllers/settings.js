@@ -26,10 +26,12 @@ const view = async (user) => {
       return { source: 'shared', provider: access.providerName, model: access.model, today: await ai.talkToday(user) };
     })(),
     ...(await (async () => {
-      const fresh = await User.findById(user._id).select('reminder timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared language').lean() || user;
+      const fresh = await User.findById(user._id).select('reminder weekly_review timezone is_mbti_shared memory_enabled is_mood_log_shared is_mood_notes_shared language').lean() || user;
       const mbti = await require('../personality/service').getMbti(user._id);
       return {
         reminders: reminders.viewFor(fresh, await reminders.getSettings()),
+        // the weekly review: day, time and on/off (src/weekly/service.js)
+        weekly: require('../weekly/service').viewFor(fresh),
         timezone: await reminders.timezoneView(fresh),
         // who can see your Moodling (MBTI-style character)
         privacy: {
@@ -99,6 +101,18 @@ const setReminders = async (req, res) => {
   res.json(await view(req.user));
 };
 
+// POST /api/me/settings/weekly { enabled?, day?: 0-6 | null, time?: "HH:MM" | null, language?: "en" | "fa" | "ru" | null }
+const setWeekly = async (req, res) => {
+  const weekly = require('../weekly/service');
+  try {
+    await weekly.updateForUser(req.user._id, req.body || {});
+  } catch (error) {
+    if (error instanceof weekly.WeeklyInputError) return res.status(400).json({ error: error.code });
+    throw error;
+  }
+  res.json(await view(req.user));
+};
+
 // POST /api/me/settings/timezone { timezone: IANA | null } — null goes back to the default
 const setTimezone = async (req, res) => {
   const tz = req.body?.timezone ?? null;
@@ -160,4 +174,5 @@ const setMemory = async (req, res) => {
 const verify = (key) => llm.verifyApiKey(key);
 
 module.exports = {
+  setWeekly,
   setLanguage, getSettings, setKey, removeKey, setModel, setReminders, setTimezone, setPrivacy, setMemory, listMemories, forgetMemory, forgetAllMemories, verify };

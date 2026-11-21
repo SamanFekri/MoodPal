@@ -302,6 +302,7 @@ async function setTimezone(userId, timezone) {
   const s = await getSettings();
   let user = await User.findByIdAndUpdate(userId, { $set: { timezone: timezone || null } }, { new: true }).lean();
   user = await User.findByIdAndUpdate(userId, { $set: { 'reminder.next_at': nextFor(user, s, new Date()) } }, { new: true }).lean();
+  await require('../weekly/service').reschedule(userId);   // the weekly review moves with the timezone
   return user;
 }
 
