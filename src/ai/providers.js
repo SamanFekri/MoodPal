@@ -11,14 +11,18 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    defaultModel: 'gemini-3.8-flash',
-    // free on Google AI Studio's free tier (checked 2026-11-21); the bigger Gemini 4 models are paid
+    // Measured with a real free-tier key on 2026-11-21: the Flash-Lite models answered every time in about
+    // 1s; gemini-3.8-flash / 3.7-flash / flash-latest mostly returned 503 (Google overloaded), and
+    // 3.5-flash / 4-hydrogen timed out. So Flash-Lite is the default, and a busy model falls back to it.
+    defaultModel: 'gemini-3.5-flash-lite',
     models: [
-      { id: 'gemini-3.8-flash', note: 'Free tier. Newest Flash, the default.' },
-      { id: 'gemini-3.6-flash', note: 'Free tier.' },
-      { id: 'gemini-3.5-flash-lite', note: 'Free tier. Lightest and fastest.' },
-      { id: 'gemini-4-hydrogen', note: 'Free tier.' },
+      { id: 'gemini-3.5-flash-lite', note: 'Free tier. Fast and reliable, the default.' },
+      { id: 'gemini-flash-lite-latest', note: 'Free tier. Always the newest Flash-Lite.' },
+      { id: 'gemini-3.6-flash', note: 'Free tier. Smarter, but slow (10 to 20s).' },
+      { id: 'gemini-3.8-flash', note: 'Free tier. Newest Flash, often busy (503) on the free tier.' },
     ],
+    // tried in order when the chosen model is busy (503 / 429 / 5xx / timeout); see llm.createChat
+    fallbackModels: ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest'],
   },
   openai: {
     name: 'OpenAI',
@@ -99,6 +103,9 @@ function clientFor(cred) {
   const p = PROVIDERS[cred?.provider];
   if (!p) throw new Error(`Unknown AI provider: ${cred?.provider}`);
   if (cred.provider === 'claude') return claudeClient(cred.apiKey);
+  // Gemini: no long hidden retries on a busy model (the SDK's default is 2 retries and a 10 minute
+  // timeout); llm.createChat moves to a fallback model instead, so Talk answers in seconds
+  if (cred.provider === 'gemini') return new OpenAI({ apiKey: cred.apiKey, baseURL: p.baseURL, maxRetries: 0, timeout: 30000 });
   return new OpenAI({ apiKey: cred.apiKey, ...(p.baseURL ? { baseURL: p.baseURL } : {}) });
 }
 function _setFactory(f) { factory = f || null; }

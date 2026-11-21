@@ -34,7 +34,7 @@ describe('AI providers', () => {
     assert.equal(providers.clientFor(OWN_KEY).baseURL, 'https://api.openai.com/v1');
     assert.equal(providers.clientFor({ provider: 'gemini', apiKey: GEMINI_KEY }).baseURL, providers.PROVIDERS.gemini.baseURL);
     assert.equal(typeof providers.clientFor({ provider: 'claude', apiKey: 'sk-ant-x' }).chat.completions.create, 'function');
-    assert.equal(providers.modelFor({ provider: 'gemini', model: 'gemini-3.8-flash' }, 'gpt-5.6'), 'gemini-3.8-flash', 'the shared key\'s model wins');
+    assert.equal(providers.modelFor({ provider: 'gemini', model: 'gemini-3.5-flash-lite' }, 'gpt-5.6'), 'gemini-3.5-flash-lite', 'the shared key\'s model wins');
     assert.equal(providers.modelFor(OWN_KEY, 'gpt-5-mini'), 'gpt-5-mini');
     assert.equal(providers.DEFAULT_PROVIDER, 'gemini');
   });
@@ -73,11 +73,11 @@ describe('AI providers', () => {
     test('Gemini: its model, a light effort, room for thinking, and JSON parsed even inside a code fence', async () => {
       const seen = [];
       llm._setClientFactory((cred) => ({ chat: { completions: { create: async (params) => { seen.push({ cred, params }); return { choices: [{ message: { content: '```json\n{"reply":"hey there","risk":"none"}\n```' } }] }; } } } }));
-      const cred = { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' };
+      const cred = { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.5-flash-lite' };
       const out = await llm.chatReply([{ role: 'user', content: 'hi' }], cred, { model: 'gpt-5.6' });
       assert.equal(out.reply, 'hey there');
       assert.equal(seen[0].cred, cred);
-      assert.equal(seen[0].params.model, 'gemini-3.8-flash');
+      assert.equal(seen[0].params.model, 'gemini-3.5-flash-lite');
       assert.equal(seen[0].params.reasoning_effort, 'low');
       assert.ok(seen[0].params.max_tokens >= 2000);
     });
@@ -89,10 +89,37 @@ describe('AI providers', () => {
         if (params.response_format) throw Object.assign(new Error('Invalid value at response_format'), { status: 400, param: 'response_format' });
         return { choices: [{ message: { content: '{"reply":"ok","risk":"low"}' } }] };
       } } } }));
-      const out = await llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' });
+      const out = await llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.5-flash-lite' });
       assert.equal(out.reply, 'ok');
       assert.equal(seen.length, 2);
       assert.equal(seen[1].response_format, undefined);
+    });
+
+    test('a busy Gemini model (503 / timeout) falls back to Flash-Lite; other errors and providers do not', async () => {
+      const seen = [];
+      const busy = new Set(['gemini-3.8-flash']);
+      llm._setClientFactory(() => ({ chat: { completions: { create: async (params) => {
+        seen.push(params.model);
+        if (busy.has(params.model)) throw Object.assign(new Error('503 status code (no body)'), { status: 503 });
+        return { choices: [{ message: { content: '{"reply":"still here","risk":"none"}' } }] };
+      } } } }));
+      const out = await llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' });
+      assert.equal(out.reply, 'still here');
+      assert.deepEqual(seen, ['gemini-3.8-flash', 'gemini-3.5-flash-lite']);
+
+      // both busy: the next fallback; all busy: the last error
+      seen.length = 0; busy.add('gemini-3.5-flash-lite');
+      await llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' });
+      assert.deepEqual(seen, ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest']);
+      busy.add('gemini-flash-lite-latest');
+      await assert.rejects(llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' }), (e) => e.status === 503);
+
+      // a rejected key isn't "busy": no fallback
+      seen.length = 0;
+      llm._setClientFactory(() => ({ chat: { completions: { create: async (params) => { seen.push(params.model); throw Object.assign(new Error('API key not valid'), { status: 401 }); } } } }));
+      await assert.rejects(llm.chatReply([{ role: 'user', content: 'hi' }], { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' }));
+      assert.deepEqual(seen, ['gemini-3.8-flash']);
+      assert.equal(llm.isBusyError({ name: 'APIConnectionTimeoutError', message: 'Request timed out.' }), true);
     });
   });
 });
@@ -125,7 +152,7 @@ describe('shared AI key: access and limits', () => {
     await share();
     const shared = await ai.forUser(alice);
     assert.equal(shared.own, false);
-    assert.deepEqual(shared.cred, { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' });
+    assert.deepEqual(shared.cred, { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.5-flash-lite' });
     assert.equal(shared.providerName, 'Google Gemini');
     await User.setOpenAIKey(alice._id, OWN_KEY);
     const own = await ai.forUser(alice);
@@ -266,8 +293,8 @@ describe('shared AI key: access and limits', () => {
 
       let r = await api('/api/me/talk/message', { as: alice, method: 'POST', body: { text: 'rough day' } });
       assert.equal(r.status, 200);
-      assert.deepEqual(stub.calls[0].apiKey, { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.8-flash' });
-      assert.equal(stub.calls[0].opts.model, 'gemini-3.8-flash');
+      assert.deepEqual(stub.calls[0].apiKey, { provider: 'gemini', apiKey: GEMINI_KEY, model: 'gemini-3.5-flash-lite' });
+      assert.equal(stub.calls[0].opts.model, 'gemini-3.5-flash-lite');
       assert.equal(r.body.today.left, 1);
       await api('/api/me/talk/message', { as: alice, method: 'POST', body: { text: 'still here' } });
       r = await api('/api/me/talk/message', { as: alice, method: 'POST', body: { text: 'one more' } });

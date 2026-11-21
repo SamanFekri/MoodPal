@@ -38,7 +38,7 @@ export function chatParams(model, { temperature, maxTokens }) {
 // request retried once, so a new model with different rules still answers.
 // response_format too: a provider without JSON mode still answers in JSON from the prompt (parseJson)
 const TUNING_PARAMS = ["temperature", "reasoning_effort", "response_format"];
-export async function createChat(client, params) {
+async function createOnce(client, params) {
   try {
     return await client.chat.completions.create(params);
   } catch (error) {
@@ -48,6 +48,26 @@ export async function createChat(client, params) {
     const retry = { ...params };
     delete retry[bad];
     return client.chat.completions.create(retry);
+  }
+}
+
+// the provider is overloaded or rate-limited, or didn't answer in time: worth another model
+export const isBusyError = (e) => [429, 500, 502, 503, 504].includes(e?.status) || /timed? ?out|ETIMEDOUT/i.test(`${e?.name || ""} ${e?.message || ""}`);
+
+// A busy Gemini model (the free tier's bigger models often return 503) moves to a lighter one
+// (providers.PROVIDERS.gemini.fallbackModels), so Talk still answers.
+export async function createChat(client, params) {
+  try {
+    return await createOnce(client, params);
+  } catch (error) {
+    if (!isBusyError(error) || !/^gemini/i.test(params.model || "")) throw error;
+    let last = error;
+    for (const model of providers.PROVIDERS.gemini.fallbackModels.filter(m => m !== params.model)) {
+      console.warn(`Gemini ${params.model} is busy (${error.status || error.name}); trying ${model}`);
+      try { return await createOnce(client, { ...params, model }); }
+      catch (e) { last = e; if (!isBusyError(e)) throw e; }
+    }
+    throw last;
   }
 }
 
