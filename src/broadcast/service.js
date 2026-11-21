@@ -100,6 +100,23 @@ async function uploadMedia(adminChatId, buffer, { mime, name }) {
   return { kind, file_id: fileId, file_name: name || null, size: buffer.length };
 }
 
+// ---------- the main channel ----------
+
+const channelId = () => process.env.MAIN_CHANNEL_ID || null;
+
+// one post in the channel, right away (no queue: it's a single message). Never throws.
+async function postToChannel(msg) {
+  const id = channelId();
+  if (!id) return { channel_status: 'not_configured', channel_error: null, channel_message_id: null };
+  try {
+    const sent = await sendTo(id, msg);
+    return { channel_status: 'sent', channel_error: null, channel_message_id: sent?.message_id ?? null };
+  } catch (error) {
+    console.error('Broadcast to the channel failed:', error.description || error.message);
+    return { channel_status: 'failed', channel_error: String(error.description || error.message || 'send failed').slice(0, 200), channel_message_id: null };
+  }
+}
+
 // ---------- audience ----------
 
 // everyone the bot can still reach
@@ -108,10 +125,18 @@ const audienceCount = () => User.countDocuments(audienceFilter());
 
 // ---------- create / cancel ----------
 
+// `to_users` / `to_channel`: send it to everyone's chat, post it in the main channel, or both
+// (the default). At least one has to be on.
+const flag = (v, fallback) => (v === undefined || v === null ? fallback : v === true || v === 'true');
+
 async function create(adminId, input, { resentFrom = null, exclude = null } = {}) {
   const msg = normalize(input);
   const order = ORDERS[input?.order] ? input.order : 'recent_active';
-  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, order, resent_from: resentFrom, only_missed: Boolean(exclude) });
+  const toUsers = flag(input?.to_users, true);
+  const toChannel = flag(input?.to_channel, true);
+  if (!toUsers && !toChannel) throw new BroadcastInputError('no_destination');
+  const broadcast = await Broadcast.create({ created_by: adminId, ...msg, order, resent_from: resentFrom, only_missed: Boolean(exclude), to_users: toUsers, to_channel: toChannel });
+  if (toChannel) Object.assign(broadcast, await postToChannel(msg));
   let total = 0;
   const filter = exclude ? { ...audienceFilter(), _id: { $nin: exclude } } : audienceFilter();
   const cursor = User.find(filter).sort(ORDERS[order]).select('_id id').lean().cursor();
@@ -122,7 +147,7 @@ async function create(adminId, input, { resentFrom = null, exclude = null } = {}
     total += batch.length;
     batch = [];
   };
-  for await (const u of cursor) {
+  for await (const u of toUsers ? cursor : []) {
     batch.push({ broadcast: broadcast._id, user: u._id, chat_id: u.id, seq: total + batch.length });
     if (batch.length >= 1000) await flush();
   }
@@ -143,7 +168,8 @@ async function resend(adminId, id, { audience = 'everyone', order } = {}) {
   const exclude = audience === 'missed'
     ? await BroadcastDelivery.find({ broadcast: original._id, status: 'sent' }).distinct('user')
     : null;
-  const input = { text: original.text, kind: original.kind, file_id: original.file_id, file_name: original.file_name, button: original.button?.text ? original.button : null, order: ORDERS[order] ? order : original.order };
+  // a resend goes to people's chats only: the channel already has the post
+  const input = { text: original.text, kind: original.kind, file_id: original.file_id, file_name: original.file_name, button: original.button?.text ? original.button : null, order: ORDERS[order] ? order : original.order, to_users: true, to_channel: false };
   return create(adminId, input, { resentFrom: original._id, exclude });
 }
 
@@ -245,12 +271,14 @@ async function view({ limit = 8 } = {}) {
   return {
     audience: await audienceCount(),
     rate_per_second: await rate(),
+    channel_configured: Boolean(channelId()),
     paused_until: pausedUntil() && pausedUntil() > new Date() ? pausedUntil() : null,
     broadcasts: list.map(b => {
       const c = by[String(b._id)] || {};
       return {
         id: b._id, kind: b.kind, text: b.text, file_id: b.file_id, file_name: b.file_name, button: b.button?.text ? b.button : null, order: b.order,
         resent_from: b.resent_from || null, only_missed: Boolean(b.only_missed),
+        to_users: b.to_users !== false, to_channel: Boolean(b.to_channel), channel_status: b.channel_status || null, channel_error: b.channel_error || null,
         status: b.status, total: b.total, started_at: b.started_at, finished_at: b.finished_at,
         sent: c.sent || 0, failed: c.failed || 0, skipped: c.skipped || 0, waiting: (c.queued || 0) + (c.sending || 0),
       };

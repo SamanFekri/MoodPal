@@ -944,6 +944,8 @@
     .bc-row { padding: 12px 0; border-top: 1px solid rgba(138,143,152,0.12); }
     .bc-row .top { display: flex; align-items: center; gap: 8px; font-size: 0.7059rem; }
     .bc-row .st { font-weight: 800; color: var(--hint); } .bc-row .st.sending { color: var(--recent-ink); } .bc-row .st.done { color: var(--fresh-ink); }
+    .bc-dest { margin-top: 12px; }
+    .bc-tag.ch-sent { color: var(--fresh-ink); } .bc-tag.ch-failed, .bc-tag.ch-not_configured { color: var(--danger-ink); }
     .bc-row .when { margin-left: auto; color: var(--hint); font-weight: 600; }
     .bc-row .txt { font-size: 0.8235rem; margin: 6px 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .bc-row .bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(138,143,152,0.16); }
@@ -1662,7 +1664,7 @@
             <div v-else-if="!bc" class="state"><div class="art"><ui-icon name="wifi-off"></ui-icon></div><h2>Couldn't load broadcasts</h2><p>{{ bcError }}</p><button class="btn" @click="fetchBroadcast()">{{ $t('Try again') }}</button></div>
             <template v-else>
               <section class="section" :style="{ '--i': 0 }">
-                <h3>New message <span class="sub">to everyone</span></h3>
+                <h3>New message <span class="sub">{{ bcDraft.toUsers && bcDraft.toChannel ? 'to everyone and the channel' : bcDraft.toChannel ? 'to the channel only' : 'to everyone' }}</span></h3>
                 <textarea class="bc-text" v-model="bcDraft.text" :maxlength="bcLimit" rows="5" :placeholder="bcDraft.media ? 'Caption (optional)' : 'Write your message…'"></textarea>
                 <div class="bc-count">{{ bcDraft.text.length }} / {{ bcLimit }}</div>
 
@@ -1683,7 +1685,25 @@
                   <button class="g-btn" title="Remove button" @click="bcDraft.showButton = false; bcDraft.buttonText = ''; bcDraft.buttonUrl = ''">×</button>
                 </div>
 
-                <div class="rem-limit">
+                <!-- where it goes: people's chats, the channel, or both (both on by default) -->
+                <div class="share-row bc-dest">
+                  <div>
+                    <div class="s-title">Send to users</div>
+                    <div class="s-desc">Everyone's own chat with the bot, through the queue.</div>
+                  </div>
+                  <button class="switch" :class="{ on: bcDraft.toUsers }" :disabled="!!bcBusy" @click="bcDraft.toUsers = !bcDraft.toUsers" role="switch" :aria-checked="bcDraft.toUsers" aria-label="Send to users"></button>
+                </div>
+                <div class="share-row bc-dest">
+                  <div>
+                    <div class="s-title">Post in the channel</div>
+                    <div class="s-desc" v-if="bc.channel_configured">One post in the main channel, right away.</div>
+                    <div class="s-desc" v-else>No channel is set up (MAIN_CHANNEL_ID), so nothing would be posted.</div>
+                  </div>
+                  <button class="switch" :class="{ on: bcDraft.toChannel }" :disabled="!!bcBusy" @click="bcDraft.toChannel = !bcDraft.toChannel" role="switch" :aria-checked="bcDraft.toChannel" aria-label="Post in the channel"></button>
+                </div>
+                <div class="warn-box" v-if="!bcDraft.toUsers && !bcDraft.toChannel">Turn on at least one: users, the channel, or both.</div>
+
+                <div class="rem-limit" v-if="bcDraft.toUsers">
                   <span><b>Who gets it first</b><i>The queue sends in this order</i></span>
                   <select v-model="bcDraft.order" :disabled="!!bcBusy">
                     <option value="recent_active">Most recently active</option>
@@ -1692,10 +1712,10 @@
                     <option value="oldest">Oldest users</option>
                   </select>
                 </div>
-                <div class="kv"><span class="k">Goes to</span><span class="v">{{ bc.audience }} {{ bc.audience === 1 ? 'person' : 'people' }} who can still get messages</span></div>
+                <div class="kv"><span class="k">Goes to</span><span class="v">{{ [bcDraft.toUsers ? bc.audience + (bc.audience === 1 ? ' person' : ' people') + ' who can still get messages' : '', bcDraft.toChannel ? 'the channel' : ''].filter(Boolean).join(' and ') || 'nobody yet' }}</span></div>
                 <div class="row-actions">
                   <button class="btn ghost" :disabled="!!bcBusy || !bcReady" @click="sendBroadcastTest">{{ bcBusy === 'test' ? 'Sending…' : 'Send test to me' }}</button>
-                  <button class="btn" :disabled="!!bcBusy || !bcReady || !bc.audience" @click="sendBroadcast">{{ bcBusy === 'send' ? 'Queuing…' : 'Send to ' + bc.audience + ' ' + (bc.audience === 1 ? 'person' : 'people') }}</button>
+                  <button class="btn" :disabled="!!bcBusy || !bcReady || !bcDestOk" @click="sendBroadcast">{{ bcBusy === 'send' ? 'Sending…' : bcSendLabel }}</button>
                 </div>
                 <div class="note-box">"Send test to me" sends exactly this message only to you. Everyone else gets it through a queue at {{ bc.rate_per_second }} messages a second, so the bot never floods Telegram. People who blocked the bot are skipped.</div>
               </section>
@@ -1708,14 +1728,18 @@
                     <span class="kind">{{ { text: 'Text', photo: 'Photo', video: 'Video', animation: 'GIF', audio: 'Audio', document: 'File' }[b.kind] }}</span>
                     <span class="st" :class="b.status">{{ { sending: 'Sending', done: 'Done', cancelled: 'Cancelled' }[b.status] }}</span>
                     <span v-if="b.resent_from" class="bc-tag">{{ b.only_missed ? 'Resent to who missed it' : 'Resent' }}</span>
+                    <span v-if="b.to_channel" class="bc-tag" :class="'ch-' + (b.channel_status || 'none')" :title="b.channel_error || ''">{{ { sent: 'Channel ✓', failed: 'Channel failed', not_configured: 'No channel set up' }[b.channel_status] || 'Channel' }}</span>
+                    <span v-if="!b.to_users" class="bc-tag">Channel only</span>
                     <span class="when">{{ formatWhen(b.started_at, true) }}</span>
                   </div>
                   <div class="txt">{{ b.text || b.file_name || '(no text)' }}</div>
+                  <template v-if="b.to_users">
                   <div class="bar"><i class="ok" :style="{ width: (b.total ? b.sent / b.total * 100 : 0) + '%' }"></i><i class="bad" :style="{ width: (b.total ? b.failed / b.total * 100 : 0) + '%' }"></i></div>
                   <div class="nums">
                     <span>{{ b.sent }} sent</span><span v-if="b.failed">{{ b.failed }} failed</span><span v-if="b.skipped">{{ b.skipped }} skipped</span><span v-if="b.waiting">{{ b.waiting }} waiting</span><span>of {{ b.total }}</span>
                     <button v-if="b.status === 'sending'" class="bc-cancel" :disabled="!!bcBusy" @click="cancelBroadcast(b)">Cancel</button>
                   </div>
+                  </template>
                   <!-- send it again as it was, or load it into the composer to change it first -->
                   <div v-if="b.status !== 'sending'" class="bc-again">
                     <button class="adm-chip" :class="{ active: bcResend?.id === b.id }" :disabled="!!bcBusy" @click="toggleResend(b)"><ui-icon name="send" :size="14"></ui-icon>Send again</button>
@@ -3823,7 +3847,7 @@
           bcError: '',
           bcBusy: '',
           bcResend: null,   // { id, audience, order } while picking how to send an earlier broadcast again
-          bcDraft: { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active' },
+          bcDraft: { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active', toUsers: true, toChannel: true },
           memoryBusy: false,
           memories: null,
           publicName: '',
@@ -3853,6 +3877,13 @@
           return Object.values(groups);
         },
         bcLimit() { return this.bcDraft.media ? 1024 : 4096; },
+        // at least one destination, and someone to send to
+        bcDestOk() { const d = this.bcDraft; return (d.toUsers || d.toChannel) && (!d.toUsers || this.bc?.audience > 0 || d.toChannel); },
+        bcSendLabel() {
+          const d = this.bcDraft, n = this.bc?.audience || 0, people = `${n} ${n === 1 ? 'person' : 'people'}`;
+          if (d.toUsers && d.toChannel) return `Send to ${people} + channel`;
+          return d.toChannel ? 'Post in the channel' : `Send to ${people}`;
+        },
         bcReady() { return Boolean(this.bcDraft.media || this.bcDraft.text.trim()) && (!this.bcDraft.showButton || (!this.bcDraft.buttonText && !this.bcDraft.buttonUrl) || (this.bcDraft.buttonText.trim() && /^https?:\/\/\S+$/i.test(this.bcDraft.buttonUrl.trim()))); },
         mbtiTest() { return this.personality?.tests?.find(t => t.key === 'mbti') || null; },
         // shared-result visitors land in the bot, which starts the test right away
@@ -5136,6 +5167,8 @@ Script.complete();
             file_name: d.media?.file_name || null,
             button: d.showButton && d.buttonText.trim() ? { text: d.buttonText.trim(), url: d.buttonUrl.trim() } : null,
             order: d.order,
+            to_users: d.toUsers,
+            to_channel: d.toChannel,
           };
         },
         toggleResend(b) {
@@ -5166,12 +5199,13 @@ Script.complete();
             media: b.kind !== 'text' && b.file_id ? { kind: b.kind, file_id: b.file_id, file_name: b.file_name } : null,
             showButton: Boolean(b.button), buttonText: b.button?.text || '', buttonUrl: b.button?.url || '',
             order: b.order || 'recent_active',
+            toUsers: b.to_users !== false, toChannel: Boolean(b.to_channel),
           };
           nextTick(() => document.querySelector('.bc-text')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
           this.showToast('Loaded into the message above');
         },
         broadcastError(error) {
-          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', still_sending: 'Wait until it has finished sending', telegram_failed: 'Telegram refused it' }[error.message];
+          const m = { empty_message: 'Write something first', missing_media: 'The attachment is missing, attach it again', text_too_long: 'That message is too long', caption_too_long: 'Captions can be at most 1024 characters', invalid_button: 'The button needs text and a link starting with https://', empty_file: 'That file is empty', still_sending: 'Wait until it has finished sending', no_destination: 'Turn on users, the channel, or both', telegram_failed: 'Telegram refused it' }[error.message];
           this.showToast(m || "Couldn't do that");
         },
         async uploadBroadcastFile(event) {
@@ -5203,14 +5237,17 @@ Script.complete();
         },
         async sendBroadcast() {
           if (this.bcBusy) return;
-          const n = this.bc.audience;
-          if (!window.confirm(`Send this to ${n} ${n === 1 ? 'person' : 'people'}? It can't be unsent, but you can stop it while it's sending.`)) return;
+          const n = this.bc.audience, d = this.bcDraft;
+          const where = [d.toUsers ? `${n} ${n === 1 ? 'person' : 'people'}` : '', d.toChannel ? 'the channel' : ''].filter(Boolean).join(' and ');
+          if (!window.confirm(`Send this to ${where}? It can't be unsent${d.toUsers ? ", but you can stop the users' queue while it's sending" : ''}.`)) return;
           this.haptic('medium');
           this.bcBusy = 'send';
           try {
             this.bc = await this.api('/api/admin/broadcasts', { method: 'POST', body: this.broadcastPayload() });
-            this.bcDraft = { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active' };
-            this.showToast(`Sending to ${n} ${n === 1 ? 'person' : 'people'}`);
+            const latest = this.bc.broadcasts?.[0];
+            const channelNote = !d.toChannel ? '' : latest?.channel_status === 'sent' ? 'posted in the channel' : latest?.channel_status === 'not_configured' ? 'no channel set up' : "the channel post failed";
+            this.showToast([d.toUsers ? `Sending to ${where.split(' and ')[0]}` : '', channelNote].filter(Boolean).join(', '));
+            this.bcDraft = { text: '', media: null, showButton: false, buttonText: '', buttonUrl: '', order: 'recent_active', toUsers: true, toChannel: true };
           } catch (error) { this.broadcastError(error); }
           finally { this.bcBusy = ''; }
         },

@@ -15,6 +15,14 @@ const broadcastSchema = new mongoose.Schema({
   // a re-send of an earlier broadcast, and whether it went only to people who hadn't got that one
   resent_from: { type: mongoose.Schema.Types.ObjectId, ref: 'Broadcast', default: null },
   only_missed: { type: Boolean, default: false },
+  // where it goes: each person's chat (through the queue) and/or one post in the main channel
+  // (MAIN_CHANNEL_ID). Both on by default; older broadcasts read as users only.
+  to_users: { type: Boolean, default: true },
+  to_channel: { type: Boolean, default: false },
+  // the channel post: 'sent' | 'failed' | 'not_configured' (null when the channel wasn't asked for)
+  channel_status: { type: String, default: null },
+  channel_error: { type: String, default: null },
+  channel_message_id: { type: Number, default: null },
   total: { type: Number, default: 0 },
   started_at: { type: Date, default: Date.now },
   finished_at: { type: Date, default: null },

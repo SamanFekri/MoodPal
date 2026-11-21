@@ -228,7 +228,7 @@ async function updateSettings(adminId, { enabled, year } = {}) {
   let announced = false;
   if (state.enabled && state.announcedYear !== state.year) {
     const button = bot() ? { text: `✨ Get my ${state.year}`, url: `https://t.me/${bot()}?start=year` } : null;
-    await require('../broadcast/service').create(adminId, { kind: 'text', text: msgs.yearlyAnnounceMsg(state.year), button });
+    await require('../broadcast/service').create(adminId, { kind: 'text', text: msgs.yearlyAnnounceMsg(state.year), button, to_users: true, to_channel: false });
     await AppConfig.updateOne({ key: 'main' }, { yearly_announced_year: state.year });
     state.announcedYear = state.year;
     announced = true;

@@ -26,7 +26,8 @@ const test = async (req, res) => {
   try { await broadcast.sendTest(req.user.id, req.body || {}); res.json({ ok: true }); } catch (error) { fail(res, error); }
 };
 
-// POST /api/admin/broadcasts { text, kind, file_id, file_name, button } — queue it for everyone
+// POST /api/admin/broadcasts { text, kind, file_id, file_name, button, order, to_users, to_channel }
+// to_users: queue it for everyone; to_channel: post it in the main channel. Both default to true.
 const create = async (req, res) => {
   try {
     const b = await broadcast.create(req.user._id, req.body || {});

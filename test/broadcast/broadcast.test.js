@@ -49,8 +49,12 @@ describe('admin broadcasts', () => {
 
   before(async () => { await db.connect(); await BroadcastDelivery.init(); server = app.listen(0); base = `http://127.0.0.1:${server.address().port}`; });
   after(async () => { server.close(); await db.disconnect(); });
+  const realChannel = process.env.MAIN_CHANNEL_ID;
+  after(() => { if (realChannel === undefined) delete process.env.MAIN_CHANNEL_ID; else process.env.MAIN_CHANNEL_ID = realChannel; });
   beforeEach(async () => {
     await db.clear();
+    // no channel unless a test sets one, so .env doesn't change what gets sent
+    delete process.env.MAIN_CHANNEL_ID;
     reminders.state.paused_until = null;
     admin = await User.create({ id: 9, first_name: 'Root', is_admin: true, last_active_at: new Date('2026-09-01') });
   });
@@ -104,6 +108,68 @@ describe('admin broadcasts', () => {
     assert.equal((await Broadcast.findById(r.body.id)).status, 'done');
     const v = (await api('/api/admin/broadcasts', { as: admin })).body.broadcasts[0];
     assert.equal(v.sent, 4); assert.equal(v.total, 4); assert.equal(v.status, 'done'); assert.equal(v.order, 'recent_active');
+  });
+
+  test('the channel and the users are switches: both by default, either alone, never neither', async () => {
+    await people();
+    process.env.MAIN_CHANNEL_ID = '-100777';
+    const tg = fakeTelegram(); setTelegram(tg);
+
+    // default: one post in the channel right away, and the users' queue
+    const both = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'News!' } });
+    assert.equal(both.status, 200);
+    assert.equal(both.body.total, 4);
+    assert.deepEqual(tg.calls.map(c => c.chatId), ['-100777'], 'the channel gets it before the queue runs');
+    let row = both.body.broadcasts[0];
+    assert.equal(row.to_users, true); assert.equal(row.to_channel, true); assert.equal(row.channel_status, 'sent');
+    assert.equal(both.body.channel_configured, true);
+    await broadcast.drain(new Date(), { limit: 10 });
+    assert.equal(tg.calls.length, 5, 'channel + 4 people');
+
+    // channel only: nothing queued, done at once
+    tg.calls.length = 0;
+    const channelOnly = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Channel post', to_users: false } });
+    assert.equal(channelOnly.body.total, 0);
+    assert.deepEqual(tg.calls.map(c => c.chatId), ['-100777']);
+    assert.equal((await Broadcast.findById(channelOnly.body.id)).status, 'done');
+
+    // users only: the channel is left alone
+    tg.calls.length = 0;
+    const usersOnly = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Just you', to_channel: false } });
+    assert.equal(usersOnly.body.total, 4);
+    assert.deepEqual(tg.calls, []);
+    row = usersOnly.body.broadcasts[0];
+    assert.equal(row.to_channel, false); assert.equal(row.channel_status, null);
+
+    // neither is refused, and nothing is created
+    const before = await Broadcast.countDocuments();
+    const none = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Nowhere', to_users: false, to_channel: false } });
+    assert.equal(none.status, 400); assert.equal(none.body.error, 'no_destination');
+    assert.equal(await Broadcast.countDocuments(), before);
+
+    // a resend goes to people only (the channel already has it)
+    await broadcast.drain(new Date(), { limit: 20 });
+    tg.calls.length = 0;
+    const again = await api(`/api/admin/broadcasts/${both.body.id}/resend`, { as: admin, method: 'POST', body: { audience: 'everyone' } });
+    assert.equal(again.status, 200);
+    assert.ok(!tg.calls.some(c => c.chatId === '-100777'), 'no second channel post');
+  });
+
+  test('a failed or missing channel never stops the users getting it', async () => {
+    await people();
+    process.env.MAIN_CHANNEL_ID = '-100777';
+    const tg = fakeTelegram((chatId) => (chatId === '-100777' ? tgError(400, 'Bad Request: chat not found') : null)); setTelegram(tg);
+    const r = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Hello' } });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.total, 4);
+    assert.equal(r.body.broadcasts[0].channel_status, 'failed');
+    assert.match(r.body.broadcasts[0].channel_error, /chat not found/);
+
+    delete process.env.MAIN_CHANNEL_ID;
+    const r2 = await api('/api/admin/broadcasts', { as: admin, method: 'POST', body: { text: 'Hello again' } });
+    assert.equal(r2.body.broadcasts[0].channel_status, 'not_configured');
+    assert.equal(r2.body.channel_configured, false);
+    assert.equal(r2.body.total, 4);
   });
 
   test('other orders: newest users first, oldest users first, least active first', async () => {
