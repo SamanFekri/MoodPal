@@ -2844,9 +2844,9 @@
                 </div>
               </div>
               <!-- open this person's Telegram chat by their id -->
-              <a v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :href="adminChatHref(sheet.user)" @click="openAdminChat($event, sheet.user)">
-                <ui-icon name="message-circle" :size="16"></ui-icon>Open chat with {{ firstNameOf(sheet.user) }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
-              </a>
+              <button v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :disabled="sheet.openingChat" @click="openAdminChat(sheet)">
+                <ui-icon name="message-circle" :size="16"></ui-icon>{{ sheet.openingChat ? 'Opening…' : `Open chat with ${firstNameOf(sheet.user)}` }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
+              </button>
               <button class="btn ghost adm-open-chat" style="margin-top:8px" :disabled="sheet.yearBusy" @click="previewYearly(sheet)"><ui-icon name="sparkles" :size="16"></ui-icon>{{ sheet.yearBusy ? 'Asking…' : 'Year in moods' }}</button>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
@@ -4744,12 +4744,27 @@ Script.complete();
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
-        // chats open by Telegram id (tg://user?id=…), never by @username
-        adminChatHref(u) { return `tg://user?id=${u.id}`; },
-        openAdminChat(event, u) {
+        // their chat by their current @username; no username: their profile by Telegram id. Telegram's
+        // in-app browser may block tg://user?id=, so the bot also sends a button that opens the profile.
+        async openAdminChat(sheet) {
+          if (sheet.openingChat) return;
           this.haptic('light');
-          // the id link needs this Telegram account to know them already, so the id is copied as a backup
-          navigator.clipboard?.writeText(String(u.id)).then(() => this.showToast(`Opening their chat · id ${u.id} copied`)).catch(() => {});
+          sheet.openingChat = true;
+          try {
+            const r = await this.api(`/api/admin/users/${sheet.user.id}/open-chat`, { method: 'POST' });
+            if (r.username) {
+              sheet.user.username = r.username;
+              const url = `https://t.me/${r.username}`;
+              if (this.tg?.openTelegramLink) this.tg.openTelegramLink(url); else window.open(url, '_blank');
+              return;
+            }
+            this.showToast('No username: opening their profile. If it doesn\'t open, tap the button the bot sent you');
+            window.location.href = `tg://user?id=${sheet.user.id}`;
+          } catch {
+            this.showToast("Couldn't open their chat. Try again");
+          } finally {
+            sheet.openingChat = false;
+          }
         },
         profileHref(friend) { return `tg://user?id=${friend.id}`; },
         openProfile(event, friend) {

@@ -178,6 +178,7 @@ app.post('/api/admin/backup/restore', express.raw({ type: ['application/zip', 'a
 app.post('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.delete('/api/admin/users/:telegramId/friend', requireWebAppUser, requireAdmin, controllers.admin.setFriend);
 app.post('/api/admin/users/:telegramId/block', requireWebAppUser, requireAdmin, controllers.admin.setBlocked);
+app.post('/api/admin/users/:telegramId/open-chat', requireWebAppUser, requireAdmin, controllers.admin.openChat);
 app.delete('/api/admin/users/:telegramId/block', requireWebAppUser, requireAdmin, controllers.admin.setBlocked);
 
 // allow all requests to /public

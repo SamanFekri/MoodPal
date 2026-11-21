@@ -738,6 +738,42 @@ describe('mini app API', () => {
       assert.equal((await api('/api/admin/users/2/block', { as: alice, method: 'POST' })).status, 403, 'non-admins cannot block');
     });
 
+    test('open chat: by their current username, else their profile by id through a bot button', async () => {
+      const sent = [];
+      let chat = { id: 2, username: 'bob_now' };
+      const fake = (extraCheck) => ({
+        getChat: async () => { if (!chat) throw new Error('chat not found'); return chat; },
+        sendMessage: async (chatId, text, extra) => { extraCheck?.(extra); sent.push({ chatId, text, extra }); return { message_id: 1 }; },
+      });
+      setTelegram(fake());
+      let r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
+      assert.equal(r.status, 200);
+      assert.deepEqual(r.body, { username: 'bob_now' }, 'the current username, asked from Telegram');
+      assert.equal(sent.length, 0, 'no bot message when the username works');
+      assert.equal((await User.findById(bob._id)).username, 'bob_now', 'a changed username is saved');
+
+      // no username: the bot sends a button to their profile by id
+      chat = { id: 2 };
+      r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
+      assert.deepEqual(r.body, { username: null, sent: true, button: true });
+      assert.equal(sent[0].chatId, 9, 'sent to the admin');
+      assert.match(sent[0].text, /tg:\/\/user\?id=2/);
+      assert.equal(sent[0].extra.reply_markup.inline_keyboard[0][0].url, 'tg://user?id=2');
+
+      // Telegram can't see them, and their privacy refuses the button: the mention by id still goes
+      sent.length = 0;
+      chat = null;
+      setTelegram(fake((extra) => {
+        if (extra.reply_markup) { const e = new Error('Bad Request: BUTTON_USER_PRIVACY_RESTRICTED'); e.description = e.message; throw e; }
+      }));
+      r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
+      assert.deepEqual(r.body, { username: null, sent: true, button: false });
+      assert.match(sent[0].text, /tg:\/\/user\?id=2/);
+
+      assert.equal((await api('/api/admin/users/999/open-chat', { as: admin, method: 'POST' })).status, 404);
+      assert.equal((await api('/api/admin/users/2/open-chat', { as: alice, method: 'POST' })).status, 403);
+    });
+
     test('admins can read a user\'s full history including private moods and notes', async () => {
       await User.updateOne({ _id: bob._id }, { is_mood_private: true });
       await Mood.create({ user: bob._id, mood: { code: 'sad', emoji: '😢', name: 'Sad' }, note: 'secret note' });
