@@ -105,8 +105,8 @@
     "semantic_hash": ""
   },
   "src/controllers/admin.js": {
-    "mtime": 1795254824.5747292,
-    "ast_hash": "bbf35263f06742b18ea35415dc757ccf",
+    "mtime": 1795258761.2649276,
+    "ast_hash": "25663182fc9cbaf53095caaedaa8f2b6",
     "semantic_hash": ""
   },
   "src/controllers/auth.js": {
@@ -260,8 +260,8 @@
     "semantic_hash": "b14b4dbc61c6bfaacc7ac2af72e439a7"
   },
   "src/server.js": {
-    "mtime": 1795256120.2542024,
-    "ast_hash": "e58a8770cb339d6b3cf2cfaa2a28aa73",
+    "mtime": 1795258524.3072655,
+    "ast_hash": "788d843fa7a005d2e758b74dc92bca04",
     "semantic_hash": ""
   },
   "src/utils/cache.js": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "test/webapp/api.test.js": {
-    "mtime": 1791196669.4922466,
-    "ast_hash": "1b4b5a383ca19988420773eff1eeb7b1",
+    "mtime": 1795258761.2669818,
+    "ast_hash": "03049b8b1b2d1c786ca8f27005fcdd9c",
     "semantic_hash": ""
   },
   "README.md": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "src/public/ui/index.html": {
-    "mtime": 1795256393.6047478,
-    "ast_hash": "3eb29a81bd51d3b4b936ebb72e5fa0cd",
+    "mtime": 1795258761.2666848,
+    "ast_hash": "bd93997266556c70dd3c6313ea80d955",
     "semantic_hash": ""
   },
   "src/public/logo.jpeg": {
