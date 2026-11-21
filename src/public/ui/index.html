@@ -947,7 +947,8 @@
     .bc-dest { margin-top: 12px; }
     .lang-chip { font-size: 0.6471rem; font-weight: 800; letter-spacing: .03em; padding: 1px 7px; border-radius: 999px; background: rgba(51,144,236,0.12); color: var(--accent-ink); margin-left: 6px; white-space: nowrap; }
     .adm-langs { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 12px; font-size: 0.7647rem; font-weight: 700; color: var(--hint); }
-    .adm-langs span { background: var(--card); border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow); }
+    .adm-langs button { border: 0; font: inherit; color: inherit; cursor: pointer; background: var(--card); border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow); }
+    .adm-langs button.on { background: var(--accent); color: var(--accent-text); }
     .bc-langs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
     .bc-langs .af-opt { position: relative; }
     .bc-langs small { opacity: .7; font-weight: 600; }
@@ -1556,7 +1557,7 @@
             <div class="adm-stat"><b>{{ admin.active.week }}</b><span>active in<br>the last 7 days</span></div>
           </div>
           <!-- how many people use each bot language -->
-          <div class="adm-langs" v-if="admin.languages"><span v-for="(n, code) in admin.languages" :key="'al' + code">{{ LANG_FLAGS[code] }} <bdi>{{ LANG_LABELS[code] }}</bdi> · {{ n }}</span></div>
+          <div class="adm-langs" v-if="admin.languages"><button v-for="(n, code) in admin.languages" :key="'al' + code" :class="{ on: admin.lang === code }" @click="filterAdminLang(code)">{{ LANG_FLAGS[code] }} <bdi>{{ LANG_LABELS[code] }}</bdi> · {{ n }}</button></div>
 
           <!-- search + filters button; below it the sort menu and one removable chip per active filter -->
           <div class="adm-bar">
@@ -2492,6 +2493,14 @@
                 </div>
 
                 <div class="af-sec">
+                  <div class="af-label">Language <span>the bot speaks to them</span></div>
+                  <div class="af-opts">
+                    <button class="af-opt" :class="{ on: !sheet.draft.lang }" @click="setDraft('lang', '')"><ui-icon name="languages" :size="15"></ui-icon>Any</button>
+                    <button v-for="(label, code) in LANG_LABELS" :key="'fl' + code" class="af-opt" :class="{ on: sheet.draft.lang === code }" @click="setDraft('lang', code)">{{ LANG_FLAGS[code] }} <bdi>{{ label }}</bdi><small v-if="admin.languages"> · {{ admin.languages[code] }}</small></button>
+                  </div>
+                </div>
+
+                <div class="af-sec">
                   <div class="af-label">Moodling <span>MBTI-style type</span></div>
                   <div class="af-opts">
                     <button class="af-opt" :class="{ on: !sheet.draft.mbti }" @click="setDraft('mbti', '')">Anyone</button>
@@ -2754,7 +2763,7 @@
                   <div class="mood" v-if="sheet.user.language"><ui-icon name="languages" :size="14"></ui-icon> Bot language: {{ LANG_FLAGS[sheet.user.language] }} <bdi>{{ LANG_LABELS[sheet.user.language] }}</bdi></div>
                 </div>
               </div>
-              <!-- open this person's Telegram chat (by @username, else by id) -->
+              <!-- open this person's Telegram chat by their id -->
               <a v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :href="adminChatHref(sheet.user)" @click="openAdminChat($event, sheet.user)">
                 <ui-icon name="message-circle" :size="16"></ui-icon>Open chat with {{ firstNameOf(sheet.user) }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
               </a>
@@ -3814,7 +3823,7 @@
           quiz: null,            // { session, picked, saving, done }
           quizSession: null,     // unfinished test from the server
           // admin
-          admin: { view: 'users', active: null, languages: null, dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', key: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
+          admin: { view: 'users', active: null, languages: null, lang: '', dir: 'desc', query: '', trait: '', mbti: '', level: 'any', notes: '', key: '', status: '', sort: 'activity', sortMenu: false, traits: [], users: [], page: 0, page_size: 20, has_more: false, total_users: null, total_moods: null, loading: false, error: '' },
           CH_ICONS: {
             straight_shooter: 'target', soft_landing: 'heart-handshake', deep_thinker: 'lightbulb', action_taker: 'zap',
             challenge_seeker: 'flame', independent: 'compass', people_powered: 'users-round', planner: 'calendar-check',
@@ -3935,6 +3944,7 @@
           if (a.status && status) chips.push({ key: 'status', label: status.label, icon: status.icon });
           if (a.notes) chips.push({ key: 'notes', label: a.notes === 'with' ? 'With a note' : 'No note', icon: 'notebook-pen' });
           if (a.key) chips.push({ key: 'key', label: a.key === 'with' ? 'Has an OpenAI key' : 'No OpenAI key', icon: 'key-round' });
+          if (a.lang) chips.push({ key: 'lang', label: `${this.LANG_FLAGS[a.lang]} ${this.LANG_LABELS[a.lang]}`, icon: 'languages' });
           if (a.mbti) chips.push({ key: 'mbti', label: a.mbti === 'any' ? 'Took the MBTI test' : `${a.mbti} · ${this.mbtiTitle(a.mbti)}`, icon: 'drama' });
           if (a.trait) {
             const level = this.TRAIT_LEVELS.find(l => l.key === a.level);
@@ -3950,7 +3960,7 @@
         },
         draftCount() {
           const d = this.sheet?.draft;
-          return d ? [d.status, d.notes, d.mbti, d.trait].filter(Boolean).length : 0;
+          return d ? [d.status, d.notes, d.key, d.lang, d.mbti, d.trait].filter(Boolean).length : 0;
         },
         adminTraitName() { return this.admin.traits.find(t => t.key === this.admin.trait)?.name || this.admin.trait; },
         // every zone the browser knows (falls back to the short list on old WebViews)
@@ -4614,18 +4624,16 @@ Script.complete();
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
-        adminChatHref(u) { return u.username ? `https://t.me/${u.username}` : `tg://user?id=${u.id}`; },
+        // chats open by Telegram id (tg://user?id=…), never by @username
+        adminChatHref(u) { return `tg://user?id=${u.id}`; },
         openAdminChat(event, u) {
           this.haptic('light');
-          // inside Telegram a t.me link opens the chat in place; without a username the tg:// link
-          // only works if this Telegram account already knows them, so the id is copied as a backup
-          if (u.username && this.tg?.openTelegramLink) { event.preventDefault(); this.tg.openTelegramLink(`https://t.me/${u.username}`); return; }
-          if (!u.username) navigator.clipboard?.writeText(String(u.id)).then(() => this.showToast(`No @username: their id ${u.id} is copied`)).catch(() => {});
+          // the id link needs this Telegram account to know them already, so the id is copied as a backup
+          navigator.clipboard?.writeText(String(u.id)).then(() => this.showToast(`Opening their chat · id ${u.id} copied`)).catch(() => {});
         },
-        profileHref(friend) { return friend.username ? `https://t.me/${friend.username}` : friend.link; },
+        profileHref(friend) { return `tg://user?id=${friend.id}`; },
         openProfile(event, friend) {
           this.haptic('light');
-          if (friend.username && this.tg?.openTelegramLink) { event.preventDefault(); this.tg.openTelegramLink(`https://t.me/${friend.username}`); }
         },
 
         // ----- personality -----
@@ -4764,6 +4772,7 @@ Script.complete();
           if (f.status) params.set('status', f.status);
           if (f.notes) params.set('notes', f.notes);
           if (f.key) params.set('key', f.key);
+          if (f.lang) params.set('lang', f.lang);
           if (f.mbti) params.set('mbti', f.mbti);
           if (f.trait) {
             const level = this.TRAIT_LEVELS.find(l => l.key === f.level) || this.TRAIT_LEVELS[0];
@@ -4774,8 +4783,8 @@ Script.complete();
         traitNameOf(key) { return this.admin.traits.find(t => t.key === key)?.name || key.replace(/_/g, ' '); },
         // filters and sort are remembered on this device
         saveAdminPrefs() {
-          const { sort, dir, status, notes, key, mbti, trait, level } = this.admin;
-          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, dir, status, notes, key, mbti, trait, level })); } catch {}
+          const { sort, dir, status, notes, key, lang, mbti, trait, level } = this.admin;
+          try { localStorage.setItem('moodpal.adminFilters', JSON.stringify({ sort, dir, status, notes, key, lang, mbti, trait, level })); } catch {}
         },
         loadAdminPrefs() {
           try {
@@ -4786,6 +4795,7 @@ Script.complete();
             if (this.ADMIN_STATUSES.some(o => o.key === saved.status)) this.admin.status = saved.status;
             if (['', 'with', 'without'].includes(saved.notes)) this.admin.notes = saved.notes;
             if (['', 'with', 'without'].includes(saved.key)) this.admin.key = saved.key;
+            if (['', 'en', 'fa', 'ru'].includes(saved.lang)) this.admin.lang = saved.lang;
             if (saved.mbti === 'any' || this.MBTI_TYPES.includes(saved.mbti)) this.admin.mbti = saved.mbti;
             if (typeof saved.trait === 'string' && /^[a-z_]*$/.test(saved.trait)) this.admin.trait = saved.trait;
             if (this.TRAIT_LEVELS.some(l => l.key === saved.level)) this.admin.level = saved.level;
@@ -4795,8 +4805,8 @@ Script.complete();
           this.haptic('light');
           this.admin.sortMenu = false;
           if (!this.admin.traits.length) this.api('/api/admin/traits').then(d => { this.admin.traits = d.traits; }).catch(() => {});
-          const { status, notes, key, mbti, trait, level } = this.admin;
-          this.sheet = { type: 'admin-filters', draft: { status, notes, key, mbti, trait, level }, count: this.admin.total_users, counting: false, traitQuery: '' };
+          const { status, notes, key, lang, mbti, trait, level } = this.admin;
+          this.sheet = { type: 'admin-filters', draft: { status, notes, key, lang, mbti, trait, level }, count: this.admin.total_users, counting: false, traitQuery: '' };
         },
         setDraft(key, value) {
           if (this.sheet?.type !== 'admin-filters') return;
@@ -4808,7 +4818,7 @@ Script.complete();
         },
         resetDraft() {
           this.haptic('light');
-          this.sheet.draft = { status: '', notes: '', key: '', mbti: '', trait: '', level: 'any' };
+          this.sheet.draft = { status: '', notes: '', key: '', lang: '', mbti: '', trait: '', level: 'any' };
           this.countAdminDraft();
         },
         // live "Show N people" while the filters are being picked
@@ -4833,6 +4843,13 @@ Script.complete();
           this.saveAdminPrefs();
           this.fetchAdmin();
         },
+        // the language counts above the list: tap one to show only those people, tap it again to show everyone
+        filterAdminLang(code) {
+          this.haptic('light');
+          this.admin.lang = this.admin.lang === code ? '' : code;
+          this.saveAdminPrefs();
+          this.fetchAdmin();
+        },
         removeAdminFilter(key) {
           this.haptic('light');
           this.admin[key] = '';
@@ -4842,7 +4859,7 @@ Script.complete();
         },
         clearAdminFilters() {
           this.haptic('light');
-          Object.assign(this.admin, { status: '', notes: '', key: '', mbti: '', trait: '', level: 'any' });
+          Object.assign(this.admin, { status: '', notes: '', key: '', lang: '', mbti: '', trait: '', level: 'any' });
           this.saveAdminPrefs();
           this.fetchAdmin();
         },

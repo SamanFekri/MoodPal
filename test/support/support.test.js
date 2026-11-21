@@ -182,8 +182,23 @@ describe('Emotional support network', () => {
       await logMood(ada, 'anxious');
       const msg = to(bob)[0];
       assert.match(msg.text, /Ada.*feeling.*anxious/);
-      assert.deepEqual(msg.extra.reply_markup.inline_keyboard[0].map(b => b.url || b.callback_data), ['https://t.me/ada', 'hug_8001']);
+      assert.deepEqual(msg.extra.reply_markup.inline_keyboard[0].map(b => b.url || b.callback_data), ['tg://user?id=8001', 'hug_8001'], 'the chat opens by id, not @username');
       assert.equal((await SupportAlert.findOne()).status, 'sent');
+    });
+
+    test('if Telegram refuses the id link (their privacy settings), the alert still goes out, without that button', async () => {
+      await setSupport(ada, { auto: true });
+      const real = fakeTelegram.sendMessage;
+      fakeTelegram.sendMessage = async (chatId, text, extra) => {
+        if (extra?.reply_markup?.inline_keyboard?.flat().some(b => String(b.url || '').startsWith('tg://user'))) throw Object.assign(new Error('Bad Request: BUTTON_USER_PRIVACY_RESTRICTED'), { description: 'Bad Request: BUTTON_USER_PRIVACY_RESTRICTED', response: { error_code: 400 } });
+        return real(chatId, text, extra);
+      };
+      try {
+        await logMood(ada, 'anxious');
+        const msg = to(bob)[0];
+        assert.deepEqual(msg.extra.reply_markup.inline_keyboard[0].map(b => b.callback_data), ['hug_8001']);
+        assert.equal((await SupportAlert.findOne()).status, 'sent');
+      } finally { fakeTelegram.sendMessage = real; }
     });
 
     test('only the moods Ada picked count', async () => {

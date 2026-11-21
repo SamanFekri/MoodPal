@@ -234,9 +234,10 @@ function alertText(from, alert, name = esc(firstName(from)), msgs = i18n.forLang
   return msgs.supportNowMsg(name, mood);
 }
 
-function alertKeyboard(from, name = firstName(from), msgs = i18n.forLang()) {
+function alertKeyboard(from, name = firstName(from), msgs = i18n.forLang(), { withChat = true } = {}) {
   const row = [];
-  if (from.username) row.push({ text: msgs.supportMessageButton(name), url: `https://t.me/${from.username}` });
+  // opens their chat by Telegram id (works with or without a @username)
+  if (withChat) row.push({ text: msgs.supportMessageButton(name), url: `tg://user?id=${from.id}` });
   row.push({ text: msgs.supportHugButton(), callback_data: `${CB.HUG}${from.id}` });
   return { inline_keyboard: [row] };
 }
@@ -245,7 +246,15 @@ function alertKeyboard(from, name = firstName(from), msgs = i18n.forLang()) {
 async function deliver(from, to, alert) {
   const name = await nicknames.nameFor(to._id, from, { first: true });
   const msgs = i18n.forUser(to);
-  await getTelegram().sendMessage(to.id, alertText(from, alert, esc(name), msgs), { parse_mode: 'HTML', reply_markup: alertKeyboard(from, name, msgs) });
+  const send = (withChat) => getTelegram().sendMessage(to.id, alertText(from, alert, esc(name), msgs), { parse_mode: 'HTML', reply_markup: alertKeyboard(from, name, msgs, { withChat }) });
+  try {
+    await send(true);
+  } catch (error) {
+    // Telegram refuses a link to someone by id when their privacy settings don't allow it: send it
+    // without the "Message" button (the hug still works) rather than not at all
+    if (!/BUTTON_USER_PRIVACY_RESTRICTED|USER_PRIVACY/i.test(error?.description || error?.message || '')) throw error;
+    await send(false);
+  }
 }
 
 const finish = (id, set) => SupportAlert.updateOne({ _id: id }, { $set: set, $unset: { open: '' } });

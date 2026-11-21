@@ -18,7 +18,7 @@ const publicUser = (u) => ({
   username: u.username || null,
 });
 
-// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&sort=activity|mood|moods|newest|name&dir=asc|desc
+// GET /api/admin/users?q=&page=&trait=<key>&min=&max=&notes=with|without&lang=en|fa|ru&sort=activity|mood|moods|newest|name&dir=asc|desc
 //                      &status=friend|blocked|admin&count=1
 // Every user with their latest mood. `sort`: most recently active (default), most recent mood, most
 // moods logged, newest account, or name A-Z. `active` counts everyone (not just this filter) active in
@@ -33,6 +33,8 @@ const listUsers = async (req, res) => {
   const notes = req.query.notes === 'with' || req.query.notes === 'without' ? req.query.notes : null;
   // who has saved their own OpenAI key (only whether they have one; the key never leaves the server)
   const key = req.query.key === 'with' || req.query.key === 'without' ? req.query.key : null;
+  // the bot language they use (src/i18n); English also matches people who never picked one
+  const lang = require('../i18n').isSupported(req.query.lang) ? req.query.lang : null;
 
   const filter = { is_bot: { $ne: true } };
   if (q) {
@@ -43,6 +45,7 @@ const listUsers = async (req, res) => {
   if (status === 'blocked') filter.is_blocked = true;
   if (key === 'with') filter.openai_api_key = { $nin: [null, ''] };
   if (key === 'without') filter.openai_api_key = { $in: [null, ''] };
+  if (lang) filter.language = lang === 'en' ? { $in: [null, 'en'] } : lang;
   if (status === 'admin') filter.is_admin = true;
   if (status === 'friend') {
     const followed = await Share.find({ follower: req.user._id, disabled: false }).distinct('followed');
@@ -169,6 +172,7 @@ const listUsers = async (req, res) => {
       mbti: mbti ? mbti.toLowerCase() === 'any' ? 'any' : mbti : null,
       notes,
       key,
+      lang,
       status,
     },
     users: rows.map(u => ({

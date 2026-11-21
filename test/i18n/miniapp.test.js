@@ -133,6 +133,13 @@ describe('mini app language API', () => {
     assert.equal(list.body.users.find(u => u.id === 74).language, 'ru');
     assert.equal(list.body.users.find(u => u.id === 71).language, 'en', 'no language set reads as English');
     assert.deepEqual(list.body.languages, { en: 2, fa: 1, ru: 1 });
+    // filter by language; English includes people who never picked one
+    const ids = async (lang) => (await api(`/api/admin/users?lang=${lang}`, { as: boss })).body.users.map(u => u.id).sort();
+    assert.deepEqual(await ids('fa'), [73]);
+    assert.deepEqual(await ids('ru'), [74]);
+    assert.deepEqual(await ids('en'), [71, 72]);
+    assert.equal((await api('/api/admin/users?lang=fa', { as: boss })).body.filter.lang, 'fa');
+    assert.equal((await api('/api/admin/users?lang=xx', { as: boss })).body.users.length, 4, 'an unknown language is ignored');
     const one = await api('/api/admin/users/73/connections', { as: boss });
     assert.equal(one.body.user.language, 'fa');
     assert.ok(lang);
