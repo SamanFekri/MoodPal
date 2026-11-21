@@ -891,7 +891,8 @@
     .mb-hero .mb-char { width: min(210px, 56vw); margin: 0 auto -4px; position: relative; z-index: 1; }
     .mb-card.compact .mb-hero .mb-char { width: 130px; }
     .mb-kicker { font-size: 0.6471rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .85; position: relative; z-index: 1; }
-    .mb-letters { display: flex; justify-content: center; gap: 6px; margin: 8px 0 4px; position: relative; z-index: 1; }
+    .mb-letters { display: flex; direction: ltr; justify-content: center; gap: 6px;   /* a type reads E-N-F-P in every language, RTL included */
+    margin: 8px 0 4px; position: relative; z-index: 1; }
     .mb-letters span { width: 42px; height: 46px; display: grid; place-items: center; font-size: 1.5294rem; font-weight: 900; color: var(--c1); background: #fff; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.18); animation: pop-in .5s var(--ease-spring) both; animation-delay: calc(.35s + var(--i) * .09s); }
     .mb-card.compact .mb-letters span { width: 32px; height: 36px; font-size: 1.1176rem; border-radius: 10px; }
     .mb-hero h2 { margin: 6px 0 0; font-size: 1.4118rem; font-weight: 900; letter-spacing: -.02em; position: relative; z-index: 1; }
