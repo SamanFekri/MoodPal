@@ -1,7 +1,7 @@
 # Graph Report - MoodPal  (2026-11-24)
 
 ## Corpus Check
-- 173 files · ~789,046 words
+- 173 files · ~788,970 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5161481a`
+- Built from commit: `e7f3c195`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
