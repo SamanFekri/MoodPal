@@ -1,16 +1,16 @@
-# Graph Report - MoodPal  (2026-11-21)
+# Graph Report - MoodPal  (2026-11-24)
 
 ## Corpus Check
-- 173 files · ~788,779 words
+- 173 files · ~788,669 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1900 nodes · 3129 edges · 136 communities (114 shown, 22 thin omitted)
+- 1900 nodes · 3127 edges · 135 communities (113 shown, 22 thin omitted)
 - Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 404 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `32da4c1d`
+- Built from commit: `83ca19c9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -94,7 +94,6 @@
 - moods.js
 - controllers/support.js
 - scheduler.js
-- secret.js
 - chart.js
 - chartjs-node-canvas
 - yearly.js
@@ -152,7 +151,7 @@
 ## God Nodes (most connected - your core abstractions)
 1. `PersonalityService` - 25 edges
 2. `api (fetch helper)` - 19 edges
-3. `app` - 16 edges
+3. `app` - 15 edges
 4. `MoodPal Mini App (Vue root)` - 14 edges
 5. `view()` - 12 edges
 6. `MemoryService` - 12 edges
@@ -182,7 +181,7 @@
 - **TGS sticker rendering pipeline** — readme_tgs_embed, src_public_ui_index_self_hosted_libs, src_public_ui_index_waitfortgsplayer, src_public_ui_index_mountstickers, src_public_ui_index_destroystickers [INFERRED 0.95]
 - **MoodPal Brand Identity System** — src_public_logo_brand_mark, src_public_logo_smiley_face_motif, src_public_logo_flat_minimal_style, src_public_logo_mood_visual_identity [INFERRED 0.75]
 
-## Communities (136 total, 22 thin omitted)
+## Communities (135 total, 22 thin omitted)
 
 ### Community 0 - "chat/talk.test.js"
 Cohesion: 0.12
@@ -480,10 +479,6 @@ Nodes (9): addContact, answerInvitation, ERRORS, getSupport, removeContact, save
 Cohesion: 0.33
 Nodes (8): AppConfig, cron, reschedule(), { runBackup, sendHeartbeat }, stop(), timeToCron(), runBackup(), sendHeartbeat()
 
-### Community 79 - "secret.js"
-Cohesion: 0.60
-Nodes (4): crypto, decrypt(), encrypt(), getKey()
-
 ### Community 82 - "yearly.js"
 Cohesion: 0.22
 Nodes (5): background(), previewFor(), requestMine(), User, yearly
@@ -585,8 +580,8 @@ Cohesion: 0.22
 Nodes (3): SERVER_BASE_URL, fa, { SERVER_BASE_URL }
 
 ### Community 123 - "app_config.js"
-Cohesion: 0.22
-Nodes (7): AppConfig, mongoose, providers, User, appConfigSchema, { encrypt, decrypt }, mongoose
+Cohesion: 0.16
+Nodes (11): AppConfig, mongoose, providers, User, appConfigSchema, { encrypt, decrypt }, mongoose, crypto (+3 more)
 
 ### Community 124 - "i18n/ru.js"
 Cohesion: 0.25
@@ -635,7 +630,7 @@ Nodes (3): setMoodCommand(), moodKeyboard(), requestMoodPicker()
   src/public/ui/index.html · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **817 isolated node(s):** `fs`, `{ Telegraf }`, `health`, `{ harden }`, `connectDB` (+812 more)
+- **817 isolated node(s):** `mongoose`, `User`, `Mood`, `Share`, `personalityService` (+812 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -646,9 +641,7 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Docker Deployment` and `destroyStickers`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `PersonalityService` connect `PersonalityService` to `personality/service.js`, `service.test.js`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **What connects `fs`, `{ Telegraf }`, `health` to the rest of the system?**
+- **What connects `mongoose`, `User`, `Mood` to the rest of the system?**
   _817 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `chat/talk.test.js` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
@@ -656,3 +649,5 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.11396011396011396 - nodes in this community are weakly interconnected._
 - **Should `miniapp.test.js` be split into smaller, more focused modules?**
   _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._
+- **Should `bot.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._
