@@ -4865,8 +4865,8 @@ Script.complete();
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
-        // their chat by their current @username. No username: try their profile by id (tg://user?id=); if the
-        // app is still showing a moment later, it didn't open, so the bot sends the link and the app closes onto it.
+        // their chat by their current @username. No username: the bot has sent a message with a button to
+        // their profile by id, and the app closes onto it.
         async openAdminChat(sheet) {
           if (sheet.openingChat) return;
           this.haptic('light');
@@ -4880,10 +4880,6 @@ Script.complete();
               return;
             }
             sheet.user.username = null;
-            window.location.href = `tg://user?id=${sheet.user.id}`;
-            await new Promise((done) => setTimeout(done, 900));
-            if (document.visibilityState === 'hidden') return;   // their profile opened over the app
-            await this.api(`/api/admin/users/${sheet.user.id}/open-chat`, { method: 'POST', body: { send: true } });
             if (this.tg?.close) this.tg.close();
             else this.showToast('The bot sent you a link to their profile');
           } catch {
