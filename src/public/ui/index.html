@@ -547,9 +547,6 @@
     .adm-sort { position: relative; }
     .adm-open-chat { display: flex; justify-content: center; margin: 12px 0 0; }
     .adm-open-chat .u { font-weight: 600; opacity: .7; margin-left: 2px; }
-    .adm-ask-profile { margin: 10px 0 0; text-align: center; font-size: 0.8235rem; font-weight: 600; }
-    .adm-ask-profile .row-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
-    .adm-ask-profile .btn { text-decoration: none; }
     .adm-chip.dir { padding: 6px 9px; }
     .adm-chip.dir svg { color: var(--accent-ink); }
     .menu-order { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 2px 4px 4px; }
@@ -2922,13 +2919,6 @@
               <button v-if="sheet.user.id !== myTelegramId" class="btn ghost adm-open-chat" :disabled="sheet.openingChat" @click="openAdminChat(sheet)">
                 <ui-icon name="message-circle" :size="16"></ui-icon>{{ sheet.openingChat ? 'Opening…' : `Open chat with ${firstNameOf(sheet.user)}` }}<span v-if="sheet.user.username" class="u">@{{ sheet.user.username }}</span>
               </button>
-              <div v-if="sheet.askProfile" class="adm-ask-profile">
-                <span>{{ firstNameOf(sheet.user) }} has no username. Open their profile?</span>
-                <div class="row-actions">
-                  <a class="btn" :href="'tg://user?id=' + sheet.user.id" @click="sheet.askProfile = false"><ui-icon name="user" :size="16"></ui-icon>Open profile</a>
-                  <button class="btn ghost" @click="sheet.askProfile = false">Cancel</button>
-                </div>
-              </div>
               <button class="btn ghost adm-open-chat" style="margin-top:8px" :disabled="sheet.yearBusy" @click="previewYearly(sheet)"><ui-icon name="sparkles" :size="16"></ui-icon>{{ sheet.yearBusy ? 'Asking…' : 'Year in moods' }}</button>
               <div class="sheet-actions" v-if="sheet.user.id !== myTelegramId">
                 <button class="btn" :class="{ ghost: sheet.user.is_friend }" :disabled="sheet.savingFriend" @click="toggleAdminFriend(sheet.user)">
@@ -4875,7 +4865,8 @@ Script.complete();
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
-        // their chat by their current @username. No username: ask, with a tg://user?id= link the admin taps.
+        // their chat by their current @username. No username: try their profile by id (tg://user?id=); if the
+        // app is still showing a moment later, it didn't open, so the bot sends the link and the app closes onto it.
         async openAdminChat(sheet) {
           if (sheet.openingChat) return;
           this.haptic('light');
@@ -4889,7 +4880,12 @@ Script.complete();
               return;
             }
             sheet.user.username = null;
-            sheet.askProfile = true;
+            window.location.href = `tg://user?id=${sheet.user.id}`;
+            await new Promise((done) => setTimeout(done, 900));
+            if (document.visibilityState === 'hidden') return;   // their profile opened over the app
+            await this.api(`/api/admin/users/${sheet.user.id}/open-chat`, { method: 'POST', body: { send: true } });
+            if (this.tg?.close) this.tg.close();
+            else this.showToast('The bot sent you a link to their profile');
           } catch {
             this.showToast("Couldn't open their chat. Try again");
           } finally {
@@ -4897,8 +4893,13 @@ Script.complete();
           }
         },
         profileHref(friend) { return `tg://user?id=${friend.id}`; },
+        // with a username, t.me/<username> through Telegram (mini apps can ignore tg:// links); without one, the tg:// href.
         openProfile(event, friend) {
           this.haptic('light');
+          if (!friend.username) return;
+          event.preventDefault();
+          const url = `https://t.me/${friend.username}`;
+          if (this.tg?.openTelegramLink) this.tg.openTelegramLink(url); else window.open(url, '_blank');
         },
 
         // ----- personality -----

@@ -277,12 +277,15 @@ const setBlocked = async (req, res) => {
 
 // POST /api/admin/users/:telegramId/open-chat — how the mini app opens someone's chat.
 // 1. Their current @username (asked from Telegram, so a changed one isn't stale): the app opens t.me/<username>.
-// 2. No username: the app asks, and the admin taps a tg://user?id= link to their profile. The bot sends nothing.
+// 2. No username: the app tries tg://user?id= itself. Mini apps often ignore that, so when it doesn't open,
+//    the app calls again with { send: true }: the bot sends the admin their name linked by id (a chat
+//    message can open it), and the app closes onto that message.
 //    A username they removed is cleared, so the admin sheet stops showing it.
 const openChat = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) }).lean();
   if (!user) return res.status(404).json({ error: 'not_found' });
   const { getTelegram } = require('../utils/telegram');
+  if (req.body?.send) return sendProfileLink(req, res, user, getTelegram());
   let chat = null;
   try {
     chat = await getTelegram().getChat(user.id);
@@ -296,6 +299,29 @@ const openChat = async (req, res) => {
   }
   if (chat && user.username) await User.updateOne({ _id: user._id }, { $unset: { username: 1 } });
   res.json({ username: null });
+};
+
+// the bot's message to the admin: their name linked by id, plus a button when their privacy allows one
+const sendProfileLink = async (req, res, user, telegram) => {
+  const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || `id ${user.id}`;
+  const text = `<a href="tg://user?id=${user.id}">${esc(name)}</a> has no username. Tap their name to open their profile.`;
+  const send = (withButton) => telegram.sendMessage(req.user.id, text, {
+    parse_mode: 'HTML',
+    ...(withButton ? { reply_markup: { inline_keyboard: [[{ text: `👤 Open ${name}'s profile`.slice(0, 64), url: `tg://user?id=${user.id}` }]] } } : {}),
+  });
+  try {
+    await send(true);
+  } catch (error) {
+    try {
+      if (!/BUTTON_USER_PRIVACY_RESTRICTED|USER_PRIVACY/i.test(error?.description || error?.message || '')) throw error;
+      await send(false);   // their privacy refuses the button: the name link still goes
+    } catch (e) {
+      console.error('Open chat message failed:', e?.description || e?.message);
+      return res.status(502).json({ error: 'send_failed' });
+    }
+  }
+  res.json({ sent: true });
 };
 
 // GET /api/admin/users/:telegramId/personality — anyone's profile, regardless of their sharing setting

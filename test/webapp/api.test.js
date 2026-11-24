@@ -765,6 +765,26 @@ describe('mini app API', () => {
       assert.deepEqual(r.body, { username: null });
       assert.equal(sent.length, 0);
 
+      // the app couldn't open their profile: it asks the bot to send the admin a link by id
+      r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST', body: { send: true } });
+      assert.deepEqual(r.body, { sent: true });
+      assert.equal(sent[0].chatId, 9, 'sent to the admin');
+      assert.match(sent[0].text, /<a href="tg:\/\/user\?id=2">.*<\/a> has no username/);
+      assert.equal(sent[0].extra.reply_markup.inline_keyboard[0][0].url, 'tg://user?id=2');
+
+      // their privacy refuses the button: the name link still goes
+      sent.length = 0;
+      setTelegram(fake((extra) => {
+        if (extra.reply_markup) { const e = new Error('Bad Request: BUTTON_USER_PRIVACY_RESTRICTED'); e.description = e.message; throw e; }
+      }));
+      r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST', body: { send: true } });
+      assert.deepEqual(r.body, { sent: true });
+      assert.equal(sent[0].extra.reply_markup, undefined, 'no button');
+
+      // it can't be sent at all: an error, so the app doesn't close on nothing
+      setTelegram(fake(() => { throw new Error('Forbidden: bot was blocked by the user'); }));
+      assert.equal((await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST', body: { send: true } })).status, 502);
+
       assert.equal((await api('/api/admin/users/999/open-chat', { as: admin, method: 'POST' })).status, 404);
       assert.equal((await api('/api/admin/users/2/open-chat', { as: alice, method: 'POST' })).status, 403);
     });
