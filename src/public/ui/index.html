@@ -4865,8 +4865,7 @@ Script.complete();
           this.dropSticker('sheet');
           setTimeout(() => this.sweepStickers(), 450);   // after the slide-out transition removed its log
         },
-        // their chat by their current @username; no username: their profile by Telegram id. Telegram's
-        // in-app browser may block tg://user?id=, so the bot also sends a button that opens the profile.
+        // their chat by their current @username; no username: their profile by Telegram id (tg://user?id=).
         async openAdminChat(sheet) {
           if (sheet.openingChat) return;
           this.haptic('light');
@@ -4879,7 +4878,7 @@ Script.complete();
               if (this.tg?.openTelegramLink) this.tg.openTelegramLink(url); else window.open(url, '_blank');
               return;
             }
-            this.showToast('No username: opening their profile. If it doesn\'t open, tap the button the bot sent you');
+            sheet.user.username = null;
             window.location.href = `tg://user?id=${sheet.user.id}`;
           } catch {
             this.showToast("Couldn't open their chat. Try again");

@@ -277,41 +277,25 @@ const setBlocked = async (req, res) => {
 
 // POST /api/admin/users/:telegramId/open-chat — how the mini app opens someone's chat.
 // 1. Their current @username (asked from Telegram, so a changed one isn't stale): the app opens t.me/<username>.
-// 2. No username: the app tries their profile by id (tg://user?id=), and since Telegram's in-app browser
-//    may block that, the bot also sends the admin a message whose button opens the profile by id.
-//    The name in the text is a mention by id too, for when their privacy refuses the button.
+// 2. No username: the app opens their profile by id (tg://user?id=) itself. The bot sends nothing.
+//    A username they removed is cleared, so the admin sheet stops showing it.
 const openChat = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) }).lean();
   if (!user) return res.status(404).json({ error: 'not_found' });
   const { getTelegram } = require('../utils/telegram');
-  let username = null;
+  let chat = null;
   try {
-    username = (await getTelegram().getChat(user.id))?.username || null;
+    chat = await getTelegram().getChat(user.id);
   } catch {
-    username = null;   // Telegram can't see them (blocked the bot, deleted): go by id
+    chat = null;   // Telegram can't see them (blocked the bot, deleted): go by id
   }
+  const username = chat?.username || null;
   if (username) {
     if (username !== user.username) await User.updateOne({ _id: user._id }, { username });
     return res.json({ username });
   }
-  const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || `id ${user.id}`;
-  const text = `💬 <a href="tg://user?id=${user.id}">${esc(name)}</a>\nid <code>${user.id}</code>${user.username ? ` · @${esc(user.username)}` : ''}`;
-  const send = (withButton) => getTelegram().sendMessage(req.user.id, text, {
-    parse_mode: 'HTML',
-    ...(withButton ? { reply_markup: { inline_keyboard: [[{ text: `💬 Open chat with ${name}`.slice(0, 64), url: `tg://user?id=${user.id}` }]] } } : {}),
-  });
-  try {
-    await send(true);
-    return res.json({ username: null, sent: true, button: true });
-  } catch (error) {
-    if (!/BUTTON_USER_PRIVACY_RESTRICTED|USER_PRIVACY/i.test(error?.description || error?.message || '')) {
-      console.error('Open chat message failed:', error?.description || error?.message);
-      return res.status(502).json({ error: 'send_failed' });
-    }
-  }
-  await send(false);
-  res.json({ username: null, sent: true, button: false });
+  if (chat && user.username) await User.updateOne({ _id: user._id }, { $unset: { username: 1 } });
+  res.json({ username: null });
 };
 
 // GET /api/admin/users/:telegramId/personality — anyone's profile, regardless of their sharing setting

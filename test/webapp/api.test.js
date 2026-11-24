@@ -738,7 +738,7 @@ describe('mini app API', () => {
       assert.equal((await api('/api/admin/users/2/block', { as: alice, method: 'POST' })).status, 403, 'non-admins cannot block');
     });
 
-    test('open chat: by their current username, else their profile by id through a bot button', async () => {
+    test('open chat: by their current username, else their profile by id, with no bot message', async () => {
       const sent = [];
       let chat = { id: 2, username: 'bob_now' };
       const fake = (extraCheck) => ({
@@ -752,23 +752,18 @@ describe('mini app API', () => {
       assert.equal(sent.length, 0, 'no bot message when the username works');
       assert.equal((await User.findById(bob._id)).username, 'bob_now', 'a changed username is saved');
 
-      // no username: the bot sends a button to their profile by id
+      // they removed their username: the app opens them by id, the bot sends nothing, the old one is cleared
       chat = { id: 2 };
       r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
-      assert.deepEqual(r.body, { username: null, sent: true, button: true });
-      assert.equal(sent[0].chatId, 9, 'sent to the admin');
-      assert.match(sent[0].text, /tg:\/\/user\?id=2/);
-      assert.equal(sent[0].extra.reply_markup.inline_keyboard[0][0].url, 'tg://user?id=2');
+      assert.deepEqual(r.body, { username: null });
+      assert.equal(sent.length, 0, 'no bot message');
+      assert.equal((await User.findById(bob._id)).username, undefined, 'the removed username is cleared');
 
-      // Telegram can't see them, and their privacy refuses the button: the mention by id still goes
-      sent.length = 0;
+      // Telegram can't see them: still by id, still no message
       chat = null;
-      setTelegram(fake((extra) => {
-        if (extra.reply_markup) { const e = new Error('Bad Request: BUTTON_USER_PRIVACY_RESTRICTED'); e.description = e.message; throw e; }
-      }));
       r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
-      assert.deepEqual(r.body, { username: null, sent: true, button: false });
-      assert.match(sent[0].text, /tg:\/\/user\?id=2/);
+      assert.deepEqual(r.body, { username: null });
+      assert.equal(sent.length, 0);
 
       assert.equal((await api('/api/admin/users/999/open-chat', { as: admin, method: 'POST' })).status, 404);
       assert.equal((await api('/api/admin/users/2/open-chat', { as: alice, method: 'POST' })).status, 403);
