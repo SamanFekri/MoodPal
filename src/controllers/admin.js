@@ -277,7 +277,7 @@ const setBlocked = async (req, res) => {
 
 // POST /api/admin/users/:telegramId/open-chat — how the mini app opens someone's chat.
 // 1. Their current @username (asked from Telegram, so a changed one isn't stale): the app opens t.me/<username>.
-// 2. No username: the app opens their profile by id (tg://user?id=) itself. The bot sends nothing.
+// 2. No username: the app asks, and the admin taps a tg://user?id= link to their profile. The bot sends nothing.
 //    A username they removed is cleared, so the admin sheet stops showing it.
 const openChat = async (req, res) => {
   const user = await User.findOne({ id: Number(req.params.telegramId) }).lean();

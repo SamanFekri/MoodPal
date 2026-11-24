@@ -738,7 +738,7 @@ describe('mini app API', () => {
       assert.equal((await api('/api/admin/users/2/block', { as: alice, method: 'POST' })).status, 403, 'non-admins cannot block');
     });
 
-    test('open chat: by their current username, else their profile by id, with no bot message', async () => {
+    test('open chat: by their current username, else no username (the app links their profile by id)', async () => {
       const sent = [];
       let chat = { id: 2, username: 'bob_now' };
       const fake = (extraCheck) => ({
@@ -752,14 +752,14 @@ describe('mini app API', () => {
       assert.equal(sent.length, 0, 'no bot message when the username works');
       assert.equal((await User.findById(bob._id)).username, 'bob_now', 'a changed username is saved');
 
-      // they removed their username: the app opens them by id, the bot sends nothing, the old one is cleared
+      // they removed their username: no username, no bot message, the old one is cleared
       chat = { id: 2 };
       r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
       assert.deepEqual(r.body, { username: null });
       assert.equal(sent.length, 0, 'no bot message');
       assert.equal((await User.findById(bob._id)).username, undefined, 'the removed username is cleared');
 
-      // Telegram can't see them: still by id, still no message
+      // Telegram can't see them: same
       chat = null;
       r = await api('/api/admin/users/2/open-chat', { as: admin, method: 'POST' });
       assert.deepEqual(r.body, { username: null });
